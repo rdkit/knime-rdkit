@@ -2,14 +2,16 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes for Knime
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.9.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.knime.base;bundle-version="2.3.0",
  org.knime.chem.types;bundle-version="2.3.0",
  org.knime.workbench.repository;bundle-version="2.3.0",
- org.rdkit.knime.types;bundle-version="1.0.0"
-Export-Package: org.rdkit.knime.nodes.canonsmiles;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ org.rdkit.knime.types;bundle-version="0.9.0"
+Export-Package: org.RDKit,
+ org.rdkit.knime.nodes,
+ org.rdkit.knime.nodes.canonsmiles;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.rdkfingerprint;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.tomolconverter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings"
 Bundle-ActivationPolicy: lazy

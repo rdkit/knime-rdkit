@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.rdkit.knime.feature"
-      label="RDKit KNIME integration"
+      id="org.rdkit.knime.binaries.feature"
+      label="RDKit binaries"
       version="0.9.0.qualifier"
-      provider-name="NIBR"
-      plugin="org.rdkit.knime.nodes">
+      provider-name="rdkit.org">
 
    <description>
-      This feature contains several nodes that provide some of RDKit&apos;s functionality.
+      This feature contains the platform specific binaries for RDKit.
    </description>
 
    <copyright>
@@ -699,7 +698,7 @@ Public License instead of this License.  But first, please read
 *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
 
 Additional permissions under GNU GPL Version 3 Section 7:
- 
+	
 KNIME interoperates with ECLIPSE solely via ECLIPSE&apos;s plug-in APIs.
 Hence, KNIME and ECLIPSE are both independent programs and are not
 derived from each other. Should, however, the interpretation of the
@@ -710,8 +709,8 @@ ECLIPSE with only the license terms in place for ECLIPSE applying to
 ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
 license terms of ECLIPSE themselves allow for the respective use and
 propagation of ECLIPSE together with KNIME.
- 
- 
+	
+	
 Additional permission relating to nodes for KNIME that extend the Node
 Extension (and in particular that are based on subclasses of NodeModel,
 NodeDialog, and NodeView) and that only interoperate with KNIME through
@@ -726,21 +725,40 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <requires>
-      <import feature="org.rdkit.knime.binaries.feature" version="0.9.0" match="greaterOrEqual"/>
-   </requires>
-
    <plugin
-         id="org.rdkit.knime.nodes"
+         id="org.rdkit.knime.bin.linux.x86"
+         os="linux"
+         arch="x86"
          download-size="0"
          install-size="0"
          version="0.0.0"
-         unpack="false"/>
+         fragment="true"/>
 
    <plugin
-         id="org.rdkit.knime.types"
+         id="org.rdkit.knime.bin.linux.x86_64"
+         os="linux"
+         arch="x86_64"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.rdkit.knime.bin.macosx.x86_64"
+         os="macosx"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.rdkit.knime.bin.win32.x86"
+         os="win32"
+         arch="x86"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
 
 </feature>

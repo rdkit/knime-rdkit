@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: RDKit binaries for 64bit Linux
+Bundle-SymbolicName: org.rdkit.knime.bin.linux.x86_64;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Fragment-Host: org.rdkit.knime.types;bundle-version="0.9.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Eclipse-PlatformFilter: (&(osgi.os=linux)(osgi.arch=x86_64))
+Bundle-Vendor: rdkit.org

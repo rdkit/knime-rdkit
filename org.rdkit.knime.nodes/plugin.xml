@@ -18,13 +18,18 @@
          point="org.knime.workbench.repository.nodes">
       <node
             factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
-            id="org.knime.workshop.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
+            id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
       <node
             factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
-            id="org.knime.workshop.rdkfingerprint.RDKitFingerprintNodeFactory"/>
+            id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
       <node
             factory-class="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"
-            id="org.knime.workshop.tomolconverter.RDKitToMolConverterNodeFactory"/>
+            id="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"/>
+      <node
+            factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
+            id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
+
+
    </extension>
    
 </plugin>

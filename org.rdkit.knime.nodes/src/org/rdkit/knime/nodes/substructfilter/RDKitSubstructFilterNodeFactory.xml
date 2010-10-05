@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../default.png" type="Manipulator">
+	<name>RDKit Substructure Filter</name>
+	
+	<shortDescription>
+	    Applies a substructure filter to an input SMILES column
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Applies a substructure filter to an input SMILES column.</intro>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data">Data with SMILES column</inPort>
+		<outPort index="0" name="Data matching filter">Data matching the substructure query</outPort>
+		<outPort index="1" name="Data not matching filter">Data not matching the substructure query</outPort>
+	</ports>	
+</knimeNode>

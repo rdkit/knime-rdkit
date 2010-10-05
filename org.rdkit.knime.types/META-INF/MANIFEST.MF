@@ -2,15 +2,16 @@ Manifest-Version: 1.0
 Export-Package: org.RDKit,
  org.rdkit.knime.preferences,
  org.rdkit.knime.types
-Require-Bundle: org.knime.base,org.eclipse.core.runtime,org.eclipse.ui
- ,org.eclipse.help,org.eclipse.help.ui
+Require-Bundle: org.knime.base,
+ org.eclipse.core.runtime,
+ org.eclipse.ui
 Bundle-Vendor: rdkit.org
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
  lib/org.RDKit.jar
 Bundle-Version: 0.9.0.qualifier
 Bundle-Name: RDKit Chemistry Type Definition Plugin
-Bundle-Activator: org.rdkit.knime.types.RDKitTypesNodePlugin
+Bundle-Activator: org.rdkit.knime.RDKitTypesPluginActivator
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.rdkit.knime.types;singleton:=true
 Eclipse-RegisterBuddy: org.knime.base

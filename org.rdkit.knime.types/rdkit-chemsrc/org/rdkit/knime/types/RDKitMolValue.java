@@ -42,11 +42,9 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.rdkit.knime.types;
-
-import javax.swing.Icon;
 
 import org.RDKit.ROMol;
 import org.knime.core.data.DataValue;
@@ -56,31 +54,31 @@ import org.knime.core.data.DataValueComparator;
 /**
  * Smiles Data Value interface.
  * (Only a wrapper for the underlying string)
- * 
+ *
  * @author Greg Landrum
  */
 public interface RDKitMolValue extends DataValue {
     /**
      * Meta information to this value type.
-     * 
+     *
      * @see DataValue#UTILITY
      */
     public static final UtilityFactory UTILITY = new RDKUtilityFactory();
 
     /**
      * Returns the RDKit ROMol
-     * 
+     *
      * @return a String value
      */
     ROMol getMoleculeValue();
-    
+
     /**
      * Returns the Smiles string of the molecule.
-     * 
+     *
      * @return a String value
      */
     String getSmilesValue();
-    
+
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */

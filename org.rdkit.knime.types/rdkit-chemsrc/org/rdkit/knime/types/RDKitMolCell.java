@@ -49,8 +49,8 @@ package org.rdkit.knime.types;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.RDKit.RDKFuncs;
 import org.RDKit.Char_Vect;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -67,18 +67,23 @@ import org.knime.core.data.StringValue;
  *
  * @author Greg Landrum
  */
-public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue {
+public class RDKitMolCell extends DataCell implements StringValue,
+        RDKitMolValue {
     /**
      * Convenience access member for
      * <code>DataType.getType(RDKitMolCell.class)</code>.
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(RDKitMolCell.class);
-    private static final long serialVersionUID=0x1;
+
+    private static final long serialVersionUID = 0x1;
+
     /**
-     * Returns the preferred value class of this cell implementation.
-     * This method is called per reflection to determine which is the
-     * preferred renderer, comparator, etc.
+     * Returns the preferred value class of this cell implementation. This
+     * method is called per reflection to determine which is the preferred
+     * renderer, comparator, etc.
+     *
      * @return SmilesValue.class
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
@@ -86,11 +91,11 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
     }
 
     private static final RDKitMolSerializer SERIALIZER =
-        new RDKitMolSerializer();
+            new RDKitMolSerializer();
 
     /**
-     * Returns the factory to read/write DataCells of this class from/to
-     * a DataInput/DataOutput. This method is called via reflection.
+     * Returns the factory to read/write DataCells of this class from/to a
+     * DataInput/DataOutput. This method is called via reflection.
      *
      * @return a serializer for reading/writing cells of this kind
      * @see DataCell
@@ -100,6 +105,7 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
     }
 
     private final String m_smilesString;
+
     private final ROMol m_mol;
 
     /**
@@ -114,14 +120,14 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
      * @throws NullPointerException if the given String value is
      *             <code>null</code>
      */
-    public RDKitMolCell(final ROMol mol){
+    public RDKitMolCell(final ROMol mol) {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
-        m_mol=mol;
+        m_mol = mol;
         m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
     }
-    
+
     /**
      * Creates a new Smiles Cell based on the given String value. <br />
      * <b>Note</b>: The serializing technique writes the given String to a
@@ -134,13 +140,13 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
      * @throws NullPointerException if the given String value is
      *             <code>null</code>
      */
-    public RDKitMolCell(final String smiles) {
-        if (smiles == null) {
+    public RDKitMolCell(final String str) {
+        if (str == null) {
             throw new NullPointerException("Smiles value must not be null.");
         }
-        m_mol=RDKFuncs.MolFromSmiles(smiles);
-        if(m_mol==null){
-            throw new NullPointerException("could not process smiles");        
+        m_mol = RDKFuncs.MolFromSmiles(str);
+        if (m_mol == null) {
+            throw new NullPointerException("could not process smiles");
         }
         m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
     }
@@ -148,6 +154,7 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getStringValue() {
         return m_smilesString;
     }
@@ -155,6 +162,7 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getSmilesValue() {
         return m_smilesString;
     }
@@ -162,6 +170,7 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
     /**
      * {@inheritDoc}
      */
+    @Override
     public ROMol getMoleculeValue() {
         return m_mol;
     }
@@ -192,40 +201,44 @@ public class RDKitMolCell extends DataCell implements StringValue, RDKitMolValue
 
     /** Factory for (de-)serializing a RDKitMolCell. */
     private static class RDKitMolSerializer implements
-        DataCellSerializer<RDKitMolCell> {
+            DataCellSerializer<RDKitMolCell> {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final RDKitMolCell cell,
                 final DataCellDataOutput output) throws IOException {
-            //output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-        	Char_Vect cv=RDKFuncs.MolToBinary(cell.getMoleculeValue());
-        	String pkl="";
-        	for(int i=0;i<cv.size();++i) pkl += cv.get(i);
-        	output.writeUTF(pkl);
+            // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
+            Char_Vect cv = RDKFuncs.MolToBinary(cell.getMoleculeValue());
+            StringBuilder pkl = new StringBuilder((int)cv.size());
+            for (int i = 0; i < cv.size(); ++i) {
+                pkl.append(cv.get(i));
+            }
+            output.writeUTF(pkl.toString());
         }
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public RDKitMolCell deserialize(final DataCellDataInput input)
-            throws IOException {
+                throws IOException {
             String s = input.readUTF();
-            Char_Vect cv=new Char_Vect(0);
-            for(int i=0;i<s.length();++i){
-            	char c=s.charAt(i);
-            	cv.add(c);
+            Char_Vect cv = new Char_Vect(0);
+            for (int i = 0; i < s.length(); ++i) {
+                char c = s.charAt(i);
+                cv.add(c);
             }
-            //ROMol m=new ROMol(s);
-            //ROMol m=RDKFuncs.MolFromSmiles(s);
-            ROMol m=RDKFuncs.MolFromBinary(cv);
+            // ROMol m=new ROMol(s);
+            // ROMol m=RDKFuncs.MolFromSmiles(s);
+            ROMol m = RDKFuncs.MolFromBinary(cv);
             return new RDKitMolCell(m);
         }
     }
-    protected void finalize() throws Throwable
-    {
-      m_mol.delete();
-      super.finalize();
-    }     
-    
+
+    @Override
+    protected void finalize() throws Throwable {
+        m_mol.delete();
+        super.finalize();
+    }
 }

@@ -53,12 +53,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.data.renderer.DataValueRenderer;
-import org.rdkit.knime.types.RDKitTypesNodePlugin;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 
 /**
  * This is the preference page for the RDKit chemistry type definition. It allows
  * the user to change preferred renderer for all types listed in
- * {@link RDKitTypesNodePlugin#getCustomizableTypeList()}.
+ * {@link RDKitTypesPluginActivator#getCustomizableTypeList()}.
  *
  * @author Greg Landrum
  */
@@ -73,7 +73,7 @@ public class RDKitTypesPreferencePage extends FieldEditorPreferencePage
         super(GRID);
         // we use the pref store of the UI plugin
         setPreferenceStore(
-                RDKitTypesNodePlugin.getDefault().getPreferenceStore());
+                RDKitTypesPluginActivator.getDefault().getPreferenceStore());
         setDescription("RDKit Preferred Renderer");
     }
 

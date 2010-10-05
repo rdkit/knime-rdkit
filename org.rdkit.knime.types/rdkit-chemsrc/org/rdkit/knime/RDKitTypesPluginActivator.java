@@ -43,20 +43,17 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ----------------------------------------------------------------------------
  */
-package org.rdkit.knime.types;
+package org.rdkit.knime;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.data.DataValue;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.osgi.framework.BundleContext;
-
 
 /**
  * This is the activator for this plugin that is instantiated by the Eclipse
@@ -64,9 +61,9 @@ import org.osgi.framework.BundleContext;
  *
  * @author Greg Landrum
  */
-public class RDKitTypesNodePlugin extends AbstractUIPlugin {
+public class RDKitTypesPluginActivator extends AbstractUIPlugin {
     // The shared instance.
-    private static RDKitTypesNodePlugin plugin;
+    private static RDKitTypesPluginActivator plugin;
 
     /**
      * This method is called upon plug-in activation.
@@ -77,17 +74,22 @@ public class RDKitTypesNodePlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-//        try {
-        System.loadLibrary("RDKFuncs");
-//       } catch (java.lang.UnsatisfiedLinkError e){
-//          ;
-//        }
+        try {
+            System.loadLibrary("RDKFuncs");
+        } catch (UnsatisfiedLinkError e) {
+            IStatus error =
+                    new Status(IStatus.ERROR, context.getBundle()
+                            .getSymbolicName(),
+                            "Could not load native RDKit library", e);
+            Platform.getLog(context.getBundle()).log(error);
+
+        }
         final IPreferenceStore pStore = getPreferenceStore();
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
-           /** {@inheritDoc} */
+            /** {@inheritDoc} */
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-            } 
+            }
         });
     }
 
@@ -103,11 +105,13 @@ public class RDKitTypesNodePlugin extends AbstractUIPlugin {
         plugin = null;
     }
 
-    /** Lookups the preferred renderer for a given molecular type. 
-     * @param valueClass The DataValue class of interest, one of 
-     * {@link SdfValue}, {@link Mol2Value}, {@link SmilesValue}
-     * @return The class name of the stored preferred renderer or 
-     * <code>null</code> if none has been saved.
+    /**
+     * Lookups the preferred renderer for a given molecular type.
+     *
+     * @param valueClass The DataValue class of interest, one of
+     *            {@link SdfValue}, {@link Mol2Value}, {@link SmilesValue}
+     * @return The class name of the stored preferred renderer or
+     *         <code>null</code> if none has been saved.
      */
     public String getPreferredRendererClassName(
             final Class<? extends DataValue> valueClass) {
@@ -119,16 +123,17 @@ public class RDKitTypesNodePlugin extends AbstractUIPlugin {
         }
         return resultClassName;
     }
+
     /**
      * Returns the shared instance.
      *
      * @return singleton instance of the Plugin
      */
-    public static RDKitTypesNodePlugin getDefault() {
+    public static RDKitTypesPluginActivator getDefault() {
         return plugin;
     }
 
-    /** Get preference name for a given data value class. */ 
+    /** Get preference name for a given data value class. */
     private static String getPreferenceIdentifier(
             final Class<? extends DataValue> valueClass) {
         return "prefRenderer_" + valueClass.getName();

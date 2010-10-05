@@ -1,0 +1,42 @@
+Manifest-Version: 1.0
+Export-Package: org.RDKit,
+ org.rdkit.knime.preferences,
+ org.rdkit.knime.types
+Require-Bundle: org.knime.base,org.eclipse.core.runtime,org.eclipse.ui
+ ,org.eclipse.help,org.eclipse.help.ui
+Bundle-Vendor: rdkit.org
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: rdkit-chem-patches.jar,
+ rdkit-chem.jar,
+ lib/org.RDKit.jar
+Bundle-Version: 1.0
+Bundle-Name: RDKit Chemistry Type Definition Plugin
+Bundle-Activator: org.rdkit.knime.types.RDKitTypesNodePlugin
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.rdkit.knime.types;singleton:=true
+Eclipse-RegisterBuddy: org.knime.base
+
+Name: icons/chemistry.png
+SHA1-Digest: I7+4KSHA1NwKuy/aa3elt04G3GE=
+
+Name: icons/chem.png
+SHA1-Digest: A4ROgxC8VqMOF9q4uO83mWzZ+mc=
+
+Name: LICENSE.txt
+SHA1-Digest: BX1KuxTrnnuAB3OpgEcWgaEwe2I=
+
+Name: tocs/translators.xml
+SHA1-Digest: p6JWBKDVBw2A7pgputyjQHCwTOs=
+
+Name: tocs/chemistry.xml
+SHA1-Digest: /1OzLzvLDkMmVR+naoopKpoZ8xQ=
+
+Name: plugin.xml
+SHA1-Digest: tiKT4c58aQexHBwNmRmsZBRhwcs=
+
+Name: rdkit-chem.jar
+SHA1-Digest: dzAWgw9KIaF9om5ZcGfaMRpqG5Y=
+
+Name: icons/translator.png
+SHA1-Digest: taqEEZFPejKgKUuP4omSSOv4+2k=
+

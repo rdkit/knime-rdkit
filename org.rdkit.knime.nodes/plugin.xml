@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   <!-- This is an example for providing an own category 
+      <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="Category containing my nodes"
+            icon="icons/default.png"
+            level-id="myNodes"
+            name="My nodes"
+            path="/"/>
+   </extension>
+   -->
+   
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
+            id="org.knime.workshop.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
+      <node
+            factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
+            id="org.knime.workshop.rdkfingerprint.RDKitFingerprintNodeFactory"/>
+      <node
+            factory-class="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"
+            id="org.knime.workshop.tomolconverter.RDKitToMolConverterNodeFactory"/>
+   </extension>
+   
+</plugin>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../default.png" type="Manipulator">
+	<name>RDKit To Mol Converter</name>
+	
+	<shortDescription>
+	    Generates RDKit molecules froom an input SMILES column
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Generates RDKit molecule column from an input SMILES column and appends
+		it to the table.</intro>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data">Data with SMILES column</inPort>
+		<outPort index="0" name="Output data">Data with RDKit molecule column</outPort>
+	</ports>	
+</knimeNode>

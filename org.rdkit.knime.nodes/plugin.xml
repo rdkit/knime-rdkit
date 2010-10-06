@@ -17,19 +17,33 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
+            category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
             id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
       <node
+            category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
             id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
       <node
+            category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"
             id="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"/>
       <node
+            category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
             id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
 
 
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="Nodes using RDKit"
+            icon="icons/default.png"
+            level-id="rdkit"
+            name="RDKit"
+            path="/chemistry">
+      </category>
    </extension>
    
 </plugin>

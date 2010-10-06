@@ -5,9 +5,9 @@ Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Bundle-Version: 0.9.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: org.knime.base;bundle-version="2.3.0",
- org.knime.chem.types;bundle-version="2.3.0",
- org.knime.workbench.repository;bundle-version="2.3.0",
+Require-Bundle: org.knime.base,
+ org.knime.chem.types,
+ org.knime.workbench.repository,
  org.rdkit.knime.types;bundle-version="0.9.0"
 Export-Package: org.RDKit,
  org.rdkit.knime.nodes,

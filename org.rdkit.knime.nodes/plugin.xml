@@ -32,6 +32,10 @@
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
             id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
+      <node
+            category-path="/chemistry/rdkit"
+            factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
+            id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
 
 
    </extension>

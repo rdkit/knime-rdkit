@@ -174,6 +174,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     	// check user settings against input spec here 
     	final int[] indices = findColumnIndices(inSpec);
 
+    	// build an RDKit reaction from the SMARTS:
     	ChemicalReaction rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
     	if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
         try {
@@ -199,9 +200,17 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 	    				ownMol=true;
 	    			}
 	    			if(mol!=null){
+	    				// the reaction takes a vector of reactants. For this single-component reaction that
+	    				// vector is one long:
 	    				ROMol_Vect rs=new ROMol_Vect(1);
 	    				rs.set(0,mol);
+	    				// ChemicalReaction.runReactants() returns a vector of vectors,
+	    				// the outer vector allows the reaction queries to match reactants
+	    				// multiple times, the inner vectors allow each reaction to have multiple
+	    				// products.
 	    				ROMol_Vect_Vect prods=rxn.runReactants(rs);
+	    				// if the reaction could not be applied to the reactants, we get an
+	    				// empty vector, check for that now:
 	    				if(!prods.isEmpty()){
 	    					for(int psetidx=0;psetidx<prods.size();psetidx++){
 	    						for(int pidx=0;pidx<prods.get(psetidx).size();pidx++){

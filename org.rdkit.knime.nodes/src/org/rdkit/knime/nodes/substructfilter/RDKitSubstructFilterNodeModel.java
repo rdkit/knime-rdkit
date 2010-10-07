@@ -111,9 +111,11 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
        }
    	   final int[] indices = findColumnIndices(inSpecs[0]);
 
+   	   ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+   	   if(pattern==null) throw new InvalidSettingsException("unparseable smarts: "+m_smarts.getStringValue());
+   	   
    	   return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
     }
-   
    
    private int[] findColumnIndices(final DataTableSpec spec)
            throws InvalidSettingsException {
@@ -148,8 +150,8 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
     	// check user settings against input spec here 
     	final int[] indices = findColumnIndices(inSpec);
 
+    	// construct an RDKit molecule from the SMARTS pattern:
     	ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
-    	if(pattern==null) throw new InvalidSettingsException("unparseable smarts: "+m_smarts.getStringValue());
         try {
             int count = 0;
             RowIterator it=inData[0].iterator();
@@ -157,7 +159,8 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                 DataRow row = it.next();
                 boolean matched=false;
                 count++;
-
+                // REFACTOR: this code for grabbing smiles or RDKitMolValue data from a cell
+                // and converting it into an ROMol occurs in almost every node; it should be pulled out
     			DataCell firstCell = row.getCell(indices[0]);
     			if (firstCell.isMissing()){
     				matched = false;
@@ -169,6 +172,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
 	    				mol=((RDKitMolValue)firstCell).getMoleculeValue();
 	    				ownMol=false;
 	    			} else {
+	    				// it's a SMILES column, so construct an RDKit molecule from the SMILES:
 	    				String smiles=((StringValue)firstCell).toString();
 	    				mol=RDKFuncs.MolFromSmiles(smiles);
 	    				ownMol=true;
@@ -176,6 +180,8 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
 	    			if(mol==null){
 	    				matched = false;
 	    			} else {
+	    				// after all that work we can now check whether or not there is
+	    				// a substructure match:
 	    				matched = mol.hasSubstructMatch(pattern);
 	    				if(ownMol) mol.delete();
 	    			}

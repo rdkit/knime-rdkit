@@ -199,6 +199,14 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
     	ChemicalReaction rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
     	if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
 
+    	// the node has two modes of operation, determined by the doMatrix flag:
+    	//   doMatrix=false:  The two input tables are stepped through row by row.
+    	//      i.e. the first row of table 1 is combined with the first row of table 2, then
+    	//      the second row of table 1 is combined with the second row of table 2.
+    	//      This process repeats until one of the tables runs out of rows.
+    	//
+    	//   doMatrix=true: the two input tables are combined as an NxM matrix.
+    	//      i.e. every row in table 1 is combined with every other row of table 2.
     	boolean doMatrix=m_doMatrix.getBooleanValue();
         try {
         	int r1Count=0;
@@ -210,46 +218,48 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                 r1Count++;
                 DataCell r1Cell = row1.getCell(indices[0]);
                 if(!doMatrix){
+                	// if we're not doing the matrix combination and we've iterated through table 2,
+                	// then we're done.
                 	if(!it2.hasNext()) {
                 		break;
-                	}
-                	if(r1Cell.isMissing()){
-    					DataRow foorow=it2.next();
-                		r2Count++;
                 	}
                 } else {
                 	r2Count=0;
                 	it2=inData[1].iterator();
                 }
 
-    			if (r1Cell.isMissing()){
-    				continue;
-    			}
-
     			boolean ownMol1=false;
     			ROMol mol1=null;
-    			if(inSpec1.getColumnSpec(indices[0]).getType().isCompatible(RDKitMolValue.class)){
-    				mol1=((RDKitMolValue)r1Cell).getMoleculeValue();
-    				ownMol1=false;
-    			} else {
-    				String smiles=((StringValue)r1Cell).toString();
-    				mol1=RDKFuncs.MolFromSmiles(smiles);
-    				ownMol1=true;
+    			if (!r1Cell.isMissing()){
+	    			if(inSpec1.getColumnSpec(indices[0]).getType().isCompatible(RDKitMolValue.class)){
+	    				mol1=((RDKitMolValue)r1Cell).getMoleculeValue();
+	    				ownMol1=false;
+	    			} else {
+	    				String smiles=((StringValue)r1Cell).toString();
+	    				mol1=RDKFuncs.MolFromSmiles(smiles);
+	    				ownMol1=true;
+	    			}
     			}
     			if(mol1==null){
+    				// no first molecule, so might as well bail on the rest of the work
     				if(!doMatrix){
+    					// but if we aren't doing the matrix combination, we do need to
+    					// increment the second table iterator:
     					DataRow foorow=it2.next();
                 		r2Count++;
     				}
     				continue;
     			}
-				ROMol_Vect rs=new ROMol_Vect(2);
+
+    			ROMol_Vect rs=new ROMol_Vect(2);
 				rs.set(0,mol1);
+				// make like we're going to loop, but we will break out below if doMatrix is false
     			while(it2.hasNext()){
                     DataRow row2=it2.next();
                     r2Count++;
                     DataCell r2Cell = row2.getCell(indices[1]);
                     if(!r2Cell.isMissing()){ 
+                    	// usual boilerplate for building the second molecule:
             			boolean ownMol2=false;
             			ROMol mol2=null;
             			if(inSpec2.getColumnSpec(indices[1]).getType().isCompatible(RDKitMolValue.class)){
@@ -262,6 +272,10 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
             			}
                     	if(mol2!=null){
 		    				rs.set(1,mol2);
+		    				// ChemicalReaction.runReactants() returns a vector of vectors,
+		    				// the outer vector allows the reaction queries to match reactants
+		    				// multiple times, the inner vectors allow each reaction to have multiple
+		    				// products.
 		    				ROMol_Vect_Vect prods=rxn.runReactants(rs);
 		    				if(!prods.isEmpty()){
 		    					for(int psetidx=0;psetidx<prods.size();psetidx++){
@@ -284,7 +298,6 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 	    			if(!doMatrix) break;
     			}
 				if(ownMol1) mol1.delete();
-    			
             }
         } finally {
             productTable.close();

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../default.png" type="Manipulator">
+	<name>RDKit Two Component Reaction</name>
+	
+	<shortDescription>
+	    Applies a reaction to input SMILES columns
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Applies a reaction to input SMILES columns.</intro>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Reactant 1">Data with SMILES or RDKit Molecule column</inPort>
+		<inPort index="1" name="Reactant 2">Data with SMILES or RDKit Molecule column</inPort>
+		<outPort index="0" name="Product molecules">Product molecules</outPort>
+	</ports>	
+</knimeNode>

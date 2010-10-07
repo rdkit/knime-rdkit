@@ -36,6 +36,10 @@
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
+      <node
+            category-path="/chemistry/rdkit"
+            factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"
+            id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
 
 
    </extension>

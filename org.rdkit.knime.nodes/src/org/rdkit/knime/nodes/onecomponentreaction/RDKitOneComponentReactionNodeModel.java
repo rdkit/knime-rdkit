@@ -97,9 +97,15 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
        if (m_smarts.toString() == "") {
-           throw new InvalidSettingsException("No row filter specified");
+           throw new InvalidSettingsException("No reaction smarts specified");
        }
-   	   final int[] indices = findColumnIndices(inSpecs[0]);
+	   ChemicalReaction rxn;
+	   rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
+	   if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
+	   if(rxn.getNumReactantTemplates()!=1) throw new InvalidSettingsException("reaction should only have one reactant, it has: "
+				+ rxn.getNumReactantTemplates());
+
+       final int[] indices = findColumnIndices(inSpecs[0]);
 
        return createOutSpecs();
     }
@@ -139,8 +145,6 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 
     	ChemicalReaction rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
     	if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
-    	if(rxn.getNumReactantTemplates()!=1) throw new InvalidSettingsException("reaction should only have one reactant, it has: "
-    			+ rxn.getNumReactantTemplates());
         try {
             int count = 0;
             RowIterator it=inData[0].iterator();

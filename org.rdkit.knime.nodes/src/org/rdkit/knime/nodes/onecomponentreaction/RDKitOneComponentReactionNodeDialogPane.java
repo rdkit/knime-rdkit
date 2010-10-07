@@ -40,7 +40,7 @@ public class RDKitOneComponentReactionNodeDialogPane extends DefaultNodeSettings
                 StringValue.class));
         super.addDialogComponent(
                 new DialogComponentString(createSmartsModel(), 
-                        "Smarts query: "));
+                        "Reaction SMARTS: "));
     }
     
     /**

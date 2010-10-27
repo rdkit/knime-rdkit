@@ -53,10 +53,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
-public class RDKitSubstructFilterNodeFactory 
+public class RDKitSubstructFilterNodeFactory
         extends NodeFactory<RDKitSubstructFilterNodeModel> {
 
     /**
@@ -80,7 +80,8 @@ public class RDKitSubstructFilterNodeFactory
      */
     @Override
     public NodeView<RDKitSubstructFilterNodeModel> createNodeView(
-            final int viewIndex, final RDKitSubstructFilterNodeModel nodeModel) {
+            final int viewIndex,
+            final RDKitSubstructFilterNodeModel nodeModel) {
         return null;
     }
 

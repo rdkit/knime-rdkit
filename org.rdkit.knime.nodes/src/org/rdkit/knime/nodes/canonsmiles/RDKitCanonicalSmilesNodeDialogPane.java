@@ -56,7 +56,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
 public class RDKitCanonicalSmilesNodeDialogPane extends DefaultNodeSettingsPane {
@@ -66,32 +66,32 @@ public class RDKitCanonicalSmilesNodeDialogPane extends DefaultNodeSettingsPane 
      */
     RDKitCanonicalSmilesNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "SMILES column: ", 0, 
+                createFirstColumnModel(), "SMILES column: ", 0,
                 StringValue.class));
-        super.addDialogComponent(
-                new DialogComponentString(createNewColumnModel(), 
-                        "New column name: "));
-        super.addDialogComponent(
-        		new DialogComponentBoolean(createBooleanModel(),
-        				"Remove source columns"));
+        super.addDialogComponent(new DialogComponentString(
+                createNewColumnModel(), "New column name: "));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createBooleanModel(), "Remove source columns"));
     }
-    
+
     /**
      * @return settings model for first column selection
      */
     static final SettingsModelString createFirstColumnModel() {
         return new SettingsModelString("first_column", "");
     }
-    
+
     /**
      * @return settings model for the new appended column name
      */
     static final SettingsModelString createNewColumnModel() {
         return new SettingsModelString("new_column_name", "RDKit canon SMILES");
     }
-    
-    /** @return settings model for check box whether to remove source columns. */
+
+    /**
+     * @return settings model for check box whether to remove source columns.
+     */
     static final SettingsModelBoolean createBooleanModel() {
-    	return new SettingsModelBoolean("remove_source_columns", false);
+        return new SettingsModelBoolean("remove_source_columns", false);
     }
 }

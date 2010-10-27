@@ -53,11 +53,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
-public class RDKitCanonicalSmilesNodeFactory 
-        extends NodeFactory<RDKitCanonicalSmilesNodeModel> {
+public class RDKitCanonicalSmilesNodeFactory extends
+        NodeFactory<RDKitCanonicalSmilesNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -80,7 +80,8 @@ public class RDKitCanonicalSmilesNodeFactory
      */
     @Override
     public NodeView<RDKitCanonicalSmilesNodeModel> createNodeView(
-            final int viewIndex, final RDKitCanonicalSmilesNodeModel nodeModel) {
+            final int viewIndex,
+            final RDKitCanonicalSmilesNodeModel nodeModel) {
         return null;
     }
 

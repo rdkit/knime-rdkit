@@ -51,48 +51,39 @@ package org.rdkit.knime.nodes.substructfilter;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.node.preproc.filter.row.RowFilterIterator;
+import org.RDKit.RDKFuncs;
+import org.RDKit.ROMol;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
-import org.knime.chem.types.SmilesCell;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.RDKit.*;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
 public class RDKitSubstructFilterNodeModel extends NodeModel {
-    
-    private final SettingsModelString m_first = 
-        RDKitSubstructFilterNodeDialogPane.createFirstColumnModel();
-    
-    private final SettingsModelString m_smarts = 
-        RDKitSubstructFilterNodeDialogPane.createSmartsModel();
-    
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(RDKitSubstructFilterNodeModel.class);
-    
+
+    private final SettingsModelString m_first =
+            RDKitSubstructFilterNodeDialogPane.createFirstColumnModel();
+
+    private final SettingsModelString m_smarts =
+            RDKitSubstructFilterNodeDialogPane.createSmartsModel();
+
     /**
      * Create new node model with one data in- and one outport.
      */
@@ -103,129 +94,140 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-   @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-       if (m_smarts.toString() == "") {
-           throw new InvalidSettingsException("No row filter specified");
-       }
-   	   final int[] indices = findColumnIndices(inSpecs[0]);
+        if (m_smarts.toString() == "") {
+            throw new InvalidSettingsException("No row filter specified");
+        }
 
-   	   ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
-   	   if(pattern==null) throw new InvalidSettingsException("unparseable smarts: "+m_smarts.getStringValue());
-   	   
-   	   return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
+        ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        if (pattern == null)
+            throw new InvalidSettingsException("unparseable smarts: "
+                    + m_smarts.getStringValue());
+
+        return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
     }
-   
-   private int[] findColumnIndices(final DataTableSpec spec)
-           throws InvalidSettingsException {
-	   	String first = m_first.getStringValue();
-		if (first == null ){
-			throw new InvalidSettingsException("Not configured yet");
-		}
-		int firstIndex = spec.findColumnIndex(first);
-		if (firstIndex < 0) {
-			throw new InvalidSettingsException(
-					"No such column in input table: " + first);
-		}
-		DataType firstType = spec.getColumnSpec(firstIndex).getType();
-		if (!firstType.isCompatible(SmilesValue.class) && !firstType.isCompatible(RDKitMolValue.class)) {
-			throw new InvalidSettingsException(
-					"Column '" + first + "' does not contain SMILES");
-		}
-		return new int[]{firstIndex};
-   }
 
-   /**
-    * {@inheritDoc}
-    */
+    private int[] findColumnIndices(final DataTableSpec spec)
+            throws InvalidSettingsException {
+        String first = m_first.getStringValue();
+        if (first == null) {
+            throw new InvalidSettingsException("Not configured yet");
+        }
+        int firstIndex = spec.findColumnIndex(first);
+        if (firstIndex < 0) {
+            throw new InvalidSettingsException(
+                    "No such column in input table: " + first);
+        }
+        DataType firstType = spec.getColumnSpec(firstIndex).getType();
+        if (!firstType.isCompatible(SmilesValue.class)
+                && !firstType.isCompatible(RDKitMolValue.class)) {
+            throw new InvalidSettingsException("Column '" + first
+                    + "' does not contain SMILES");
+        }
+        return new int[]{firstIndex};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-    	DataTableSpec inSpec = inData[0].getDataTableSpec();
+        DataTableSpec inSpec = inData[0].getDataTableSpec();
 
-    	BufferedDataContainer matchTable = exec.createDataContainer(inData[0].getDataTableSpec());
-    	BufferedDataContainer failTable = exec.createDataContainer(inData[0].getDataTableSpec());
-   
-    	// check user settings against input spec here 
-    	final int[] indices = findColumnIndices(inSpec);
+        BufferedDataContainer matchTable =
+                exec.createDataContainer(inData[0].getDataTableSpec());
+        BufferedDataContainer failTable =
+                exec.createDataContainer(inData[0].getDataTableSpec());
 
-    	// construct an RDKit molecule from the SMARTS pattern:
-    	ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        // check user settings against input spec here
+        final int[] indices = findColumnIndices(inSpec);
+
+        // construct an RDKit molecule from the SMARTS pattern:
+        ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
         try {
             int count = 0;
-            RowIterator it=inData[0].iterator();
+            RowIterator it = inData[0].iterator();
             while (it.hasNext()) {
                 DataRow row = it.next();
-                boolean matched=false;
+                boolean matched = false;
                 count++;
-                // REFACTOR: this code for grabbing smiles or RDKitMolValue data from a cell
-                // and converting it into an ROMol occurs in almost every node; it should be pulled out
-    			DataCell firstCell = row.getCell(indices[0]);
-    			if (firstCell.isMissing()){
-    				matched = false;
-    			} else {
-	    			DataType firstType = inSpec.getColumnSpec(indices[0]).getType();
-	    			boolean ownMol;
-	    			ROMol mol=null;
-	    			if(firstType.isCompatible(RDKitMolValue.class)){
-	    				mol=((RDKitMolValue)firstCell).getMoleculeValue();
-	    				ownMol=false;
-	    			} else {
-	    				// it's a SMILES column, so construct an RDKit molecule from the SMILES:
-	    				String smiles=((StringValue)firstCell).toString();
-	    				mol=RDKFuncs.MolFromSmiles(smiles);
-	    				ownMol=true;
-	    			}
-	    			if(mol==null){
-	    				matched = false;
-	    			} else {
-	    				// after all that work we can now check whether or not there is
-	    				// a substructure match:
-	    				matched = mol.hasSubstructMatch(pattern);
-	    				if(ownMol) mol.delete();
-	    			}
-    			}
-                if(matched){ 
-                	matchTable.addRowToTable(row);
+                // REFACTOR: this code for grabbing smiles or RDKitMolValue data
+                // from a cell
+                // and converting it into an ROMol occurs in almost every node;
+                // it should be pulled out
+                DataCell firstCell = row.getCell(indices[0]);
+                if (firstCell.isMissing()) {
+                    matched = false;
                 } else {
-                	failTable.addRowToTable(row);
+                    DataType firstType =
+                            inSpec.getColumnSpec(indices[0]).getType();
+                    boolean ownMol;
+                    ROMol mol = null;
+                    if (firstType.isCompatible(RDKitMolValue.class)) {
+                        mol = ((RDKitMolValue)firstCell).getMoleculeValue();
+                        ownMol = false;
+                    } else {
+                        // it's a SMILES column, so construct an RDKit molecule
+                        // from the SMILES:
+                        String smiles = ((StringValue)firstCell).toString();
+                        mol = RDKFuncs.MolFromSmiles(smiles);
+                        ownMol = true;
+                    }
+                    if (mol == null) {
+                        matched = false;
+                    } else {
+                        // after all that work we can now check whether or not
+                        // there is
+                        // a substructure match:
+                        matched = mol.hasSubstructMatch(pattern);
+                        if (ownMol)
+                            mol.delete();
+                    }
+                }
+                if (matched) {
+                    matchTable.addRowToTable(row);
+                } else {
+                    failTable.addRowToTable(row);
                 }
             }
         } finally {
             matchTable.close();
             failTable.close();
         }
-    	
-    	return new BufferedDataTable[]{matchTable.getTable(),failTable.getTable()};
+
+        return new BufferedDataTable[]{matchTable.getTable(),
+                failTable.getTable()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-        
+        // nothing to reset
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // node does not have internals
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // node does not have internals
     }
 
     /**
@@ -233,7 +235,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
         m_smarts.loadSettingsFrom(settings);
     }

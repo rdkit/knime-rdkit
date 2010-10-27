@@ -53,10 +53,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
-public class RDKitTwoComponentReactionNodeFactory 
+public class RDKitTwoComponentReactionNodeFactory
         extends NodeFactory<RDKitTwoComponentReactionNodeModel> {
 
     /**
@@ -80,7 +80,8 @@ public class RDKitTwoComponentReactionNodeFactory
      */
     @Override
     public NodeView<RDKitTwoComponentReactionNodeModel> createNodeView(
-            final int viewIndex, final RDKitTwoComponentReactionNodeModel nodeModel) {
+            final int viewIndex,
+            final RDKitTwoComponentReactionNodeModel nodeModel) {
         return null;
     }
 

@@ -52,8 +52,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
-import org.knime.base.node.io.filereader.ColProperty;
-import org.knime.base.node.preproc.filter.row.RowFilterIterator;
+import org.RDKit.ChemicalReaction;
+import org.RDKit.RDKFuncs;
+import org.RDKit.ROMol;
+import org.RDKit.ROMol_Vect;
+import org.RDKit.ROMol_Vect_Vect;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -62,12 +66,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
-import org.knime.chem.types.SmilesCell;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -80,29 +80,32 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.RDKit.*;
-import org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeDialogPane;
 import org.rdkit.knime.types.RDKitMolCell;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
 public class RDKitTwoComponentReactionNodeModel extends NodeModel {
-    
-    private final SettingsModelString m_reactant1Col = 
-        RDKitTwoComponentReactionNodeDialogPane.createReactant1ColumnModel();
-    private final SettingsModelString m_reactant2Col = 
-        RDKitTwoComponentReactionNodeDialogPane.createReactant2ColumnModel();
-    private final SettingsModelString m_smarts = 
-        RDKitTwoComponentReactionNodeDialogPane.createSmartsModel();
+
+    private final SettingsModelString m_reactant1Col =
+            RDKitTwoComponentReactionNodeDialogPane
+                    .createReactant1ColumnModel();
+
+    private final SettingsModelString m_reactant2Col =
+            RDKitTwoComponentReactionNodeDialogPane
+                    .createReactant2ColumnModel();
+
+    private final SettingsModelString m_smarts =
+            RDKitTwoComponentReactionNodeDialogPane.createSmartsModel();
+
     private final SettingsModelBoolean m_doMatrix =
-    	RDKitTwoComponentReactionNodeDialogPane.createBooleanModel();
-    
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(RDKitTwoComponentReactionNodeModel.class);
-    
+            RDKitTwoComponentReactionNodeDialogPane.createBooleanModel();
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RDKitTwoComponentReactionNodeModel.class);
+
     /**
      * Create new node model with one data in- and one outport.
      */
@@ -110,228 +113,272 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
         super(2, 1);
     }
 
-    private DataTableSpec[] createOutSpecs(){
-	   Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
-       DataColumnSpecCreator crea =
-    	   new DataColumnSpecCreator("Product",RDKitMolCell.TYPE);
-       cSpec.add(crea.createSpec());
-       crea = new DataColumnSpecCreator("Product Index",IntCell.TYPE);
-       cSpec.add(crea.createSpec());
-       crea = new DataColumnSpecCreator("Reactant 1 sequence index",IntCell.TYPE);
-       cSpec.add(crea.createSpec());
-       crea = new DataColumnSpecCreator("Reactant 1",RDKitMolCell.TYPE);
-       cSpec.add(crea.createSpec());
-       crea = new DataColumnSpecCreator("Reactant 2 sequence index",IntCell.TYPE);
-       cSpec.add(crea.createSpec());
-       crea = new DataColumnSpecCreator("Reactant 2",RDKitMolCell.TYPE);
-       cSpec.add(crea.createSpec());
-       DataTableSpec tSpec = new DataTableSpec("output", cSpec.toArray(new DataColumnSpec[cSpec.size()]));
-       
-       return new DataTableSpec[]{ tSpec };
+    private DataTableSpec[] createOutSpecs() {
+        Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
+        DataColumnSpecCreator crea =
+                new DataColumnSpecCreator("Product", RDKitMolCell.TYPE);
+        cSpec.add(crea.createSpec());
+        crea = new DataColumnSpecCreator("Product Index", IntCell.TYPE);
+        cSpec.add(crea.createSpec());
+        crea =
+                new DataColumnSpecCreator("Reactant 1 sequence index",
+                        IntCell.TYPE);
+        cSpec.add(crea.createSpec());
+        crea = new DataColumnSpecCreator("Reactant 1", RDKitMolCell.TYPE);
+        cSpec.add(crea.createSpec());
+        crea =
+                new DataColumnSpecCreator("Reactant 2 sequence index",
+                        IntCell.TYPE);
+        cSpec.add(crea.createSpec());
+        crea = new DataColumnSpecCreator("Reactant 2", RDKitMolCell.TYPE);
+        cSpec.add(crea.createSpec());
+        DataTableSpec tSpec =
+                new DataTableSpec("output",
+                        cSpec.toArray(new DataColumnSpec[cSpec.size()]));
+
+        return new DataTableSpec[]{tSpec};
     }
+
     /**
      * {@inheritDoc}
      */
-   @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-	   if (m_smarts.toString() == "") {
-           throw new InvalidSettingsException("No reaction smarts provided");
-       }
-	   ChemicalReaction rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
-	   if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
-	   if(rxn.getNumReactantTemplates()!=2) throw new InvalidSettingsException("reaction should only have two reactants, it has: "
-			+ rxn.getNumReactantTemplates());
+        if (m_smarts.toString() == "") {
+            throw new InvalidSettingsException("No reaction smarts provided");
+        }
+        ChemicalReaction rxn =
+                RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
+        if (rxn == null)
+            throw new InvalidSettingsException("unparseable reaction smarts: "
+                    + m_smarts.getStringValue());
+        if (rxn.getNumReactantTemplates() != 2)
+            throw new InvalidSettingsException(
+                    "reaction should only have two reactants, it has: "
+                            + rxn.getNumReactantTemplates());
 
-       final int[] indices = findColumnIndices(inSpecs);
+        final int[] indices = findColumnIndices(inSpecs);
 
-       return createOutSpecs();
+        return createOutSpecs();
     }
-   
-   
-   private int[] findColumnIndices(final DataTableSpec[] specs)
-           throws InvalidSettingsException {
-	   	String first = m_reactant1Col.getStringValue();
-		if (first == null ){
-			throw new InvalidSettingsException("Not configured yet");
-		}
-		int firstIndex = specs[0].findColumnIndex(first);
-		if (firstIndex < 0) {
-			throw new InvalidSettingsException(
-					"No such column in first input table: " + first);
-		}
-		DataType firstType = specs[0].getColumnSpec(firstIndex).getType();
-		if (!firstType.isCompatible(SmilesValue.class) && !firstType.isCompatible(RDKitMolValue.class)) {
-			throw new InvalidSettingsException(
-					"Column '" + first + "' does not contain SMILES");
-		}
-	   	String second = m_reactant2Col.getStringValue();
-		if (second == null ){
-			throw new InvalidSettingsException("Not configured yet");
-		}
-		int secondIndex = specs[1].findColumnIndex(second);
-		if (secondIndex < 0) {
-			throw new InvalidSettingsException(
-					"No such column in second input table: " + second);
-		}
-		DataType secondType = specs[1].getColumnSpec(secondIndex).getType();
-		if (!secondType.isCompatible(SmilesValue.class) && !secondType.isCompatible(RDKitMolValue.class)) {
-			throw new InvalidSettingsException(
-					"Column '" + second + "' does not contain SMILES");
-		}
-		return new int[]{firstIndex,secondIndex};
-   }
 
-   /**
-    * {@inheritDoc}
-    */
+    private int[] findColumnIndices(final DataTableSpec[] specs)
+            throws InvalidSettingsException {
+        String first = m_reactant1Col.getStringValue();
+        if (first == null) {
+            throw new InvalidSettingsException("Not configured yet");
+        }
+        int firstIndex = specs[0].findColumnIndex(first);
+        if (firstIndex < 0) {
+            throw new InvalidSettingsException(
+                    "No such column in first input table: " + first);
+        }
+        DataType firstType = specs[0].getColumnSpec(firstIndex).getType();
+        if (!firstType.isCompatible(SmilesValue.class)
+                && !firstType.isCompatible(RDKitMolValue.class)) {
+            throw new InvalidSettingsException("Column '" + first
+                    + "' does not contain SMILES");
+        }
+        String second = m_reactant2Col.getStringValue();
+        if (second == null) {
+            throw new InvalidSettingsException("Not configured yet");
+        }
+        int secondIndex = specs[1].findColumnIndex(second);
+        if (secondIndex < 0) {
+            throw new InvalidSettingsException(
+                    "No such column in second input table: " + second);
+        }
+        DataType secondType = specs[1].getColumnSpec(secondIndex).getType();
+        if (!secondType.isCompatible(SmilesValue.class)
+                && !secondType.isCompatible(RDKitMolValue.class)) {
+            throw new InvalidSettingsException("Column '" + second
+                    + "' does not contain SMILES");
+        }
+        return new int[]{firstIndex, secondIndex};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-    	DataTableSpec inSpec1 = inData[0].getDataTableSpec();
-    	DataTableSpec inSpec2 = inData[1].getDataTableSpec();
-    	
-    	BufferedDataContainer productTable = exec.createDataContainer(createOutSpecs()[0]);
-   
-    	// check user settings against input spec here 
-    	final int[] indices = findColumnIndices(new DataTableSpec[] {inSpec1,inSpec2});
+        DataTableSpec inSpec1 = inData[0].getDataTableSpec();
+        DataTableSpec inSpec2 = inData[1].getDataTableSpec();
 
-    	ChemicalReaction rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
-    	if(rxn==null) throw new InvalidSettingsException("unparseable reaction smarts: "+m_smarts.getStringValue());  	
+        BufferedDataContainer productTable =
+                exec.createDataContainer(createOutSpecs()[0]);
 
-    	// the node has two modes of operation, determined by the doMatrix flag:
-    	//   doMatrix=false:  The two input tables are stepped through row by row.
-    	//      i.e. the first row of table 1 is combined with the first row of table 2, then
-    	//      the second row of table 1 is combined with the second row of table 2.
-    	//      This process repeats until one of the tables runs out of rows.
-    	//
-    	//   doMatrix=true: the two input tables are combined as an NxM matrix.
-    	//      i.e. every row in table 1 is combined with every other row of table 2.
-    	boolean doMatrix=m_doMatrix.getBooleanValue();
+        // check user settings against input spec here
+        final int[] indices =
+                findColumnIndices(new DataTableSpec[]{inSpec1, inSpec2});
+
+        ChemicalReaction rxn =
+                RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
+        if (rxn == null)
+            throw new InvalidSettingsException("unparseable reaction smarts: "
+                    + m_smarts.getStringValue());
+
+        // the node has two modes of operation, determined by the doMatrix flag:
+        // doMatrix=false: The two input tables are stepped through row by row.
+        // i.e. the first row of table 1 is combined with the first row of table
+        // 2, then
+        // the second row of table 1 is combined with the second row of table 2.
+        // This process repeats until one of the tables runs out of rows.
+        //
+        // doMatrix=true: the two input tables are combined as an NxM matrix.
+        // i.e. every row in table 1 is combined with every other row of table
+        // 2.
+        boolean doMatrix = m_doMatrix.getBooleanValue();
         try {
-        	int r1Count=0;
-            RowIterator it1=inData[0].iterator();
-        	int r2Count=0;
-            RowIterator it2=inData[1].iterator();
+            int r1Count = 0;
+            RowIterator it1 = inData[0].iterator();
+            int r2Count = 0;
+            RowIterator it2 = inData[1].iterator();
             while (it1.hasNext()) {
                 DataRow row1 = it1.next();
                 r1Count++;
                 DataCell r1Cell = row1.getCell(indices[0]);
-                if(!doMatrix){
-                	// if we're not doing the matrix combination and we've iterated through table 2,
-                	// then we're done.
-                	if(!it2.hasNext()) {
-                		break;
-                	}
+                if (!doMatrix) {
+                    // if we're not doing the matrix combination and we've
+                    // iterated through table 2,
+                    // then we're done.
+                    if (!it2.hasNext()) {
+                        break;
+                    }
                 } else {
-                	r2Count=0;
-                	it2=inData[1].iterator();
+                    r2Count = 0;
+                    it2 = inData[1].iterator();
                 }
 
-    			boolean ownMol1=false;
-    			ROMol mol1=null;
-    			if (!r1Cell.isMissing()){
-	    			if(inSpec1.getColumnSpec(indices[0]).getType().isCompatible(RDKitMolValue.class)){
-	    				mol1=((RDKitMolValue)r1Cell).getMoleculeValue();
-	    				ownMol1=false;
-	    			} else {
-	    				String smiles=((StringValue)r1Cell).toString();
-	    				mol1=RDKFuncs.MolFromSmiles(smiles);
-	    				ownMol1=true;
-	    			}
-    			}
-    			if(mol1==null){
-    				// no first molecule, so might as well bail on the rest of the work
-    				if(!doMatrix){
-    					// but if we aren't doing the matrix combination, we do need to
-    					// increment the second table iterator:
-    					DataRow foorow=it2.next();
-                		r2Count++;
-    				}
-    				continue;
-    			}
+                boolean ownMol1 = false;
+                ROMol mol1 = null;
+                if (!r1Cell.isMissing()) {
+                    if (inSpec1.getColumnSpec(indices[0]).getType()
+                            .isCompatible(RDKitMolValue.class)) {
+                        mol1 = ((RDKitMolValue)r1Cell).getMoleculeValue();
+                        ownMol1 = false;
+                    } else {
+                        String smiles = ((StringValue)r1Cell).toString();
+                        mol1 = RDKFuncs.MolFromSmiles(smiles);
+                        ownMol1 = true;
+                    }
+                }
+                if (mol1 == null) {
+                    // no first molecule, so might as well bail on the rest of
+                    // the work
+                    if (!doMatrix) {
+                        // but if we aren't doing the matrix combination, we do
+                        // need to
+                        // increment the second table iterator:
+                        DataRow foorow = it2.next();
+                        r2Count++;
+                    }
+                    continue;
+                }
 
-    			ROMol_Vect rs=new ROMol_Vect(2);
-				rs.set(0,mol1);
-				// make like we're going to loop, but we will break out below if doMatrix is false
-    			while(it2.hasNext()){
-                    DataRow row2=it2.next();
+                ROMol_Vect rs = new ROMol_Vect(2);
+                rs.set(0, mol1);
+                // make like we're going to loop, but we will break out below if
+                // doMatrix is false
+                while (it2.hasNext()) {
+                    DataRow row2 = it2.next();
                     r2Count++;
                     DataCell r2Cell = row2.getCell(indices[1]);
-                    if(!r2Cell.isMissing()){ 
-                    	// usual boilerplate for building the second molecule:
-            			boolean ownMol2=false;
-            			ROMol mol2=null;
-            			if(inSpec2.getColumnSpec(indices[1]).getType().isCompatible(RDKitMolValue.class)){
-            				mol2=((RDKitMolValue)r2Cell).getMoleculeValue();
-            				ownMol2=false;
-            			} else {
-            				String smiles=((StringValue)r2Cell).toString();
-            				mol2=RDKFuncs.MolFromSmiles(smiles);
-            				ownMol2=true;
-            			}
-                    	if(mol2!=null){
-		    				rs.set(1,mol2);
-		    				// ChemicalReaction.runReactants() returns a vector of vectors,
-		    				// the outer vector allows the reaction queries to match reactants
-		    				// multiple times, the inner vectors allow each reaction to have multiple
-		    				// products.
-		    				ROMol_Vect_Vect prods=rxn.runReactants(rs);
-		    				if(!prods.isEmpty()){
-		    					for(int psetidx=0;psetidx<prods.size();psetidx++){
-		    						for(int pidx=0;pidx<prods.get(psetidx).size();pidx++){
-				    					DataCell[] cells = new DataCell[productTable.getTableSpec().getNumColumns()];
-				    					cells[0]=new RDKitMolCell(prods.get(psetidx).get(pidx));
-				    					cells[1]=new IntCell(pidx);
-				    					cells[2]=new IntCell(r1Count-1);
-				    					cells[3]=new RDKitMolCell(rs.get(0));
-				    					cells[4]=new IntCell(r2Count-1);
-				    					cells[5]=new RDKitMolCell(rs.get(1));
-				    					DataRow drow=new  DefaultRow(""+(r1Count-1)+"_"+(r2Count-1)+"_"+psetidx+"_"+pidx,cells);
-				    					productTable.addRowToTable(drow);
-		    						}
-		    					}
-		    				}
-		    				if(ownMol2) mol2.delete();
-		    			}
-	    			}
-	    			if(!doMatrix) break;
-    			}
-				if(ownMol1) mol1.delete();
+                    if (!r2Cell.isMissing()) {
+                        // usual boilerplate for building the second molecule:
+                        boolean ownMol2 = false;
+                        ROMol mol2 = null;
+                        if (inSpec2.getColumnSpec(indices[1]).getType()
+                                .isCompatible(RDKitMolValue.class)) {
+                            mol2 = ((RDKitMolValue)r2Cell).getMoleculeValue();
+                            ownMol2 = false;
+                        } else {
+                            String smiles = ((StringValue)r2Cell).toString();
+                            mol2 = RDKFuncs.MolFromSmiles(smiles);
+                            ownMol2 = true;
+                        }
+                        if (mol2 != null) {
+                            rs.set(1, mol2);
+                            // ChemicalReaction.runReactants() returns a vector
+                            // of vectors,
+                            // the outer vector allows the reaction queries to
+                            // match reactants
+                            // multiple times, the inner vectors allow each
+                            // reaction to have multiple
+                            // products.
+                            ROMol_Vect_Vect prods = rxn.runReactants(rs);
+                            if (!prods.isEmpty()) {
+                                for (int psetidx = 0; psetidx < prods.size();
+                                        psetidx++) {
+                                    for (int pidx = 0; pidx < prods
+                                            .get(psetidx).size(); pidx++) {
+                                        DataCell[] cells =
+                                                new DataCell[productTable
+                                                        .getTableSpec()
+                                                        .getNumColumns()];
+                                        cells[0] =
+                                                new RDKitMolCell(prods.get(
+                                                        psetidx).get(pidx));
+                                        cells[1] = new IntCell(pidx);
+                                        cells[2] = new IntCell(r1Count - 1);
+                                        cells[3] = new RDKitMolCell(rs.get(0));
+                                        cells[4] = new IntCell(r2Count - 1);
+                                        cells[5] = new RDKitMolCell(rs.get(1));
+                                        DataRow drow =
+                                                new DefaultRow(""
+                                                        + (r1Count - 1) + "_"
+                                                        + (r2Count - 1) + "_"
+                                                        + psetidx + "_" + pidx,
+                                                        cells);
+                                        productTable.addRowToTable(drow);
+                                    }
+                                }
+                            }
+                            if (ownMol2)
+                                mol2.delete();
+                        }
+                    }
+                    if (!doMatrix)
+                        break;
+                }
+                if (ownMol1)
+                    mol1.delete();
             }
         } finally {
             productTable.close();
         }
-    	
-    	return new BufferedDataTable[]{productTable.getTable()};
+
+        return new BufferedDataTable[]{productTable.getTable()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-        
+        // nothing to reset
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // node does not have internals
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // node does not have internals
     }
 
     /**
@@ -339,7 +386,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_reactant1Col.loadSettingsFrom(settings);
         m_reactant2Col.loadSettingsFrom(settings);
         m_smarts.loadSettingsFrom(settings);

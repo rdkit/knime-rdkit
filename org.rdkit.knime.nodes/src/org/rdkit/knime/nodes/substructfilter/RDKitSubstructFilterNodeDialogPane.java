@@ -50,42 +50,40 @@ package org.rdkit.knime.nodes.substructfilter;
 
 import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
-public class RDKitSubstructFilterNodeDialogPane extends DefaultNodeSettingsPane {
+public class RDKitSubstructFilterNodeDialogPane
+        extends DefaultNodeSettingsPane {
 
     /**
      * Create a new dialog pane with some default components.
      */
     RDKitSubstructFilterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "SMILES column: ", 0, 
+                createFirstColumnModel(), "SMILES column: ", 0,
                 StringValue.class));
-        super.addDialogComponent(
-                new DialogComponentString(createSmartsModel(), 
-                        "Smarts query: "));
+        super.addDialogComponent(new DialogComponentString(createSmartsModel(),
+                "Smarts query: "));
     }
-    
+
     /**
      * @return settings model for first column selection
      */
     static final SettingsModelString createFirstColumnModel() {
         return new SettingsModelString("first_column", "");
     }
-    
+
     /**
      * @return settings model for the new appended column name
      */
     static final SettingsModelString createSmartsModel() {
         return new SettingsModelString("smarts_value", "");
     }
-    
+
 }

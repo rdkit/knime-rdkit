@@ -53,10 +53,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Greg Landrum
  */
-public class RDKitToMolConverterNodeFactory 
+public class RDKitToMolConverterNodeFactory
         extends NodeFactory<RDKitToMolConverterNodeModel> {
 
     /**

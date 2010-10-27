@@ -48,14 +48,18 @@
  */
 package org.rdkit.knime.nodes.canonsmiles;
 
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.chem.types.SmilesCell;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -103,6 +107,35 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (null == m_first.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_first.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_first.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in input table");
+            }
+        }
+        if (null == m_concate.getStringValue()) {
+            if (null != m_first.getStringValue()) {
+                // auto-configure
+                m_concate.setStringValue(m_first.getStringValue()
+                        + " (Canonical)");
+            } else {
+                m_concate.setStringValue("RDKit Canonical Smiles");
+            }
+        }
         ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{rearranger.createSpec()};
     }

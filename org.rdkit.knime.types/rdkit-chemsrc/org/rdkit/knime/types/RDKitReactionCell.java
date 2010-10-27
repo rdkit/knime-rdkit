@@ -49,9 +49,9 @@ package org.rdkit.knime.types;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.RDKit.RDKFuncs;
 import org.RDKit.Char_Vect;
 import org.RDKit.ChemicalReaction;
+import org.RDKit.RDKFuncs;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
@@ -64,18 +64,24 @@ import org.knime.core.data.StringValue;
  *
  * @author Greg Landrum
  */
-public class RDKitReactionCell extends DataCell implements StringValue, RDKitReactionValue {
+public class RDKitReactionCell extends DataCell implements StringValue,
+        RDKitReactionValue {
     /**
      * Convenience access member for
      * <code>DataType.getType(RDKitMolCell.class)</code>.
+     *
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = DataType.getType(RDKitReactionCell.class);
-    private static final long serialVersionUID=0x1;
+    public static final DataType TYPE = DataType
+            .getType(RDKitReactionCell.class);
+
+    private static final long serialVersionUID = 0x1;
+
     /**
-     * Returns the preferred value class of this cell implementation.
-     * This method is called per reflection to determine which is the
-     * preferred renderer, comparator, etc.
+     * Returns the preferred value class of this cell implementation. This
+     * method is called per reflection to determine which is the preferred
+     * renderer, comparator, etc.
+     *
      * @return SmilesValue.class
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
@@ -83,11 +89,11 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
     }
 
     private static final RDKitReactionSerializer SERIALIZER =
-        new RDKitReactionSerializer();
+            new RDKitReactionSerializer();
 
     /**
-     * Returns the factory to read/write DataCells of this class from/to
-     * a DataInput/DataOutput. This method is called via reflection.
+     * Returns the factory to read/write DataCells of this class from/to a
+     * DataInput/DataOutput. This method is called via reflection.
      *
      * @return a serializer for reading/writing cells of this kind
      * @see DataCell
@@ -97,6 +103,7 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
     }
 
     private final String m_smilesString;
+
     private final ChemicalReaction m_rxn;
 
     /**
@@ -111,14 +118,14 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
      * @throws NullPointerException if the given String value is
      *             <code>null</code>
      */
-    public RDKitReactionCell(final ChemicalReaction rxn){
+    public RDKitReactionCell(final ChemicalReaction rxn) {
         if (rxn == null) {
             throw new NullPointerException("Rxn value must not be null.");
         }
-        m_rxn=rxn;
+        m_rxn = rxn;
         m_smilesString = RDKFuncs.ReactionToSmarts(rxn);
     }
-    
+
     /**
      * Creates a new Smiles Cell based on the given String value. <br />
      * <b>Note</b>: The serializing technique writes the given String to a
@@ -135,9 +142,9 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
         if (smarts == null) {
             throw new NullPointerException("Smarts value must not be null.");
         }
-        m_rxn=RDKFuncs.ReactionFromSmarts(smarts);
-        if(m_rxn==null){
-            throw new NullPointerException("could not process reaction");        
+        m_rxn = RDKFuncs.ReactionFromSmarts(smarts);
+        if (m_rxn == null) {
+            throw new NullPointerException("could not process reaction");
         }
         m_smilesString = "sorry";
     }
@@ -145,6 +152,7 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getStringValue() {
         return m_smilesString;
     }
@@ -152,6 +160,7 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getSmilesValue() {
         return m_smilesString;
     }
@@ -159,6 +168,7 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
     /**
      * {@inheritDoc}
      */
+    @Override
     public ChemicalReaction getReactionValue() {
         return m_rxn;
     }
@@ -189,38 +199,42 @@ public class RDKitReactionCell extends DataCell implements StringValue, RDKitRea
 
     /** Factory for (de-)serializing a RDKitMolCell. */
     private static class RDKitReactionSerializer implements
-        DataCellSerializer<RDKitReactionCell> {
+            DataCellSerializer<RDKitReactionCell> {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final RDKitReactionCell cell,
                 final DataCellDataOutput output) throws IOException {
-            //output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-        	Char_Vect cv=RDKFuncs.RxnToBinary(cell.getReactionValue());
-        	String pkl="";
-        	for(int i=0;i<cv.size();++i) pkl += cv.get(i);
-        	output.writeUTF(pkl);
+            // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
+            Char_Vect cv = RDKFuncs.RxnToBinary(cell.getReactionValue());
+            String pkl = "";
+            for (int i = 0; i < cv.size(); ++i)
+                pkl += cv.get(i);
+            output.writeUTF(pkl);
         }
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public RDKitReactionCell deserialize(final DataCellDataInput input)
-            throws IOException {
+                throws IOException {
             String s = input.readUTF();
-            Char_Vect cv=new Char_Vect(0);
-            for(int i=0;i<s.length();++i){
-            	char c=s.charAt(i);
-            	cv.add(c);
+            Char_Vect cv = new Char_Vect(0);
+            for (int i = 0; i < s.length(); ++i) {
+                char c = s.charAt(i);
+                cv.add(c);
             }
-            ChemicalReaction rxn=RDKFuncs.RxnFromBinary(cv);
+            ChemicalReaction rxn = RDKFuncs.RxnFromBinary(cv);
             return new RDKitReactionCell(rxn);
         }
     }
-    protected void finalize() throws Throwable
-    {
-      m_rxn.delete();
-      super.finalize();
-    }     
-    
+
+    @Override
+    protected void finalize() throws Throwable {
+        m_rxn.delete();
+        super.finalize();
+    }
+
 }

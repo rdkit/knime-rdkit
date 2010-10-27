@@ -236,6 +236,9 @@ public class RDKitMolCell extends DataCell implements StringValue,
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void finalize() throws Throwable {
         m_mol.delete();

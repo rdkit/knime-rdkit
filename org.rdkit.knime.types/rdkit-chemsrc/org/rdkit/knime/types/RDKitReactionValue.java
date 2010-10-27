@@ -42,49 +42,46 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.rdkit.knime.types;
-
-import javax.swing.Icon;
 
 import org.RDKit.ChemicalReaction;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 
-
 /**
- * Smiles Data Value interface.
- * (Only a wrapper for the underlying string)
- * 
+ * Smiles Data Value interface. (Only a wrapper for the underlying string)
+ *
  * @author Greg Landrum
  */
 public interface RDKitReactionValue extends DataValue {
     /**
      * Meta information to this value type.
-     * 
+     *
      * @see DataValue#UTILITY
      */
     public static final UtilityFactory UTILITY = new RDKUtilityFactory();
 
     /**
      * Returns the RDKit Reaction
-     * 
+     *
      * @return an RDKit ChemicalReaciton
      */
     ChemicalReaction getReactionValue();
-    
+
     /**
      * Returns the Smiles string of the molecule.
-     * 
+     *
      * @return a String value
      */
     String getSmilesValue();
-    
+
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        //private static final Icon ICON = loadIcon(RDKitMolValue.class, "../icons/chem.png");
+        // private static final Icon ICON = loadIcon(RDKitMolValue.class,
+        // "../icons/chem.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {
@@ -92,17 +89,25 @@ public interface RDKitReactionValue extends DataValue {
                     protected int compareDataValues(final DataValue v1,
                             final DataValue v2) {
                         int count1 =
-                                (int)((RDKitReactionValue)v1).getReactionValue().getNumReactantTemplates();
+                                (int)((RDKitReactionValue)v1)
+                                        .getReactionValue()
+                                        .getNumReactantTemplates();
                         int count2 =
-                                (int)((RDKitReactionValue)v2).getReactionValue().getNumReactantTemplates();
-                        if(count1==count2){
+                                (int)((RDKitReactionValue)v2)
+                                        .getReactionValue()
+                                        .getNumReactantTemplates();
+                        if (count1 == count2) {
                             count1 =
-                            	(int)((RDKitReactionValue)v1).getReactionValue().getNumProductTemplates();
+                                    (int)((RDKitReactionValue)v1)
+                                            .getReactionValue()
+                                            .getNumProductTemplates();
                             count2 =
-                                (int)((RDKitReactionValue)v2).getReactionValue().getNumProductTemplates();
+                                    (int)((RDKitReactionValue)v2)
+                                            .getReactionValue()
+                                            .getNumProductTemplates();
 
                         }
-                        return count1-count2;
+                        return count1 - count2;
                     }
                 };
 
@@ -113,10 +118,10 @@ public interface RDKitReactionValue extends DataValue {
         /**
          * {@inheritDoc}
          */
-        //@Override
-        //public Icon getIcon() {
-        //    return ICON;
-        //}
+        // @Override
+        // public Icon getIcon() {
+        // return ICON;
+        // }
 
         /**
          * {@inheritDoc}

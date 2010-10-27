@@ -50,10 +50,8 @@ import org.RDKit.ROMol;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 
-
 /**
- * Smiles Data Value interface.
- * (Only a wrapper for the underlying string)
+ * Smiles Data Value interface. (Only a wrapper for the underlying string)
  *
  * @author Greg Landrum
  */
@@ -82,7 +80,8 @@ public interface RDKitMolValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        //private static final Icon ICON = loadIcon(RDKitMolValue.class, "../icons/chem.png");
+        // private static final Icon ICON = loadIcon(RDKitMolValue.class,
+        // "../icons/chem.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {
@@ -90,9 +89,11 @@ public interface RDKitMolValue extends DataValue {
                     protected int compareDataValues(final DataValue v1,
                             final DataValue v2) {
                         int atomCount1 =
-                                (int)((RDKitMolValue)v1).getMoleculeValue().getNumAtoms();
+                                (int)((RDKitMolValue)v1).getMoleculeValue()
+                                        .getNumAtoms();
                         int atomCount2 =
-                                (int)((RDKitMolValue)v2).getMoleculeValue().getNumAtoms();
+                                (int)((RDKitMolValue)v2).getMoleculeValue()
+                                        .getNumAtoms();
                         return atomCount1 - atomCount2;
                     }
                 };
@@ -104,10 +105,10 @@ public interface RDKitMolValue extends DataValue {
         /**
          * {@inheritDoc}
          */
-        //@Override
-        //public Icon getIcon() {
-        //    return ICON;
-        //}
+        // @Override
+        // public Icon getIcon() {
+        // return ICON;
+        // }
 
         /**
          * {@inheritDoc}

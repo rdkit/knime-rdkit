@@ -53,6 +53,8 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -63,7 +65,9 @@ import org.osgi.framework.BundleContext;
  */
 public class RDKitTypesPluginActivator extends AbstractUIPlugin {
     // The shared instance.
+    // TODO: plugin is never initialized
     private static RDKitTypesPluginActivator plugin;
+    private static IStatus error;
 
     /**
      * This method is called upon plug-in activation.
@@ -75,14 +79,15 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
         try {
+            error = null;
             System.loadLibrary("RDKFuncs");
         } catch (UnsatisfiedLinkError e) {
-            IStatus error =
-                    new Status(IStatus.ERROR, context.getBundle()
+            error = new Status(IStatus.ERROR, context.getBundle()
                             .getSymbolicName(),
                             "Could not load native RDKit library", e);
+            NodeLogger.getLogger("RDKit").error(error.getMessage(),
+                    error.getException());
             Platform.getLog(context.getBundle()).log(error);
-
         }
         final IPreferenceStore pStore = getPreferenceStore();
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -122,6 +127,20 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
             return null;
         }
         return resultClassName;
+    }
+
+    /**
+     * Checks if native RDKit library was successfully loaded upon plug-in
+     * activation. Throws {@link InvalidSettingsException} otherwise.
+     *
+     * @throws InvalidSettingsException when an error occurred upon plug-in
+     * activation
+     */
+    public static void checkErrorState() throws InvalidSettingsException {
+        if (null != error) {
+            throw new InvalidSettingsException(error.getMessage(),
+                    error.getException());
+        }
     }
 
     /**

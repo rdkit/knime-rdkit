@@ -48,7 +48,7 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
-import org.knime.core.data.StringValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -59,6 +59,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.types.RDKitMolValue;
 
 /**
  *
@@ -72,7 +73,7 @@ public class RDKitFingerprintNodeDialogPane extends DefaultNodeSettingsPane {
     RDKitFingerprintNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createSmilesColumnModel(), "SMILES column: ", 0,
-                StringValue.class));
+                SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentStringSelection(
                 createFPTypeModel(), "FP type ", "morgan", "rdkit", "layered"));
 
@@ -89,21 +90,21 @@ public class RDKitFingerprintNodeDialogPane extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
-                createBooleanModel(), "Remove source columns"));
+                createBooleanModel(), "Remove source column"));
     }
 
     /**
      * @return settings model for smiles column selection
      */
     static final SettingsModelString createSmilesColumnModel() {
-        return new SettingsModelString("smiles_column", "");
+        return new SettingsModelString("smiles_column", null);
     }
 
     /**
      * @return settings model for the new appended column name
      */
     static final SettingsModelString createNewColumnModel() {
-        return new SettingsModelString("new_column_name", "rdk_fingerprint");
+        return new SettingsModelString("new_column_name", null);
     }
 
     /** @return settings model for check box whether to remove source columns. */

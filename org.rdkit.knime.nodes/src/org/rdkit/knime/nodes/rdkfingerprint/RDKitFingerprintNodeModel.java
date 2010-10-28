@@ -50,6 +50,8 @@ package org.rdkit.knime.nodes.rdkfingerprint;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.RDKFuncs;
@@ -58,6 +60,7 @@ import org.RDKit.SparseIntVectu32;
 import org.RDKit.UInt_Pair_Vect;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -80,6 +83,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -119,6 +123,19 @@ public class RDKitFingerprintNodeModel extends NodeModel {
             .getLogger(RDKitFingerprintNodeModel.class);
 
     /**
+     * Temporarily used during execution to track the number of rows
+     * with parsing error.
+     */
+    private int m_parseErrorCount;
+
+    /**
+     * Temporarily used during execution to track the number of rows
+     * with where finger print could not be computed.
+     */
+    private int m_fingerPrintErrorCount;
+
+
+    /**
      * Create new node model with one data in- and one outport.
      */
     RDKitFingerprintNodeModel() {
@@ -131,6 +148,40 @@ public class RDKitFingerprintNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check whether native RDKit library has been loaded successfully
+        RDKitTypesPluginActivator.checkErrorState();
+
+        if (null == m_smiles.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)
+                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_smiles.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_smiles.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in input table");
+            }
+        }
+        if (null == m_concate.getStringValue()) {
+            if (null != m_smiles.getStringValue()) {
+                // auto-configure
+                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
+                        m_smiles.getStringValue() + " (Fingerprint)");
+                m_concate.setStringValue(newName);
+            } else {
+                m_concate.setStringValue("RDKit Fingerprint");
+            }
+        }
         ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{rearranger.createSpec()};
     }
@@ -163,8 +214,23 @@ public class RDKitFingerprintNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger rearranger = createColumnRearranger(inSpec);
+        m_parseErrorCount = 0;
+        m_fingerPrintErrorCount = 0;
         BufferedDataTable outTable =
                 exec.createColumnRearrangeTable(inData[0], rearranger, exec);
+        StringBuilder msg = new StringBuilder();
+        if (m_parseErrorCount > 0) {
+            msg.append("Error parsing Smiles for " + m_parseErrorCount
+                    + " rows.");
+        }
+        if (m_fingerPrintErrorCount > 0) {
+            msg.append(" ");
+            msg.append("Error computing fingerprint for "
+                    + m_fingerPrintErrorCount + " rows.");
+        }
+        if (msg.length() > 0) {
+            setWarningMessage(msg.toString());
+        }
         return new BufferedDataTable[]{outTable};
     }
 
@@ -172,7 +238,14 @@ public class RDKitFingerprintNodeModel extends NodeModel {
             throws InvalidSettingsException {
         // check user settings against input spec here
         final int[] indices = findColumnIndices(spec);
+        String inputCol = m_smiles.getStringValue();
         String newName = m_concate.getStringValue();
+        if ((spec.containsName(newName) && !newName.equals(inputCol))
+              ||  (spec.containsName(newName) && newName.equals(inputCol)
+              && !m_removeSourceCols.getBooleanValue())) {
+            throw new InvalidSettingsException("Cannot create column "
+                    + newName + "since it is already in the input.");
+        }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec =
                 new DataColumnSpecCreator(newName, DenseBitVectorCell.TYPE);
@@ -195,6 +268,8 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                     ownMol = true;
                 }
                 if (mol == null) {
+                    LOGGER.debug("Error parsing smiles "
+                            + "while processing row: " + row.getKey());
                     return DataType.getMissingCell();
                 } else {
                     // transfer the bitset into a dense bit vector
@@ -237,10 +312,12 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                             }
                             fingerprint.delete();
                         }
-                        if (ownMol)
+                        if (ownMol) {
                             mol.delete();
+                        }
                     } catch (Exception ex) {
-                        LOGGER.error("Error while creating fingerprint", ex);
+                        LOGGER.debug("Error while creating fingerprint "
+                            + "for row: " + row.getKey());
                         return DataType.getMissingCell();
                     }
                     DenseBitVectorCellFactory fact =

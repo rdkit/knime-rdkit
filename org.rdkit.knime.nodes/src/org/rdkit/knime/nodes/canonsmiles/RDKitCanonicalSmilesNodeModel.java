@@ -77,6 +77,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -107,6 +108,8 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        RDKitTypesPluginActivator.checkErrorState();
+
         if (null == m_first.getStringValue()) {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
@@ -130,8 +133,9 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
         if (null == m_concate.getStringValue()) {
             if (null != m_first.getStringValue()) {
                 // auto-configure
-                m_concate.setStringValue(m_first.getStringValue()
-                        + " (Canonical)");
+                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
+                        m_first.getStringValue() + " (Canonical)");
+                m_concate.setStringValue(newName);
             } else {
                 m_concate.setStringValue("RDKit Canonical Smiles");
             }
@@ -177,7 +181,14 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
             throws InvalidSettingsException {
         // check user settings against input spec here
         final int[] indices = findColumnIndices(spec);
+        String inputCol = m_first.getStringValue();
         String newName = m_concate.getStringValue();
+        if ((spec.containsName(newName) && !newName.equals(inputCol))
+              ||  (spec.containsName(newName) && newName.equals(inputCol)
+              && !m_removeSourceCols.getBooleanValue())) {
+            throw new InvalidSettingsException("Cannot create column "
+                    + newName + "since it is already in the input.");
+        }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec =
                 new DataColumnSpecCreator(newName, SmilesCell.TYPE);
@@ -196,11 +207,13 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                     mol = ((RDKitMolValue)firstCell).getMoleculeValue();
                     ownMol = false;
                 } else {
-                    String smiles = ((StringValue)firstCell).toString();
+                String smiles = ((StringValue)firstCell).toString();
                     mol = RDKFuncs.MolFromSmiles(smiles);
                     ownMol = true;
                 }
                 if (mol == null) {
+                    setWarningMessage("Error occured while processing row: "
+                            + row.getKey());
                     return DataType.getMissingCell();
                 } else {
                     canSmiles = RDKFuncs.MolToSmiles(mol, true);

@@ -188,8 +188,8 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
         BufferedDataTable outTable =
                 exec.createColumnRearrangeTable(inData[0], rearranger, exec);
         if (m_parseErrorCount > 0) {
-            setWarningMessage("Error parsing smiles for " + m_parseErrorCount
-                    + " rows");
+            setWarningMessage("Error parsing Smiles for " + m_parseErrorCount
+                    + " rows.");
         }
         return new BufferedDataTable[]{outTable};
     }

@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 Export-Package: org.RDKit,
+ org.rdkit.knime,
  org.rdkit.knime.preferences,
  org.rdkit.knime.types
 Require-Bundle: org.knime.base,

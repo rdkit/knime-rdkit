@@ -72,21 +72,21 @@ public class RDKitToMolConverterNodeDialogPane extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
-                createBooleanModel(), "Remove source columns"));
+                createBooleanModel(), "Remove source column"));
     }
 
     /**
      * @return settings model for first column selection
      */
     static final SettingsModelString createFirstColumnModel() {
-        return new SettingsModelString("first_column", "");
+        return new SettingsModelString("first_column", null);
     }
 
     /**
      * @return settings model for the new appended column name
      */
     static final SettingsModelString createNewColumnModel() {
-        return new SettingsModelString("new_column_name", "RDKit molecule");
+        return new SettingsModelString("new_column_name", null);
     }
 
     /**

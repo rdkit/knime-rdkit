@@ -50,11 +50,14 @@ package org.rdkit.knime.nodes.tomolconverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -73,6 +76,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolCell;
 
 /**
@@ -106,6 +110,39 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check whether native RDKit library has been loaded successfully
+        RDKitTypesPluginActivator.checkErrorState();
+
+        if (null == m_first.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_first.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_first.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in input table");
+            }
+        }
+        if (null == m_concate.getStringValue()) {
+            if (null != m_first.getStringValue()) {
+                // auto-configure
+                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
+                        m_first.getStringValue() + " (RDKit Mol)");
+                m_concate.setStringValue(newName);
+            } else {
+                m_concate.setStringValue("RDKit Molecule");
+            }
+        }
         ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{rearranger.createSpec()};
     }
@@ -146,7 +183,14 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         // check user settings against input spec here
         final int[] indices = findColumnIndices(spec);
+        String inputCol = m_first.getStringValue();
         String newName = m_concate.getStringValue();
+        if ((spec.containsName(newName) && !newName.equals(inputCol))
+              ||  (spec.containsName(newName) && newName.equals(inputCol)
+              && !m_removeSourceCols.getBooleanValue())) {
+            throw new InvalidSettingsException("Cannot create column "
+                    + newName + "since it is already in the input.");
+        }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec =
                 new DataColumnSpecCreator(newName, RDKitMolCell.TYPE);
@@ -165,7 +209,8 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
                     e.printStackTrace();
                 }
                 if (mol == null) {
-                    LOGGER.error("Error parsing SMILES: " + smiles);
+                    setWarningMessage("Error pasing smiles "
+                            + "while processing row: " + row.getKey());
                     return DataType.getMissingCell();
                 }
                 return new RDKitMolCell(mol);

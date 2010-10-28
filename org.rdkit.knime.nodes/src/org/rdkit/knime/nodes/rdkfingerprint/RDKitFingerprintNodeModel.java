@@ -270,6 +270,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "
                             + "while processing row: " + row.getKey());
+                    m_parseErrorCount++;
                     return DataType.getMissingCell();
                 } else {
                     // transfer the bitset into a dense bit vector
@@ -318,6 +319,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                     } catch (Exception ex) {
                         LOGGER.debug("Error while creating fingerprint "
                             + "for row: " + row.getKey());
+                        m_fingerPrintErrorCount++;
                         return DataType.getMissingCell();
                     }
                     DenseBitVectorCellFactory fact =

@@ -72,6 +72,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -95,6 +96,15 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
     private final SettingsModelBoolean m_removeSourceCols =
             RDKitCanonicalSmilesNodeDialogPane.createBooleanModel();
 
+    private static NodeLogger LOGGER = NodeLogger.getLogger(
+            RDKitCanonicalSmilesNodeModel.class);
+
+    /**
+     * Temporarily used during execution to track the number of rows
+     * with parsing error.
+     */
+    private int m_parseErrorCount;
+
     /**
      * Create new node model with one data in- and one outport.
      */
@@ -108,12 +118,14 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check whether native RDKit library has been loaded successfully
         RDKitTypesPluginActivator.checkErrorState();
 
         if (null == m_first.getStringValue()) {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(SmilesValue.class)) {
+                if (c.getType().isCompatible(SmilesValue.class)
+                        || c.getType().isCompatible(RDKitMolValue.class)) {
                     compatibleCols.add(c.getName());
                 }
             }
@@ -159,7 +171,7 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
         if (!firstType.isCompatible(SmilesValue.class)
                 && !firstType.isCompatible(RDKitMolValue.class)) {
             throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain SMILES");
+                    + "' does not contain Smiles");
         }
         return new int[]{firstIndex};
     }
@@ -172,8 +184,13 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger rearranger = createColumnRearranger(inSpec);
+        m_parseErrorCount = 0;
         BufferedDataTable outTable =
                 exec.createColumnRearrangeTable(inData[0], rearranger, exec);
+        if (m_parseErrorCount > 0) {
+            setWarningMessage("Error parsing smiles for " + m_parseErrorCount
+                    + " rows");
+        }
         return new BufferedDataTable[]{outTable};
     }
 
@@ -212,13 +229,15 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                     ownMol = true;
                 }
                 if (mol == null) {
-                    setWarningMessage("Error occured while processing row: "
-                            + row.getKey());
+                    LOGGER.debug("Error parsing smiles "
+                            + "while processing row: " + row.getKey());
+                    m_parseErrorCount ++;
                     return DataType.getMissingCell();
                 } else {
                     canSmiles = RDKFuncs.MolToSmiles(mol, true);
-                    if (ownMol)
+                    if (ownMol) {
                         mol.delete();
+                    }
                 }
                 return new SmilesCell(canSmiles);
             }

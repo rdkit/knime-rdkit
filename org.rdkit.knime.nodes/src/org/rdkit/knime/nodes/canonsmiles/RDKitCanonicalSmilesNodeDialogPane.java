@@ -47,13 +47,14 @@
  */
 package org.rdkit.knime.nodes.canonsmiles;
 
-import org.knime.core.data.StringValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.types.RDKitMolValue;
 
 /**
  *
@@ -67,7 +68,7 @@ public class RDKitCanonicalSmilesNodeDialogPane extends DefaultNodeSettingsPane 
     RDKitCanonicalSmilesNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "SMILES column: ", 0,
-                StringValue.class));
+                SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(

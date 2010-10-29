@@ -207,6 +207,9 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     "reaction should only have two reactants, it has: "
                             + rxn.getNumReactantTemplates());
 
+        // further input spec check
+        findColumnIndices(inSpecs);
+
         return createOutSpecs();
     }
 

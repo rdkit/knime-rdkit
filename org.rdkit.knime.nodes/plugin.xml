@@ -47,7 +47,7 @@
          point="org.knime.workbench.repository.categories">
       <category
             description="Nodes using RDKit"
-            icon="icons/default.png"
+            icon="icons/category_rdkit.png"
             level-id="rdkit"
             name="RDKit"
             path="/chemistry">

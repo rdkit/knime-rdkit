@@ -50,6 +50,8 @@ package org.rdkit.knime.nodes.onecomponentreaction;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import org.RDKit.ChemicalReaction;
@@ -74,10 +76,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolCell;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -92,6 +96,9 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 
     private final SettingsModelString m_smarts =
             RDKitOneComponentReactionNodeDialogPane.createSmartsModel();
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RDKitOneComponentReactionNodeModel.class);
 
     /**
      * Create new node model with one data in- and one outport.
@@ -125,8 +132,33 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_smarts.toString() == "") {
-            throw new InvalidSettingsException("No reaction smarts specified");
+        // check whether native RDKit library has been loaded successfully
+        RDKitTypesPluginActivator.checkErrorState();
+
+        if (null == m_first.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)
+                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_first.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_first.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in input table");
+            }
+        }
+        if (m_smarts.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Please provide a reaction "
+                    + "SMARTS.");
         }
         ChemicalReaction rxn;
         rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
@@ -137,6 +169,9 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "reaction should only have one reactant, it has: "
                             + rxn.getNumReactantTemplates());
+
+        // further input spec check
+        findColumnIndices(inSpecs[0]);
 
         return createOutSpecs();
     }
@@ -178,9 +213,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
         // build an RDKit reaction from the SMARTS:
         ChemicalReaction rxn =
                 RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
-        if (rxn == null)
+        if (rxn == null) {
             throw new InvalidSettingsException("unparseable reaction smarts: "
                     + m_smarts.getStringValue());
+        }
+        int parseErrorCount = 0;
         try {
             int count = 0;
             RowIterator it = inData[0].iterator();
@@ -244,15 +281,23 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                 }
                             }
                         }
-                        if (ownMol)
+                        if (ownMol) {
                             mol.delete();
+                        }
+                    } else {
+                        LOGGER.debug("Error parsing Smiles "
+                                + "while processing row: " + row.getKey());
+                        parseErrorCount++;
                     }
                 }
             }
         } finally {
             productTable.close();
         }
-
+        if (parseErrorCount > 0) {
+            setWarningMessage("Error parsing Smiles for " + parseErrorCount
+                    + " rows.");
+        }
         return new BufferedDataTable[]{productTable.getTable()};
     }
 

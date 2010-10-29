@@ -48,11 +48,14 @@
  */
 package org.rdkit.knime.nodes.substructfilter;
 
-import org.knime.core.data.StringValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.types.RDKitMolValue;
 
 /**
  *
@@ -67,16 +70,19 @@ public class RDKitSubstructFilterNodeDialogPane
     RDKitSubstructFilterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "SMILES column: ", 0,
-                StringValue.class));
+                SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
-                "Smarts query: "));
+                "SMARTS query: "));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createRemoveInvalidModel(),
+                "Remove Rows with Invalid Structures"));
     }
 
     /**
      * @return settings model for first column selection
      */
     static final SettingsModelString createFirstColumnModel() {
-        return new SettingsModelString("first_column", "");
+        return new SettingsModelString("first_column", null);
     }
 
     /**
@@ -86,4 +92,11 @@ public class RDKitSubstructFilterNodeDialogPane
         return new SettingsModelString("smarts_value", "");
     }
 
+    /**
+     * @return settings model for check box whether to remove rows with
+     * invalid structures
+     */
+    static final SettingsModelBoolean createRemoveInvalidModel() {
+        return new SettingsModelBoolean("remove_invalid", true);
+    }
 }

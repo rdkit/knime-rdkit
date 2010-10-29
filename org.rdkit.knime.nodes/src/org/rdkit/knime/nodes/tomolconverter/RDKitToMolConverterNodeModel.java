@@ -98,6 +98,12 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
             .getLogger(RDKitToMolConverterNodeModel.class);
 
     /**
+     * Temporarily used during execution to track the number of rows
+     * with parsing error.
+     */
+    private int m_parseErrorCount;
+
+    /**
      * Create new node model with one data in- and one outport.
      */
     RDKitToMolConverterNodeModel() {
@@ -130,7 +136,7 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
                         + compatibleCols.get(0) + "\".");
             } else {
                 throw new InvalidSettingsException("No Smiles compatible "
-                        + "column in input table");
+                        + "column in input table.");
             }
         }
         if (null == m_concate.getStringValue()) {
@@ -161,7 +167,7 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
         DataType firstType = spec.getColumnSpec(firstIndex).getType();
         if (!firstType.isCompatible(SmilesValue.class)) {
             throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain SMILES");
+                    + "' does not contain Smiles.");
         }
         return new int[]{firstIndex};
     }
@@ -174,8 +180,13 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger rearranger = createColumnRearranger(inSpec);
+        m_parseErrorCount = 0;
         BufferedDataTable outTable =
                 exec.createColumnRearrangeTable(inData[0], rearranger, exec);
+        if (m_parseErrorCount > 0) {
+            setWarningMessage("Error parsing Smiles for " + m_parseErrorCount
+                    + " rows.");
+        }
         return new BufferedDataTable[]{outTable};
     }
 
@@ -202,15 +213,11 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 String smiles = ((StringValue)firstCell).toString();
-                ROMol mol = null;
-                try {
-                    mol = RDKFuncs.MolFromSmiles(smiles);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                ROMol mol = RDKFuncs.MolFromSmiles(smiles);
                 if (mol == null) {
-                    setWarningMessage("Error pasing smiles "
+                    LOGGER.debug("Error parsing smiles "
                             + "while processing row: " + row.getKey());
+                    m_parseErrorCount ++;
                     return DataType.getMissingCell();
                 }
                 return new RDKitMolCell(mol);

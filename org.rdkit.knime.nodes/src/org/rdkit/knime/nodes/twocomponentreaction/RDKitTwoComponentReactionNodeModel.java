@@ -50,6 +50,8 @@ package org.rdkit.knime.nodes.twocomponentreaction;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import org.RDKit.ChemicalReaction;
@@ -80,6 +82,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolCell;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -145,20 +148,64 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_smarts.toString() == "") {
-            throw new InvalidSettingsException("No reaction smarts provided");
+        // check whether native RDKit library has been loaded successfully
+        RDKitTypesPluginActivator.checkErrorState();
+
+        if (null == m_reactant1Col.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)
+                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_reactant1Col.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_reactant1Col.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in the first input table");
+            }
+        }
+        if (null == m_reactant2Col.getStringValue()) {
+            List<String> compatibleCols = new ArrayList<String>();
+            for (DataColumnSpec c : inSpecs[0]) {
+                if (c.getType().isCompatible(SmilesValue.class)
+                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                    compatibleCols.add(c.getName());
+                }
+            }
+            if (compatibleCols.size() == 1) {
+                // auto-configure
+                m_reactant2Col.setStringValue(compatibleCols.get(0));
+            } else if (compatibleCols.size() > 1) {
+                // auto-guessing
+                m_reactant2Col.setStringValue(compatibleCols.get(0));
+                setWarningMessage("Auto guessing: using column \""
+                        + compatibleCols.get(0) + "\".");
+            } else {
+                throw new InvalidSettingsException("No Smiles compatible "
+                        + "column in second input table");
+            }
+        }
+        if (m_smarts.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Please provide a reaction "
+                    + "SMARTS.");
         }
         ChemicalReaction rxn =
                 RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
         if (rxn == null)
-            throw new InvalidSettingsException("unparseable reaction smarts: "
+            throw new InvalidSettingsException("unparseable reaction SMARTS: "
                     + m_smarts.getStringValue());
         if (rxn.getNumReactantTemplates() != 2)
             throw new InvalidSettingsException(
                     "reaction should only have two reactants, it has: "
                             + rxn.getNumReactantTemplates());
-
-        final int[] indices = findColumnIndices(inSpecs);
 
         return createOutSpecs();
     }
@@ -217,9 +264,12 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
         ChemicalReaction rxn =
                 RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
         if (rxn == null)
-            throw new InvalidSettingsException("unparseable reaction smarts: "
+            throw new InvalidSettingsException("unparseable reaction SMARTS: "
                     + m_smarts.getStringValue());
 
+        int parseErrorCount1 = 0;
+        int parseErrorCount2 = 0;
+        boolean firstIteration = true;
         // the node has two modes of operation, determined by the doMatrix flag:
         // doMatrix=false: The two input tables are stepped through row by row.
         // i.e. the first row of table 1 is combined with the first row of table
@@ -266,13 +316,16 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     }
                 }
                 if (mol1 == null) {
+                    LOGGER.debug("Error parsing Smiles "
+                            + "while processing row: " + row1.getKey());
+                    parseErrorCount1++;
                     // no first molecule, so might as well bail on the rest of
                     // the work
                     if (!doMatrix) {
                         // but if we aren't doing the matrix combination, we do
                         // need to
                         // increment the second table iterator:
-                        DataRow foorow = it2.next();
+                        it2.next();
                         r2Count++;
                     }
                     continue;
@@ -336,20 +389,48 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                                     }
                                 }
                             }
-                            if (ownMol2)
+                            if (ownMol2) {
                                 mol2.delete();
+                            }
+                        } else {
+                            if ((firstIteration
+                                    && m_doMatrix.getBooleanValue())
+                                    || !m_doMatrix.getBooleanValue()) {
+                                LOGGER.debug("Error parsing Smiles "
+                                    + "while processing row: " + row2.getKey());
+                                parseErrorCount2++;
+                            }
                         }
                     }
-                    if (!doMatrix)
+                    if (!doMatrix) {
                         break;
+                    }
                 }
-                if (ownMol1)
+                if (ownMol1) {
                     mol1.delete();
+                }
+                firstIteration = false;
             }
         } finally {
             productTable.close();
         }
-
+        if (parseErrorCount1 > 0 || parseErrorCount2 > 0) {
+            StringBuilder msg = new StringBuilder();
+            msg.append("Error parsing Smiles for ");
+            if (parseErrorCount1 > 0) {
+                msg.append(parseErrorCount1);
+                msg.append(" rows from input 1");
+                if (parseErrorCount2 > 0) {
+                    msg.append(" and ");
+                }
+            }
+            if (parseErrorCount2 > 0) {
+                msg.append(parseErrorCount2);
+                msg.append(" rows from input 2");
+            }
+            msg.append(".");
+            setWarningMessage(msg.toString());
+        }
         return new BufferedDataTable[]{productTable.getTable()};
     }
 

@@ -48,13 +48,14 @@
  */
 package org.rdkit.knime.nodes.twocomponentreaction;
 
-import org.knime.core.data.StringValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.types.RDKitMolValue;
 
 /**
  *
@@ -69,10 +70,10 @@ public class RDKitTwoComponentReactionNodeDialogPane
     RDKitTwoComponentReactionNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createReactant1ColumnModel(), "Reactants 1 SMILES column: ", 0,
-                StringValue.class));
+                SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createReactant2ColumnModel(), "Reactants 2 SMILES column: ", 1,
-                StringValue.class));
+                SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
                 "Reaction SMARTS: "));
         super.addDialogComponent(new DialogComponentBoolean(
@@ -83,14 +84,14 @@ public class RDKitTwoComponentReactionNodeDialogPane
      * @return settings model for first column selection
      */
     static final SettingsModelString createReactant1ColumnModel() {
-        return new SettingsModelString("reactant1_column", "");
+        return new SettingsModelString("reactant1_column", null);
     }
 
     /**
      * @return settings model for second column selection
      */
     static final SettingsModelString createReactant2ColumnModel() {
-        return new SettingsModelString("reactant2_column", "");
+        return new SettingsModelString("reactant2_column", null);
     }
 
     /**

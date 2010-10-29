@@ -55,7 +55,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.types.RDKitMolValue;
 
 /**
  *
@@ -69,7 +68,7 @@ public class RDKitToMolConverterNodeDialogPane extends DefaultNodeSettingsPane {
     RDKitToMolConverterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "SMILES column: ", 0,
-                SmilesValue.class, RDKitMolValue.class));
+                SmilesValue.class));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(

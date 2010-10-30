@@ -169,7 +169,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "reaction should only have one reactant, it has: "
                             + rxn.getNumReactantTemplates());
-
+	   
+	   if(!rxn.validateReaction()){
+		   throw new InvalidSettingsException("reaction smarts has errors");
+	   }
+	   
         // further input spec check
         findColumnIndices(inSpecs[0]);
 
@@ -272,7 +276,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                                     .get(pidx));
                                     cells[1] = new IntCell(pidx);
                                     cells[2] = new IntCell(count - 1);
-                                    cells[3] = new RDKitMolCell(mol);
+                                    cells[3] = new RDKitMolCell(rs.get(0));
                                     DataRow drow =
                                             new DefaultRow("" + (count - 1)
                                                     + "_" + psetidx + "_"

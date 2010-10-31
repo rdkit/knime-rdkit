@@ -289,6 +289,24 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     bitVector.set(i);
                             }
                             fingerprint.delete();
+                        } else if (m_fpType.getStringValue() == "atompair") {
+                                ExplicitBitVect fingerprint;
+                                fingerprint =
+                                        RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol,m_numBits.getIntValue());
+                                for (int i = 0; i < fingerprint.getNumBits(); i++) {
+                                    if (fingerprint.getBit(i))
+                                        bitVector.set(i);
+                                }
+                                fingerprint.delete();
+                        } else if (m_fpType.getStringValue() == "torsion") {
+                            ExplicitBitVect fingerprint;
+                            fingerprint =
+                                    RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol,m_numBits.getIntValue());
+                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
+                                if (fingerprint.getBit(i))
+                                    bitVector.set(i);
+                            }
+                            fingerprint.delete();
                         } else if (m_fpType.getStringValue() == "morgan") {
                             SparseIntVectu32 mfp =
                                     RDKFuncs.MorganFingerprintMol(mol,

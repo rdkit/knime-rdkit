@@ -4,12 +4,30 @@
 	<name>RDKit Fingerprint</name>
 	
 	<shortDescription>
-	    Generates RDKit fingerprints for input molecules
+	    Generates fingerprints for input molecules
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Generates RDKit fingerprints for an input SMILES or RDKit molecule column and appends
-		it to the table.</intro>
+		<intro>Generates fingerprints for an input SMILES or RDKit molecule column and appends
+		them to the table.</intro>
+        <option name="SMILES column">The column containing reactant molecules as either 
+        SMILES or RDKit Molecules</option>
+		<option name="FP type">The type of fingerprint to generation. Choices are:
+		<ul>
+		  <li>Morgan: Circular fingerprint based on the Morgan algorithm (ECFP-like)</li>
+  		  <li>AtomPair: Atom-pair fingerprint</li>
+		  <li>Torsion: Topological-torsion fingeprint</li>
+		  <li>RDKit: Daylight-like topological fingerprint</li>
+		  <li>Layered: An experimental substructure-matching fingerprint</li>
+		</ul>
+		</option>
+		<option name="New Column Name">Name of the fingerprint column in the output table.</option>
+		<option name="Remove source column">Toggles removal of the input SMILES/molecule column in the output table.</option>
+		<option name="Num Bits">(Advanced option) Number of bits in the fingerprint. Applicable to all fingerpint types</option>
+		<option name="Radius">(Advanced option) The radius of the atomic environments considered. Applicable to fingerprint types: Morgan</option>
+		<option name="Min Path Length">(Advanced option) Minimum length (in bonds) of the paths to be considered. Applicable to fingerprint types: RDKit, Layered</option>
+		<option name="Max Path Length">(Advanced option) Maximum length (in bonds) of the paths to be considered. Applicable to fingerprint types: RDKit, Layered</option>
+		<option name="LayerFlags">(Advanced option) Which atomic layers should be included. Applicable to fingerprint types: Layered</option>
 	</fullDescription>
 	
 	<ports>

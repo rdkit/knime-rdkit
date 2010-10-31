@@ -75,22 +75,23 @@ public class RDKitFingerprintNodeDialogPane extends DefaultNodeSettingsPane {
                 createSmilesColumnModel(), "SMILES column: ", 0,
                 SmilesValue.class, RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentStringSelection(
-                createFPTypeModel(), "FP type ", "morgan", "rdkit", "layered"));
+                createFPTypeModel(), "FP type ", "morgan", "atompair", "torsion", "rdkit", "layered"));
 
-        super.addDialogComponent(new DialogComponentNumber(
-                createMinPathModel(), "Min Path Length: ", 1));
-        super.addDialogComponent(new DialogComponentNumber(
-                createMaxPathModel(), "Max Path Length: ", 1));
-        super.addDialogComponent(new DialogComponentNumber(createRadiusModel(),
-                "Radius: ", 1));
-        super.addDialogComponent(new DialogComponentNumberEdit(
-                createLayerFlagsModel(), "LayerFlags: ", 8));
-        super.addDialogComponent(new DialogComponentNumberEdit(
-                createNumBitsModel(), "Num Bits: ", 4));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
+
+        super.addDialogComponent(new DialogComponentNumberEdit(
+                createNumBitsModel(), "Num Bits: ", 4));
+        super.addDialogComponent(new DialogComponentNumber(createRadiusModel(),
+                "Radius: ", 1));
+        super.addDialogComponent(new DialogComponentNumber(
+                createMinPathModel(), "Min Path Length: ", 1));
+        super.addDialogComponent(new DialogComponentNumber(
+                createMaxPathModel(), "Max Path Length: ", 1));
+        super.addDialogComponent(new DialogComponentNumberEdit(
+                createLayerFlagsModel(), "LayerFlags: ", 8));
     }
 
     /**

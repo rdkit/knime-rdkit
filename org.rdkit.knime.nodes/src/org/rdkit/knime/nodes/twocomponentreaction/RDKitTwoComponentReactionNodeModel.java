@@ -59,7 +59,6 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -154,8 +153,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
         if (null == m_reactant1Col.getStringValue()) {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(SmilesValue.class)
-                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                if (c.getType().isCompatible(RDKitMolValue.class)) {
                     compatibleCols.add(c.getName());
                 }
             }
@@ -168,15 +166,16 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                 setWarningMessage("Auto guessing: using column \""
                         + compatibleCols.get(0) + "\".");
             } else {
-                throw new InvalidSettingsException("No Smiles compatible "
-                        + "column in the first input table");
+                throw new InvalidSettingsException("No RDKit Mol compatible "
+                        + "column in the first input table. Use RDKit "
+                        + "to Mol Converter "
+                        + "node for Smiles or SDF.");
             }
         }
         if (null == m_reactant2Col.getStringValue()) {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(SmilesValue.class)
-                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                if (c.getType().isCompatible(RDKitMolValue.class)) {
                     compatibleCols.add(c.getName());
                 }
             }
@@ -189,8 +188,10 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                 setWarningMessage("Auto guessing: using column \""
                         + compatibleCols.get(0) + "\".");
             } else {
-                throw new InvalidSettingsException("No Smiles compatible "
-                        + "column in second input table");
+                throw new InvalidSettingsException("No RDKit Mol compatible "
+                        + "column in the second input table. Use RDKit "
+                        + "to Mol Converter "
+                        + "node for Smiles or SDF.");
             }
         }
         if (m_smarts.getStringValue().isEmpty()) {
@@ -228,8 +229,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     "No such column in first input table: " + first);
         }
         DataType firstType = specs[0].getColumnSpec(firstIndex).getType();
-        if (!firstType.isCompatible(SmilesValue.class)
-                && !firstType.isCompatible(RDKitMolValue.class)) {
+        if (!firstType.isCompatible(RDKitMolValue.class)) {
             throw new InvalidSettingsException("Column '" + first
                     + "' does not contain SMILES");
         }
@@ -243,8 +243,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     "No such column in second input table: " + second);
         }
         DataType secondType = specs[1].getColumnSpec(secondIndex).getType();
-        if (!secondType.isCompatible(SmilesValue.class)
-                && !secondType.isCompatible(RDKitMolValue.class)) {
+        if (!secondType.isCompatible(RDKitMolValue.class)) {
             throw new InvalidSettingsException("Column '" + second
                     + "' does not contain SMILES");
         }

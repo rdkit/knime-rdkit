@@ -48,7 +48,6 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -72,8 +71,8 @@ public class RDKitFingerprintNodeDialogPane extends DefaultNodeSettingsPane {
      */
     RDKitFingerprintNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createSmilesColumnModel(), "SMILES column: ", 0,
-                SmilesValue.class, RDKitMolValue.class));
+                createSmilesColumnModel(), "RDKit Mol column: ", 0,
+                RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentStringSelection(
                 createFPTypeModel(), "FP type ", "morgan", "atompair", "torsion", "rdkit", "layered"));
 

@@ -4,16 +4,16 @@
 	<name>RDKit Canon Smiles</name>
 	
 	<shortDescription>
-	    Generates RDKit canonical smiles for an input SMILES column
+	    Generates RDKit canonical smiles for an input RDKit Mol column
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Generates RDKit canonical smiles for an input SMILES column and appends
+		<intro>Generates RDKit canonical smiles for an input RDKit Mol column and appends
 		it to the table.</intro>
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Data">Data with SMILES column</inPort>
+		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
 		<outPort index="0" name="Data with canonical smiles">Data with canonical SMILES column</outPort>
 	</ports>	
 </knimeNode>

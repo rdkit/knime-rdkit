@@ -4,21 +4,20 @@
 	<name>RDKit One Component Reaction</name>
 	
 	<shortDescription>
-	    Applies a reaction to an input SMILES or molecule column
+	    Applies a reaction to an input RDKit Mol column
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Applies a reaction to an input SMILES or molecule column.
+		<intro>Applies a reaction to an input RDKit Mol column.
 		<p>
 		The output table contains a row for each product produced by applying the reaction to the inputs.
 		<br />Each row contains the product molecule, index information, and the reactant molecule that was used.
 		</p>
 		</intro>
         
-        <option name="SMILES column">The column containing reactant molecules as either 
-        SMILES or RDKit Molecules</option>
+        <option name="RDKit Mol column">The column containing reactant molecules</option>
         <option name="Reaction SMARTS">A reaction SMARTS describing the reaction.
-        <br />For a description of the format, please see Chapter 2 of the RDKit Book: http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf</option>
+        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a>. </option>
 
 	</fullDescription>
 	

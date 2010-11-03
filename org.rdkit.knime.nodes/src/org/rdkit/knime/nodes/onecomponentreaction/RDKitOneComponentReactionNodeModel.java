@@ -59,7 +59,6 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -138,8 +137,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
         if (null == m_first.getStringValue()) {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(SmilesValue.class)
-                        || c.getType().isCompatible(RDKitMolValue.class)) {
+                if (c.getType().isCompatible(RDKitMolValue.class)) {
                     compatibleCols.add(c.getName());
                 }
             }
@@ -152,8 +150,9 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                 setWarningMessage("Auto guessing: using column \""
                         + compatibleCols.get(0) + "\".");
             } else {
-                throw new InvalidSettingsException("No Smiles compatible "
-                        + "column in input table");
+                throw new InvalidSettingsException("No RDKit Mol compatible "
+                        + "column in input table. Use RDKit to Mol Converter "
+                        + "node for Smiles or SDF.");
             }
         }
         if (m_smarts.getStringValue().isEmpty()) {
@@ -169,11 +168,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "reaction should only have one reactant, it has: "
                             + rxn.getNumReactantTemplates());
-	   
+
 	   if(!rxn.validateReaction()){
 		   throw new InvalidSettingsException("reaction smarts has errors");
 	   }
-	   
+
         // further input spec check
         findColumnIndices(inSpecs[0]);
 
@@ -192,8 +191,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                     "No such column in input table: " + first);
         }
         DataType firstType = spec.getColumnSpec(firstIndex).getType();
-        if (!firstType.isCompatible(SmilesValue.class)
-                && !firstType.isCompatible(RDKitMolValue.class)) {
+        if (!firstType.isCompatible(RDKitMolValue.class)) {
             throw new InvalidSettingsException("Column '" + first
                     + "' does not contain SMILES");
         }

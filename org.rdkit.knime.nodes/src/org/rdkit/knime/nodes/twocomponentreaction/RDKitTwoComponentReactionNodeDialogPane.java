@@ -48,7 +48,6 @@
  */
 package org.rdkit.knime.nodes.twocomponentreaction;
 
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -69,11 +68,11 @@ public class RDKitTwoComponentReactionNodeDialogPane
      */
     RDKitTwoComponentReactionNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createReactant1ColumnModel(), "Reactants 1 SMILES column: ", 0,
-                SmilesValue.class, RDKitMolValue.class));
+                createReactant1ColumnModel(), "Reactants 1 RDKit Mol column: ", 0,
+                RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createReactant2ColumnModel(), "Reactants 2 SMILES column: ", 1,
-                SmilesValue.class, RDKitMolValue.class));
+                createReactant2ColumnModel(), "Reactants 2 RDKit Mol column: ", 1,
+                RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
                 "Reaction SMARTS: "));
         super.addDialogComponent(new DialogComponentBoolean(

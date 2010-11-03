@@ -4,15 +4,15 @@
 	<name>RDKit Substructure Filter</name>
 	
 	<shortDescription>
-	    Applies a substructure filter to an input SMILES column
+	    Applies a substructure filter to an input RDKit Mol column
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Applies a substructure filter to an input SMILES column.</intro>
+		<intro>Applies a substructure filter to an input RDKit Mol column.</intro>
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Data">Data with SMILES column</inPort>
+		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
 		<outPort index="0" name="Data matching filter">Data matching the substructure query</outPort>
 		<outPort index="1" name="Data not matching filter">Data not matching the substructure query</outPort>
 	</ports>	

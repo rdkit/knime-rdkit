@@ -48,7 +48,6 @@
  */
 package org.rdkit.knime.nodes.substructfilter;
 
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -69,8 +68,8 @@ public class RDKitSubstructFilterNodeDialogPane
      */
     RDKitSubstructFilterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "SMILES column: ", 0,
-                SmilesValue.class, RDKitMolValue.class));
+                createFirstColumnModel(), "RDKit Mol column: ", 0,
+                RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
                 "SMARTS query: "));
         super.addDialogComponent(new DialogComponentBoolean(

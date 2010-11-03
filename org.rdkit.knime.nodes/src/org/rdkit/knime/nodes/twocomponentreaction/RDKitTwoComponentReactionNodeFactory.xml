@@ -4,29 +4,27 @@
 	<name>RDKit Two Component Reaction</name>
 	
 	<shortDescription>
-	    Applies a reaction to two input SMILES or RDKit molecule columns
+	    Applies a reaction to two RDKit Mol columns
 	</shortDescription>
 	<fullDescription>
-		<intro>Applies a reaction to two input SMILES or molecule columns.
+		<intro>Applies a reaction to two  RDKit Mol columns.
 		<p>
 		The output table contains a row for each product produced by applying the reaction to the inputs.
 		<br />Each row contains the product molecule, index information, and the reactant molecules that were used.
 		</p>
 		</intro>
         
-        <option name="Reactants 1 SMILES column">The column containing the first reactant molecules as either 
-        SMILES or RDKit Molecules</option>
-        <option name="Reactants 2 SMILES column">The column containing the second reactant molecules as either 
-        SMILES or RDKit Molecules</option>
+        <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
+        <option name="Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
         <option name="Reaction SMARTS">A reaction SMARTS describing the reaction.
-        <br />For a description of the format, please see Chapter 2 of the RDKit Book: http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf</option>
+        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a></option>
 	    <option name="Do Matrix Expansion">If checked, each reactant 1 will be combined with each reactant 2
 	    yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
 	    sequentially, with the longer list determining the number of output rows.</option>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Reactant 1">Data with SMILES or RDKit Molecule column</inPort>
-		<inPort index="1" name="Reactant 2">Data with SMILES or RDKit Molecule column</inPort>
+		<inPort index="0" name="Reactant 1">Data with RDKit Mol column</inPort>
+		<inPort index="1" name="Reactant 2">Data with RDKit Mol column</inPort>
 		<outPort index="0" name="Product molecules">Product molecules</outPort>
 	</ports>	
 </knimeNode>

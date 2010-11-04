@@ -26,8 +26,12 @@
             id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
       <node
             category-path="/chemistry/rdkit"
-            factory-class="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"
-            id="org.rdkit.knime.nodes.tomolconverter.RDKitToMolConverterNodeFactory"/>
+            factory-class="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"
+            id="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"/>
+      <node
+            category-path="/chemistry/rdkit"
+            factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"
+            id="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
       <node
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"

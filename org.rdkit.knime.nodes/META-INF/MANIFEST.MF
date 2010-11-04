@@ -12,9 +12,9 @@ Require-Bundle: org.knime.base;bundle-version="2.2.0",
 Export-Package: org.RDKit,
  org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.canonsmiles;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.nodes.rdkfingerprint;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.nodes.substructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.onecomponentreaction;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.nodes.twocomponentreaction;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.nodes.tomolconverter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings"
+ org.rdkit.knime.nodes.rdkfingerprint;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ org.rdkit.knime.nodes.rdkit2molecule;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ org.rdkit.knime.nodes.substructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ org.rdkit.knime.nodes.twocomponentreaction;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings"
 Bundle-ActivationPolicy: lazy

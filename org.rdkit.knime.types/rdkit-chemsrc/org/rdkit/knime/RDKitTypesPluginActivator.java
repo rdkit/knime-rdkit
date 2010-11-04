@@ -48,11 +48,7 @@ package org.rdkit.knime;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.BundleContext;
@@ -89,13 +85,13 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
                     error.getException());
             Platform.getLog(context.getBundle()).log(error);
         }
-        final IPreferenceStore pStore = getPreferenceStore();
-        pStore.addPropertyChangeListener(new IPropertyChangeListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-            }
-        });
+//        final IPreferenceStore pStore = getPreferenceStore();
+//        pStore.addPropertyChangeListener(new IPropertyChangeListener() {
+//            /** {@inheritDoc} */
+//            @Override
+//            public void propertyChange(final PropertyChangeEvent event) {
+//            }
+//        });
     }
 
     /**
@@ -109,25 +105,25 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
         super.stop(context);
         plugin = null;
     }
-
-    /**
-     * Lookups the preferred renderer for a given molecular type.
-     *
-     * @param valueClass The DataValue class of interest, one of
-     *            {@link SdfValue}, {@link Mol2Value}, {@link SmilesValue}
-     * @return The class name of the stored preferred renderer or
-     *         <code>null</code> if none has been saved.
-     */
-    public String getPreferredRendererClassName(
-            final Class<? extends DataValue> valueClass) {
-        final IPreferenceStore pStore = getPreferenceStore();
-        String preferenceIdentifier = getPreferenceIdentifier(valueClass);
-        String resultClassName = pStore.getString(preferenceIdentifier);
-        if (resultClassName == null || resultClassName.length() == 0) {
-            return null;
-        }
-        return resultClassName;
-    }
+//
+//    /**
+//     * Lookups the preferred renderer for a given molecular type.
+//     *
+//     * @param valueClass The DataValue class of interest, one of
+//     *            {@link SdfValue}, {@link Mol2Value}, {@link SmilesValue}
+//     * @return The class name of the stored preferred renderer or
+//     *         <code>null</code> if none has been saved.
+//     */
+//    public String getPreferredRendererClassName(
+//            final Class<? extends DataValue> valueClass) {
+//        final IPreferenceStore pStore = getPreferenceStore();
+//        String preferenceIdentifier = getPreferenceIdentifier(valueClass);
+//        String resultClassName = pStore.getString(preferenceIdentifier);
+//        if (resultClassName == null || resultClassName.length() == 0) {
+//            return null;
+//        }
+//        return resultClassName;
+//    }
 
     /**
      * Checks if native RDKit library was successfully loaded upon plug-in
@@ -151,10 +147,10 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
     public static RDKitTypesPluginActivator getDefault() {
         return plugin;
     }
-
-    /** Get preference name for a given data value class. */
-    private static String getPreferenceIdentifier(
-            final Class<? extends DataValue> valueClass) {
-        return "prefRenderer_" + valueClass.getName();
-    }
+//
+//    /** Get preference name for a given data value class. */
+//    private static String getPreferenceIdentifier(
+//            final Class<? extends DataValue> valueClass) {
+//        return "prefRenderer_" + valueClass.getName();
+//    }
 }

@@ -2,8 +2,9 @@
 <?eclipse version="3.0"?>
 
 <plugin>
+<!--
    <extension point="org.eclipse.ui.preferencePages">
       <page category="org.knime.workbench.ui.preferences" class="org.rdkit.knime.preferences.RDKitTypesPreferencePage" id="org.knime.rdkit.preferences" name="Chemistry"/>
    </extension>
-
+-->
 </plugin>

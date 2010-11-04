@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="to_mol.png" type="Manipulator">
+	<name>RDKit To Molecule</name>
+	
+	<shortDescription>
+	    Converts RDKit molecules into string representations (SDF or Smiles)
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Converts the RDKit molecules into string representations (SDF or Smiles) and appends it to the table</intro>
+	</fullDescription>
+        <option name="RDKit Mol Column">
+            The column that contains the RDKit molecules.
+        </option>
+        <option name="New Column Name">
+            Name of the new column in the output table.
+        </option>
+        <option name="Remove source column">
+            Toggles removal of the input RDKit Mol column in the output table.
+        </option>
+       
+        <option name="Destination format">Select the destination format here.</option>	
+	<ports>
+        <inPort index="0" name="RDKit molecules">Table containing RDKit molecules</inPort>
+        <outPort index="0" name="Converted string representations">
+            Table with the molecules' converted string representations
+        </outPort>		
+	</ports>	
+</knimeNode>

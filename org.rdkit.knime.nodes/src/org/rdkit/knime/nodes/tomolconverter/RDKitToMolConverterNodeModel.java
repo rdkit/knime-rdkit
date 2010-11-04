@@ -77,7 +77,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.types.RDKitMolCell;
+import org.rdkit.knime.types.RDKitMolCellFactory;
 
 /**
  *
@@ -204,7 +204,7 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
         }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec =
-                new DataColumnSpecCreator(newName, RDKitMolCell.TYPE);
+                new DataColumnSpecCreator(newName, RDKitMolCellFactory.TYPE);
         result.append(new SingleCellFactory(appendSpec.createSpec()) {
             @Override
             public DataCell getCell(final DataRow row) {
@@ -220,7 +220,7 @@ public class RDKitToMolConverterNodeModel extends NodeModel {
                     m_parseErrorCount ++;
                     return DataType.getMissingCell();
                 }
-                return new RDKitMolCell(mol);
+                return RDKitMolCellFactory.createRDKitMolCell(mol);
             }
         });
         if (m_removeSourceCols.getBooleanValue()) {

@@ -81,7 +81,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.types.RDKitMolCell;
+import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -109,14 +109,15 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     private DataTableSpec[] createOutSpecs() {
         Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
         DataColumnSpecCreator crea =
-                new DataColumnSpecCreator("Product", RDKitMolCell.TYPE);
+                new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE);
         cSpec.add(crea.createSpec());
         crea = new DataColumnSpecCreator("Product Index", IntCell.TYPE);
         cSpec.add(crea.createSpec());
         crea = new DataColumnSpecCreator("Reactant 1 sequence index",
                         IntCell.TYPE);
         cSpec.add(crea.createSpec());
-        crea = new DataColumnSpecCreator("Reactant 1", RDKitMolCell.TYPE);
+        crea = new DataColumnSpecCreator("Reactant 1",
+                RDKitMolCellFactory.TYPE);
         cSpec.add(crea.createSpec());
         DataTableSpec tSpec =
                 new DataTableSpec("output",
@@ -270,11 +271,13 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                                     .getTableSpec()
                                                     .getNumColumns()];
                                     cells[0] =
-                                            new RDKitMolCell(prods.get(psetidx)
-                                                    .get(pidx));
+                                        RDKitMolCellFactory.createRDKitMolCell(
+                                                prods.get(psetidx).get(pidx));
                                     cells[1] = new IntCell(pidx);
                                     cells[2] = new IntCell(count - 1);
-                                    cells[3] = new RDKitMolCell(rs.get(0));
+                                    cells[3] =
+                                        RDKitMolCellFactory.createRDKitMolCell(
+                                                rs.get(0));
                                     DataRow drow =
                                             new DefaultRow("" + (count - 1)
                                                     + "_" + psetidx + "_"

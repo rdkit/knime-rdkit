@@ -82,7 +82,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.types.RDKitMolCell;
+import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -118,25 +118,24 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
     private DataTableSpec[] createOutSpecs() {
         Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
         DataColumnSpecCreator crea =
-                new DataColumnSpecCreator("Product", RDKitMolCell.TYPE);
+                new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE);
         cSpec.add(crea.createSpec());
         crea = new DataColumnSpecCreator("Product Index", IntCell.TYPE);
         cSpec.add(crea.createSpec());
-        crea =
-                new DataColumnSpecCreator("Reactant 1 sequence index",
-                        IntCell.TYPE);
+        crea = new DataColumnSpecCreator(
+                "Reactant 1 sequence index", IntCell.TYPE);
         cSpec.add(crea.createSpec());
-        crea = new DataColumnSpecCreator("Reactant 1", RDKitMolCell.TYPE);
+        crea = new DataColumnSpecCreator(
+                "Reactant 1", RDKitMolCellFactory.TYPE);
         cSpec.add(crea.createSpec());
-        crea =
-                new DataColumnSpecCreator("Reactant 2 sequence index",
-                        IntCell.TYPE);
+        crea = new DataColumnSpecCreator(
+                "Reactant 2 sequence index", IntCell.TYPE);
         cSpec.add(crea.createSpec());
-        crea = new DataColumnSpecCreator("Reactant 2", RDKitMolCell.TYPE);
+        crea = new DataColumnSpecCreator(
+                "Reactant 2", RDKitMolCellFactory.TYPE);
         cSpec.add(crea.createSpec());
-        DataTableSpec tSpec =
-                new DataTableSpec("output",
-                        cSpec.toArray(new DataColumnSpec[cSpec.size()]));
+        DataTableSpec tSpec = new DataTableSpec(
+                "output", cSpec.toArray(new DataColumnSpec[cSpec.size()]));
 
         return new DataTableSpec[]{tSpec};
     }
@@ -376,14 +375,16 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                                                 new DataCell[productTable
                                                         .getTableSpec()
                                                         .getNumColumns()];
-                                        cells[0] =
-                                                new RDKitMolCell(prods.get(
-                                                        psetidx).get(pidx));
+                                        cells[0] = RDKitMolCellFactory.
+                                            createRDKitMolCell(
+                                                prods.get(psetidx).get(pidx));
                                         cells[1] = new IntCell(pidx);
                                         cells[2] = new IntCell(r1Count - 1);
-                                        cells[3] = new RDKitMolCell(rs.get(0));
+                                        cells[3] = RDKitMolCellFactory.
+                                            createRDKitMolCell(rs.get(0));
                                         cells[4] = new IntCell(r2Count - 1);
-                                        cells[5] = new RDKitMolCell(rs.get(1));
+                                        cells[5] = RDKitMolCellFactory.
+                                            createRDKitMolCell(rs.get(1));
                                         DataRow drow =
                                                 new DefaultRow(""
                                                         + (r1Count - 1) + "_"

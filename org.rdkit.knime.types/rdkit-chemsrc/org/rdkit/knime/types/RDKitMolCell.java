@@ -49,7 +49,7 @@ package org.rdkit.knime.types;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.RDKit.Char_Vect;
+import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
@@ -69,13 +69,14 @@ import org.knime.core.data.StringValue;
  */
 public class RDKitMolCell extends DataCell implements StringValue,
         RDKitMolValue {
+
     /**
      * Convenience access member for
      * <code>DataType.getType(RDKitMolCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = DataType.getType(RDKitMolCell.class);
+    static final DataType TYPE = DataType.getType(RDKitMolCell.class);
 
     private static final long serialVersionUID = 0x1;
 
@@ -108,19 +109,11 @@ public class RDKitMolCell extends DataCell implements StringValue,
 
     private final ROMol m_mol;
 
-    /**
-     * Creates a new Smiles Cell based on the given String value. <br />
-     * <b>Note</b>: The serializing technique writes the given String to a
-     * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
-     * The implementation is limited to string lengths of at most 64kB - (in UTF
-     * format - which may be not equal to the number of characters in the
-     * string).
-     *
-     * @param mol the ROMol value to store
-     * @throws NullPointerException if the given String value is
-     *             <code>null</code>
+
+    /** Package scope constructor that wraps the argument molecule.
+     * @param mol The molecule to wrap.
      */
-    public RDKitMolCell(final ROMol mol) {
+    RDKitMolCell(final ROMol mol) {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
@@ -209,12 +202,13 @@ public class RDKitMolCell extends DataCell implements StringValue,
         public void serialize(final RDKitMolCell cell,
                 final DataCellDataOutput output) throws IOException {
             // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-            Char_Vect cv = RDKFuncs.MolToBinary(cell.getMoleculeValue());
-            StringBuilder pkl = new StringBuilder((int)cv.size());
-            for (int i = 0; i < cv.size(); ++i) {
-                pkl.append(cv.get(i));
+            Int_Vect iv = RDKFuncs.MolToBinary(cell.getMoleculeValue());
+            byte[] bytes = new byte[(int)iv.size()];
+            for (int i = 0; i < bytes.length; i++) {
+                bytes[i] = (byte)iv.get(i);
             }
-            output.writeUTF(pkl.toString());
+            output.writeInt(bytes.length);
+            output.write(bytes);
         }
 
         /**
@@ -223,15 +217,16 @@ public class RDKitMolCell extends DataCell implements StringValue,
         @Override
         public RDKitMolCell deserialize(final DataCellDataInput input)
                 throws IOException {
-            String s = input.readUTF();
-            Char_Vect cv = new Char_Vect(0);
-            for (int i = 0; i < s.length(); ++i) {
-                char c = s.charAt(i);
-                cv.add(c);
+            int length = input.readInt();
+            byte[] bytes = new byte[length];
+            input.readFully(bytes);
+            Int_Vect iv = new Int_Vect(length);
+            for (int i = 0; i < length; i++) {
+                iv.set(i, bytes[i]);
             }
             // ROMol m=new ROMol(s);
             // ROMol m=RDKFuncs.MolFromSmiles(s);
-            ROMol m = RDKFuncs.MolFromBinary(cv);
+            ROMol m = RDKFuncs.MolFromBinary(iv);
             return new RDKitMolCell(m);
         }
     }
@@ -244,4 +239,5 @@ public class RDKitMolCell extends DataCell implements StringValue,
         m_mol.delete();
         super.finalize();
     }
+
 }

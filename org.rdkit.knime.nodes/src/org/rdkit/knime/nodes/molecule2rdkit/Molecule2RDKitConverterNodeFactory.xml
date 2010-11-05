@@ -8,10 +8,10 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>Generates RDKit molecule column from a string representation and appends
-        it to the table.</intro>
+        <intro>Generates RDKit molecule column from a string representation 
+        (SDF or Smiles) and appends it to the table.</intro>
         <option name="Molecule Column">
-            The column that contains the molecules.
+            The column that contains the molecules (SDF or Smiles type column).
         </option>
         <option name="New Column Name">
             Name of the new column in the output table.
@@ -22,7 +22,7 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Data">Data with string representation of molecules</inPort>
+        <inPort index="0" name="Data">Data with Smiles or SDF representation of molecules</inPort>
         <outPort index="0" name="Output data">Data with RDKit molecule column</outPort>
     </ports>    
 </knimeNode>

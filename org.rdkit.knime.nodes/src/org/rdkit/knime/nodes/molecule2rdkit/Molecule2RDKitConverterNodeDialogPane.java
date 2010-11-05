@@ -68,7 +68,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends DefaultNodeSettingsPa
      */
     Molecule2RDKitConverterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "SMILES column: ", 0,
+                createFirstColumnModel(), "Molecule column: ", 0,
                 SmilesValue.class, SdfValue.class));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));

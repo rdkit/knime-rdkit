@@ -17,7 +17,7 @@
         <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
         <option name="Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
         <option name="Reaction SMARTS">A reaction SMARTS describing the reaction.
-        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a></option>
+        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a>.</option>
 	    <option name="Do Matrix Expansion">If checked, each reactant 1 will be combined with each reactant 2
 	    yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
 	    sequentially, with the longer list determining the number of output rows.</option>

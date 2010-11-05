@@ -59,6 +59,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.container.BlobDataCell;
 
 /**
  * Default implementation of a Smiles Cell. This cell stores only the Smiles
@@ -67,8 +68,12 @@ import org.knime.core.data.StringValue;
  *
  * @author Greg Landrum
  */
-public class RDKitMolCell extends DataCell implements StringValue,
+public class RDKitMolCell extends BlobDataCell implements StringValue,
         RDKitMolValue {
+
+    /** Do not compress blobs, see {@link BlobDataCell#USE_COMPRESSION}. */
+    @SuppressWarnings("hiding")
+    public static final boolean USE_COMPRESSION = false;
 
     /**
      * Convenience access member for

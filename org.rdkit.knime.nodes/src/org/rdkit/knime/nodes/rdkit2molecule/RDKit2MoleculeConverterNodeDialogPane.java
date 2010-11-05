@@ -76,14 +76,14 @@ public class RDKit2MoleculeConverterNodeDialogPane extends DefaultNodeSettingsPa
      */
     RDKit2MoleculeConverterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "RDKit column: ", 0,
+                createFirstColumnModel(), "RDKit Mol column: ", 0,
                 RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
         super.addDialogComponent(new DialogComponentStringSelection(
-                createDestinationFormatModel(), "Destination Format:",
+                createDestinationFormatModel(), "Destination format:",
                 Arrays.asList(new String[] {SDF_FORMAT, SMILES_FORMAT})));
     }
 

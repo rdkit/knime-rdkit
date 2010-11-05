@@ -10,10 +10,10 @@
     <fullDescription>
         <intro>Generates RDKit molecule column from a string representation 
         (SDF or Smiles) and appends it to the table.</intro>
-        <option name="Molecule Column">
+        <option name="Molecule column">
             The column that contains the molecules (SDF or Smiles type column).
         </option>
-        <option name="New Column Name">
+        <option name="New column name">
             Name of the new column in the output table.
         </option>
         <option name="Remove source column">

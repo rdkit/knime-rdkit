@@ -10,11 +10,11 @@
 	
 	<fullDescription>
 		<intro>Converts RDKit molecules into string based molecule representations
-        (SDF or Smiles) and appends it to the table</intro>
+        (SDF or Smiles) and appends it to the table.</intro>
         <option name="RDKit Mol Column">
             The column that contains the RDKit molecules.
         </option>
-        <option name="New Column Name">
+        <option name="New column name">
             Name of the new column in the output table.
         </option>
         <option name="Remove source column">

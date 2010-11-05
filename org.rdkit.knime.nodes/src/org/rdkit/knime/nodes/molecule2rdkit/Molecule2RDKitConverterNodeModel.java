@@ -189,7 +189,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         BufferedDataTable outTable =
                 exec.createColumnRearrangeTable(inData[0], rearranger, exec);
         if (m_parseErrorCount > 0) {
-            setWarningMessage("Error parsing Smiles for " + m_parseErrorCount
+            setWarningMessage("Error parsing input for " + m_parseErrorCount
                     + " rows.");
         }
         return new BufferedDataTable[]{outTable};

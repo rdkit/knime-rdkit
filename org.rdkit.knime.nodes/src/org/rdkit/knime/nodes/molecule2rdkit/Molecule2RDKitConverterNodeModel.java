@@ -168,10 +168,11 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     "No such column in input table: " + first);
         }
         DataType firstType = spec.getColumnSpec(firstIndex).getType();
+      		 
         if (!firstType.isCompatible(SmilesValue.class)
-                || !firstType.isCompatible(SdfValue.class)) {
+                && !firstType.isCompatible(SdfValue.class)) {
             throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain Smiles.");
+                    + "' does not contain smiles or SDF.");
         }
         return new int[]{firstIndex};
     }

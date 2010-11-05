@@ -18,29 +18,35 @@
          point="org.knime.workbench.repository.nodes">
       <node
             category-path="/chemistry/rdkit"
-            factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
-            id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
+            factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"
+            id="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
       <node
-            category-path="/chemistry/rdkit"
-            factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
-            id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
-      <node
+            after="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"
             id="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"/>
       <node
+            after="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"
             category-path="/chemistry/rdkit"
-            factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"
-            id="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
+            factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
+            id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
       <node
+            after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
+            category-path="/chemistry/rdkit"
+            factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
+            id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
             id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
       <node
+            after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
       <node
+            after="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
             category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>

@@ -227,6 +227,7 @@ public class RDKit2MoleculeConverterNodeModel extends NodeModel {
                         StringBuilder valueBuilder = new StringBuilder();
                         valueBuilder.append(value);
                         valueBuilder.append(postfix);
+                        value = valueBuilder.toString();
                     }
                     return SdfCellFactory.create(value);
                 }

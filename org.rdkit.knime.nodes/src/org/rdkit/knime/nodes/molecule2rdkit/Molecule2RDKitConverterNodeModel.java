@@ -168,7 +168,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     "No such column in input table: " + first);
         }
         DataType firstType = spec.getColumnSpec(firstIndex).getType();
-      		 
+
         if (!firstType.isCompatible(SmilesValue.class)
                 && !firstType.isCompatible(SdfValue.class)) {
             throw new InvalidSettingsException("Column '" + first
@@ -204,8 +204,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         if ((spec.containsName(newName) && !newName.equals(inputCol))
               ||  (spec.containsName(newName) && newName.equals(inputCol)
               && !m_removeSourceCols.getBooleanValue())) {
-            throw new InvalidSettingsException("Cannot create column "
-                    + newName + "since it is already in the input.");
+            throw new InvalidSettingsException("Cannot create column \""
+                    + newName + "\" since it is already in the input.");
         }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec =
@@ -223,15 +223,19 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 ROMol mol = null;
                 if (smilesInput) {
                     mol = RDKFuncs.MolFromSmiles(value);
-                    if (mol == null) {
-                        LOGGER.debug("Error parsing smiles "
-                                + "while processing row: " + row.getKey());
-                        m_parseErrorCount ++;
-                        return DataType.getMissingCell();
-                    }
 
                 } else {
                     mol = RDKFuncs.MolFromMolBlock(value);
+                }
+                if (mol == null) {
+                    StringBuilder error = new StringBuilder();
+                    error.append("Error parsing ");
+                    error.append(smilesInput ? "SMILES " : "SDF ");
+                    error.append("while processing row: \"");
+                    error.append(row.getKey()).append("\"");
+                    LOGGER.debug(error.toString());
+                    m_parseErrorCount ++;
+                    return DataType.getMissingCell();
                 }
                 return RDKitMolCellFactory.createRDKitMolCell(mol);
             }

@@ -46,7 +46,6 @@
  */
 package org.rdkit.knime.types;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.RDKit.Int_Vect;
@@ -123,29 +122,6 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
             throw new NullPointerException("Mol value must not be null.");
         }
         m_mol = mol;
-        m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
-    }
-
-    /**
-     * Creates a new Smiles Cell based on the given String value. <br />
-     * <b>Note</b>: The serializing technique writes the given String to a
-     * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
-     * The implementation is limited to string lengths of at most 64kB - (in UTF
-     * format - which may be not equal to the number of characters in the
-     * string).
-     *
-     * @param str the String value to store
-     * @throws NullPointerException if the given String value is
-     *             <code>null</code>
-     */
-    public RDKitMolCell(final String str) {
-        if (str == null) {
-            throw new NullPointerException("Smiles value must not be null.");
-        }
-        m_mol = RDKFuncs.MolFromSmiles(str);
-        if (m_mol == null) {
-            throw new NullPointerException("could not process smiles");
-        }
         m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
     }
 

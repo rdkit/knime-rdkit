@@ -222,6 +222,8 @@ public class RDKit2MoleculeConverterNodeModel extends NodeModel {
                         RDKFuncs.compute2DCoords(mol);
                     }
                     String value = RDKFuncs.MolToMolBlock(mol);
+                    // KNIME SDF type requires string to be terminated
+                    // by $$$$ -- see org.knime.chem.types.SdfValue for details
                     String postfix = "\n$$$$\n";
                     if (!value.endsWith(postfix)) {
                         StringBuilder valueBuilder = new StringBuilder();

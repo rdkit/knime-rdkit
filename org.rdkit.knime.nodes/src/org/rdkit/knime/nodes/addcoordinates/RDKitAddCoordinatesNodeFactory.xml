@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="add_coords.png" type="Manipulator">
+	<name>RDKit Generate Coords</name>
+	
+	<shortDescription>
+	    Generates coordinates (2D or 3D) for an input RDKit Mol column
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Generates coordinates (2D or 3D) for an input RDKit Mol column.</intro>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
+		<outPort index="0" name="Data with modified molecules">Data with modified molecules</outPort>
+	</ports>	
+</knimeNode>

@@ -94,7 +94,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             RDKitSubstructFilterNodeDialogPane.createRemoveInvalidModel();
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RDKitOneComponentReactionNodeModel.class);
+            .getLogger(RDKitSubstructFilterNodeModel.class);
 
     /**
      * Create new node model with one data in- and one outport.

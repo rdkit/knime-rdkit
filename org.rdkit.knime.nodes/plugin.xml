@@ -20,6 +20,11 @@
       <node
             after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
             category-path="/chemistry/rdkit"
+            factory-class="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"
+            id="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
+            category-path="/chemistry/rdkit"
             factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"
             id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
       <node

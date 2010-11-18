@@ -9,6 +9,15 @@
 	
 	<fullDescription>
 		<intro>Generates coordinates (2D or 3D) for an input RDKit Mol column.</intro>
+		
+  	<option name="RDKit Mol column">The column containing molecules to be modified</option>
+	<option name="Add 3D coordinates?">If checked, 3D coordinates will be generated. 
+	If not checked 2D coordinates (useful for displaying molecules in tables) 
+	will be generated.</option>
+	<option name="Template Smarts">If provided and 2D coordinates are being generated, 
+	the coordinates will be generated so that the piece of each molecule that
+	corresponds to the template will be drawn in the same way.</option>
+		
 	</fullDescription>
 	
 	<ports>

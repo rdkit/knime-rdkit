@@ -134,7 +134,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                         + "node for Smiles or SDF.");
             }
         }
-        if(m_templateSmarts.getStringValue()!=""){
+        if(!m_templateSmarts.getStringValue().isEmpty()){
 	        ROMol pattern = RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
 	        if (pattern == null) {
 	            throw new InvalidSettingsException("Could not parse SMARTS query for template: "
@@ -182,9 +182,9 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
 
         // construct an RDKit molecule from the SMARTS pattern:
         ROMol pattern = null;
-        if(m_templateSmarts.getStringValue()!="") {
+        if(!m_templateSmarts.getStringValue().isEmpty()) {
         	pattern=RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
-        	RDKFuncs.compute2DCoords(pattern);
+        	if(pattern!=null) RDKFuncs.compute2DCoords(pattern);
         }
         
         int parseErrorCount = 0;
@@ -283,6 +283,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
+        m_templateSmarts.saveSettingsTo(settings);
         m_do3D.saveSettingsTo(settings);
     }
 
@@ -293,6 +294,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
+        m_templateSmarts.validateSettings(settings);
         m_do3D.validateSettings(settings);
     }
 }

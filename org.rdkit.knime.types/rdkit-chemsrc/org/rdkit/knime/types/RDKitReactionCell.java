@@ -51,6 +51,7 @@ import java.io.IOException;
 
 import org.RDKit.Char_Vect;
 import org.RDKit.ChemicalReaction;
+import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -207,7 +208,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
         public void serialize(final RDKitReactionCell cell,
                 final DataCellDataOutput output) throws IOException {
             // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-            Char_Vect cv = RDKFuncs.RxnToBinary(cell.getReactionValue());
+            Int_Vect cv = RDKFuncs.RxnToBinary(cell.getReactionValue());
             String pkl = "";
             for (int i = 0; i < cv.size(); ++i)
                 pkl += cv.get(i);
@@ -221,7 +222,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
         public RDKitReactionCell deserialize(final DataCellDataInput input)
                 throws IOException {
             String s = input.readUTF();
-            Char_Vect cv = new Char_Vect(0);
+            Int_Vect cv = new Int_Vect(0);
             for (int i = 0; i < s.length(); ++i) {
                 char c = s.charAt(i);
                 cv.add(c);

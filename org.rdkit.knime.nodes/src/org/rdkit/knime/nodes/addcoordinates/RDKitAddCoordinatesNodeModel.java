@@ -76,7 +76,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeModel;
-import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeDialogPane;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -93,7 +92,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
 
     private final SettingsModelString m_templateSmarts =
         RDKitAddCoordinatesNodeDialogPane.createTemplateSmartsModel();
-    
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RDKitOneComponentReactionNodeModel.class);
 
@@ -186,7 +185,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
         	pattern=RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
         	if(pattern!=null) RDKFuncs.compute2DCoords(pattern);
         }
-        
+
         int parseErrorCount = 0;
         try {
             int count = 0;

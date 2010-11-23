@@ -75,7 +75,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeModel;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**

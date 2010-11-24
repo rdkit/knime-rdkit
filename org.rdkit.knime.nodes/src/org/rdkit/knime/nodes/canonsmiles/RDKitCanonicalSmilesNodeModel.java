@@ -137,7 +137,7 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                         + compatibleCols.get(0) + "\".");
             } else {
                 throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use RDKit to Mol Converter "
+                        + "column in input table. Use \"Molecule to RDKit\" "
                         + "node for Smiles or SDF.");
             }
         }

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
-	<actions>
+	<dependencies>
+        <dependency name="org.knime.workbench.helpview" componentType="osgi.bundle" />
+    </dependencies>
+    <actions>
 		<!-- Dynamically build the files for the Eclipse help. -->
 		<private name="knime.create.helpfiles" actor="knime.docBuilder">
 			<!-- Example how to selectively build help

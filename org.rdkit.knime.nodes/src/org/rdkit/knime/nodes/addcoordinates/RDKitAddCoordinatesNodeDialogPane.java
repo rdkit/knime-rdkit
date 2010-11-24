@@ -48,8 +48,12 @@
  */
 package org.rdkit.knime.nodes.addcoordinates;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -62,7 +66,14 @@ import org.rdkit.knime.types.RDKitMolValue;
  */
 public class RDKitAddCoordinatesNodeDialogPane
         extends DefaultNodeSettingsPane {
+    /**
+     * Possible Values of the settings model return by createDimensionModel().
+     */
+    static String DIMENSION_2D = "2D coordinates";
+    static String DIMENSION_3D = "3D coordinates";
 
+    private DialogComponentString m_smartsComp;
+    private SettingsModelString m_dimModel;
     /**
      * Create a new dialog pane with some default components.
      */
@@ -70,12 +81,36 @@ public class RDKitAddCoordinatesNodeDialogPane
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "RDKit Mol column: ", 0,
                 RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createDo3DModel(),
-                "Add 3D coordinates?"));
         super.addDialogComponent(new DialogComponentString(
-                createTemplateSmartsModel(),
-                "Template Smarts"));
+                createNewColumnModel(), "New column name: "));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createBooleanModel(), "Remove source column"));
+        m_dimModel = createDimensionModel();
+        DialogComponentButtonGroup dimComp = new DialogComponentButtonGroup(
+                m_dimModel, true, "Dimension",
+                DIMENSION_2D, DIMENSION_3D);
+        m_smartsComp = new DialogComponentString(
+                createTemplateSmartsModel(), "Template Smarts");
+
+        dimComp.getModel().addChangeListener(new ChangeListener() {
+            /** Invoked when 2D/3D choice is changed. */
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                boolean do2D = m_dimModel.getStringValue().equals(DIMENSION_2D);
+                m_smartsComp.getModel().setEnabled(do2D);
+            }
+        });
+        super.addDialogComponent(dimComp);
+        super.addDialogComponent(m_smartsComp);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onOpen() {
+        boolean do2D = m_dimModel.getStringValue().equals(DIMENSION_2D);
+        m_smartsComp.getModel().setEnabled(do2D);
     }
 
     /**
@@ -88,15 +123,29 @@ public class RDKitAddCoordinatesNodeDialogPane
     /**
      * @return settings model for the new appended column name
      */
+    static final SettingsModelString createNewColumnModel() {
+        return new SettingsModelString("new_column_name", null);
+    }
+
+    /**
+     * @return settings model for check box whether to remove source columns.
+     */
+    static final SettingsModelBoolean createBooleanModel() {
+        return new SettingsModelBoolean("remove_source_columns", false);
+    }
+
+    /**
+     * @return settings model for the new appended column name
+     */
     static final SettingsModelString createTemplateSmartsModel() {
         return new SettingsModelString("template_smarts_value", "");
     }
 
     /**
-     * @return settings model for check box whether to remove rows with
-     * invalid structures
+     * @return settings model for radio buttons whether compute 2D or 3D
+     * coordinates.
      */
-    static final SettingsModelBoolean createDo3DModel() {
-        return new SettingsModelBoolean("do3d", true);
+    static final SettingsModelString createDimensionModel() {
+        return new SettingsModelString("dimension", null);
     }
 }

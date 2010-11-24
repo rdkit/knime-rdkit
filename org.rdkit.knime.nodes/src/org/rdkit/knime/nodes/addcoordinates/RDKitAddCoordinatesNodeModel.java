@@ -57,12 +57,13 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
-import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -76,6 +77,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeModel;
+import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -87,14 +89,22 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     private final SettingsModelString m_first =
             RDKitAddCoordinatesNodeDialogPane.createFirstColumnModel();
 
-    private final SettingsModelBoolean m_do3D =
-            RDKitAddCoordinatesNodeDialogPane.createDo3DModel();
+    private final SettingsModelString m_concate =
+            RDKitAddCoordinatesNodeDialogPane.createNewColumnModel();
+
+    private final SettingsModelBoolean m_removeSourceCols =
+            RDKitAddCoordinatesNodeDialogPane.createBooleanModel();
+
+    private final SettingsModelString m_dimension =
+            RDKitAddCoordinatesNodeDialogPane.createDimensionModel();
 
     private final SettingsModelString m_templateSmarts =
-        RDKitAddCoordinatesNodeDialogPane.createTemplateSmartsModel();
+            RDKitAddCoordinatesNodeDialogPane.createTemplateSmartsModel();
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RDKitOneComponentReactionNodeModel.class);
+
+    private ROMol pattern;
 
     /**
      * Create new node model with one data in- and one outport.
@@ -129,21 +139,39 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                         + compatibleCols.get(0) + "\".");
             } else {
                 throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use RDKit to Mol Converter "
+                        + "column in input table. Use \"Molecule to RDKit\" "
                         + "node for Smiles or SDF.");
             }
         }
-        if(!m_templateSmarts.getStringValue().isEmpty()){
-	        ROMol pattern = RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
-	        if (pattern == null) {
-	            throw new InvalidSettingsException("Could not parse SMARTS query for template: "
-	                    + m_templateSmarts.getStringValue());
-	        }
+        if (null == m_concate.getStringValue()) {
+            if (null != m_first.getStringValue()) {
+                // auto-configure
+                String newName =
+                        DataTableSpec.getUniqueColumnName(inSpecs[0],
+                                m_first.getStringValue() + " (with coord.)");
+                m_concate.setStringValue(newName);
+            } else {
+                m_concate.setStringValue("RDKit Mol with coord.");
+            }
         }
-        // further input spec check
-        findColumnIndices(inSpecs[0]);
+        if (null == m_dimension.getStringValue()) {
+            m_dimension.setStringValue(
+                    RDKitAddCoordinatesNodeDialogPane.DIMENSION_3D);
+        }
 
-        return new DataTableSpec[]{inSpecs[0]};
+        boolean do2D = m_dimension.getStringValue().equals(
+                RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
+        if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
+            ROMol patternTest =
+                    RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
+            if (patternTest == null) {
+                throw new InvalidSettingsException(
+                        "Could not parse SMARTS query for template: "
+                                + m_templateSmarts.getStringValue());
+            }
+        }
+        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{rearranger.createSpec()};
     }
 
     private int[] findColumnIndices(final DataTableSpec spec)
@@ -172,69 +200,81 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
+        ColumnRearranger rearranger = createColumnRearranger(inSpec);
+        BufferedDataTable outTable =
+                exec.createColumnRearrangeTable(inData[0], rearranger, exec);
+        return new BufferedDataTable[]{outTable};
+    }
 
-        BufferedDataContainer outTable =
-                exec.createDataContainer(inData[0].getDataTableSpec());
-
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
+            throws InvalidSettingsException {
         // check user settings against input spec here
-        final int[] indices = findColumnIndices(inSpec);
-
+        final int[] indices = findColumnIndices(spec);
+        String inputCol = m_first.getStringValue();
+        String newName = m_concate.getStringValue();
+        if ((spec.containsName(newName) && !newName.equals(inputCol))
+                || (spec.containsName(newName) && newName.equals(inputCol) &&
+                        !m_removeSourceCols.getBooleanValue())) {
+            throw new InvalidSettingsException("Cannot create column "
+                    + newName + "since it is already in the input.");
+        }
         // construct an RDKit molecule from the SMARTS pattern:
-        ROMol pattern = null;
-        if(!m_templateSmarts.getStringValue().isEmpty()) {
-        	pattern=RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
-        	if(pattern!=null) RDKFuncs.compute2DCoords(pattern);
+        pattern = null;
+        final boolean do2D = m_dimension.getStringValue().equals(
+                RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
+        if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
+            pattern = RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
+            if (pattern != null)
+                RDKFuncs.compute2DCoords(pattern);
         }
 
-        int parseErrorCount = 0;
-        try {
-            int count = 0;
-            RowIterator it = inData[0].iterator();
-            while (it.hasNext()) {
-                DataRow row = it.next();
-                count++;
-                // REFACTOR: this code for grabbing smiles or RDKitMolValue data
-                // from a cell
-                // and converting it into an ROMol occurs in almost every node;
-                // it should be pulled out
+        ColumnRearranger result = new ColumnRearranger(spec);
+        DataColumnSpecCreator appendSpec =
+                new DataColumnSpecCreator(newName, RDKitMolCellFactory.TYPE);
+        result.append(new SingleCellFactory(appendSpec.createSpec()) {
+            @Override
+            public DataCell getCell(final DataRow row) {
                 DataCell firstCell = row.getCell(indices[0]);
-                if (!firstCell.isMissing()) {
-                    DataType firstType =
-                            inSpec.getColumnSpec(indices[0]).getType();
-                    boolean ownMol;
-                    ROMol mol = null;
-                    if (firstType.isCompatible(RDKitMolValue.class)) {
-                        mol = ((RDKitMolValue)firstCell).getMoleculeValue();
-                        ownMol = false;
+                if (firstCell.isMissing()) {
+                    return DataType.getMissingCell();
+                }
+                DataType firstType = spec.getColumnSpec(indices[0]).getType();
+                boolean ownMol;
+                ROMol mol = null;
+                if (firstType.isCompatible(RDKitMolValue.class)) {
+                    ROMol input = ((RDKitMolValue)firstCell).getMoleculeValue();
+                    mol = new ROMol(input);
+                    ownMol = false;
+                } else {
+                    // it's a SMILES column, so construct an RDKit molecule
+                    // from the SMILES:
+                    String smiles = ((StringValue)firstCell).toString();
+                    mol = RDKFuncs.MolFromSmiles(smiles);
+                    ownMol = true;
+                }
+                if (mol != null) {
+                    // after all that work we can now add coords:
+                    if (!do2D) {
+                        RDKFuncs.compute3DCoords(mol);
                     } else {
-                        // it's a SMILES column, so construct an RDKit molecule
-                        // from the SMILES:
-                        String smiles = ((StringValue)firstCell).toString();
-                        mol = RDKFuncs.MolFromSmiles(smiles);
-                        ownMol = true;
-                    }
-                    if (mol != null) {
-                        // after all that work we can now add coords:
-                        if (m_do3D.getBooleanValue()) {
-                            RDKFuncs.compute3DCoords(mol);
+                        if (pattern != null) {
+                            RDKFuncs.compute2DCoords(mol, pattern);
                         } else {
-                        	if(pattern!=null){
-                        		RDKFuncs.compute2DCoords(mol,pattern);
-                        	} else {
-                        		RDKFuncs.compute2DCoords(mol);
-                        	}
+                            RDKFuncs.compute2DCoords(mol);
                         }
+                    }
 
-                    	if (ownMol)
-                            mol.delete();
+                    if (ownMol) {
+                        mol.delete();
                     }
                 }
-                outTable.addRowToTable(row);
+                return RDKitMolCellFactory.createRDKitMolCell(mol);
             }
-        } finally {
-            outTable.close();
+        });
+        if (m_removeSourceCols.getBooleanValue()) {
+            result.remove(indices);
         }
-        return new BufferedDataTable[]{outTable.getTable()};
+        return result;
     }
 
     /**
@@ -272,8 +312,10 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
+        m_concate.loadSettingsFrom(settings);
+        m_removeSourceCols.loadSettingsFrom(settings);
         m_templateSmarts.loadSettingsFrom(settings);
-        m_do3D.loadSettingsFrom(settings);
+        m_dimension.loadSettingsFrom(settings);
     }
 
     /**
@@ -282,8 +324,10 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
+        m_concate.saveSettingsTo(settings);
+        m_removeSourceCols.saveSettingsTo(settings);
         m_templateSmarts.saveSettingsTo(settings);
-        m_do3D.saveSettingsTo(settings);
+        m_dimension.saveSettingsTo(settings);
     }
 
     /**
@@ -293,7 +337,9 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
+        m_concate.validateSettings(settings);
+        m_removeSourceCols.validateSettings(settings);
         m_templateSmarts.validateSettings(settings);
-        m_do3D.validateSettings(settings);
+        m_dimension.validateSettings(settings);
     }
 }

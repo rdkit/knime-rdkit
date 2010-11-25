@@ -69,14 +69,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeModel;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -101,10 +99,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
     private final SettingsModelString m_templateSmarts =
             RDKitAddCoordinatesNodeDialogPane.createTemplateSmartsModel();
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RDKitOneComponentReactionNodeModel.class);
-
-    private ROMol pattern;
+    private ROMol m_smartsPattern;
 
     /**
      * Create new node model with one data in- and one outport.
@@ -219,13 +214,15 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                     + newName + "since it is already in the input.");
         }
         // construct an RDKit molecule from the SMARTS pattern:
-        pattern = null;
+        m_smartsPattern = null;
         final boolean do2D = m_dimension.getStringValue().equals(
                 RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
         if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
-            pattern = RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
-            if (pattern != null)
-                RDKFuncs.compute2DCoords(pattern);
+            m_smartsPattern = RDKFuncs.MolFromSmarts(
+                    m_templateSmarts.getStringValue());
+            if (m_smartsPattern != null) {
+                RDKFuncs.compute2DCoords(m_smartsPattern);
+            }
         }
 
         ColumnRearranger result = new ColumnRearranger(spec);
@@ -257,8 +254,8 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                     if (!do2D) {
                         RDKFuncs.compute3DCoords(mol);
                     } else {
-                        if (pattern != null) {
-                            RDKFuncs.compute2DCoords(mol, pattern);
+                        if (m_smartsPattern != null) {
+                            RDKFuncs.compute2DCoords(mol, m_smartsPattern);
                         } else {
                             RDKFuncs.compute2DCoords(mol);
                         }

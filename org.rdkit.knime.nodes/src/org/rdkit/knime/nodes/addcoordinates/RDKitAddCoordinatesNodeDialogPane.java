@@ -79,10 +79,10 @@ public class RDKitAddCoordinatesNodeDialogPane
      */
     RDKitAddCoordinatesNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "RDKit Mol column: ", 0,
+                createFirstColumnModel(), "RDKit Mol column:", 0,
                 RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(
-                createNewColumnModel(), "New column name: "));
+                createNewColumnModel(), "New column name:"));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
         m_dimModel = createDimensionModel();
@@ -90,7 +90,7 @@ public class RDKitAddCoordinatesNodeDialogPane
                 m_dimModel, true, "Dimension",
                 DIMENSION_2D, DIMENSION_3D);
         m_smartsComp = new DialogComponentString(
-                createTemplateSmartsModel(), "Template Smarts");
+                createTemplateSmartsModel(), "Template Smarts:");
 
         dimComp.getModel().addChangeListener(new ChangeListener() {
             /** Invoked when 2D/3D choice is changed. */

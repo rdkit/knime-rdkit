@@ -190,8 +190,8 @@ public class RDKit2MoleculeConverterNodeModel extends NodeModel {
         if ((spec.containsName(newName) && !newName.equals(inputCol))
               ||  (spec.containsName(newName) && newName.equals(inputCol)
               && !m_removeSourceCols.getBooleanValue())) {
-            throw new InvalidSettingsException("Cannot create column "
-                    + newName + "since it is already in the input.");
+            throw new InvalidSettingsException("Cannot create column \""
+                    + newName + "\" since it is already in the input.");
         }
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpecCreator appendSpec = null;

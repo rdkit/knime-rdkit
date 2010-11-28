@@ -69,6 +69,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -83,6 +84,9 @@ import org.rdkit.knime.types.RDKitMolValue;
  * @author Greg Landrum
  */
 public class RDKitAddCoordinatesNodeModel extends NodeModel {
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(RDKitAddCoordinatesNodeModel.class);
 
     private final SettingsModelString m_first =
             RDKitAddCoordinatesNodeDialogPane.createFirstColumnModel();
@@ -236,35 +240,35 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 DataType firstType = spec.getColumnSpec(indices[0]).getType();
-                boolean ownMol;
-                ROMol mol = null;
+                ROMol mol;
                 if (firstType.isCompatible(RDKitMolValue.class)) {
                     ROMol input = ((RDKitMolValue)firstCell).getMoleculeValue();
                     mol = new ROMol(input);
-                    ownMol = false;
                 } else {
                     // it's a SMILES column, so construct an RDKit molecule
                     // from the SMILES:
                     String smiles = ((StringValue)firstCell).toString();
                     mol = RDKFuncs.MolFromSmiles(smiles);
-                    ownMol = true;
+                    if (mol == null) {
+                        StringBuilder error = new StringBuilder();
+                        error.append("Error parsing SMILES ");
+                        error.append("while processing row: \"");
+                        error.append(row.getKey()).append("\"");
+                        LOGGER.warn(error.toString());
+                        return DataType.getMissingCell();
+                    }
                 }
-                if (mol != null) {
-                    // after all that work we can now add coords:
-                    if (!do2D) {
-                        RDKFuncs.compute3DCoords(mol);
+                // after all that work we can now add coords:
+                if (!do2D) {
+                    RDKFuncs.compute3DCoords(mol);
+                } else {
+                    if (m_smartsPattern != null) {
+                        RDKFuncs.compute2DCoords(mol, m_smartsPattern);
                     } else {
-                        if (m_smartsPattern != null) {
-                            RDKFuncs.compute2DCoords(mol, m_smartsPattern);
-                        } else {
-                            RDKFuncs.compute2DCoords(mol);
-                        }
-                    }
-
-                    if (ownMol) {
-                        mol.delete();
+                        RDKFuncs.compute2DCoords(mol);
                     }
                 }
+
                 return RDKitMolCellFactory.createRDKitMolCell(mol);
             }
         });

@@ -258,6 +258,9 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     }
                 }
+                if (mol == null) {
+                    return DataType.getMissingCell();                	
+                }
                 // after all that work we can now add coords:
                 if (!do2D) {
                     RDKFuncs.compute3DCoords(mol);

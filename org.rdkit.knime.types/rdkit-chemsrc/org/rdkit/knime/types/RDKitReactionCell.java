@@ -49,7 +49,6 @@ package org.rdkit.knime.types;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.RDKit.Char_Vect;
 import org.RDKit.ChemicalReaction;
 import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;

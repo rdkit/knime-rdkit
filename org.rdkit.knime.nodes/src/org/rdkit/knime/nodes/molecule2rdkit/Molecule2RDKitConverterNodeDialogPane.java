@@ -52,6 +52,7 @@ import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -61,11 +62,27 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Greg Landrum
  */
-public class Molecule2RDKitConverterNodeDialogPane extends DefaultNodeSettingsPane {
+public class Molecule2RDKitConverterNodeDialogPane extends
+        DefaultNodeSettingsPane {
+
+    /**
+     * the key when table split is selected - also the label displayed next to
+     * the corresponding radio button.
+     */
+    static final String SPLIT_BAD_ROWS =
+            "Create table with erroneous input rows at second output";
+
+    /**
+     * the key when table split is disabled - also the label displayed next to
+     * the corresponding radio button.
+     */
+    static final String MISSVAL_FOR_FOR_BAD_ROWS =
+            "Insert a missing value as result in erroneous rows";
 
     /**
      * Create a new dialog pane with some default components.
      */
+    @SuppressWarnings("unchecked")
     Molecule2RDKitConverterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "Molecule column: ", 0,
@@ -74,6 +91,10 @@ public class Molecule2RDKitConverterNodeDialogPane extends DefaultNodeSettingsPa
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
+        super.addDialogComponent(new DialogComponentButtonGroup(
+                createSeparateRowsModel(), true,
+                "Separate erroneous input rows", SPLIT_BAD_ROWS,
+                MISSVAL_FOR_FOR_BAD_ROWS));
     }
 
     /**
@@ -96,4 +117,12 @@ public class Molecule2RDKitConverterNodeDialogPane extends DefaultNodeSettingsPa
     static final SettingsModelBoolean createBooleanModel() {
         return new SettingsModelBoolean("remove_source_columns", false);
     }
+
+    /**
+     * @return new settings model for the flag 'send bad rows to port1'
+     */
+    static final SettingsModelString createSeparateRowsModel() {
+        return new SettingsModelString("bad_rows_to_port1", SPLIT_BAD_ROWS);
+    };
+
 }

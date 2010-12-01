@@ -63,9 +63,8 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.StringValue;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -95,20 +94,17 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     private final SettingsModelBoolean m_removeSourceCols =
             Molecule2RDKitConverterNodeDialogPane.createBooleanModel();
 
+    private final SettingsModelString m_separateFails =
+            Molecule2RDKitConverterNodeDialogPane.createSeparateRowsModel();
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Molecule2RDKitConverterNodeModel.class);
-
-    /**
-     * Temporarily used during execution to track the number of rows
-     * with parsing error.
-     */
-    private int m_parseErrorCount;
 
     /**
      * Create new node model with one data in- and one outport.
      */
     Molecule2RDKitConverterNodeModel() {
-        super(1, 1);
+        super(1, 2);
     }
 
     /**
@@ -143,38 +139,17 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             }
         }
         if (null == m_concate.getStringValue()) {
+            // auto-configure
+            String newName;
             if (null != m_first.getStringValue()) {
-                // auto-configure
-                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
-                        m_first.getStringValue() + " (RDKit Mol)");
-                m_concate.setStringValue(newName);
+                newName = m_first.getStringValue() + " (RDKit Mol)";
             } else {
-                m_concate.setStringValue("RDKit Molecule");
+                newName = "RDKit Molecule";
             }
+            newName = DataTableSpec.getUniqueColumnName(inSpecs[0], newName);
+            m_concate.setStringValue(newName);
         }
-        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{rearranger.createSpec()};
-    }
-
-    private int[] findColumnIndices(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        String first = m_first.getStringValue();
-        if (first == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int firstIndex = spec.findColumnIndex(first);
-        if (firstIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + first);
-        }
-        DataType firstType = spec.getColumnSpec(firstIndex).getType();
-
-        if (!firstType.isCompatible(SmilesValue.class)
-                && !firstType.isCompatible(SdfValue.class)) {
-            throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain smiles or SDF.");
-        }
-        return new int[]{firstIndex};
+        return new DataTableSpec[]{createOutPort0Spec(inSpecs[0]), inSpecs[0]};
     }
 
     /**
@@ -184,47 +159,43 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
-        ColumnRearranger rearranger = createColumnRearranger(inSpec);
-        m_parseErrorCount = 0;
-        BufferedDataTable outTable =
-                exec.createColumnRearrangeTable(inData[0], rearranger, exec);
-        if (m_parseErrorCount > 0) {
-            setWarningMessage("Error parsing input for " + m_parseErrorCount
-                    + " rows.");
-        }
-        return new BufferedDataTable[]{outTable};
-    }
+        DataTableSpec out0Spec = createOutPort0Spec(inSpec);
+        // contains the rows with the result column
+        BufferedDataContainer port0 = exec.createDataContainer(out0Spec);
+        // contains the input rows if result computation fails
+        BufferedDataContainer port1 = exec.createDataContainer(inSpec);
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        // check user settings against input spec here
-        final int[] indices = findColumnIndices(spec);
-        String inputCol = m_first.getStringValue();
-        String newName = m_concate.getStringValue();
-        if ((spec.containsName(newName) && !newName.equals(inputCol))
-              ||  (spec.containsName(newName) && newName.equals(inputCol)
-              && !m_removeSourceCols.getBooleanValue())) {
-            throw new InvalidSettingsException("Cannot create column \""
-                    + newName + "\" since it is already in the input.");
-        }
-        ColumnRearranger result = new ColumnRearranger(spec);
-        DataColumnSpecCreator appendSpec =
-                new DataColumnSpecCreator(newName, RDKitMolCellFactory.TYPE);
-        final boolean smilesInput = spec.getColumnSpec(indices[0]).getType().
+        int molColIdx = getMolColIndex(inSpec, m_first.getStringValue().trim());
+        final boolean smilesInput = inSpec.getColumnSpec(molColIdx).getType().
             isCompatible(SmilesValue.class);
-        result.append(new SingleCellFactory(appendSpec.createSpec()) {
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell firstCell = row.getCell(indices[0]);
-                if (firstCell.isMissing()) {
-                    return DataType.getMissingCell();
+        DataCell[] cells = new DataCell[out0Spec.getNumColumns()];
+        int parseErrorCount = 0;
+        int rowsProcessed = 0;
+        int totalRowCount = inData[0].getRowCount();
+        for (DataRow row : inData[0]) {
+            exec.checkCanceled();
+            exec.setProgress(rowsProcessed / (double)totalRowCount,
+                    "Processing row " + row.getKey());
+            // copy the cells from the incoming row
+            int outIdx = 0;
+            for (int i = 0; i < cells.length - 1; i++) {
+                if (i == molColIdx && m_removeSourceCols.getBooleanValue()) {
+                    continue;
                 }
-                String value = ((StringValue)firstCell).toString();
+                cells[outIdx++] = row.getCell(i);
+            }
+            // append result
+            boolean parseError = false;
+            DataCell molCell = row.getCell(molColIdx);
+            if (molCell.isMissing()) {
+                cells[cells.length - 1] = DataType.getMissingCell();
+            } else {
                 ROMol mol = null;
                 if (smilesInput) {
+                    String value = ((SmilesValue)molCell).getSmilesValue();
                     mol = RDKFuncs.MolFromSmiles(value);
-
                 } else {
+                    String value = ((SdfValue)molCell).getSdfValue();
                     mol = RDKFuncs.MolFromMolBlock(value);
                 }
                 if (mol == null) {
@@ -234,16 +205,100 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     error.append("while processing row: \"");
                     error.append(row.getKey()).append("\"");
                     LOGGER.debug(error.toString());
-                    m_parseErrorCount ++;
-                    return DataType.getMissingCell();
+                    parseErrorCount++;
+                    parseError = true;
+                    if (splitBadRowsToPort1()) {
+                        cells[cells.length - 1] = null;
+                    } else {
+                        cells[cells.length - 1] = DataType.getMissingCell();
+                    }
+                } else {
+                    cells[cells.length - 1] =
+                            RDKitMolCellFactory.createRDKitMolCell(mol);
                 }
-                return RDKitMolCellFactory.createRDKitMolCell(mol);
             }
-        });
-        if (m_removeSourceCols.getBooleanValue()) {
-            result.remove(indices);
+            if (parseError && splitBadRowsToPort1()) {
+                port1.addRowToTable(row);
+            } else {
+                port0.addRowToTable(new DefaultRow(row.getKey(), cells));
+            }
+            rowsProcessed++;
         }
-        return result;
+        if (parseErrorCount > 0) {
+            String msg =
+                    "Error parsing input for " + parseErrorCount + " rows.";
+            LOGGER.warn(msg);
+            setWarningMessage(msg);
+        }
+        port0.close();
+        port1.close();
+        return new BufferedDataTable[]{port0.getTable(), port1.getTable()};
+    }
+
+    private boolean splitBadRowsToPort1() {
+        return !Molecule2RDKitConverterNodeDialogPane.MISSVAL_FOR_FOR_BAD_ROWS
+                .equals(m_separateFails.getStringValue());
+    }
+
+    private int getMolColIndex(final DataTableSpec inSpec, final String colName)
+            throws InvalidSettingsException {
+        if (colName == null || colName.isEmpty()) {
+            throw new InvalidSettingsException("Not configured yet");
+        }
+        int molColIndex = inSpec.findColumnIndex(colName);
+        if (molColIndex < 0) {
+            throw new InvalidSettingsException(
+                    "No such column in input table: " + colName);
+        }
+        DataType molColType = inSpec.getColumnSpec(molColIndex).getType();
+        if (!molColType.isCompatible(SmilesValue.class)
+                && !molColType.isCompatible(SdfValue.class)) {
+            throw new InvalidSettingsException("Column '" + colName
+                    + "' does not contain smiles or SDF.");
+        }
+        return molColIndex;
+    }
+
+    private DataTableSpec createOutPort0Spec(final DataTableSpec inSpec)
+            throws InvalidSettingsException {
+        String molCol = m_first.getStringValue().trim();
+        // make sure it is set and of correct type:
+        getMolColIndex(inSpec, molCol);
+        String newName = m_concate.getStringValue().trim();
+        if (newName == null || newName.isEmpty()) {
+            throw new InvalidSettingsException("No name for new column set.");
+        }
+        if (inSpec.containsName(newName)) {
+            // only acceptable if it replaces the input column
+            if (!(newName.equals(molCol) && m_removeSourceCols
+                    .getBooleanValue())) {
+                throw new InvalidSettingsException("Cannot create column \""
+                        + newName + "\" since it is already in the input.");
+            }
+        }
+
+        int newColNum = inSpec.getNumColumns() + 1;
+        if (m_removeSourceCols.getBooleanValue()) {
+            newColNum--;
+        }
+        ArrayList<DataColumnSpec> newColSpecs =
+                new ArrayList<DataColumnSpec>(newColNum);
+        for (DataColumnSpec inCol : inSpec) {
+            if (m_removeSourceCols.getBooleanValue()
+                    && inCol.getName().equals(molCol)) {
+                // don't include source column in output spec
+                continue;
+            }
+            newColSpecs.add(inCol);
+        }
+        // append result column
+        DataColumnSpec appendSpec =
+                new DataColumnSpecCreator(newName, RDKitMolCellFactory.TYPE)
+                        .createSpec();
+        newColSpecs.add(appendSpec);
+        assert newColSpecs.size() == newColNum;
+        return new DataTableSpec(
+                newColSpecs.toArray(new DataColumnSpec[newColNum]));
     }
 
     /**
@@ -283,6 +338,9 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_first.loadSettingsFrom(settings);
         m_concate.loadSettingsFrom(settings);
         m_removeSourceCols.loadSettingsFrom(settings);
+        m_separateFails.loadSettingsFrom(settings);
+        m_separateFails.setStringValue(
+                Molecule2RDKitConverterNodeDialogPane.MISSVAL_FOR_FOR_BAD_ROWS);
     }
 
     /**
@@ -293,6 +351,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_first.saveSettingsTo(settings);
         m_concate.saveSettingsTo(settings);
         m_removeSourceCols.saveSettingsTo(settings);
+        m_separateFails.saveSettingsTo(settings);
     }
 
     /**
@@ -304,5 +363,6 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_first.validateSettings(settings);
         m_concate.validateSettings(settings);
         m_removeSourceCols.validateSettings(settings);
+        m_separateFails.validateSettings(settings);
     }
 }

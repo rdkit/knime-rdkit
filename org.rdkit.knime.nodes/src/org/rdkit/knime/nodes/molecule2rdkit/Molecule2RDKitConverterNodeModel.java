@@ -242,8 +242,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     }
 
     private boolean splitBadRowsToPort1() {
-        return !Molecule2RDKitConverterNodeDialogPane.MISSVAL_FOR_FOR_BAD_ROWS
-                .equals(m_separateFails.getStringValue());
+        return ParseErrorPolicy.SPLIT_ROWS.getActionCommand().equals(
+                m_separateFails.getStringValue());
     }
 
     private int getMolColIndex(final DataTableSpec inSpec, final String colName)

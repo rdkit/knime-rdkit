@@ -66,25 +66,10 @@ public class Molecule2RDKitConverterNodeDialogPane extends
         DefaultNodeSettingsPane {
 
     /**
-     * the key when table split is selected - also the label displayed next to
-     * the corresponding radio button.
-     */
-    static final String SPLIT_BAD_ROWS =
-            "Create table with erroneous input rows at second output";
-
-    /**
-     * the key when table split is disabled - also the label displayed next to
-     * the corresponding radio button.
-     */
-    static final String MISSVAL_FOR_FOR_BAD_ROWS =
-            "Insert a missing value as result in erroneous rows";
-
-    /**
      * Create a new dialog pane with some default components.
      */
     @SuppressWarnings("unchecked")
     Molecule2RDKitConverterNodeDialogPane() {
-        super.createNewGroup("Column Options");
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "Molecule column: ", 0,
                 SmilesValue.class, SdfValue.class));
@@ -92,11 +77,9 @@ public class Molecule2RDKitConverterNodeDialogPane extends
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
-        super.closeCurrentGroup();
         super.addDialogComponent(new DialogComponentButtonGroup(
-                createSeparateRowsModel(), true,
-                "Separate erroneous input rows", SPLIT_BAD_ROWS,
-                MISSVAL_FOR_FOR_BAD_ROWS));
+                createSeparateRowsModel(), "Error Handling", true,
+                ParseErrorPolicy.values()));
     }
 
     /**
@@ -124,7 +107,8 @@ public class Molecule2RDKitConverterNodeDialogPane extends
      * @return new settings model for the flag 'send bad rows to port1'
      */
     static final SettingsModelString createSeparateRowsModel() {
-        return new SettingsModelString("bad_rows_to_port1", SPLIT_BAD_ROWS);
+        return new SettingsModelString("bad_rows_to_port1",
+                ParseErrorPolicy.SPLIT_ROWS.getActionCommand());
     };
 
 }

@@ -84,6 +84,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends
      */
     @SuppressWarnings("unchecked")
     Molecule2RDKitConverterNodeDialogPane() {
+        super.createNewGroup("Column Options");
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "Molecule column: ", 0,
                 SmilesValue.class, SdfValue.class));
@@ -91,6 +92,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
                 createBooleanModel(), "Remove source column"));
+        super.closeCurrentGroup();
         super.addDialogComponent(new DialogComponentButtonGroup(
                 createSeparateRowsModel(), true,
                 "Separate erroneous input rows", SPLIT_BAD_ROWS,

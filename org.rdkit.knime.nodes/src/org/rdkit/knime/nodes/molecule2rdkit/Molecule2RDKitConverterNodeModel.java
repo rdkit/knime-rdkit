@@ -63,7 +63,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -168,7 +168,6 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         int molColIdx = getMolColIndex(inSpec, m_first.getStringValue().trim());
         final boolean smilesInput = inSpec.getColumnSpec(molColIdx).getType().
             isCompatible(SmilesValue.class);
-        DataCell[] cells = new DataCell[out0Spec.getNumColumns()];
         int parseErrorCount = 0;
         int rowsProcessed = 0;
         int totalRowCount = inData[0].getRowCount();
@@ -176,51 +175,58 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             exec.checkCanceled();
             exec.setProgress(rowsProcessed / (double)totalRowCount,
                     "Processing row " + row.getKey());
-            // copy the cells from the incoming row
-            int outIdx = 0;
-            for (int i = 0; i < cells.length - 1; i++) {
-                if (i == molColIdx && m_removeSourceCols.getBooleanValue()) {
-                    continue;
-                }
-                cells[outIdx++] = row.getCell(i);
-            }
-            // append result
+            final DataCell molCell = row.getCell(molColIdx);
+
+            DataCell result;
             boolean parseError = false;
-            DataCell molCell = row.getCell(molColIdx);
+            ROMol mol = null;
             if (molCell.isMissing()) {
-                cells[cells.length - 1] = DataType.getMissingCell();
+                mol = null;
+            } else if (smilesInput) {
+                String value = ((SmilesValue)molCell).getSmilesValue();
+                mol = RDKFuncs.MolFromSmiles(value);
             } else {
-                ROMol mol = null;
-                if (smilesInput) {
-                    String value = ((SmilesValue)molCell).getSmilesValue();
-                    mol = RDKFuncs.MolFromSmiles(value);
-                } else {
-                    String value = ((SdfValue)molCell).getSdfValue();
-                    mol = RDKFuncs.MolFromMolBlock(value);
-                }
-                if (mol == null) {
-                    StringBuilder error = new StringBuilder();
-                    error.append("Error parsing ");
-                    error.append(smilesInput ? "SMILES " : "SDF ");
-                    error.append("while processing row: \"");
-                    error.append(row.getKey()).append("\"");
-                    LOGGER.debug(error.toString());
-                    parseErrorCount++;
-                    parseError = true;
-                    if (splitBadRowsToPort1()) {
-                        cells[cells.length - 1] = null;
-                    } else {
-                        cells[cells.length - 1] = DataType.getMissingCell();
-                    }
-                } else {
-                    cells[cells.length - 1] =
-                            RDKitMolCellFactory.createRDKitMolCell(mol);
-                }
+                String value = ((SdfValue)molCell).getSdfValue();
+                mol = RDKFuncs.MolFromMolBlock(value);
             }
+
+            if (mol == null) {
+                StringBuilder error = new StringBuilder();
+                error.append("Error parsing ");
+                error.append(smilesInput ? "SMILES " : "SDF ");
+                error.append("while processing row: \"");
+                error.append(row.getKey()).append("\"");
+                LOGGER.debug(error.toString());
+                parseErrorCount++;
+                parseError = true;
+                result = DataType.getMissingCell();
+            } else {
+                result = RDKitMolCellFactory.createRDKitMolCell(mol);
+            }
+
             if (parseError && splitBadRowsToPort1()) {
                 port1.addRowToTable(row);
             } else {
-                port0.addRowToTable(new DefaultRow(row.getKey(), cells));
+                final ArrayList<DataCell> copyCells =
+                    new ArrayList<DataCell>(row.getNumCells() + 1);
+
+                // copy the cells from the incoming row
+                for (int i = 0; i < row.getNumCells(); i++) {
+                    if (i == molColIdx && m_removeSourceCols.getBooleanValue()) {
+                        continue;
+                    }
+                    // respecting a blob support row has the advantage that
+                    // blobs are not unwrapped (expensive)
+                    // --> this is really only for performance and makes a
+                    // difference only if the input row contains blobs
+                    copyCells.add(row instanceof BlobSupportDataRow
+                            ? ((BlobSupportDataRow)row).getRawCell(i)
+                                    : row.getCell(i));
+                }
+                copyCells.add(result);
+                BlobSupportDataRow outRow = new BlobSupportDataRow(row.getKey(),
+                        copyCells.toArray(new DataCell[copyCells.size()]));
+                port0.addRowToTable(outRow);
             }
             rowsProcessed++;
         }
@@ -339,8 +345,6 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_concate.loadSettingsFrom(settings);
         m_removeSourceCols.loadSettingsFrom(settings);
         m_separateFails.loadSettingsFrom(settings);
-        m_separateFails.setStringValue(
-                Molecule2RDKitConverterNodeDialogPane.MISSVAL_FOR_FOR_BAD_ROWS);
     }
 
     /**

@@ -19,7 +19,7 @@
         <option name="Remove source column">
             Toggles removal of the input molecule column in the output table.
         </option>        
-        <option name="Split erroneous input rows">
+        <option name="Error Handling">
             If the molecule in an input row cannot be converted, you can select
             if this row should be separated from the output table and be delivered 
             at the second port, or if a missing value should be inserted instead

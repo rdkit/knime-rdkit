@@ -58,7 +58,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 public enum ParseErrorPolicy implements ButtonGroupEnumInterface {
 
     /** */
-    SPLIT_ROWS("Provide error rows at second port", "The table at the second "
+    SPLIT_ROWS("Send error rows to second output", "The table at the second "
             + "port contains the input rows with problematic structures"),
     /** */
     MISS_VAL("Insert missing values", "If the input structure can't be "

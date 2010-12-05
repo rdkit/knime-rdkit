@@ -281,7 +281,8 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     RDKFuncs.RDKFingerprintMol(mol,
                                             m_minPath.getIntValue(),
                                             m_maxPath.getIntValue(),
-                                            m_numBits.getIntValue());
+                                            m_numBits.getIntValue(),
+                                            2);
                             for (int i = 0; i < fingerprint.getNumBits(); i++) {
                                 if (fingerprint.getBit(i))
                                     bitVector.set(i);

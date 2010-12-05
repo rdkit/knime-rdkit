@@ -2,16 +2,12 @@
 <feature
       id="org.rdkit.knime.binaries.feature"
       label="RDKit binaries"
-      version="0.9.0.qualifier"
+      version="1.0.0.qualifier"
       provider-name="rdkit.org">
 
    <description>
       This feature contains the platform specific binaries for RDKit.
    </description>
-
-   <copyright>
-      [Enter Copyright Description here.]
-   </copyright>
 
    <license>
       Please see below the General Public License (GPL), Version 3, 
@@ -694,35 +690,6 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
-
-*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
-
-Additional permissions under GNU GPL Version 3 Section 7:
-	
-KNIME interoperates with ECLIPSE solely via ECLIPSE&apos;s plug-in APIs.
-Hence, KNIME and ECLIPSE are both independent programs and are not
-derived from each other. Should, however, the interpretation of the
-GNU GPL Version 3 (&quot;License&quot;) under any applicable laws result in
-KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
-you the additional permission to use and propagate KNIME together with
-ECLIPSE with only the license terms in place for ECLIPSE applying to
-ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
-license terms of ECLIPSE themselves allow for the respective use and
-propagation of ECLIPSE together with KNIME.
-	
-	
-Additional permission relating to nodes for KNIME that extend the Node
-Extension (and in particular that are based on subclasses of NodeModel,
-NodeDialog, and NodeView) and that only interoperate with KNIME through
-standard APIs (&quot;Nodes&quot;):
-Nodes are deemed to be separate and independent programs and to not be
-covered works.  Notwithstanding anything to the contrary in the License,
-the License does not apply to Nodes, you are not required to license Nodes
-under the License, and you are granted a license to prepare and propagate
-Nodes, in each case even if such Nodes are propagated with or for
-interoperation with KNIME.  The owner of a Node may freely choose the
-license terms applicable to such Node, including when such Node is
-propagated with or for interoperation with KNIME.
    </license>
 
    <plugin

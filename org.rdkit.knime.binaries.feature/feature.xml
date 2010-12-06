@@ -3,11 +3,15 @@
       id="org.rdkit.knime.binaries.feature"
       label="RDKit binaries"
       version="1.0.0.qualifier"
-      provider-name="rdkit.org">
+      provider-name="NIBR">
 
    <description>
       This feature contains the platform specific binaries for RDKit.
    </description>
+
+   <copyright>
+      Copyright (C) 2010 Novartis Institutes for BioMedical Research
+   </copyright>
 
    <license>
       Please see below the General Public License (GPL), Version 3, 

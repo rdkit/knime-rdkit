@@ -47,6 +47,7 @@
 package org.rdkit.knime.types;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
@@ -59,6 +60,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Default implementation of a Smiles Cell. This cell stores only the Smiles
@@ -83,6 +85,9 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
     static final DataType TYPE = DataType.getType(RDKitMolCell.class);
 
     private static final long serialVersionUID = 0x1;
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(RDKitMolCell.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
@@ -113,6 +118,15 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
 
     private final ROMol m_mol;
 
+	/** Living instance count (incremented in constructed, decremented in
+	 * finalize() */
+    private static final AtomicLong INSTANCE_COUNT = new AtomicLong();
+    /** current time in millis we lasted reporting instance count on
+     * debug. */
+    private static final AtomicLong LAST_REPORT_TIME = new AtomicLong();
+    /** live count after last manual GC. */
+    private static final AtomicLong LAST_LIVE_COUNT_AFTER_GC =
+        new AtomicLong();
 
     /** Package scope constructor that wraps the argument molecule.
      * @param mol The molecule to wrap.
@@ -122,6 +136,7 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
             throw new NullPointerException("Mol value must not be null.");
         }
         m_mol = mol;
+        reportUsageAndFreeMemory(INSTANCE_COUNT.incrementAndGet());
         m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
     }
 
@@ -212,12 +227,43 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
         }
     }
 
+    private static void reportUsageAndFreeMemory(final long liveCount) {
+        if (liveCount == 0) {
+            LOGGER.debug("RDKit instance count: " + liveCount);
+        }
+        long last = LAST_REPORT_TIME.get();
+        long now = System.currentTimeMillis();
+        long diff = now - last;
+        // do not report too often
+        if (diff > 3000 && LAST_REPORT_TIME.compareAndSet(last, now)) {
+            LOGGER.debug("RDKit instance count: " + liveCount);
+        }
+        // call GC if 10000 objects were created while no objects were
+        // finalized
+        final int createdObjectThreshold = 10000;
+        long lastLiveCountAfterGC = LAST_LIVE_COUNT_AFTER_GC.get();
+        if (lastLiveCountAfterGC > liveCount) {
+            // decreasing number of living objects ... update field
+            LAST_LIVE_COUNT_AFTER_GC.compareAndSet(
+                    lastLiveCountAfterGC, liveCount);
+        } else if (liveCount - lastLiveCountAfterGC > createdObjectThreshold) {
+            // call GC if only if this thread successfully updates the value
+            if (LAST_LIVE_COUNT_AFTER_GC.compareAndSet(
+                    lastLiveCountAfterGC, Long.MAX_VALUE)) {
+                LOGGER.debug("RDKit - calling GC to force finalizer ("
+                        + liveCount + " living objects)");
+                System.gc();
+            }
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void finalize() throws Throwable {
         m_mol.delete();
+        reportUsageAndFreeMemory(INSTANCE_COUNT.decrementAndGet());
         super.finalize();
     }
 

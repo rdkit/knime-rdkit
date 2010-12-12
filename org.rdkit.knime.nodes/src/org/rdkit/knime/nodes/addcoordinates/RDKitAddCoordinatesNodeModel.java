@@ -262,14 +262,20 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                     return DataType.getMissingCell();                	
                 }
                 // after all that work we can now add coords:
-                if (!do2D) {
-                    RDKFuncs.compute3DCoords(mol);
-                } else {
-                    if (m_smartsPattern != null) {
-                        RDKFuncs.compute2DCoords(mol, m_smartsPattern);
-                    } else {
-                        RDKFuncs.compute2DCoords(mol);
-                    }
+                try {
+                	// keep this all isolated in a try...catch so that we don't take
+                	// down knime if there's a problem on the C++ side.
+	                if (!do2D) {
+	                    RDKFuncs.compute3DCoords(mol);
+	                } else {
+	                    if (m_smartsPattern != null) {
+	                        RDKFuncs.compute2DCoords(mol, m_smartsPattern);
+	                    } else {
+	                        RDKFuncs.compute2DCoords(mol);
+	                    }
+	                } 
+                } catch (Exception e) {
+                	LOGGER.warn("problems generating coordinates");
                 }
 
                 return RDKitMolCellFactory.createRDKitMolCell(mol);

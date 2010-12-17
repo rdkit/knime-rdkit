@@ -100,7 +100,7 @@ public final class RDKitMolCellFactory {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
-        return new RDKitMolCell(mol);
+        return new RDKitMolCell(mol,"");
     }
 
 

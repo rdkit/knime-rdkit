@@ -130,14 +130,20 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
 
     /** Package scope constructor that wraps the argument molecule.
      * @param mol The molecule to wrap.
+     * @param canonsmiles RDKit canonical smiles for the molecule. 
+     *        Leave this empty if you have any doubts how to generate it.
      */
-    RDKitMolCell(final ROMol mol) {
+    RDKitMolCell(final ROMol mol,final String canonSmiles) {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
         m_mol = mol;
         reportUsageAndFreeMemory(INSTANCE_COUNT.incrementAndGet());
-        m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
+        if(canonSmiles==""){
+        	m_smilesString = RDKFuncs.MolToSmiles(m_mol, true);
+        } else {
+        	m_smilesString=canonSmiles;
+        }
     }
 
     /**
@@ -203,6 +209,8 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
             for (int i = 0; i < bytes.length; i++) {
                 bytes[i] = (byte)iv.get(i);
             }
+            output.writeInt(-1);
+            output.writeUTF(cell.getSmilesValue());
             output.writeInt(bytes.length);
             output.write(bytes);
         }
@@ -214,16 +222,19 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
         public RDKitMolCell deserialize(final DataCellDataInput input)
                 throws IOException {
             int length = input.readInt();
+            String smiles="";
+            if(length<0){
+            	smiles=input.readUTF();
+            	length = input.readInt();
+            }
             byte[] bytes = new byte[length];
             input.readFully(bytes);
             Int_Vect iv = new Int_Vect(length);
             for (int i = 0; i < length; i++) {
                 iv.set(i, bytes[i]);
             }
-            // ROMol m=new ROMol(s);
-            // ROMol m=RDKFuncs.MolFromSmiles(s);
             ROMol m = RDKFuncs.MolFromBinary(iv);
-            return new RDKitMolCell(m);
+            return new RDKitMolCell(m,smiles);
         }
     }
 

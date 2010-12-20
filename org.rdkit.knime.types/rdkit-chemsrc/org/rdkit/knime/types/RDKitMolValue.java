@@ -49,8 +49,12 @@ package org.rdkit.knime.types;
 import javax.swing.Icon;
 
 import org.RDKit.ROMol;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.renderer.StringValueRenderer;
 
 /**
  * Smiles Data Value interface. (Only a wrapper for the underlying string)
@@ -82,8 +86,8 @@ public interface RDKitMolValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-         private static final Icon ICON =
-             loadIcon(RDKitMolValue.class, "/rdkit_type.png");
+        private static final Icon ICON = loadIcon(RDKitMolValue.class,
+                "/rdkit_type.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {
@@ -107,10 +111,10 @@ public interface RDKitMolValue extends DataValue {
         /**
          * {@inheritDoc}
          */
-         @Override
-         public Icon getIcon() {
-             return ICON;
-         }
+        @Override
+        public Icon getIcon() {
+            return ICON;
+        }
 
         /**
          * {@inheritDoc}
@@ -118,6 +122,16 @@ public interface RDKitMolValue extends DataValue {
         @Override
         protected DataValueComparator getComparator() {
             return COMPARATOR;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataValueRendererFamily getRendererFamily(
+                final DataColumnSpec spec) {
+            return new DefaultDataValueRendererFamily(
+                    StringValueRenderer.INSTANCE, new RDKitMolValueRenderer());
         }
     }
 }

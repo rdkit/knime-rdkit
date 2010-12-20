@@ -54,12 +54,22 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.StringReader;
 
 import org.RDKit.RDKFuncs;
+import org.apache.batik.bridge.BridgeContext;
+import org.apache.batik.bridge.GVTBuilder;
+import org.apache.batik.bridge.UserAgent;
+import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
+import org.apache.batik.gvt.GraphicsNode;
+import org.apache.batik.gvt.renderer.StaticRenderer;
 import org.apache.batik.util.XMLResourceDescriptor;
-import org.knime.base.data.xml.SvgValueRenderer;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.svg.SVGDocument;
@@ -131,6 +141,61 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
             return;
         }
 
-        SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
+        paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
+    }
+
+
+    // FIXME: removes this method and use the one from SvgValueRenderer once
+    // KNIME 2.3.1 is released
+    private static final UserAgent UA = new UserAgentAdapter();
+
+    private static final RenderingHints R_HINTS = new RenderingHints(
+            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    private static void paint(final SVGDocument doc, final Graphics2D g,
+            final Rectangle componentBounds, final boolean keepAspectRatio) {
+        if ((componentBounds.getHeight() < 1)
+                || (componentBounds.getWidth() < 1)) {
+            return;
+        }
+
+        GVTBuilder gvtBuilder = new GVTBuilder();
+        BridgeContext bridgeContext = new BridgeContext(UA);
+        GraphicsNode gvtRoot = gvtBuilder.build(bridgeContext, doc);
+
+        Rectangle2D svgBounds = gvtRoot.getBounds();
+        if (svgBounds == null) {
+            g.setFont(NO_SVG_FONT);
+            g.drawString("Invalid SVG", 2, 14);
+            return;
+        }
+
+        double scaleX = (componentBounds.getWidth() - 2) / svgBounds.getWidth();
+        double scaleY =
+                (componentBounds.getHeight() - 2) / svgBounds.getHeight();
+        if (keepAspectRatio) {
+            scaleX = Math.min(scaleX, scaleY);
+            scaleY = Math.min(scaleX, scaleY);
+        }
+
+        AffineTransform transform = new AffineTransform();
+        transform.scale(scaleX, scaleY);
+        transform.translate(-svgBounds.getX(), -svgBounds.getY());
+
+        StaticRenderer renderer = new StaticRenderer(R_HINTS, transform);
+        renderer.setTree(gvtRoot);
+        renderer.updateOffScreen((int)componentBounds.getWidth(),
+                (int)componentBounds.getHeight());
+        renderer.clearOffScreen();
+        renderer.repaint(componentBounds);
+        final BufferedImage image = renderer.getOffScreen();
+
+        double heightDiff =
+                componentBounds.getHeight() - scaleY * svgBounds.getHeight();
+
+        double widthDiff =
+                componentBounds.getWidth() - scaleX * svgBounds.getWidth();
+
+        g.drawImage(image, (int)(widthDiff / 2), (int)(heightDiff / 2), null);
     }
 }

@@ -6,9 +6,6 @@
              for the knime.create.helpfiles action. -->
         <dependency name="org.knime.workbench.helpview" componentType="osgi.bundle" />
     </dependencies>
-	<dependencies>
-        <dependency name="org.knime.workbench.helpview" componentType="osgi.bundle" />
-    </dependencies>
     <actions>
 		<!-- Dynamically build the files for the Eclipse help. -->
 		<private name="knime.create.helpfiles" actor="knime.docBuilder">

@@ -186,6 +186,8 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         // construct an RDKit molecule from the SMARTS pattern:
         ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
         int parseErrorCount = 0;
+        final int rowCount = inData[0].getRowCount();
+        int matchCount = 0;
         try {
             int count = 0;
             RowIterator it = inData[0].iterator();
@@ -234,9 +236,14 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                 }
                 if (matched) {
                     matchTable.addRowToTable(row);
+                    matchCount += 1;
                 } else {
                     failTable.addRowToTable(row);
                 }
+                exec.setProgress(count / (double)rowCount,
+                        "Processed row " + count + "/" + rowCount + " (\""
+                        + row.getKey() + "\") -- " + matchCount + " matches");
+                exec.checkCanceled();
             }
         } finally {
             matchTable.close();

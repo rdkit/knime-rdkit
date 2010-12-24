@@ -221,6 +221,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                     + m_smarts.getStringValue());
         }
         int parseErrorCount = 0;
+        final int rowCount = inData[0].getRowCount();
         try {
             int count = 0;
             RowIterator it = inData[0].iterator();
@@ -297,6 +298,10 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         mol.delete();
                     }
                 }
+                exec.setProgress(count / (double)rowCount,
+                        "Processed row " + count + "/" + rowCount + " (\""
+                        + row.getKey() + "\")");
+                exec.checkCanceled();
             }
         } finally {
             productTable.close();

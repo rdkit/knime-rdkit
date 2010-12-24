@@ -306,17 +306,14 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     it2 = inData[1].iterator();
                 }
 
-                boolean ownMol1 = false;
                 ROMol mol1 = null;
                 if (!r1Cell.isMissing()) {
                     if (inSpec1.getColumnSpec(indices[0]).getType()
                             .isCompatible(RDKitMolValue.class)) {
-                        mol1 = ((RDKitMolValue)r1Cell).getMoleculeValue();
-                        ownMol1 = false;
+                        mol1 = ((RDKitMolValue)r1Cell).readMoleculeValue();
                     } else {
                         String smiles = ((StringValue)r1Cell).toString();
                         mol1 = RDKFuncs.MolFromSmiles(smiles);
-                        ownMol1 = true;
                     }
                 }
                 if (mol1 == null) {
@@ -345,16 +342,13 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                     DataCell r2Cell = row2.getCell(indices[1]);
                     if (!r2Cell.isMissing()) {
                         // usual boilerplate for building the second molecule:
-                        boolean ownMol2 = false;
                         ROMol mol2 = null;
                         if (inSpec2.getColumnSpec(indices[1]).getType()
                                 .isCompatible(RDKitMolValue.class)) {
-                            mol2 = ((RDKitMolValue)r2Cell).getMoleculeValue();
-                            ownMol2 = false;
+                            mol2 = ((RDKitMolValue)r2Cell).readMoleculeValue();
                         } else {
                             String smiles = ((StringValue)r2Cell).toString();
                             mol2 = RDKFuncs.MolFromSmiles(smiles);
-                            ownMol2 = true;
                         }
                         if (mol2 != null) {
                             rs.set(1, mol2);
@@ -376,15 +370,17 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                                                         .getTableSpec()
                                                         .getNumColumns()];
                                         cells[0] = RDKitMolCellFactory.
-                                            createRDKitMolCell(
+                                            createRDKitMolCellAndDelete(
                                                 prods.get(psetidx).get(pidx));
                                         cells[1] = new IntCell(pidx);
                                         cells[2] = new IntCell(r1Count - 1);
                                         cells[3] = RDKitMolCellFactory.
-                                            createRDKitMolCell(rs.get(0));
+                                            createRDKitMolCellAndDelete(
+                                                    rs.get(0));
                                         cells[4] = new IntCell(r2Count - 1);
                                         cells[5] = RDKitMolCellFactory.
-                                            createRDKitMolCell(rs.get(1));
+                                            createRDKitMolCellAndDelete(
+                                                    rs.get(1));
                                         DataRow drow =
                                                 new DefaultRow(""
                                                         + (r1Count - 1) + "_"
@@ -395,9 +391,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                                     }
                                 }
                             }
-                            if (ownMol2) {
-                                mol2.delete();
-                            }
+                            mol2.delete();
                         } else {
                             if ((firstIteration
                                     && m_doMatrix.getBooleanValue())
@@ -412,13 +406,12 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                         break;
                     }
                 }
-                if (ownMol1) {
-                    mol1.delete();
-                }
+                mol1.delete();
                 firstIteration = false;
             }
         } finally {
             productTable.close();
+            rxn.delete();
         }
         if (parseErrorCount1 > 0 || parseErrorCount2 > 0) {
             StringBuilder msg = new StringBuilder();

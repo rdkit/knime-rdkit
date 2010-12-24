@@ -216,28 +216,25 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                 }
                 String canSmiles = "";
                 DataType firstType = spec.getColumnSpec(indices[0]).getType();
-                boolean ownMol;
                 ROMol mol = null;
                 if (firstType.isCompatible(RDKitMolValue.class)) {
-                    mol = ((RDKitMolValue)firstCell).getMoleculeValue();
-                    ownMol = false;
+                    mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                 } else {
-                String smiles = ((StringValue)firstCell).toString();
+                    String smiles = ((StringValue)firstCell).toString();
                     mol = RDKFuncs.MolFromSmiles(smiles);
-                    ownMol = true;
                 }
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "
                             + "while processing row: " + row.getKey());
                     m_parseErrorCount ++;
                     return DataType.getMissingCell();
-                } else {
-                    canSmiles = RDKFuncs.MolToSmiles(mol, true);
-                    if (ownMol) {
-                        mol.delete();
-                    }
                 }
-                return new SmilesCell(canSmiles);
+                try {
+                    canSmiles = RDKFuncs.MolToSmiles(mol, true);
+                    return new SmilesCell(canSmiles);
+                } finally {
+                    mol.delete();
+                }
             }
         });
         if (m_removeSourceCols.getBooleanValue()) {

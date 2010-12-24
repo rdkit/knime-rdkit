@@ -234,17 +234,20 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                 } else {
                     DataType firstType =
                             inSpec.getColumnSpec(indices[0]).getType();
-                    boolean ownMol;
                     ROMol mol = null;
                     if (firstType.isCompatible(RDKitMolValue.class)) {
-                        mol = ((RDKitMolValue)firstCell).getMoleculeValue();
-                        ownMol = false;
+                        mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                     } else {
                         String smiles = ((StringValue)firstCell).toString();
                         mol = RDKFuncs.MolFromSmiles(smiles);
-                        ownMol = true;
+                        if (mol == null) {
+                            LOGGER.debug("Error parsing Smiles "
+                                    + "while processing row: " + row.getKey());
+                            parseErrorCount++;
+                        }
+                        continue;
                     }
-                    if (mol != null) {
+                    try {
                         // the reaction takes a vector of reactants. For this
                         // single-component reaction that
                         // vector is one long:
@@ -270,14 +273,18 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                             new DataCell[productTable
                                                     .getTableSpec()
                                                     .getNumColumns()];
+                                    ROMol temp = prods.get(psetidx).get(pidx);
                                     cells[0] =
                                         RDKitMolCellFactory.createRDKitMolCell(
-                                                prods.get(psetidx).get(pidx));
+                                                temp);
+                                    temp.delete();
                                     cells[1] = new IntCell(pidx);
                                     cells[2] = new IntCell(count - 1);
+                                    temp = rs.get(0);
                                     cells[3] =
                                         RDKitMolCellFactory.createRDKitMolCell(
-                                                rs.get(0));
+                                                temp);
+                                    temp.delete();
                                     DataRow drow =
                                             new DefaultRow("" + (count - 1)
                                                     + "_" + psetidx + "_"
@@ -286,13 +293,8 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                 }
                             }
                         }
-                        if (ownMol) {
-                            mol.delete();
-                        }
-                    } else {
-                        LOGGER.debug("Error parsing Smiles "
-                                + "while processing row: " + row.getKey());
-                        parseErrorCount++;
+                    } finally {
+                        mol.delete();
                     }
                 }
             }

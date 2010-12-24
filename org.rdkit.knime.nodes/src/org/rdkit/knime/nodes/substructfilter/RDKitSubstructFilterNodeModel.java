@@ -203,17 +203,14 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                 } else {
                     DataType firstType =
                             inSpec.getColumnSpec(indices[0]).getType();
-                    boolean ownMol;
                     ROMol mol = null;
                     if (firstType.isCompatible(RDKitMolValue.class)) {
-                        mol = ((RDKitMolValue)firstCell).getMoleculeValue();
-                        ownMol = false;
+                        mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                     } else {
                         // it's a SMILES column, so construct an RDKit molecule
                         // from the SMILES:
                         String smiles = ((StringValue)firstCell).toString();
                         mol = RDKFuncs.MolFromSmiles(smiles);
-                        ownMol = true;
                     }
                     if (mol == null) {
                         LOGGER.debug("Error parsing smiles "
@@ -228,9 +225,11 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                         // after all that work we can now check whether or not
                         // there is
                         // a substructure match:
-                        matched = mol.hasSubstructMatch(pattern);
-                        if (ownMol)
+                        try {
+                            matched = mol.hasSubstructMatch(pattern);
+                        } finally {
                             mol.delete();
+                        }
                     }
                 }
                 if (matched) {
@@ -242,6 +241,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         } finally {
             matchTable.close();
             failTable.close();
+            pattern.delete();
         }
         if (parseErrorCount > 0) {
             if (m_removeInvalid.getBooleanValue()) {

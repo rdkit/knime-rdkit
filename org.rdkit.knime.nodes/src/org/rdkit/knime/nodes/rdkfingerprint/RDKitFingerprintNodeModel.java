@@ -255,15 +255,12 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 DataType firstType = spec.getColumnSpec(indices[0]).getType();
-                boolean ownMol;
                 ROMol mol = null;
                 if (firstType.isCompatible(RDKitMolValue.class)) {
-                    mol = ((RDKitMolValue)firstCell).getMoleculeValue();
-                    ownMol = false;
+                    mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                 } else {
                     String smiles = ((StringValue)firstCell).toString();
                     mol = RDKFuncs.MolFromSmiles(smiles);
-                    ownMol = true;
                 }
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "
@@ -275,7 +272,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                     DenseBitVector bitVector =
                             new DenseBitVector(m_numBits.getIntValue());
                     try {
-                        if (m_fpType.getStringValue() == "rdkit") {
+                        if ("rdkit".equals(m_fpType.getStringValue())) {
                             ExplicitBitVect fingerprint;
                             fingerprint =
                                     RDKFuncs.RDKFingerprintMol(mol,
@@ -288,7 +285,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     bitVector.set(i);
                             }
                             fingerprint.delete();
-                        } else if (m_fpType.getStringValue() == "atompair") {
+                        } else if ("atompair".equals(m_fpType.getStringValue())) {
                                 ExplicitBitVect fingerprint;
                                 fingerprint =
                                         RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol,m_numBits.getIntValue());
@@ -297,7 +294,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                         bitVector.set(i);
                                 }
                                 fingerprint.delete();
-                        } else if (m_fpType.getStringValue() == "torsion") {
+                        } else if ("torsion".equals(m_fpType.getStringValue())) {
                             ExplicitBitVect fingerprint;
                             fingerprint =
                                     RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol,m_numBits.getIntValue());
@@ -306,7 +303,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     bitVector.set(i);
                             }
                             fingerprint.delete();
-                        } else if (m_fpType.getStringValue() == "morgan") {
+                        } else if ("morgan".equals(m_fpType.getStringValue())) {
                             SparseIntVectu32 mfp =
                                     RDKFuncs.MorganFingerprintMol(mol,
                                             m_radius.getIntValue());
@@ -316,7 +313,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                         % m_numBits.getIntValue());
                             }
                             mfp.delete();
-                        } else if (m_fpType.getStringValue() == "layered") {
+                        } else if ("layered".equals(m_fpType.getStringValue())) {
                             ExplicitBitVect fingerprint;
                             fingerprint =
                                     RDKFuncs.LayeredFingerprintMol(mol,
@@ -330,14 +327,13 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                             }
                             fingerprint.delete();
                         }
-                        if (ownMol) {
-                            mol.delete();
-                        }
                     } catch (Exception ex) {
                         LOGGER.debug("Error while creating fingerprint "
                             + "for row: " + row.getKey());
                         m_fingerPrintErrorCount++;
                         return DataType.getMissingCell();
+                    } finally {
+                        mol.delete();
                     }
                     DenseBitVectorCellFactory fact =
                             new DenseBitVectorCellFactory(bitVector);

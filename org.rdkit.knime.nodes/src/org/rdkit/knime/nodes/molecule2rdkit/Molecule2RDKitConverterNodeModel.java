@@ -201,7 +201,14 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 parseError = true;
                 result = DataType.getMissingCell();
             } else {
-                result = RDKitMolCellFactory.createRDKitMolCell(mol);
+                if(mol.getNumConformers() == 0){
+                    RDKFuncs.compute2DCoords(mol);
+                }
+                try {
+                    result = RDKitMolCellFactory.createRDKitMolCell(mol);
+                } finally {
+                    mol.delete();
+                }
             }
 
             if (parseError && splitBadRowsToPort1()) {

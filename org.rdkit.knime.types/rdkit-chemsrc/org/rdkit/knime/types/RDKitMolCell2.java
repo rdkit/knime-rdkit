@@ -58,7 +58,6 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.BlobDataCell;
 
 /**
  * Default implementation of a Smiles Cell. This cell stores only the Smiles
@@ -66,26 +65,17 @@ import org.knime.core.data.container.BlobDataCell;
  * information.
  *
  * @author Greg Landrum
- * @deprecated This cell implementation is deprecated as RDKit objects are no
- * longer blobs (changed with keeping the byte[] content rather than the ROMol
- * object). Replaced by RDKitMolCell2. This class is kept in order to allow old
- * workflows to load.
  */
-@Deprecated
-public class RDKitMolCell extends BlobDataCell implements StringValue,
+public class RDKitMolCell2 extends DataCell implements StringValue,
         RDKitMolValue {
-
-    /** Do not compress blobs, see {@link BlobDataCell#USE_COMPRESSION}. */
-    @SuppressWarnings("hiding")
-    public static final boolean USE_COMPRESSION = false;
 
     /**
      * Convenience access member for
-     * <code>DataType.getType(RDKitMolCell.class)</code>.
+     * <code>DataType.getType(RDKitMolCell2.class)</code>.
      *
      * @see DataType#getType(Class)
      */
-    static final DataType TYPE = DataType.getType(RDKitMolCell.class);
+    static final DataType TYPE = DataType.getType(RDKitMolCell2.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
@@ -121,7 +111,7 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
      * @param canonSmiles RDKit canonical smiles for the molecule.
      *        Leave this empty if you have any doubts how to generate it.
      */
-    RDKitMolCell(final ROMol mol, final String canonSmiles) {
+    RDKitMolCell2(final ROMol mol, final String canonSmiles) {
         this(toByteArray(mol), canonSmiles);
     }
 
@@ -129,7 +119,7 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
      * @param byteContent The byte content
      * @param canonSmiles RDKit canonical smiles for the molecule.
      */
-    private RDKitMolCell(final byte[] byteContent, final String canonSmiles) {
+    private RDKitMolCell2(final byte[] byteContent, final String canonSmiles) {
         if (byteContent == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -178,7 +168,7 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return m_smilesString.equals(((RDKitMolCell)dc).m_smilesString);
+        return m_smilesString.equals(((RDKitMolCell2)dc).m_smilesString);
     }
 
     /**
@@ -208,12 +198,12 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
 
     /** Factory for (de-)serializing a RDKitMolCell. */
     private static class RDKitSerializer implements
-            DataCellSerializer<RDKitMolCell> {
+            DataCellSerializer<RDKitMolCell2> {
         /**
          * {@inheritDoc}
          */
         @Override
-        public void serialize(final RDKitMolCell cell,
+        public void serialize(final RDKitMolCell2 cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeInt(-1);
             output.writeUTF(cell.getSmilesValue());
@@ -226,17 +216,17 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
          * {@inheritDoc}
          */
         @Override
-        public RDKitMolCell deserialize(final DataCellDataInput input)
+        public RDKitMolCell2 deserialize(final DataCellDataInput input)
                 throws IOException {
             int length = input.readInt();
             String smiles = "";
             if(length < 0) {
-                smiles = input.readUTF();
-                length = input.readInt();
+            	smiles = input.readUTF();
+            	length = input.readInt();
             }
             byte[] bytes = new byte[length];
             input.readFully(bytes);
-            return new RDKitMolCell(bytes, smiles);
+            return new RDKitMolCell2(bytes, smiles);
         }
     }
 

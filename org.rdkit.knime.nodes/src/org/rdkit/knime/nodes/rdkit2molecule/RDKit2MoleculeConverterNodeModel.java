@@ -210,28 +210,32 @@ public class RDKit2MoleculeConverterNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 RDKitMolValue rdkit = (RDKitMolValue)firstCell;
-                ROMol mol = rdkit.getMoleculeValue();
+                ROMol mol = rdkit.readMoleculeValue();
 
-                if (convertToSmiles) {
-                    // Convert to Smiles
-                    String value = RDKFuncs.MolToSmiles(mol, true);
-                    return new SmilesCell(value);
-                } else {
-                    // Convert to SDF
-                    if(mol.getNumConformers() == 0){
-                        RDKFuncs.compute2DCoords(mol);
+                try {
+                    if (convertToSmiles) {
+                        // Convert to Smiles
+                        String value = RDKFuncs.MolToSmiles(mol, true);
+                        return new SmilesCell(value);
+                    } else {
+                        // Convert to SDF
+                        if(mol.getNumConformers() == 0){
+                            RDKFuncs.compute2DCoords(mol);
+                        }
+                        String value = RDKFuncs.MolToMolBlock(mol);
+                        // KNIME SDF type requires string to be terminated
+                        // by $$$$ -- see org.knime.chem.types.SdfValue for details
+                        String postfix = "\n$$$$\n";
+                        if (!value.endsWith(postfix)) {
+                            StringBuilder valueBuilder = new StringBuilder();
+                            valueBuilder.append(value);
+                            valueBuilder.append(postfix);
+                            value = valueBuilder.toString();
+                        }
+                        return SdfCellFactory.create(value);
                     }
-                    String value = RDKFuncs.MolToMolBlock(mol);
-                    // KNIME SDF type requires string to be terminated
-                    // by $$$$ -- see org.knime.chem.types.SdfValue for details
-                    String postfix = "\n$$$$\n";
-                    if (!value.endsWith(postfix)) {
-                        StringBuilder valueBuilder = new StringBuilder();
-                        valueBuilder.append(value);
-                        valueBuilder.append(postfix);
-                        value = valueBuilder.toString();
-                    }
-                    return SdfCellFactory.create(value);
+                } finally {
+                    mol.delete();
                 }
             }
         });

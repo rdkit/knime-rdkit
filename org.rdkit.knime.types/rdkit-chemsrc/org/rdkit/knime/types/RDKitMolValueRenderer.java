@@ -100,7 +100,7 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
         }
 
         RDKitMolValue mol = (RDKitMolValue)value;
-        String svg = RDKFuncs.MolToSVG(mol.getMoleculeValue());
+        String svg = RDKFuncs.MolToSVG(mol.readMoleculeValue());
 
         String parserClass = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);

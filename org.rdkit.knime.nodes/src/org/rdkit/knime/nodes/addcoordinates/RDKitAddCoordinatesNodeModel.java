@@ -242,8 +242,13 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                 DataType firstType = spec.getColumnSpec(indices[0]).getType();
                 ROMol mol;
                 if (firstType.isCompatible(RDKitMolValue.class)) {
-                    ROMol input = ((RDKitMolValue)firstCell).getMoleculeValue();
-                    mol = new ROMol(input);
+                    ROMol input =
+                        ((RDKitMolValue)firstCell).readMoleculeValue();
+                    try {
+                        mol = new ROMol(input);
+                    } finally {
+                        input.delete();
+                    }
                 } else {
                     // it's a SMILES column, so construct an RDKit molecule
                     // from the SMILES:
@@ -258,9 +263,6 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     }
                 }
-                if (mol == null) {
-                    return DataType.getMissingCell();                	
-                }
                 // after all that work we can now add coords:
                 try {
                 	// keep this all isolated in a try...catch so that we don't take
@@ -273,12 +275,15 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
 	                    } else {
 	                        RDKFuncs.compute2DCoords(mol);
 	                    }
-	                } 
+	                }
+	                return RDKitMolCellFactory.createRDKitMolCell(mol);
                 } catch (Exception e) {
-                	LOGGER.warn("problems generating coordinates");
+                	LOGGER.warn("problems generating coordinates", e);
+                	return DataType.getMissingCell();
+                } finally {
+                    mol.delete();
                 }
 
-                return RDKitMolCellFactory.createRDKitMolCell(mol);
             }
         });
         if (m_removeSourceCols.getBooleanValue()) {

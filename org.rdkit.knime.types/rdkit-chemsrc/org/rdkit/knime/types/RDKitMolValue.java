@@ -70,11 +70,13 @@ public interface RDKitMolValue extends DataValue {
     public static final UtilityFactory UTILITY = new RDKUtilityFactory();
 
     /**
-     * Returns the RDKit ROMol
+     * Reads and returns the ROMol object represented by this value.
+     * It's the callers responsibility to call the {@link ROMol#delete()}
+     * method when done!
      *
-     * @return a String value
+     * @return a newly created {@link ROMol} object.
      */
-    ROMol getMoleculeValue();
+    ROMol readMoleculeValue();
 
     /**
      * Returns the Smiles string of the molecule.
@@ -95,10 +97,10 @@ public interface RDKitMolValue extends DataValue {
                     protected int compareDataValues(final DataValue v1,
                             final DataValue v2) {
                         int atomCount1 =
-                                (int)((RDKitMolValue)v1).getMoleculeValue()
+                                (int)((RDKitMolValue)v1).readMoleculeValue()
                                         .getNumAtoms();
                         int atomCount2 =
-                                (int)((RDKitMolValue)v2).getMoleculeValue()
+                                (int)((RDKitMolValue)v2).readMoleculeValue()
                                         .getNumAtoms();
                         return atomCount1 - atomCount2;
                     }
@@ -131,7 +133,7 @@ public interface RDKitMolValue extends DataValue {
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE, new RDKitMolValueRenderer());
+                    new RDKitMolValueRenderer(), StringValueRenderer.INSTANCE);
         }
     }
 }

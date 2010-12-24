@@ -48,6 +48,9 @@
  */
 package org.rdkit.knime.nodes.molecule2rdkit;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -80,6 +83,15 @@ public class Molecule2RDKitConverterNodeDialogPane extends
         super.addDialogComponent(new DialogComponentButtonGroup(
                 createSeparateRowsModel(), "Error Handling", true,
                 ParseErrorPolicy.values()));
+        super.createNewGroup("2D Coordinates");
+        SettingsModelBoolean generateCoordinatesModel =
+            createGenerateCoordinatesModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+                generateCoordinatesModel, "Generate Coordinates"));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createForceGenerateCoordinatesModel(generateCoordinatesModel),
+                "Force Generation"));
+        super.closeCurrentGroup();
     }
 
     /**
@@ -109,6 +121,32 @@ public class Molecule2RDKitConverterNodeDialogPane extends
     static final SettingsModelString createSeparateRowsModel() {
         return new SettingsModelString("bad_rows_to_port1",
                 ParseErrorPolicy.SPLIT_ROWS.getActionCommand());
-    };
+    }
+
+    /**
+     * @return new settings model whether to also compute coordinates
+     */
+    static final SettingsModelBoolean createGenerateCoordinatesModel() {
+        return new SettingsModelBoolean("generateCoordinates", true);
+    }
+
+    /**
+     * @param generateCoordinatesModel
+     * The other model (to enable/disable the returned model).
+     * @return new settings model whether to also force coordinate generation
+     * (SDF may already have coordinates).
+     */
+    static final SettingsModelBoolean createForceGenerateCoordinatesModel(
+            final SettingsModelBoolean generateCoordinatesModel) {
+        final SettingsModelBoolean result =
+            new SettingsModelBoolean("forceGenerateCoordinates", false);
+        generateCoordinatesModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(generateCoordinatesModel.getBooleanValue());
+            }
+        });
+        return result;
+    }
 
 }

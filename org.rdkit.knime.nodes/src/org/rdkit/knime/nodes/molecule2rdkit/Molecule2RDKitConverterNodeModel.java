@@ -97,6 +97,13 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     private final SettingsModelString m_separateFails =
             Molecule2RDKitConverterNodeDialogPane.createSeparateRowsModel();
 
+    private final SettingsModelBoolean m_generateCoordinates =
+        Molecule2RDKitConverterNodeDialogPane.createGenerateCoordinatesModel();
+
+    private final SettingsModelBoolean m_forceGenerateCoordinates =
+        Molecule2RDKitConverterNodeDialogPane.
+            createForceGenerateCoordinatesModel(m_generateCoordinates);
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Molecule2RDKitConverterNodeModel.class);
 
@@ -164,6 +171,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         BufferedDataContainer port0 = exec.createDataContainer(out0Spec);
         // contains the input rows if result computation fails
         BufferedDataContainer port1 = exec.createDataContainer(inSpec);
+        boolean generateCoordinates = m_generateCoordinates.getBooleanValue();
+        boolean forceGeneration = m_forceGenerateCoordinates.getBooleanValue();
 
         int molColIdx = getMolColIndex(inSpec, m_first.getStringValue().trim());
         final boolean smilesInput = inSpec.getColumnSpec(molColIdx).getType().
@@ -201,8 +210,10 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 parseError = true;
                 result = DataType.getMissingCell();
             } else {
-                if(mol.getNumConformers() == 0){
-                    RDKFuncs.compute2DCoords(mol);
+                if (generateCoordinates) {
+                    if(forceGeneration || mol.getNumConformers() == 0) {
+                        RDKFuncs.compute2DCoords(mol);
+                    }
                 }
                 try {
                     result = RDKitMolCellFactory.createRDKitMolCell(mol);
@@ -352,6 +363,12 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_concate.loadSettingsFrom(settings);
         m_removeSourceCols.loadSettingsFrom(settings);
         m_separateFails.loadSettingsFrom(settings);
+        try {
+            m_generateCoordinates.loadSettingsFrom(settings);
+            m_forceGenerateCoordinates.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // added after 1.0 -- ignore
+        }
     }
 
     /**
@@ -363,6 +380,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_concate.saveSettingsTo(settings);
         m_removeSourceCols.saveSettingsTo(settings);
         m_separateFails.saveSettingsTo(settings);
+        m_generateCoordinates.saveSettingsTo(settings);
+        m_forceGenerateCoordinates.saveSettingsTo(settings);
     }
 
     /**
@@ -375,5 +394,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_concate.validateSettings(settings);
         m_removeSourceCols.validateSettings(settings);
         m_separateFails.validateSettings(settings);
+        // added after v1.0
+        // m_generateCoordinates.validateSettings(settings);
+        // m_forceGenerateCoordinates.validateSettings(settings);
     }
 }

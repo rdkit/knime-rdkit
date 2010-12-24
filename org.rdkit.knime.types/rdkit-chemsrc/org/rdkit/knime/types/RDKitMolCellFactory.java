@@ -48,6 +48,7 @@
  */
 package org.rdkit.knime.types;
 
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -80,7 +81,7 @@ public final class RDKitMolCellFactory {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
-        return new RDKitMolCell2(mol,"");
+        return new RDKitMolCell2(mol, RDKFuncs.MolToSmiles(mol, true));
     }
 
     /**

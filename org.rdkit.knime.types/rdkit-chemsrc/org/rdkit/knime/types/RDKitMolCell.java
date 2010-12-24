@@ -135,7 +135,12 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
         }
         m_byteContent = byteContent;
         if(canonSmiles == null || canonSmiles.length() == 0){
-            m_smilesString = RDKFuncs.MolToSmiles(toROMol(byteContent), true);
+            ROMol mol = toROMol(byteContent);
+            try {
+                m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+            } finally {
+                mol.delete();
+            }
         } else {
             m_smilesString = canonSmiles;
         }

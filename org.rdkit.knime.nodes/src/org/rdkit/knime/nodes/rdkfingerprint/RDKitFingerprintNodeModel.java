@@ -57,6 +57,7 @@ import org.RDKit.ExplicitBitVect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.SparseIntVectu32;
+import org.RDKit.UInt32_Vect;
 import org.RDKit.UInt_Pair_Vect;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -307,6 +308,18 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                             SparseIntVectu32 mfp =
                                     RDKFuncs.MorganFingerprintMol(mol,
                                             m_radius.getIntValue());
+                            UInt_Pair_Vect obs = mfp.getNonzero();
+                            for (int i = 0; i < obs.size(); i++) {
+                                bitVector.set(obs.get(i).getFirst()
+                                        % m_numBits.getIntValue());
+                            }
+                            mfp.delete();
+                        } else if ("featmorgan".equals(m_fpType.getStringValue())) {
+                        	UInt32_Vect ivs=new UInt32_Vect(mol.getNumAtoms());
+                        	RDKFuncs.getFeatureInvariants(mol, ivs);
+                            SparseIntVectu32 mfp =
+                                    RDKFuncs.MorganFingerprintMol(mol,
+                                            m_radius.getIntValue(),ivs);
                             UInt_Pair_Vect obs = mfp.getNonzero();
                             for (int i = 0; i < obs.size(); i++) {
                                 bitVector.set(obs.get(i).getFirst()

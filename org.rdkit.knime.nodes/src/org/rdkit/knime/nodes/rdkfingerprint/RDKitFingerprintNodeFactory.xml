@@ -13,8 +13,9 @@
         <option name="RDKit Mol column">The column containing reactant molecules</option>
 		<option name="FP type">The type of fingerprint to generation. Choices are:
 		<ul>
-		  <li>Morgan: Circular fingerprint based on the Morgan algorithm (ECFP-like)</li>
-  		  <li>AtomPair: Atom-pair fingerprint</li>
+		  <li>Morgan: Circular fingerprint based on the Morgan algorithm and connectivity invariants (ECFP-like)</li>
+		  <li>FeatMorgan: Circular fingerprint based on the Morgan algorithm and feature invariants (FCFP-like)</li>
+		  <li>AtomPair: Atom-pair fingerprint</li>
 		  <li>Torsion: Topological-torsion fingeprint</li>
 		  <li>RDKit: Daylight-like topological fingerprint</li>
 		  <li>Layered: An experimental substructure-matching fingerprint</li>

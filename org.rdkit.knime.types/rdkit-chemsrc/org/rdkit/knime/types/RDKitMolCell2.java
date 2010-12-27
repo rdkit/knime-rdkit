@@ -112,7 +112,12 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
      *        Leave this empty if you have any doubts how to generate it.
      */
     RDKitMolCell2(final ROMol mol, final String canonSmiles) {
-        this(toByteArray(mol), canonSmiles);
+        if(canonSmiles == null || canonSmiles.length() == 0){
+        	m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+        } else {
+        	m_smilesString = canonSmiles;
+        }
+        m_byteContent = toByteArray(mol);
     }
 
     /** Deserialisation constructor.

@@ -25,11 +25,11 @@
             at the second port, or if a missing value should be inserted instead
             of the RDKit molecule in the result table.
         </option>
-        <option name="Generate Coordinates">
+        <option name="Generate 2D Coordinates">
            Select this option to generate 2D coordinates for the molecules.
-           The coordinates are used, e.g. in the 2D rendering of the structure
-           (if not selected, the renderer will (re-)compute coordinates on 
-           demand).
+           The coordinates are used for, among other things, 2D renderings of the structures. 
+           If not selected, the renderer will (re-)compute coordinates on 
+           demand.
         </option>
         <option name="Force Generation">
            Select this box to enforce 2D coordinate generation. Coordinates may

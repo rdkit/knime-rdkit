@@ -87,7 +87,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends
         SettingsModelBoolean generateCoordinatesModel =
             createGenerateCoordinatesModel();
         super.addDialogComponent(new DialogComponentBoolean(
-                generateCoordinatesModel, "Generate Coordinates"));
+                generateCoordinatesModel, "Generate 2D Coordinates"));
         super.addDialogComponent(new DialogComponentBoolean(
                 createForceGenerateCoordinatesModel(generateCoordinatesModel),
                 "Force Generation"));
@@ -127,7 +127,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends
      * @return new settings model whether to also compute coordinates
      */
     static final SettingsModelBoolean createGenerateCoordinatesModel() {
-        return new SettingsModelBoolean("generateCoordinates", true);
+        return new SettingsModelBoolean("generateCoordinates", false);
     }
 
     /**

@@ -248,20 +248,21 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         }
                         continue;
                     }
+                    // the reaction takes a vector of reactants. For this
+                    // single-component reaction that
+                    // vector is one long:
+                    ROMol_Vect rs = new ROMol_Vect(1);
+                    rs.set(0, mol);
+                    ROMol_Vect_Vect prods = null;
+                    // ChemicalReaction.runReactants() returns a vector of
+                    // vectors,
+                    // the outer vector allows the reaction queries to match
+                    // reactants
+                    // multiple times, the inner vectors allow each reaction
+                    // to have multiple
+                    // products.
                     try {
-                        // the reaction takes a vector of reactants. For this
-                        // single-component reaction that
-                        // vector is one long:
-                        ROMol_Vect rs = new ROMol_Vect(1);
-                        rs.set(0, mol);
-                        // ChemicalReaction.runReactants() returns a vector of
-                        // vectors,
-                        // the outer vector allows the reaction queries to match
-                        // reactants
-                        // multiple times, the inner vectors allow each reaction
-                        // to have multiple
-                        // products.
-                        ROMol_Vect_Vect prods = rxn.runReactants(rs);
+                        prods = rxn.runReactants(rs);
                         // if the reaction could not be applied to the
                         // reactants, we get an
                         // empty vector, check for that now:
@@ -296,6 +297,10 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         }
                     } finally {
                         mol.delete();
+                        rs.delete();
+                        if (prods != null) {
+                            prods.delete();
+                        }
                     }
                 }
                 exec.setProgress(count / (double)rowCount,

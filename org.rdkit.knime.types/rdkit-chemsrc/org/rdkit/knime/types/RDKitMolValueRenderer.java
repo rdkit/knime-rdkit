@@ -94,7 +94,7 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
      */
     @Override
     protected void setValue(final Object value) {
-        if (value == null) {
+        if (!(value instanceof RDKitMolValue)) { // might be missing
             m_svgDocument = null;
             return;
         }

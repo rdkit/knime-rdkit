@@ -105,11 +105,25 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
         String parserClass = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
 
+        /* The document factory loads the XML parser
+         * (org.apache.xerces.parsers.SAXParser), using the thread's context
+         * class loader. In KNIME desktop (and batch) this is correctly set,
+         * in the KNIME server the thread is some TCP-socket-listener-thread,
+         * which fails to load the parser class
+         * (class loading happens in org.xml.sax.helpers.XMLReaderFactory#
+         *   createXMLReader(String) ... follow the call)
+         */
+        Thread t = Thread.currentThread();
+        ClassLoader contextClassLoader = t.getContextClassLoader();
+        t.setContextClassLoader(getClass().getClassLoader());
+
         try {
             m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
         } catch (Exception ex) {
             m_svgDocument = null;
             LOGGER.error("Could not render molecule", ex);
+        } finally {
+            t.setContextClassLoader(contextClassLoader);
         }
     }
 

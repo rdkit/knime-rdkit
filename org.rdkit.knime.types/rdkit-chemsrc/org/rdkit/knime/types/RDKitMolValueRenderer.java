@@ -70,6 +70,7 @@ import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.gvt.GraphicsNode;
 import org.apache.batik.gvt.renderer.StaticRenderer;
 import org.apache.batik.util.XMLResourceDescriptor;
+import org.knime.base.data.xml.SvgProvider;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.svg.SVGDocument;
@@ -79,7 +80,8 @@ import org.w3c.dom.svg.SVGDocument;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
+public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
+    implements SvgProvider {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RDKitMolValueRenderer.class);
 
@@ -184,9 +186,9 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
             return;
         }
 
-        double scaleX = (componentBounds.getWidth() - 2) / svgBounds.getWidth();
+        double scaleX = (componentBounds.getWidth() - 20) / svgBounds.getWidth();
         double scaleY =
-                (componentBounds.getHeight() - 2) / svgBounds.getHeight();
+                (componentBounds.getHeight() - 20) / svgBounds.getHeight();
         if (keepAspectRatio) {
             scaleX = Math.min(scaleX, scaleY);
             scaleY = Math.min(scaleX, scaleY);
@@ -211,5 +213,13 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer {
                 componentBounds.getWidth() - scaleX * svgBounds.getWidth();
 
         g.drawImage(image, (int)(widthDiff / 2), (int)(heightDiff / 2), null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SVGDocument getSvg() {
+        return m_svgDocument;
     }
 }

@@ -217,6 +217,16 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 }
                 try {
                     result = RDKitMolCellFactory.createRDKitMolCell(mol);
+                    // may throw exception while deriving smiles string...
+                } catch (Exception e) {
+                    StringBuilder error = new StringBuilder();
+                    error.append("Error creating RDKit cell from ROMol ");
+                    error.append("while processing row \"");
+                    error.append(row.getKey()).append("\": ");
+                    LOGGER.debug(e.getMessage(), e);
+                    parseErrorCount++;
+                    parseError = true;
+                    result = DataType.getMissingCell();
                 } finally {
                     mol.delete();
                 }

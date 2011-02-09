@@ -61,18 +61,15 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolValue;
@@ -88,12 +85,6 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
 
     private final SettingsModelString m_smarts =
             RDKitSubstructFilterNodeDialogPane.createSmartsModel();
-
-    private final SettingsModelBoolean m_removeInvalid =
-            RDKitSubstructFilterNodeDialogPane.createRemoveInvalidModel();
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RDKitSubstructFilterNodeModel.class);
 
     /**
      * Create new node model with one data in- and one outport.
@@ -133,8 +124,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             }
         }
         if (m_smarts.getStringValue().equals("")) {
-            throw new InvalidSettingsException(
-                    "Please specify a SMARTS query.");
+            throw new InvalidSettingsException("Please specify a SMARTS query.");
         }
         ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
         if (pattern == null) {
@@ -185,7 +175,6 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
 
         // construct an RDKit molecule from the SMARTS pattern:
         ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
-        int parseErrorCount = 0;
         final int rowCount = inData[0].getRowCount();
         int matchCount = 0;
         try {
@@ -203,35 +192,15 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                 if (firstCell.isMissing()) {
                     matched = false;
                 } else {
-                    DataType firstType =
-                            inSpec.getColumnSpec(indices[0]).getType();
                     ROMol mol = null;
-                    if (firstType.isCompatible(RDKitMolValue.class)) {
-                        mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-                    } else {
-                        // it's a SMILES column, so construct an RDKit molecule
-                        // from the SMILES:
-                        String smiles = ((StringValue)firstCell).toString();
-                        mol = RDKFuncs.MolFromSmiles(smiles);
-                    }
-                    if (mol == null) {
-                        LOGGER.debug("Error parsing smiles "
-                                + "while processing row: " + row.getKey());
-                        parseErrorCount++;
-                        if (m_removeInvalid.getBooleanValue()) {
-                            continue;
-                        } else {
-                            matched = false;
-                        }
-                    } else {
-                        // after all that work we can now check whether or not
-                        // there is
-                        // a substructure match:
-                        try {
-                            matched = mol.hasSubstructMatch(pattern);
-                        } finally {
-                            mol.delete();
-                        }
+                    mol = ((RDKitMolValue)firstCell).readMoleculeValue();
+                    // after all that work we can now check whether or not
+                    // there is
+                    // a substructure match:
+                    try {
+                        matched = mol.hasSubstructMatch(pattern);
+                    } finally {
+                        mol.delete();
                     }
                 }
                 if (matched) {
@@ -240,26 +209,15 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                 } else {
                     failTable.addRowToTable(row);
                 }
-                exec.setProgress(count / (double)rowCount,
-                        "Processed row " + count + "/" + rowCount + " (\""
-                        + row.getKey() + "\") -- " + matchCount + " matches");
+                exec.setProgress(count / (double)rowCount, "Processed row "
+                        + count + "/" + rowCount + " (\"" + row.getKey()
+                        + "\") -- " + matchCount + " matches");
                 exec.checkCanceled();
             }
         } finally {
             matchTable.close();
             failTable.close();
             pattern.delete();
-        }
-        if (parseErrorCount > 0) {
-            if (m_removeInvalid.getBooleanValue()) {
-                setWarningMessage("Removed " + parseErrorCount
-                        + " rows from output due to Smiles parsing errors.");
-            } else {
-                setWarningMessage("Appended " + parseErrorCount
-                        + " rows to the output port 1 due to "
-                        + "Smiles parsing errors.");
-            }
-
         }
         return new BufferedDataTable[]{matchTable.getTable(),
                 failTable.getTable()};
@@ -301,7 +259,6 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
         m_smarts.loadSettingsFrom(settings);
-        m_removeInvalid.loadSettingsFrom(settings);
     }
 
     /**
@@ -311,7 +268,6 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
         m_smarts.saveSettingsTo(settings);
-        m_removeInvalid.saveSettingsTo(settings);
     }
 
     /**
@@ -322,6 +278,5 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
         m_smarts.validateSettings(settings);
-        m_removeInvalid.validateSettings(settings);
     }
 }

@@ -49,10 +49,8 @@
 package org.rdkit.knime.nodes.substructfilter;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -72,9 +70,6 @@ public class RDKitSubstructFilterNodeDialogPane
                 RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
                 "SMARTS query: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createRemoveInvalidModel(),
-                "Remove Rows with Invalid Structures"));
     }
 
     /**
@@ -89,13 +84,5 @@ public class RDKitSubstructFilterNodeDialogPane
      */
     static final SettingsModelString createSmartsModel() {
         return new SettingsModelString("smarts_value", "");
-    }
-
-    /**
-     * @return settings model for check box whether to remove rows with
-     * invalid structures
-     */
-    static final SettingsModelBoolean createRemoveInvalidModel() {
-        return new SettingsModelBoolean("remove_invalid", true);
     }
 }

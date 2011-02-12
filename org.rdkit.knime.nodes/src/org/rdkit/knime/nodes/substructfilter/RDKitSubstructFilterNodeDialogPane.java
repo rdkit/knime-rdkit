@@ -51,7 +51,9 @@ package org.rdkit.knime.nodes.substructfilter;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
@@ -70,6 +72,8 @@ public class RDKitSubstructFilterNodeDialogPane
                 RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentString(createSmartsModel(),
                 "SMARTS query: "));
+        super.addDialogComponent(new DialogComponentBoolean(createExactMatchModel(),
+        "Do exact match"));
     }
 
     /**
@@ -80,9 +84,16 @@ public class RDKitSubstructFilterNodeDialogPane
     }
 
     /**
-     * @return settings model for the new appended column name
+     * @return settings model for the smarts query
      */
     static final SettingsModelString createSmartsModel() {
         return new SettingsModelString("smarts_value", "");
+    }
+
+    /**
+     * @return settings model for the exact match toggle
+     */
+    static final SettingsModelBoolean createExactMatchModel() {
+        return new SettingsModelBoolean("exact_match", false);
     }
 }

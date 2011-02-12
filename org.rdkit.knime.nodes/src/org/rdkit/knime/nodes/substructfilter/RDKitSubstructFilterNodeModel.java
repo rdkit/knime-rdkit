@@ -71,6 +71,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -85,6 +86,9 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
 
     private final SettingsModelString m_smarts =
             RDKitSubstructFilterNodeDialogPane.createSmartsModel();
+
+    private final SettingsModelBoolean m_exactMatch =
+        RDKitSubstructFilterNodeDialogPane.createExactMatchModel();
 
     /**
      * Create new node model with one data in- and one outport.
@@ -195,12 +199,13 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
                     ROMol mol = null;
                     mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                     // after all that work we can now check whether or not
-                    // there is
-                    // a substructure match:
-                    try {
-                        matched = mol.hasSubstructMatch(pattern);
-                    } finally {
-                        mol.delete();
+                    // there is a substructure match:
+                    if(!m_exactMatch.getBooleanValue() || mol.getNumAtoms()==pattern.getNumAtoms()){
+	                    try {
+	                        matched = mol.hasSubstructMatch(pattern);
+	                    } finally {
+	                        mol.delete();
+	                    }
                     }
                 }
                 if (matched) {
@@ -259,6 +264,11 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
         m_smarts.loadSettingsFrom(settings);
+        try{
+          m_exactMatch.loadSettingsFrom(settings);
+        } catch(Exception ex) {
+          m_exactMatch.setBooleanValue(false);
+        }
     }
 
     /**
@@ -268,6 +278,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
         m_smarts.saveSettingsTo(settings);
+        m_exactMatch.saveSettingsTo(settings);
     }
 
     /**
@@ -278,5 +289,6 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
         m_smarts.validateSettings(settings);
+        m_exactMatch.validateSettings(settings);
     }
 }

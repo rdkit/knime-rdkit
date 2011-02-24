@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="rgroups.png" type="Manipulator">
+	<name>R group decomposition</name>
+	
+	<shortDescription>
+	    Does an R group decomposition for an input RDKit Mol column
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Does an R group decomposition for an input RDKit Mol column.
+		</intro>
+        
+        <option name="RDKit Mol column">The column containing molecules</option>
+        <option name="Core SMARTS">A SMARTS describing the core to use.</option>
+
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data">Data with SMILES or RDKit Molecule column</inPort>
+		<outPort index="0" name="Table with R groups">Table with R groups added</outPort>
+	</ports>	
+</knimeNode>

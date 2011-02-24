@@ -85,6 +85,23 @@ public final class RDKitMolCellFactory {
     }
 
     /**
+     * Creates a new RDKit Cell based on the given molecule and SMILES. The argument
+     * can (and should) be {@link ROMol#delete() deleted} after this method
+     * returns.
+     * @param mol the ROMol value to store
+     * @param smiles canonical SMILES for the molecule
+     * @return A data cell implementing RDKitMolValue interface. Currently this
+     * is a {@link RDKitMolCell2} but this may change in future versions.
+     * @throws NullPointerException if argument is <code>null</code>
+     */
+    public static DataCell createRDKitMolCell(final ROMol mol,final String smiles) {
+        if (mol == null) {
+            throw new NullPointerException("Mol value must not be null.");
+        }
+        return new RDKitMolCell2(mol, smiles);
+    }
+
+    /**
      * Creates a new RDKit Cell based on the given molecule and discards the
      * argument using the {@link ROMol#delete()} method.
      * @param mol the ROMol value to store

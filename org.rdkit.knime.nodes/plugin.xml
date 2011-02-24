@@ -19,6 +19,21 @@
             id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>
       <node
             after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
+            category-path="/community/rdkit/experimental"
+            factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"
+            id="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"
+            category-path="/community/rdkit/experimental"
+            factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory"
+            id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"
+            category-path="/community/rdkit/experimental"
+            factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"
+            id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"
             category-path="/community/rdkit"
             factory-class="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"
             id="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"/>
@@ -42,8 +57,6 @@
             category-path="/community/rdkit"
             factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
-
-
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
@@ -53,6 +66,13 @@
             level-id="rdkit"
             name="RDKit"
             path="/community">
+      </category>
+      <category
+            description="Experimental nodes"
+            icon="icons/category_rdkit.png"
+            level-id="experimental"
+            name="Experimental"
+            path="/community/rdkit">
       </category>
    </extension>
    <extension

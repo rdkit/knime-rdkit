@@ -172,6 +172,10 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                         + "node for Smiles or SDF.");
             }
         }
+        if(m_minPath.getIntValue() > m_maxPath.getIntValue() ){
+        	throw new InvalidSettingsException("minimum path length is larger than maximum path length.");
+        }
+        
         if (null == m_concate.getStringValue()) {
             if (null != m_smiles.getStringValue()) {
                 // auto-configure
@@ -305,27 +309,28 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                             }
                             fingerprint.delete();
                         } else if ("morgan".equals(m_fpType.getStringValue())) {
-                            SparseIntVectu32 mfp =
-                                    RDKFuncs.MorganFingerprintMol(mol,
-                                            m_radius.getIntValue());
-                            UInt_Pair_Vect obs = mfp.getNonzero();
-                            for (int i = 0; i < obs.size(); i++) {
-                                bitVector.set(obs.get(i).getFirst()
-                                        % m_numBits.getIntValue());
+                            ExplicitBitVect fingerprint;
+                            fingerprint =
+                                    RDKFuncs.getMorganFingerprintAsBitVect(mol,m_radius.getIntValue(),
+                                    		m_numBits.getIntValue());
+                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
+                                if (fingerprint.getBit(i))
+                                    bitVector.set(i);
                             }
-                            mfp.delete();
+                            fingerprint.delete();
+                            
                         } else if ("featmorgan".equals(m_fpType.getStringValue())) {
                         	UInt32_Vect ivs=new UInt32_Vect(mol.getNumAtoms());
                         	RDKFuncs.getFeatureInvariants(mol, ivs);
-                            SparseIntVectu32 mfp =
-                                    RDKFuncs.MorganFingerprintMol(mol,
-                                            m_radius.getIntValue(),ivs);
-                            UInt_Pair_Vect obs = mfp.getNonzero();
-                            for (int i = 0; i < obs.size(); i++) {
-                                bitVector.set(obs.get(i).getFirst()
-                                        % m_numBits.getIntValue());
+                            ExplicitBitVect fingerprint;
+                            fingerprint =
+                                    RDKFuncs.getMorganFingerprintAsBitVect(mol,m_radius.getIntValue(),
+                                    		m_numBits.getIntValue(),ivs);
+                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
+                                if (fingerprint.getBit(i))
+                                    bitVector.set(i);
                             }
-                            mfp.delete();
+                            fingerprint.delete();
                         } else if ("layered".equals(m_fpType.getStringValue())) {
                             ExplicitBitVect fingerprint;
                             fingerprint =

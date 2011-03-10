@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.rdkit.knime.binaries.feature"
-      label="RDKit binaries"
+      label="RDKit binaries (obsolete, do not install)"
       version="1.0.0.qualifier"
       provider-name="NIBR">
 
@@ -695,41 +695,5 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
    </license>
-
-   <plugin
-         id="org.rdkit.knime.bin.linux.x86"
-         os="linux"
-         arch="x86"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
-
-   <plugin
-         id="org.rdkit.knime.bin.linux.x86_64"
-         os="linux"
-         arch="x86_64"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
-
-   <plugin
-         id="org.rdkit.knime.bin.macosx.x86_64"
-         os="macosx"
-         arch="x86_64"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
-
-   <plugin
-         id="org.rdkit.knime.bin.win32.x86"
-         os="win32"
-         arch="x86"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
 
 </feature>

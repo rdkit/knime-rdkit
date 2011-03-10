@@ -697,10 +697,6 @@ Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
    </license>
 
-   <requires>
-      <import feature="org.rdkit.knime.binaries.feature" version="0.9.0" match="greaterOrEqual"/>
-   </requires>
-
    <plugin
          id="org.rdkit.knime.nodes"
          download-size="0"

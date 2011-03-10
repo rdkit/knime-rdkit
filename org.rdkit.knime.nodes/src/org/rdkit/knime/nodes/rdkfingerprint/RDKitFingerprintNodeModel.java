@@ -56,9 +56,7 @@ import java.util.List;
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
-import org.RDKit.SparseIntVectu32;
 import org.RDKit.UInt32_Vect;
-import org.RDKit.UInt_Pair_Vect;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -175,7 +173,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
         if(m_minPath.getIntValue() > m_maxPath.getIntValue() ){
         	throw new InvalidSettingsException("minimum path length is larger than maximum path length.");
         }
-        
+
         if (null == m_concate.getStringValue()) {
             if (null != m_smiles.getStringValue()) {
                 // auto-configure
@@ -318,7 +316,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     bitVector.set(i);
                             }
                             fingerprint.delete();
-                            
+
                         } else if ("featmorgan".equals(m_fpType.getStringValue())) {
                         	UInt32_Vect ivs=new UInt32_Vect(mol.getNumAtoms());
                         	RDKFuncs.getFeatureInvariants(mol, ivs);

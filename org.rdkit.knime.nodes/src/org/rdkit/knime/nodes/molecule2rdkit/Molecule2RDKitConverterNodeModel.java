@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
@@ -168,97 +169,130 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         DataTableSpec out0Spec = createOutPort0Spec(inSpec);
         // contains the rows with the result column
-        BufferedDataContainer port0 = exec.createDataContainer(out0Spec);
+        final BufferedDataContainer port0 = exec.createDataContainer(out0Spec);
         // contains the input rows if result computation fails
-        BufferedDataContainer port1 = exec.createDataContainer(inSpec);
-        boolean generateCoordinates = m_generateCoordinates.getBooleanValue();
-        boolean forceGeneration = m_forceGenerateCoordinates.getBooleanValue();
+        final BufferedDataContainer port1 = exec.createDataContainer(inSpec);
+        final boolean generateCoordinates =
+            m_generateCoordinates.getBooleanValue();
+        final boolean forceGeneration =
+            m_forceGenerateCoordinates.getBooleanValue();
 
-        int molColIdx = getMolColIndex(inSpec, m_first.getStringValue().trim());
+        final int molColIdx =
+            getMolColIndex(inSpec, m_first.getStringValue().trim());
         final boolean smilesInput = inSpec.getColumnSpec(molColIdx).getType().
             isCompatible(SmilesValue.class);
-        int parseErrorCount = 0;
-        int rowsProcessed = 0;
-        int totalRowCount = inData[0].getRowCount();
-        for (DataRow row : inData[0]) {
-            exec.checkCanceled();
-            exec.setProgress(rowsProcessed / (double)totalRowCount,
-                    "Processing row " + row.getKey());
-            final DataCell molCell = row.getCell(molColIdx);
+        final AtomicInteger parseErrorCount = new AtomicInteger();
+        final int totalRowCount = inData[0].getRowCount();
+        int cpuCount = Runtime.getRuntime().availableProcessors() + 1;
+        int queueSize = Math.max(cpuCount, 100);
+        MultiThreadWorker<DataRow, DataCell> worker =
+            new MultiThreadWorker<DataRow, DataCell>(queueSize, cpuCount) {
+            /** {@inheritDoc} */
+            @Override
+            public DataCell compute(final DataRow row, final long index) {
+                final DataCell molCell = row.getCell(molColIdx);
 
-            DataCell result;
-            boolean parseError = false;
-            ROMol mol = null;
-            if (molCell.isMissing()) {
-                mol = null;
-            } else if (smilesInput) {
-                String value = ((SmilesValue)molCell).getSmilesValue();
-                mol = RDKFuncs.MolFromSmiles(value);
-            } else {
-                String value = ((SdfValue)molCell).getSdfValue();
-                mol = RDKFuncs.MolFromMolBlock(value);
-            }
+                DataCell result;
+                ROMol mol = null;
+                if (molCell.isMissing()) {
+                    mol = null;
+                } else if (smilesInput) {
+                    String value = ((SmilesValue)molCell).getSmilesValue();
+                    mol = RDKFuncs.MolFromSmiles(value);
+                } else {
+                    String value = ((SdfValue)molCell).getSdfValue();
+                    mol = RDKFuncs.MolFromMolBlock(value);
+                }
 
-            if (mol == null) {
-                StringBuilder error = new StringBuilder();
-                error.append("Error parsing ");
-                error.append(smilesInput ? "SMILES " : "SDF ");
-                error.append("while processing row: \"");
-                error.append(row.getKey()).append("\"");
-                LOGGER.debug(error.toString());
-                parseErrorCount++;
-                parseError = true;
-                result = DataType.getMissingCell();
-            } else {
-                if (generateCoordinates) {
-                    if(forceGeneration || mol.getNumConformers() == 0) {
-                        RDKFuncs.compute2DCoords(mol);
+                if (mol == null) {
+                    StringBuilder error = new StringBuilder();
+                    error.append("Error parsing ");
+                    error.append(smilesInput ? "SMILES " : "SDF ");
+                    error.append("while processing row: \"");
+                    error.append(row.getKey()).append("\"");
+                    LOGGER.debug(error.toString());
+                    parseErrorCount.incrementAndGet();
+                    result = DataType.getMissingCell();
+                } else {
+                    if (generateCoordinates) {
+                        if(forceGeneration || mol.getNumConformers() == 0) {
+                            RDKFuncs.compute2DCoords(mol);
+                        }
                     }
+                    try {
+                        result = RDKitMolCellFactory.createRDKitMolCell(mol);
+                        // may throw exception while deriving smiles string...
+                    } catch (Exception e) {
+                        StringBuilder error = new StringBuilder();
+                        error.append("Error creating RDKit cell from ROMol ");
+                        error.append("while processing row \"");
+                        error.append(row.getKey()).append("\": ");
+                        LOGGER.debug(e.getMessage(), e);
+                        parseErrorCount.incrementAndGet();
+                        result = DataType.getMissingCell();
+                    } finally {
+                        mol.delete();
+                    }
+                }
+                return result;
+            }
+            @Override
+            public void processFinished(final ComputationTask task) {
+                long rowIndex = task.getIndex();
+                DataRow row = task.getInput();
+                DataCell cell;
+                try {
+                    cell = task.get();
+                } catch (Exception e) {
+                    LOGGER.warn("Exception while getting result " +
+                    		"(assigning missing)", e);
+                    cell = DataType.getMissingCell();
                 }
                 try {
-                    result = RDKitMolCellFactory.createRDKitMolCell(mol);
-                    // may throw exception while deriving smiles string...
-                } catch (Exception e) {
-                    StringBuilder error = new StringBuilder();
-                    error.append("Error creating RDKit cell from ROMol ");
-                    error.append("while processing row \"");
-                    error.append(row.getKey()).append("\": ");
-                    LOGGER.debug(e.getMessage(), e);
-                    parseErrorCount++;
-                    parseError = true;
-                    result = DataType.getMissingCell();
-                } finally {
-                    mol.delete();
+                    exec.checkCanceled();
+                } catch (CanceledExecutionException e) {
+                    cancel(true);
                 }
-            }
+                StringBuilder m = new StringBuilder("Finished row ");
+                m.append(rowIndex).append('/').append(totalRowCount);
+                m.append(" (\"").append(row.getKey()).append("\") - ");
+                m.append(getActiveCount()).append(" active; ");
+                m.append(getFinishedTaskCount()).append(" pending");
+                exec.setProgress(rowIndex/ (double)totalRowCount, m.toString());
+                if (cell.isMissing() && splitBadRowsToPort1()) {
+                    port1.addRowToTable(row);
+                } else {
+                    final ArrayList<DataCell> copyCells =
+                        new ArrayList<DataCell>(row.getNumCells() + 1);
 
-            if (parseError && splitBadRowsToPort1()) {
-                port1.addRowToTable(row);
-            } else {
-                final ArrayList<DataCell> copyCells =
-                    new ArrayList<DataCell>(row.getNumCells() + 1);
-
-                // copy the cells from the incoming row
-                for (int i = 0; i < row.getNumCells(); i++) {
-                    if (i == molColIdx && m_removeSourceCols.getBooleanValue()) {
-                        continue;
+                    // copy the cells from the incoming row
+                    for (int i = 0; i < row.getNumCells(); i++) {
+                        if (i == molColIdx && m_removeSourceCols.getBooleanValue()) {
+                            continue;
+                        }
+                        // respecting a blob support row has the advantage that
+                        // blobs are not unwrapped (expensive)
+                        // --> this is really only for performance and makes a
+                        // difference only if the input row contains blobs
+                        copyCells.add(row instanceof BlobSupportDataRow
+                                ? ((BlobSupportDataRow)row).getRawCell(i)
+                                        : row.getCell(i));
                     }
-                    // respecting a blob support row has the advantage that
-                    // blobs are not unwrapped (expensive)
-                    // --> this is really only for performance and makes a
-                    // difference only if the input row contains blobs
-                    copyCells.add(row instanceof BlobSupportDataRow
-                            ? ((BlobSupportDataRow)row).getRawCell(i)
-                                    : row.getCell(i));
+                    copyCells.add(cell);
+                    BlobSupportDataRow outRow = new BlobSupportDataRow(row.getKey(),
+                            copyCells.toArray(new DataCell[copyCells.size()]));
+                    port0.addRowToTable(outRow);
                 }
-                copyCells.add(result);
-                BlobSupportDataRow outRow = new BlobSupportDataRow(row.getKey(),
-                        copyCells.toArray(new DataCell[copyCells.size()]));
-                port0.addRowToTable(outRow);
-            }
-            rowsProcessed++;
+            };
+
+        };
+        try {
+            worker.run(inData[0]);
+        } catch (Exception e) {
+            exec.checkCanceled();
+            throw e;
         }
-        if (parseErrorCount > 0) {
+        if (parseErrorCount.get() > 0) {
             String msg =
                     "Error parsing input for " + parseErrorCount + " rows.";
             LOGGER.warn(msg);
@@ -408,4 +442,5 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         // m_generateCoordinates.validateSettings(settings);
         // m_forceGenerateCoordinates.validateSettings(settings);
     }
+
 }

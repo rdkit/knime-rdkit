@@ -183,7 +183,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             isCompatible(SmilesValue.class);
         final AtomicInteger parseErrorCount = new AtomicInteger();
         final int totalRowCount = inData[0].getRowCount();
-        int cpuCount = Runtime.getRuntime().availableProcessors() + 1;
+        int cpuCount = Runtime.getRuntime().availableProcessors() + 2;
         int queueSize = Math.max(cpuCount, 100);
         MultiThreadWorker<DataRow, DataCell> worker =
             new MultiThreadWorker<DataRow, DataCell>(queueSize, cpuCount) {

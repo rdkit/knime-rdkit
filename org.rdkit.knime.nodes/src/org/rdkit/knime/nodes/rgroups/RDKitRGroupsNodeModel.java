@@ -242,9 +242,11 @@ public class RDKitRGroupsNodeModel extends NodeModel {
                     	boolean found=false;
                     	for(int atIdx=0;atIdx<frag.getNumAtoms();atIdx++){
                     		Atom at=frag.getAtomWithIdx(atIdx);
-
                     		if(at.getAtomicNum()==0){
-                        		int massLabel=(int)Math.floor(at.getMass()+.1);
+                    			int massLabel=(int)Math.floor(at.getMass()+.1);
+                    			// dummies are labeled by the zero-based atom index they're attached
+                    			// to. To make things clearer to the user, increment these.
+                        		at.setMass(massLabel+1);
                        			cells[firstRGroup+massLabel]=RDKitMolCellFactory.createRDKitMolCell(
                                       frag);
                        			found=true;

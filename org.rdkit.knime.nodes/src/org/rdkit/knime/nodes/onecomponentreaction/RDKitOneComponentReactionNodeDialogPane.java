@@ -48,9 +48,15 @@
  */
 package org.rdkit.knime.nodes.onecomponentreaction;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -68,8 +74,16 @@ public class RDKitOneComponentReactionNodeDialogPane extends
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "RDKit Mol column: ", 0,
                 RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentString(createSmartsModel(),
-                "Reaction SMARTS: "));
+        SettingsModelString smartsModel = createSmartsModel();
+        SettingsModelString fileModel = createFileModel();
+        SettingsModelBoolean fileEnableModel =
+            createFileEnableModel(fileModel, smartsModel);
+        super.addDialogComponent(new DialogComponentString(
+                smartsModel, "Reaction SMARTS: "));
+        super.addDialogComponent(new DialogComponentBoolean(fileEnableModel,
+                "Use Reaction from RXN file: "));
+        super.addDialogComponent(new DialogComponentFileChooser(
+                fileModel, "rdkit_onecomp_reaction", ".rxn"));
     }
 
     /**
@@ -84,6 +98,30 @@ public class RDKitOneComponentReactionNodeDialogPane extends
      */
     static final SettingsModelString createSmartsModel() {
         return new SettingsModelString("smarts_value", "");
+    }
+
+    static final SettingsModelBoolean createFileEnableModel(
+            final SettingsModelString fileModel,
+            final SettingsModelString smartsModel) {
+        boolean def = false;
+        final SettingsModelBoolean result =
+            new SettingsModelBoolean("use_rxn_file_input", def);
+        fileModel.setEnabled(def);
+        smartsModel.setEnabled(!def);
+        result.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                boolean isChecked = result.getBooleanValue();
+                fileModel.setEnabled(isChecked);
+                smartsModel.setEnabled(!isChecked);
+            }
+        });
+        return result;
+    }
+
+    static final SettingsModelString createFileModel() {
+        return new SettingsModelString("file_input", "");
     }
 
 }

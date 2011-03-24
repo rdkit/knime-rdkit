@@ -7,7 +7,7 @@
 	    Applies a reaction to two RDKit Mol columns
 	</shortDescription>
 	<fullDescription>
-		<intro>Applies a reaction to two  RDKit Mol columns.
+		<intro>Applies a reaction to two RDKit Mol columns.
 		<p>
 		The output table contains a row for each product produced by applying the reaction to the inputs.
 		<br />Each row contains the product molecule, index information, and the reactant molecules that were used.
@@ -17,7 +17,8 @@
         <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
         <option name="Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
         <option name="Reaction SMARTS">A reaction SMARTS describing the reaction.
-        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a>.</option>
+        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a>. </option>
+        <option name="Use Reaction from RXN file">If you want to use a reaction file rather than a smarts pattern, select this box and choose the RXN file in the file browser. </option>
 	    <option name="Do Matrix Expansion">If checked, each reactant 1 will be combined with each reactant 2
 	    yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
 	    sequentially, with the longer list determining the number of output rows.</option>

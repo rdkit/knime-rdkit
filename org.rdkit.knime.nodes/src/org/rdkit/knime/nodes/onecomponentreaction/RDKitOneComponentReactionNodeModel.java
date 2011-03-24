@@ -79,6 +79,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolCellFactory;
@@ -95,6 +96,13 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 
     private final SettingsModelString m_smarts =
             RDKitOneComponentReactionNodeDialogPane.createSmartsModel();
+
+    private final SettingsModelString m_rxnFileInput =
+        RDKitOneComponentReactionNodeDialogPane.createFileModel();
+
+    private final SettingsModelBoolean m_rxnFileEnableModel =
+        RDKitOneComponentReactionNodeDialogPane.createFileEnableModel(
+                m_rxnFileInput, m_smarts);
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RDKitOneComponentReactionNodeModel.class);
@@ -156,28 +164,60 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         + "node for Smiles or SDF.");
             }
         }
-        if (m_smarts.getStringValue().isEmpty()) {
-            throw new InvalidSettingsException("Please provide a reaction "
-                    + "SMARTS.");
-        }
-        ChemicalReaction rxn;
-        rxn = RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
-        if (rxn == null)
-            throw new InvalidSettingsException("unparseable reaction smarts: "
-                    + m_smarts.getStringValue());
-        if (rxn.getNumReactantTemplates() != 1)
-            throw new InvalidSettingsException(
-                    "reaction should only have one reactant, it has: "
-                            + rxn.getNumReactantTemplates());
-
-	   if(!rxn.validateReaction()){
-		   throw new InvalidSettingsException("reaction smarts has errors");
-	   }
+        // validate only
+        readRxn().delete();
 
         // further input spec check
         findColumnIndices(inSpecs[0]);
 
         return createOutSpecs();
+    }
+
+    /**
+      * @throws InvalidSettingsException */
+    private ChemicalReaction readRxn() throws InvalidSettingsException {
+        ChemicalReaction rxn;
+        if (!m_rxnFileEnableModel.getBooleanValue()) {
+            // read smarts field
+            String smartsString = m_smarts.getStringValue();
+            if (smartsString == null || smartsString.isEmpty()) {
+                throw new InvalidSettingsException("Invalid (empty) smarts");
+            }
+            rxn = RDKFuncs.ReactionFromSmarts(smartsString);
+            if (rxn == null)
+                throw new InvalidSettingsException("unparseable reaction smarts: "
+                        + smartsString);
+        } else {
+            // read from rxn file
+            String rxnFileLocation = m_rxnFileInput.getStringValue();
+            if (rxnFileLocation == null || rxnFileLocation.isEmpty()) {
+                throw new InvalidSettingsException("Neither a smarts pattern "
+                        + "nor a file location has been specified.");
+            }
+            if (!new File(rxnFileLocation).exists()) {
+                throw new InvalidSettingsException("No such RXN file: "
+                        + rxnFileLocation);
+            }
+            try {
+                rxn = RDKFuncs.ReactionFromRxnFile(rxnFileLocation);
+            } catch (Exception e) {
+                throw new InvalidSettingsException(
+                        "Unable to parse rxn file ", e);
+            }
+            if (rxn == null) {
+                throw new InvalidSettingsException(
+                        "Unable to parse rxn file (RDKit lib returned null)");
+            }
+        }
+        if (rxn.getNumReactantTemplates() != 1)
+            throw new InvalidSettingsException(
+                    "reaction should have exactly one reactant, it has: "
+                            + rxn.getNumReactantTemplates());
+
+	   if(!rxn.validateReaction()){
+		   throw new InvalidSettingsException("reaction smarts has errors");
+	   }
+	   return rxn;
     }
 
     private int[] findColumnIndices(final DataTableSpec spec)
@@ -213,13 +253,8 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
         // check user settings against input spec here
         final int[] indices = findColumnIndices(inSpec);
 
-        // build an RDKit reaction from the SMARTS:
-        ChemicalReaction rxn =
-                RDKFuncs.ReactionFromSmarts(m_smarts.getStringValue());
-        if (rxn == null) {
-            throw new InvalidSettingsException("unparseable reaction smarts: "
-                    + m_smarts.getStringValue());
-        }
+        // get the reaction:
+        ChemicalReaction rxn = readRxn();
         int parseErrorCount = 0;
         final int rowCount = inData[0].getRowCount();
         try {
@@ -271,14 +306,20 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                     psetidx++) {
                                 for (int pidx = 0; pidx < prods.get(psetidx)
                                         .size(); pidx++) {
-                                    DataCell[] cells =
-                                            new DataCell[productTable
-                                                    .getTableSpec()
-                                                    .getNumColumns()];
                                     ROMol temp = prods.get(psetidx).get(pidx);
-                                    cells[0] =
-                                        RDKitMolCellFactory.createRDKitMolCell(
-                                                temp);
+                                    DataCell cell;
+                                    try{
+                                    	cell=RDKitMolCellFactory.createRDKitMolCell(
+                                    				temp);
+                                    } catch (Exception e){
+                                    	temp.delete();
+                                    	continue;
+                                    }
+                                    DataCell[] cells =
+                                        new DataCell[productTable
+                                                .getTableSpec()
+                                                .getNumColumns()];
+                                    cells[0] = cell;
                                     temp.delete();
                                     cells[1] = new IntCell(pidx);
                                     cells[2] = new IntCell(count - 1);
@@ -310,6 +351,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             }
         } finally {
             productTable.close();
+            rxn.delete();
         }
         if (parseErrorCount > 0) {
             setWarningMessage("Error parsing Smiles for " + parseErrorCount
@@ -353,6 +395,12 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
+        try {
+            m_rxnFileEnableModel.loadSettingsFrom(settings);
+            m_rxnFileInput.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // ignore, assume smarts (rxn file input added in later version)
+        }
         m_smarts.loadSettingsFrom(settings);
     }
 
@@ -362,7 +410,9 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
+        m_rxnFileEnableModel.saveSettingsTo(settings);
         m_smarts.saveSettingsTo(settings);
+        m_rxnFileInput.saveSettingsTo(settings);
     }
 
     /**
@@ -373,5 +423,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
         m_smarts.validateSettings(settings);
+        // don't verify rxn fields -- fields were added at later state
+        // (would break backward compatibility)
     }
 }

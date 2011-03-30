@@ -57,6 +57,13 @@
             category-path="/community/rdkit"
             factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
+            category-path="/community/rdkit"
+            expert-flag="false"
+            factory-class="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"
+            id="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

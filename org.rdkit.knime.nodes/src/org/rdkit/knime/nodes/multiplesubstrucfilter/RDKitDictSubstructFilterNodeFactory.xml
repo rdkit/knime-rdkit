@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="substruct_filter.png" type="Manipulator">
+    <name>RDKit Dictionary Substructure Filter</name>
+
+    <shortDescription>
+        Applies a substructure filter to an input RDKit Mol column
+	</shortDescription>
+
+    <fullDescription>
+        <intro>Applies a substructure filter to an input RDKit Mol column. The patterns
+            are given as SMARTS in the second input table. You can choose how many patterns must
+            match for each molecule at least.
+        </intro>
+
+        <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>
+        <option name="SMARTS column">Select the column from the second input table that contains the SMARTS patterns</option>
+        <option name="Matches">Select the minimum number of patterns that must match for each molecule so that it is
+            included in the first output table</option>
+    </fullDescription>
+
+
+
+    <ports>
+        <inPort index="0" name="Molecules">Table with RDKit molecules</inPort>
+        <inPort index="1" name="SMARTS patterns">Table with SMARTS patterns</inPort>
+        <outPort index="0" name="Molecules matching filter">Molecules matching the substructure query</outPort>
+        <outPort index="1" name="Molecules not matching filter">Molecules not matching the substructure query</outPort>
+    </ports>
+</knimeNode>

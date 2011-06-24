@@ -76,7 +76,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
         super.start(context);
         try {
             error = null;
-            System.loadLibrary("RDKFuncs");
+            System.loadLibrary("GraphMolWrap");
         } catch (UnsatisfiedLinkError e) {
             error = new Status(IStatus.ERROR, context.getBundle()
                             .getSymbolicName(),

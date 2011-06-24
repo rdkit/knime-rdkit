@@ -221,7 +221,7 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
                     mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                 } else {
                     String smiles = ((StringValue)firstCell).toString();
-                    mol = RDKFuncs.MolFromSmiles(smiles);
+                    mol = RWMol.MolFromSmiles(smiles);
                 }
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "
@@ -234,8 +234,12 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
                 	ROMol temp1=RDKFuncs.MurckoDecompose(mol);
                     RWMol temp2=new RWMol(temp1);
                     temp1.delete();
-                    RDKFuncs.sanitizeMol(temp2);
-                    res = RDKitMolCellFactory.createRDKitMolCell(temp2);
+                    if(temp2.getNumAtoms()>0){
+                    	RDKFuncs.sanitizeMol(temp2);
+                    	res = RDKitMolCellFactory.createRDKitMolCell(temp2);
+                    } else {
+                    	res=DataType.getMissingCell();
+                    }
                     temp2.delete();
                 } catch(Exception ex) {
                 	res=DataType.getMissingCell();

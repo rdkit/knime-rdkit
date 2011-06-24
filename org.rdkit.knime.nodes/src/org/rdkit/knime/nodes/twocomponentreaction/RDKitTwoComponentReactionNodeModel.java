@@ -59,6 +59,7 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
+import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -220,7 +221,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
            if (smartsString == null || smartsString.isEmpty()) {
                throw new InvalidSettingsException("Invalid (empty) smarts");
            }
-           rxn = RDKFuncs.ReactionFromSmarts(smartsString);
+           rxn = ChemicalReaction.ReactionFromSmarts(smartsString);
            if (rxn == null)
                throw new InvalidSettingsException("unparseable reaction smarts: "
                        + smartsString);
@@ -236,7 +237,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                        + rxnFileLocation);
            }
            try {
-               rxn = RDKFuncs.ReactionFromRxnFile(rxnFileLocation);
+               rxn = ChemicalReaction.ReactionFromRxnFile(rxnFileLocation);
            } catch (Exception e) {
                throw new InvalidSettingsException(
                        "Unable to parse rxn file ", e);
@@ -251,7 +252,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                    "reaction should have exactly two reactants, it has: "
                            + rxn.getNumReactantTemplates());
 
-	   if(!rxn.validateReaction()){
+	   if(!rxn.validate()){
 		   throw new InvalidSettingsException("reaction smarts has errors");
 	   }
 	   return rxn;
@@ -352,7 +353,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                         mol1 = ((RDKitMolValue)r1Cell).readMoleculeValue();
                     } else {
                         String smiles = ((StringValue)r1Cell).toString();
-                        mol1 = RDKFuncs.MolFromSmiles(smiles);
+                        mol1 = RWMol.MolFromSmiles(smiles);
                     }
                 }
                 if (mol1 == null) {
@@ -387,7 +388,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                             mol2 = ((RDKitMolValue)r2Cell).readMoleculeValue();
                         } else {
                             String smiles = ((StringValue)r2Cell).toString();
-                            mol2 = RDKFuncs.MolFromSmiles(smiles);
+                            mol2 = RWMol.MolFromSmiles(smiles);
                         }
                         if (mol2 != null) {
                             rs.set(1, mol2);
@@ -405,10 +406,13 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                                     for (int pidx = 0; pidx < prods
                                             .get(psetidx).size(); pidx++) {
                                     	DataCell cell;
+                                    	RWMol prod=new RWMol(prods.get(psetidx).get(pidx));
                                     	try{
+                                    		RDKFuncs.sanitizeMol(prod);
                                     		cell=RDKitMolCellFactory.createRDKitMolCellAndDelete(
-                                                    prods.get(psetidx).get(pidx));
+                                                    prod);
                                     	} catch (Exception e){
+                                    		prod.delete();
                                     		prods.get(psetidx).get(pidx).delete();
                                     		continue;
                                     	}

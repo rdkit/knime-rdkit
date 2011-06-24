@@ -55,6 +55,7 @@ import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -130,7 +131,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         if (m_smarts.getStringValue().equals("")) {
             throw new InvalidSettingsException("Please specify a SMARTS query.");
         }
-        ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue());
         if (pattern == null) {
             throw new InvalidSettingsException("Could not parse SMARTS query: "
                     + m_smarts.getStringValue());
@@ -178,7 +179,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         final int[] indices = findColumnIndices(inSpec);
 
         // construct an RDKit molecule from the SMARTS pattern:
-        ROMol pattern = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue());
         final int rowCount = inData[0].getRowCount();
         int matchCount = 0;
         try {

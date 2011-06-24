@@ -58,6 +58,7 @@ import org.RDKit.Atom;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
+import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -161,7 +162,7 @@ public class RDKitRGroupsNodeModel extends NodeModel {
                     + "SMARTS.");
         }
         ROMol core;
-        core = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        core = RWMol.MolFromSmarts(m_smarts.getStringValue());
         if (core == null)
             throw new InvalidSettingsException("unparseable core smarts: "
                     + m_smarts.getStringValue());
@@ -201,7 +202,7 @@ public class RDKitRGroupsNodeModel extends NodeModel {
         final int[] indices = findColumnIndices(inSpec);
         
         ROMol core;
-        core = RDKFuncs.MolFromSmarts(m_smarts.getStringValue());
+        core = RWMol.MolFromSmarts(m_smarts.getStringValue());
         if (core == null)
             throw new InvalidSettingsException("unparseable core smarts: "
                     + m_smarts.getStringValue());

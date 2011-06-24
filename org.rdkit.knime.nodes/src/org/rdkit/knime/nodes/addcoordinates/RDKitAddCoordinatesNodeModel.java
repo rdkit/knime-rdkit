@@ -53,8 +53,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.RDKit.DistanceGeom;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -162,7 +164,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                 RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
         if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
             ROMol patternTest =
-                    RDKFuncs.MolFromSmarts(m_templateSmarts.getStringValue());
+                    RWMol.MolFromSmarts(m_templateSmarts.getStringValue());
             if (patternTest == null) {
                 throw new InvalidSettingsException(
                         "Could not parse SMARTS query for template: "
@@ -222,10 +224,10 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
         final boolean do2D = m_dimension.getStringValue().equals(
                 RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
         if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
-            m_smartsPattern = RDKFuncs.MolFromSmarts(
+            m_smartsPattern = RWMol.MolFromSmarts(
                     m_templateSmarts.getStringValue());
             if (m_smartsPattern != null) {
-                RDKFuncs.compute2DCoords(m_smartsPattern);
+                m_smartsPattern.compute2DCoords();
             }
         }
 
@@ -253,7 +255,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                     // it's a SMILES column, so construct an RDKit molecule
                     // from the SMILES:
                     String smiles = ((StringValue)firstCell).toString();
-                    mol = RDKFuncs.MolFromSmiles(smiles);
+                    mol = RWMol.MolFromSmiles(smiles);
                     if (mol == null) {
                         StringBuilder error = new StringBuilder();
                         error.append("Error parsing SMILES ");
@@ -268,12 +270,12 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                 	// keep this all isolated in a try...catch so that we don't take
                 	// down knime if there's a problem on the C++ side.
 	                if (!do2D) {
-	                    RDKFuncs.compute3DCoords(mol);
+	                	DistanceGeom.EmbedMolecule(mol,0,42);
 	                } else {
 	                    if (m_smartsPattern != null) {
-	                        RDKFuncs.compute2DCoords(mol, m_smartsPattern);
+	                        mol.compute2DCoords(m_smartsPattern);
 	                    } else {
-	                        RDKFuncs.compute2DCoords(mol);
+	                        mol.compute2DCoords();
 	                    }
 	                }
 	                return RDKitMolCellFactory.createRDKitMolCell(mol);

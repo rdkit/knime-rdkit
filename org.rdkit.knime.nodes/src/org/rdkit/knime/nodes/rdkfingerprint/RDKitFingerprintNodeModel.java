@@ -56,7 +56,8 @@ import java.util.List;
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
-import org.RDKit.UInt32_Vect;
+import org.RDKit.RWMol;
+import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -263,7 +264,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                     mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                 } else {
                     String smiles = ((StringValue)firstCell).toString();
-                    mol = RDKFuncs.MolFromSmiles(smiles);
+                    mol = RWMol.MolFromSmiles(smiles);
                 }
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "
@@ -318,7 +319,7 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                             fingerprint.delete();
 
                         } else if ("featmorgan".equals(m_fpType.getStringValue())) {
-                        	UInt32_Vect ivs=new UInt32_Vect(mol.getNumAtoms());
+                        	UInt_Vect ivs=new UInt_Vect(mol.getNumAtoms());
                         	RDKFuncs.getFeatureInvariants(mol, ivs);
                             ExplicitBitVect fingerprint;
                             fingerprint =

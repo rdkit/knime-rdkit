@@ -56,6 +56,7 @@ import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.chem.types.SmilesCell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -221,7 +222,7 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                     mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                 } else {
                     String smiles = ((StringValue)firstCell).toString();
-                    mol = RDKFuncs.MolFromSmiles(smiles);
+                    mol = RWMol.MolFromSmiles(smiles);
                 }
                 if (mol == null) {
                     LOGGER.debug("Error parsing smiles "

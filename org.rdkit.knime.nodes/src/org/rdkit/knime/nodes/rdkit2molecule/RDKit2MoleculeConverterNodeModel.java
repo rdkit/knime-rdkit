@@ -220,7 +220,7 @@ public class RDKit2MoleculeConverterNodeModel extends NodeModel {
                     } else {
                         // Convert to SDF
                         if(mol.getNumConformers() == 0){
-                            RDKFuncs.compute2DCoords(mol);
+                            mol.compute2DCoords();
                         }
                         String value = RDKFuncs.MolToMolBlock(mol);
                         // KNIME SDF type requires string to be terminated

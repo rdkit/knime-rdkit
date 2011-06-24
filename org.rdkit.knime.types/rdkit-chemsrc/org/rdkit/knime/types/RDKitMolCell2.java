@@ -190,7 +190,7 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     }
 
     private static byte[] toByteArray(final ROMol mol) {
-        Int_Vect iv = RDKFuncs.MolToBinary(mol);
+        Int_Vect iv = mol.ToBinary();
         byte[] bytes = new byte[(int)iv.size()];
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte)iv.get(i);
@@ -203,7 +203,7 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
         for (int i = 0; i < bytes.length; i++) {
             iv.set(i, bytes[i]);
         }
-        return RDKFuncs.MolFromBinary(iv);
+        return ROMol.MolFromBinary(iv);
     }
 
     /** Factory for (de-)serializing a RDKitMolCell. */

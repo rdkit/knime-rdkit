@@ -10,8 +10,9 @@ Require-Bundle: org.knime.base;bundle-version="2.2.0",
 Bundle-Vendor: NIBR
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
- lib/org.RDKit.jar
-Bundle-Version: 1.0.0.qualifier
+ lib/org.RDKit.jar,
+ lib/org.RDKitDoc.jar
+Bundle-Version: 1.1.0.qualifier
 Bundle-Name: RDKit Chemistry Type Definition Plugin
 Bundle-Activator: org.rdkit.knime.RDKitTypesPluginActivator
 Bundle-ManifestVersion: 2

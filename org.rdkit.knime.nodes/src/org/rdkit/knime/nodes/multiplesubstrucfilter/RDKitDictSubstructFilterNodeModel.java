@@ -56,6 +56,7 @@ import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.chem.types.SmartsValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -205,7 +206,7 @@ public class RDKitDictSubstructFilterNodeModel extends NodeModel {
         int i = 0;
         for (DataRow row : inData[1]) {
             SmartsValue v = (SmartsValue)row.getCell(indices[1]);
-            patterns[i] = RDKFuncs.MolFromSmarts(v.getSmartsValue());
+            patterns[i] = RWMol.MolFromSmarts(v.getSmartsValue());
             if (patterns[i] == null) {
                 throw new ParseException("Could not parse SMARTS '"
                         + v.getSmartsValue() + "' in row " + row.getKey(), 0);

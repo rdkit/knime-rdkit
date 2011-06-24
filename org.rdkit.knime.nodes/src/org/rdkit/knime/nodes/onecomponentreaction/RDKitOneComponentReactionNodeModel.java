@@ -59,6 +59,7 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
+import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -183,7 +184,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             if (smartsString == null || smartsString.isEmpty()) {
                 throw new InvalidSettingsException("Invalid (empty) smarts");
             }
-            rxn = RDKFuncs.ReactionFromSmarts(smartsString);
+            rxn = ChemicalReaction.ReactionFromSmarts(smartsString);
             if (rxn == null)
                 throw new InvalidSettingsException("unparseable reaction smarts: "
                         + smartsString);
@@ -199,7 +200,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         + rxnFileLocation);
             }
             try {
-                rxn = RDKFuncs.ReactionFromRxnFile(rxnFileLocation);
+                rxn = ChemicalReaction.ReactionFromRxnFile(rxnFileLocation);
             } catch (Exception e) {
                 throw new InvalidSettingsException(
                         "Unable to parse rxn file ", e);
@@ -214,7 +215,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                     "reaction should have exactly one reactant, it has: "
                             + rxn.getNumReactantTemplates());
 
-	   if(!rxn.validateReaction()){
+	   if(!rxn.validate()){
 		   throw new InvalidSettingsException("reaction smarts has errors");
 	   }
 	   return rxn;
@@ -275,7 +276,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         mol = ((RDKitMolValue)firstCell).readMoleculeValue();
                     } else {
                         String smiles = ((StringValue)firstCell).toString();
-                        mol = RDKFuncs.MolFromSmiles(smiles);
+                        mol = RWMol.MolFromSmiles(smiles);
                         if (mol == null) {
                             LOGGER.debug("Error parsing Smiles "
                                     + "while processing row: " + row.getKey());
@@ -306,24 +307,25 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                     psetidx++) {
                                 for (int pidx = 0; pidx < prods.get(psetidx)
                                         .size(); pidx++) {
-                                    ROMol temp = prods.get(psetidx).get(pidx);
-                                    DataCell cell;
-                                    try{
-                                    	cell=RDKitMolCellFactory.createRDKitMolCell(
-                                    				temp);
-                                    } catch (Exception e){
-                                    	temp.delete();
-                                    	continue;
-                                    }
+                                	DataCell cell;
+                                	RWMol prod=new RWMol(prods.get(psetidx).get(pidx));
+                                	try{
+                                		RDKFuncs.sanitizeMol(prod);
+                                		cell=RDKitMolCellFactory.createRDKitMolCellAndDelete(
+                                                prod);
+                                	} catch (Exception e){
+                                		prod.delete();
+                                		prods.get(psetidx).get(pidx).delete();
+                                		continue;
+                                	}
                                     DataCell[] cells =
                                         new DataCell[productTable
                                                 .getTableSpec()
                                                 .getNumColumns()];
                                     cells[0] = cell;
-                                    temp.delete();
                                     cells[1] = new IntCell(pidx);
                                     cells[2] = new IntCell(count - 1);
-                                    temp = rs.get(0);
+                                    ROMol temp = rs.get(0);
                                     cells[3] =
                                         RDKitMolCellFactory.createRDKitMolCell(
                                                 temp);

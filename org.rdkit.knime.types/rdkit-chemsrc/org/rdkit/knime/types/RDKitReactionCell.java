@@ -123,7 +123,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
             throw new NullPointerException("Rxn value must not be null.");
         }
         m_rxn = rxn;
-        m_smilesString = RDKFuncs.ReactionToSmarts(rxn);
+        m_smilesString = ChemicalReaction.ReactionToSmarts(rxn);
     }
 
     /**
@@ -142,7 +142,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
         if (smarts == null) {
             throw new NullPointerException("Smarts value must not be null.");
         }
-        m_rxn = RDKFuncs.ReactionFromSmarts(smarts);
+        m_rxn = ChemicalReaction.ReactionFromSmarts(smarts);
         if (m_rxn == null) {
             throw new NullPointerException("could not process reaction");
         }
@@ -207,7 +207,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
         public void serialize(final RDKitReactionCell cell,
                 final DataCellDataOutput output) throws IOException {
             // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-            Int_Vect cv = RDKFuncs.RxnToBinary(cell.getReactionValue());
+            Int_Vect cv = cell.getReactionValue().ToBinary();
             String pkl = "";
             for (int i = 0; i < cv.size(); ++i)
                 pkl += cv.get(i);
@@ -226,7 +226,7 @@ public class RDKitReactionCell extends DataCell implements StringValue,
                 char c = s.charAt(i);
                 cv.add(c);
             }
-            ChemicalReaction rxn = RDKFuncs.RxnFromBinary(cv);
+            ChemicalReaction rxn = ChemicalReaction.RxnFromBinary(cv);
             return new RDKitReactionCell(rxn);
         }
     }

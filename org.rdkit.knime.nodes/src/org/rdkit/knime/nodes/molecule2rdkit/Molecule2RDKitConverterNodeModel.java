@@ -54,8 +54,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
@@ -194,14 +194,26 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
 
                 DataCell result;
                 ROMol mol = null;
-                if (molCell.isMissing()) {
-                    mol = null;
-                } else if (smilesInput) {
-                    String value = ((SmilesValue)molCell).getSmilesValue();
-                    mol = RDKFuncs.MolFromSmiles(value);
-                } else {
-                    String value = ((SdfValue)molCell).getSdfValue();
-                    mol = RDKFuncs.MolFromMolBlock(value);
+                try {
+                    if (molCell.isMissing()) {
+                        mol = null;
+                    } else if (smilesInput) {
+                        String value = ((SmilesValue)molCell).getSmilesValue();
+                        mol = RWMol.MolFromSmiles(value);
+                    } else {
+                        String value = ((SdfValue)molCell).getSdfValue();
+                        mol = RWMol.MolFromMolBlock(value);
+                    }
+                } catch (Exception e) {
+                    StringBuilder error = new StringBuilder();
+                    error.append(e.getClass().getSimpleName());
+                    error.append(" parsing ");
+                    error.append(smilesInput ? "SMILES " : "SDF ");
+                    error.append("while processing row: \"");
+                    error.append(row.getKey()).append("\"");
+                    LOGGER.debug(error.toString(), e);
+                    parseErrorCount.incrementAndGet();
+                    return DataType.getMissingCell();
                 }
 
                 if (mol == null) {
@@ -216,7 +228,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 } else {
                     if (generateCoordinates) {
                         if(forceGeneration || mol.getNumConformers() == 0) {
-                            RDKFuncs.compute2DCoords(mol);
+                            mol.compute2DCoords();
                         }
                     }
                     try {

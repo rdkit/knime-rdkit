@@ -183,8 +183,12 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             isCompatible(SmilesValue.class);
         final AtomicInteger parseErrorCount = new AtomicInteger();
         final int totalRowCount = inData[0].getRowCount();
-        int cpuCount = (3 * Runtime.getRuntime().availableProcessors()) / 2;
-        int queueSize = Math.max(cpuCount, 100);
+        // FIX: there are intermittent crashing problems with creating molecule cells
+        // multi-threaded. Until those are fixed, only use a single thread for that.
+        //int cpuCount = (3 * Runtime.getRuntime().availableProcessors()) / 2;
+        //int queueSize = Math.max(cpuCount, 100);
+        int cpuCount=1;
+        int queueSize=1;
         MultiThreadWorker<DataRow, DataCell> worker =
             new MultiThreadWorker<DataRow, DataCell>(queueSize, cpuCount) {
             /** {@inheritDoc} */

@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.feature"
       label="RDKit KNIME integration"
-      version="1.0.0.qualifier"
+      version="1.1.0.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.nodes">
 

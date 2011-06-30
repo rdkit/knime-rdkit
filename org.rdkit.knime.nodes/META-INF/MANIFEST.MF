@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes for Knime
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.knime.base;bundle-version="2.2.0",

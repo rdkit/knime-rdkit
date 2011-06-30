@@ -76,6 +76,11 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
         super.start(context);
         try {
             error = null;
+            // pull in the deps of the library :
+            if(System.getProperty("os.name").startsWith("Windows")){
+            	System.loadLibrary("msvcr100");
+                System.loadLibrary("msvcp100");
+            }
             System.loadLibrary("GraphMolWrap");
         } catch (UnsatisfiedLinkError e) {
             error = new Status(IStatus.ERROR, context.getBundle()

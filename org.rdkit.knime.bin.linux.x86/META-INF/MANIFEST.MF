@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit binaries for 32bit Linux
 Bundle-SymbolicName: org.rdkit.knime.bin.linux.x86;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: NIBR
 Fragment-Host: org.rdkit.knime.types;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

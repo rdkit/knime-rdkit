@@ -241,7 +241,7 @@ public class RDKitDictSubstructFilterNodeModel extends NodeModel {
                     }
                 }
                 if (((m_settings.minimumMatches() == 0) && (patternMatchCount == patterns.length))
-                        || (patternMatchCount >= m_settings.minimumMatches())) {
+                        || ((m_settings.minimumMatches() > 0)&&(patternMatchCount >= m_settings.minimumMatches()))) {
                     matchTable.addRowToTable(row);
                     matchCount += 1;
                 } else {

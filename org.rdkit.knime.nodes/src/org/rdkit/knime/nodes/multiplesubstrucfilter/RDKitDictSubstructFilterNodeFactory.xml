@@ -4,13 +4,13 @@
     <name>RDKit Dictionary Substructure Filter</name>
 
     <shortDescription>
-        Applies a substructure filter to an input RDKit Mol column
+        Applies a number of substructure filters to an input RDKit Mol column
 	</shortDescription>
 
     <fullDescription>
         <intro>Applies a substructure filter to an input RDKit Mol column. The patterns
-            are given as SMARTS in the second input table. You can choose how many patterns must
-            match for each molecule at least.
+            are given as SMARTS in the second input table. You can choose either a minimum number
+            of patterns to match or to require that all match.
         </intro>
 
         <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>

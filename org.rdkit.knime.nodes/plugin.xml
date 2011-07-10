@@ -48,7 +48,12 @@
             factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
             id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
       <node
-            after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"
+            after="org.rdkit.knime.nodes.rdkfingerprint.RDKitSubstructFilterFactory"
+            category-path="/community/rdkit"
+            factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"
+            id="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"
             category-path="/community/rdkit"
             factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
             id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>

@@ -85,6 +85,13 @@ public interface RDKitMolValue extends DataValue {
      */
     String getSmilesValue();
 
+    /**
+     * Returns whether or not our SMILES is canonical
+     *
+     * @return a boolean value
+     */
+    boolean isSmilesCanonical();
+
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */

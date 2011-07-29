@@ -103,41 +103,45 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     }
 
     private final String m_smilesString;
-
+    private final boolean m_smilesIsCanonical;
     private final byte[] m_byteContent;
 
     /** Package scope constructor that wraps the argument molecule.
      * @param mol The molecule to wrap.
-     * @param canonSmiles RDKit canonical smiles for the molecule.
-     *        Leave this empty if you have any doubts how to generate it.
+     * @param smiles smiles for the molecule.
      */
-    RDKitMolCell2(final ROMol mol, final String canonSmiles) {
-        if(canonSmiles == null || canonSmiles.length() == 0){
+    RDKitMolCell2(final ROMol mol, final String smiles) {
+        if(smiles == null || smiles.length() == 0){
         	m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+        	m_smilesIsCanonical=true;
         } else {
-        	m_smilesString = canonSmiles;
+        	m_smilesString = smiles;
+        	m_smilesIsCanonical=false;
         }
         m_byteContent = toByteArray(mol);
     }
 
     /** Deserialisation constructor.
      * @param byteContent The byte content
-     * @param canonSmiles RDKit canonical smiles for the molecule.
+     * @param smiles smiles for the molecule.
      */
-    private RDKitMolCell2(final byte[] byteContent, final String canonSmiles) {
+    private RDKitMolCell2(final byte[] byteContent, final String smiles,
+    		final boolean smilesIsCanonical) {
         if (byteContent == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_byteContent = byteContent;
-        if(canonSmiles == null || canonSmiles.length() == 0){
+        if(smiles == null || smiles.length() == 0){
             ROMol mol = toROMol(byteContent);
             try {
                 m_smilesString = RDKFuncs.MolToSmiles(mol, true);
             } finally {
                 mol.delete();
             }
+            m_smilesIsCanonical=true;
         } else {
-            m_smilesString = canonSmiles;
+            m_smilesString = smiles;
+            m_smilesIsCanonical=smilesIsCanonical;
         }
     }
 
@@ -156,7 +160,14 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     public String getSmilesValue() {
         return m_smilesString;
     }
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSmilesCanonical() {
+        return m_smilesIsCanonical;
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -220,6 +231,7 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
             byte[] bytes = cell.m_byteContent;
             output.writeInt(bytes.length);
             output.write(bytes);
+            output.writeBoolean(cell.m_smilesIsCanonical);
         }
 
         /**
@@ -236,7 +248,13 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
             }
             byte[] bytes = new byte[length];
             input.readFully(bytes);
-            return new RDKitMolCell2(bytes, smiles);
+            boolean isCanonical;
+            try {
+            	isCanonical=input.readBoolean();
+            } catch (IOException e) {
+            	isCanonical=true;
+            }
+            return new RDKitMolCell2(bytes, smiles,isCanonical);
         }
     }
 

@@ -220,21 +220,46 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                 ROMol mol = null;
                 if (firstType.isCompatible(RDKitMolValue.class)) {
                     mol = ((RDKitMolValue)firstCell).readMoleculeValue();
+                    if (mol == null) {
+                        LOGGER.debug("No molecule found "
+                                + "while processing row: " + row.getKey());
+                        m_parseErrorCount ++;
+                        return DataType.getMissingCell();
+                    }
+                    if(((RDKitMolValue)firstCell).isSmilesCanonical()){
+                    	canSmiles=((RDKitMolValue)firstCell).getSmilesValue();
+                    } else {
+                    	try{
+                    		RWMol tmol = new RWMol(mol);
+                    		RDKFuncs.sanitizeMol((RWMol)tmol);
+                    		mol.delete();
+                    		mol = tmol;
+                    	} catch (Exception e) {
+                            LOGGER.debug("could not sanitize molecule "
+                                    + "while processing row: " + row.getKey());
+                            m_parseErrorCount ++;
+                            return DataType.getMissingCell();
+                    	}
+                    }
                 } else {
                     String smiles = ((StringValue)firstCell).toString();
                     mol = RWMol.MolFromSmiles(smiles);
-                }
-                if (mol == null) {
-                    LOGGER.debug("Error parsing smiles "
-                            + "while processing row: " + row.getKey());
-                    m_parseErrorCount ++;
-                    return DataType.getMissingCell();
+                    if (mol == null) {
+                        LOGGER.debug("Error parsing smiles "
+                                + "while processing row: " + row.getKey());
+                        m_parseErrorCount ++;
+                        return DataType.getMissingCell();
+                    }
                 }
                 try {
-                    canSmiles = RDKFuncs.MolToSmiles(mol, true);
+                	if(canSmiles==""){
+                		canSmiles = RDKFuncs.MolToSmiles(mol, true);
+                	}
                     return new SmilesCell(canSmiles);
                 } finally {
-                    mol.delete();
+                	if(mol != null) {
+                		mol.delete();
+                	}
                 }
             }
         });

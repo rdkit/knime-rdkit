@@ -92,6 +92,16 @@ public class Molecule2RDKitConverterNodeDialogPane extends
                 createForceGenerateCoordinatesModel(generateCoordinatesModel),
                 "Force Generation"));
         super.closeCurrentGroup();
+        super.createNewTab("Advanced");
+        SettingsModelBoolean quickAndDirtyModel=createQuickAndDirtyModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+                quickAndDirtyModel, "Partial Santization"));
+        super.createNewGroup("Partial Sanitization Options");
+        super.addDialogComponent(new DialogComponentBoolean(
+                createAromatizationModel(quickAndDirtyModel), "Reperceive Aromaticity"));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createStereochemistryModel(quickAndDirtyModel), "Correct Stereochemistry"));
+        super.closeCurrentGroup();
     }
 
     /**
@@ -143,10 +153,45 @@ public class Molecule2RDKitConverterNodeDialogPane extends
         generateCoordinatesModel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                result.setEnabled(generateCoordinatesModel.getBooleanValue());
+            	result.setEnabled(generateCoordinatesModel.getBooleanValue());
             }
         });
+        result.setEnabled(generateCoordinatesModel.getBooleanValue());
         return result;
     }
+
+    /**
+     * @return settings model for check box whether to turn off sanitization
+     */
+    static final SettingsModelBoolean createQuickAndDirtyModel() {
+        return new SettingsModelBoolean("skip_santization", false);
+    }
+    static final SettingsModelBoolean createAromatizationModel(
+    		final SettingsModelBoolean quickAndDirtyModel) {
+        final SettingsModelBoolean result =
+            new SettingsModelBoolean("do_aromaticity", true);
+        quickAndDirtyModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(quickAndDirtyModel.getBooleanValue());
+            }
+        });
+        result.setEnabled(quickAndDirtyModel.getBooleanValue());
+        return result;
+    }
+    static final SettingsModelBoolean createStereochemistryModel(
+    		final SettingsModelBoolean quickAndDirtyModel) {
+    	final SettingsModelBoolean result =
+    		new SettingsModelBoolean("do_stereochem", false);
+    	quickAndDirtyModel.addChangeListener(new ChangeListener() {
+    		@Override
+    		public void stateChanged(final ChangeEvent e) {
+    			result.setEnabled(quickAndDirtyModel.getBooleanValue());
+    		}
+    	});
+    	result.setEnabled(quickAndDirtyModel.getBooleanValue());
+    	return result;
+    }
+
 
 }

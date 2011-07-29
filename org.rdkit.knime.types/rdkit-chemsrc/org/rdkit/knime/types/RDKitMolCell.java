@@ -161,7 +161,14 @@ public class RDKitMolCell extends BlobDataCell implements StringValue,
     public String getSmilesValue() {
         return m_smilesString;
     }
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSmilesCanonical() {
+        return true;
+    }
+ 
     /**
      * {@inheritDoc}
      */

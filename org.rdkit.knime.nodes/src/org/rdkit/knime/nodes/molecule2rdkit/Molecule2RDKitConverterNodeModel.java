@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.chem.types.SdfValue;
@@ -104,6 +105,16 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     private final SettingsModelBoolean m_forceGenerateCoordinates =
         Molecule2RDKitConverterNodeDialogPane.
             createForceGenerateCoordinatesModel(m_generateCoordinates);
+    
+    private final SettingsModelBoolean m_quickAndDirty = 
+    	Molecule2RDKitConverterNodeDialogPane.
+        createQuickAndDirtyModel();
+    private final SettingsModelBoolean m_aromatization = 
+    	Molecule2RDKitConverterNodeDialogPane.
+        createAromatizationModel(m_quickAndDirty);
+    private final SettingsModelBoolean m_stereochem = 
+    	Molecule2RDKitConverterNodeDialogPane.
+        createStereochemistryModel(m_quickAndDirty);
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Molecule2RDKitConverterNodeModel.class);
@@ -194,15 +205,19 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
 
                 DataCell result;
                 ROMol mol = null;
+                String smiles="";
+                boolean sanitize=!m_quickAndDirty.getBooleanValue();
+
                 try {
                     if (molCell.isMissing()) {
                         mol = null;
                     } else if (smilesInput) {
                         String value = ((SmilesValue)molCell).getSmilesValue();
-                        mol = RWMol.MolFromSmiles(value);
+                        mol = RWMol.MolFromSmiles(value,0,sanitize);
+                        smiles=value;
                     } else {
                         String value = ((SdfValue)molCell).getSdfValue();
-                        mol = RWMol.MolFromMolBlock(value);
+                        mol = RWMol.MolFromMolBlock(value,sanitize);
                     }
                 } catch (Exception e) {
                     StringBuilder error = new StringBuilder();
@@ -215,7 +230,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     parseErrorCount.incrementAndGet();
                     return DataType.getMissingCell();
                 }
-
+                
                 if (mol == null) {
                     StringBuilder error = new StringBuilder();
                     error.append("Error parsing ");
@@ -226,14 +241,33 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     parseErrorCount.incrementAndGet();
                     result = DataType.getMissingCell();
                 } else {
-                    if (generateCoordinates) {
-                        if(forceGeneration || mol.getNumConformers() == 0) {
-                            mol.compute2DCoords();
-                        }
-                    }
                     try {
-                        result = RDKitMolCellFactory.createRDKitMolCell(mol);
-                        // may throw exception while deriving smiles string...
+                    	if(sanitize){
+                    		result = RDKitMolCellFactory.createRDKitMolCell(mol);
+                            // may throw exception while deriving smiles string...
+                        } else {
+                        	RDKFuncs.cleanUp((RWMol)mol);
+                        	mol.updatePropertyCache(false);
+                        	RDKFuncs.symmetrizeSSSR(mol);
+                        	if(m_aromatization.getBooleanValue()){
+                        		RDKFuncs.Kekulize((RWMol)mol);
+                        		RDKFuncs.setAromaticity((RWMol)mol);
+                        	}
+                      		RDKFuncs.setConjugation(mol);
+                       		RDKFuncs.setHybridization(mol);
+                        	if(m_stereochem.getBooleanValue()){
+                        		RDKFuncs.assignStereochemistry(mol,true);
+                        	}
+                        	if(smiles==""){
+                        		smiles=RDKFuncs.MolToSmiles(mol,false,false,0,false);
+                        	}
+                        	result = RDKitMolCellFactory.createRDKitMolCell(mol,smiles);
+                        }
+                        if (generateCoordinates) {
+                            if(forceGeneration || mol.getNumConformers() == 0) {
+                                mol.compute2DCoords();
+                            }
+                        }
                     } catch (Exception e) {
                         StringBuilder error = new StringBuilder();
                         error.append("Error creating RDKit cell from ROMol ");
@@ -422,6 +456,9 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         try {
             m_generateCoordinates.loadSettingsFrom(settings);
             m_forceGenerateCoordinates.loadSettingsFrom(settings);
+            m_quickAndDirty.loadSettingsFrom(settings);
+            m_aromatization.loadSettingsFrom(settings);
+            m_stereochem.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
             // added after 1.0 -- ignore
         }
@@ -438,6 +475,10 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_separateFails.saveSettingsTo(settings);
         m_generateCoordinates.saveSettingsTo(settings);
         m_forceGenerateCoordinates.saveSettingsTo(settings);
+        m_quickAndDirty.saveSettingsTo(settings);
+        m_aromatization.saveSettingsTo(settings);
+        m_stereochem.saveSettingsTo(settings);
+        
     }
 
     /**

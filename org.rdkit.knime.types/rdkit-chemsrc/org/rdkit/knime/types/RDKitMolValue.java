@@ -103,12 +103,20 @@ public interface RDKitMolValue extends DataValue {
                     @Override
                     protected int compareDataValues(final DataValue v1,
                             final DataValue v2) {
-                        int atomCount1 =
-                                (int)((RDKitMolValue)v1).readMoleculeValue()
-                                        .getNumAtoms();
-                        int atomCount2 =
-                                (int)((RDKitMolValue)v2).readMoleculeValue()
-                                        .getNumAtoms();
+                        int atomCount1;
+                        int atomCount2;
+                        ROMol mol1 = ((RDKitMolValue)v1).readMoleculeValue();
+                        try {
+                            atomCount1 = (int)mol1.getNumAtoms();
+                        } finally {
+                            mol1.delete();
+                        }
+                        ROMol mol2 = ((RDKitMolValue)v2).readMoleculeValue();
+                        try {
+                            atomCount2 = (int)mol2.getNumAtoms();
+                        } finally {
+                            mol2.delete();
+                        }
                         return atomCount1 - atomCount2;
                     }
                 };

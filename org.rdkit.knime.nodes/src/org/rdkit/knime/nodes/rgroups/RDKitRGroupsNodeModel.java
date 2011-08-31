@@ -162,7 +162,7 @@ public class RDKitRGroupsNodeModel extends NodeModel {
                     + "SMARTS.");
         }
         ROMol core;
-        core = RWMol.MolFromSmarts(m_smarts.getStringValue());
+        core = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
         if (core == null)
             throw new InvalidSettingsException("unparseable core smarts: "
                     + m_smarts.getStringValue());
@@ -202,7 +202,7 @@ public class RDKitRGroupsNodeModel extends NodeModel {
         final int[] indices = findColumnIndices(inSpec);
         
         ROMol core;
-        core = RWMol.MolFromSmarts(m_smarts.getStringValue());
+        core = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
         if (core == null)
             throw new InvalidSettingsException("unparseable core smarts: "
                     + m_smarts.getStringValue());

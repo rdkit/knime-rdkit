@@ -131,7 +131,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         if (m_smarts.getStringValue().equals("")) {
             throw new InvalidSettingsException("Please specify a SMARTS query.");
         }
-        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue());
+        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
         if (pattern == null) {
             throw new InvalidSettingsException("Could not parse SMARTS query: "
                     + m_smarts.getStringValue());
@@ -179,7 +179,7 @@ public class RDKitSubstructFilterNodeModel extends NodeModel {
         final int[] indices = findColumnIndices(inSpec);
 
         // construct an RDKit molecule from the SMARTS pattern:
-        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue());
+        ROMol pattern = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
         final int rowCount = inData[0].getRowCount();
         int matchCount = 0;
         try {

@@ -164,7 +164,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                 RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
         if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
             ROMol patternTest =
-                    RWMol.MolFromSmarts(m_templateSmarts.getStringValue());
+                    RWMol.MolFromSmarts(m_templateSmarts.getStringValue(),0,true);
             if (patternTest == null) {
                 throw new InvalidSettingsException(
                         "Could not parse SMARTS query for template: "
@@ -225,7 +225,7 @@ public class RDKitAddCoordinatesNodeModel extends NodeModel {
                 RDKitAddCoordinatesNodeDialogPane.DIMENSION_2D);
         if (!m_templateSmarts.getStringValue().isEmpty() && do2D) {
             m_smartsPattern = RWMol.MolFromSmarts(
-                    m_templateSmarts.getStringValue());
+                    m_templateSmarts.getStringValue(),0,true);
             if (m_smartsPattern != null) {
                 m_smartsPattern.compute2DCoords();
             }

@@ -206,7 +206,7 @@ public class RDKitDictSubstructFilterNodeModel extends NodeModel {
         int i = 0;
         for (DataRow row : inData[1]) {
             SmartsValue v = (SmartsValue)row.getCell(indices[1]);
-            patterns[i] = RWMol.MolFromSmarts(v.getSmartsValue());
+            patterns[i] = RWMol.MolFromSmarts(v.getSmartsValue(),0,true);
             if (patterns[i] == null) {
                 throw new ParseException("Could not parse SMARTS '"
                         + v.getSmartsValue() + "' in row " + row.getKey(), 0);

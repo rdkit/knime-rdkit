@@ -231,38 +231,45 @@ public class RDKitRGroupsNodeModel extends NodeModel {
                 if (!firstCell.isMissing() && 
                 		firstCell.getType().isCompatible(RDKitMolValue.class)){
                     ROMol mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-                    ROMol chains = RDKFuncs.replaceCore(mol, core,true,true);
-                    mol.delete();
-                    
-                    if(chains==null) continue;
-                    ROMol_Vect frags=RDKFuncs.getMolFrags(chains);
-                    chains.delete();
-                    
-                    for(int j=0;j<frags.size();j++){
-                    	ROMol frag=frags.get(j);
-                    	boolean found=false;
-                    	for(int atIdx=0;atIdx<frag.getNumAtoms();atIdx++){
-                    		Atom at=frag.getAtomWithIdx(atIdx);
-                    		if(at.getAtomicNum()==0){
-                    			int massLabel=(int)Math.floor(at.getMass()+.1);
-                    			// dummies are labeled by the zero-based atom index they're attached
-                    			// to. To make things clearer to the user, increment these.
-                        		at.setMass(massLabel+1);
-                       			cells[firstRGroup+massLabel]=RDKitMolCellFactory.createRDKitMolCell(
-                                      frag);
-                       			found=true;
-                      			break;
-                    		}
-                    	}
-                    	if(!found){
-                          String msg =
-                                "attachment label not found for a side chain in row: "+count;
-                          LOGGER.warn(msg);
-                          setWarningMessage(msg);
-                    	}
-                    	
+                    try {
+	                    ROMol chains = RDKFuncs.replaceCore(mol, core,true,true);
+	                    mol.delete();
+	                    
+	                    if(chains==null) continue;
+	                    ROMol_Vect frags=RDKFuncs.getMolFrags(chains);
+	                    chains.delete();
+	                    
+	                    for(int j=0;j<frags.size();j++){
+	                    	ROMol frag=frags.get(j);
+	                    	boolean found=false;
+	                    	for(int atIdx=0;atIdx<frag.getNumAtoms();atIdx++){
+	                    		Atom at=frag.getAtomWithIdx(atIdx);
+	                    		if(at.getAtomicNum()==0){
+	                    			int massLabel=(int)Math.floor(at.getMass()+.1);
+	                    			// dummies are labeled by the zero-based atom index they're attached
+	                    			// to. To make things clearer to the user, increment these.
+	                        		at.setMass(massLabel+1);
+	                       			cells[firstRGroup+massLabel]=RDKitMolCellFactory.createRDKitMolCell(
+	                                      frag);
+	                       			found=true;
+	                      			break;
+	                    		}
+	                    	}
+	                    	if(!found){
+	                          String msg =
+	                                "attachment label not found for a side chain in row: "+count+1;
+	                          LOGGER.warn(msg);
+	                          setWarningMessage(msg);
+	                    	}
+	                    	
+	                    }
+	                    frags.delete();
+                    } catch (Exception e) {
+                    	String msg = "could not construct valid output molecule in row: "+count+1;
+                        LOGGER.warn(msg);
+                        setWarningMessage(msg);
+                        continue;
                     }
-                    frags.delete();
                 }
                 DataRow drow= new DefaultRow(row.getKey(),cells);
                 outTable.addRowToTable(drow);

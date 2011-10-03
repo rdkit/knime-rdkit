@@ -83,7 +83,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeDialogPane;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -222,9 +221,10 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                throw new InvalidSettingsException("Invalid (empty) smarts");
            }
            rxn = ChemicalReaction.ReactionFromSmarts(smartsString);
-           if (rxn == null)
-               throw new InvalidSettingsException("unparseable reaction smarts: "
+           if (rxn == null) {
+            throw new InvalidSettingsException("unparseable reaction smarts: "
                        + smartsString);
+        }
        } else {
            // read from rxn file
            String rxnFileLocation = m_rxnFileInput.getStringValue();
@@ -247,17 +247,18 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
                        "Unable to parse rxn file (RDKit lib returned null)");
            }
        }
-       if (rxn.getNumReactantTemplates() != 2)
-           throw new InvalidSettingsException(
+       if (rxn.getNumReactantTemplates() != 2) {
+        throw new InvalidSettingsException(
                    "reaction should have exactly two reactants, it has: "
                            + rxn.getNumReactantTemplates());
+    }
 
 	   if(!rxn.validate()){
 		   throw new InvalidSettingsException("reaction smarts has errors");
 	   }
 	   return rxn;
    }
-    
+
     private int[] findColumnIndices(final DataTableSpec[] specs)
             throws InvalidSettingsException {
         String first = m_reactant1Col.getStringValue();
@@ -307,7 +308,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
         final int[] indices =
                 findColumnIndices(new DataTableSpec[]{inSpec1, inSpec2});
 
-        
+
         // get the reaction:
         ChemicalReaction rxn = readRxn();
 

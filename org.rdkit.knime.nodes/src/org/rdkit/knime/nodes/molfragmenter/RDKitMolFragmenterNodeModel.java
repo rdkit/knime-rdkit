@@ -77,14 +77,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
-import org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeModel;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -101,9 +99,6 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
 
     private final SettingsModelIntegerBounded m_maxPath =
         RDKitMolFragmenterNodeDialogPane.createMaxPathModel();
-
-    private static final NodeLogger LOGGER = NodeLogger
-    .getLogger(RDKitRGroupsNodeModel.class);
 
     /**
      * Create new node model with one data in- and one outport.
@@ -141,7 +136,7 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
 
         return new DataTableSpec[]{fSpec, mSpec};
     }
-   
+
     /**
      * {@inheritDoc}
      */
@@ -209,16 +204,16 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         DataTableSpec[] outSpecs=createOutSpecs(new DataTableSpec[]{inSpec});
-        
+
         BufferedDataContainer fragTable =
                 exec.createDataContainer(outSpecs[0]);
         BufferedDataContainer molTable =
             exec.createDataContainer(outSpecs[1]);
-        
+
         // check user settings against input spec here
         final int[] indices = findColumnIndices(inSpec);
 
-        // used to build the output fragment table        
+        // used to build the output fragment table
         Vector<Int_Vect> fragsSeen = new Vector<Int_Vect>();
         fragsSeen.clear();
         Vector<ROMol> frags = new Vector<ROMol>();
@@ -278,7 +273,7 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
                     			}
                     		}
                     		if(idx>=0){
-                    			fragCounts.set(idx,((Integer)fragCounts.get(idx))+1);
+                    			fragCounts.set(idx,(fragCounts.get(idx))+1);
                     		} else {
                     			idx=fragsSeen.size();
                     			fragsSeen.add(discrims);
@@ -303,9 +298,9 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
 
                 DataRow drow= new DefaultRow(row.getKey(),cells);
                 molTable.addRowToTable(drow);
-                
+
                 count++;
-                exec.setProgress(.9*count / (double)rowCount, "Processed row "
+                exec.setProgress(.9*count / rowCount, "Processed row "
                         + count + "/" + rowCount + " (\"" + row.getKey()
                         + "\")");
                 exec.checkCanceled();
@@ -327,7 +322,7 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
             		if(seenHere.indexOf(fidx)>=0){
             			fragsHere.add(new IntCell(1));
             		} else {
-            			fragsHere.add(new IntCell(0));	
+            			fragsHere.add(new IntCell(0));
             		}
                 }
                 cells[cells.length-1] = CollectionCellFactory.createListCell(fragsHere);
@@ -340,20 +335,20 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
                         + "\")");
                 exec.checkCanceled();
             }
-*/            
+*/
             for(int i=0;i<fragsSeen.size();++i){
             	DataCell[] cells =
             		new DataCell[fragTable.getTableSpec().getNumColumns()];
             	cells[0]=new IntCell(i+1);
             	cells[1]=RDKitMolCellFactory.createRDKitMolCell(frags.get(i),smis.get(i));
             	cells[2]=new StringCell(smis.get(i));
-            	cells[3]=new IntCell((int)frags.get(i).getNumBonds());            	
-            	cells[4]=new IntCell(fragCounts.get(i));            	
+            	cells[3]=new IntCell((int)frags.get(i).getNumBonds());
+            	cells[4]=new IntCell(fragCounts.get(i));
                 frags.get(i).delete();
             	DataRow drow =
             		new DefaultRow("frag_" + i+1,cells);
             	fragTable.addRowToTable(drow);
-                exec.setProgress(.9+.1*i / (double)fragsSeen.size(), "Added fragment row "
+                exec.setProgress(.9+.1*i / fragsSeen.size(), "Added fragment row "
                         + i + "/" + fragsSeen.size() + " (\"" + drow.getKey()
                         + "\")");
             	exec.checkCanceled();
@@ -362,7 +357,7 @@ public class RDKitMolFragmenterNodeModel extends NodeModel {
             fragTable.close();
             molTable.close();
         }
-        
+
         return new BufferedDataTable[]{fragTable.getTable(),
                 molTable.getTable()};
     }

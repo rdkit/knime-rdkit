@@ -56,7 +56,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
 
-import org.RDKit.RDKFuncs;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;

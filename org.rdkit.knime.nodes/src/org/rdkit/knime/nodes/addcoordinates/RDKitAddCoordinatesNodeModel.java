@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.RDKit.DistanceGeom;
-import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;

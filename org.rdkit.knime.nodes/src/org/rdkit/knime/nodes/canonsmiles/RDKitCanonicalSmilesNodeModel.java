@@ -231,7 +231,7 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                     } else {
                     	try{
                     		RWMol tmol = new RWMol(mol);
-                    		RDKFuncs.sanitizeMol((RWMol)tmol);
+                    		RDKFuncs.sanitizeMol(tmol);
                     		mol.delete();
                     		mol = tmol;
                     	} catch (Exception e) {

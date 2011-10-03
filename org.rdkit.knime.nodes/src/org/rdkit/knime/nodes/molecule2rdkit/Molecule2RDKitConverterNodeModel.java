@@ -105,14 +105,14 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
     private final SettingsModelBoolean m_forceGenerateCoordinates =
         Molecule2RDKitConverterNodeDialogPane.
             createForceGenerateCoordinatesModel(m_generateCoordinates);
-    
-    private final SettingsModelBoolean m_quickAndDirty = 
+
+    private final SettingsModelBoolean m_quickAndDirty =
     	Molecule2RDKitConverterNodeDialogPane.
         createQuickAndDirtyModel();
-    private final SettingsModelBoolean m_aromatization = 
+    private final SettingsModelBoolean m_aromatization =
     	Molecule2RDKitConverterNodeDialogPane.
         createAromatizationModel(m_quickAndDirty);
-    private final SettingsModelBoolean m_stereochem = 
+    private final SettingsModelBoolean m_stereochem =
     	Molecule2RDKitConverterNodeDialogPane.
         createStereochemistryModel(m_quickAndDirty);
 
@@ -230,7 +230,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     parseErrorCount.incrementAndGet();
                     return DataType.getMissingCell();
                 }
-                
+
                 if (mol == null) {
                     StringBuilder error = new StringBuilder();
                     error.append("Error parsing ");
@@ -329,7 +329,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                             copyCells.toArray(new DataCell[copyCells.size()]));
                     port0.addRowToTable(outRow);
                 }
-            };
+            }
 
         };
         try {
@@ -478,7 +478,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         m_quickAndDirty.saveSettingsTo(settings);
         m_aromatization.saveSettingsTo(settings);
         m_stereochem.saveSettingsTo(settings);
-        
+
     }
 
     /**

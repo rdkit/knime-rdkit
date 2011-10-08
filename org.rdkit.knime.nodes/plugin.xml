@@ -68,6 +68,11 @@
             category-path="/community/rdkit/experimental"
             factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"
             id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
+      <node
+            after="org.rdkit.knime.nodes.rgroups.RDKitMolFragmenterNodeFactory"
+            category-path="/community/rdkit/experimental"
+            factory-class="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory"
+            id="org.rdkit.knime.nodes..diversitypicker.RDKitDiversityPickerNodeFactory"/>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

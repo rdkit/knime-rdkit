@@ -94,7 +94,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
     .getLogger(RDKitDiversityPickerNodeModel.class);
 
-    
+
     /**
      * Create new node model with one data in- and one outport.
      */
@@ -194,7 +194,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
                 	nextBit = jbv.nextSetBit(nextBit+1);
                 }
                 fps.add(ebv);
-                exec.setProgress(0.333*count / (double)rowCount, "Processed row "
+                exec.setProgress((0.333 * count) / rowCount, "Processed row "
                         + count + "/" + rowCount + ".");
                 exec.checkCanceled();
                 LOGGER.debug("Done: "+count);
@@ -210,7 +210,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
             exec.checkCanceled();
             LOGGER.debug("finishd");
 
-            
+
             ExplicitBitVect rowsToKeep=new ExplicitBitVect(rowCount);
             // FIX: there has to be a better way to do this
             for(int i=0;i<iv.size();i++){
@@ -225,11 +225,11 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
                 	matchTable.addRowToTable(row);
                 }
                 count++;
-                exec.setProgress(0.6667+0.333*count / (double)rowCount, "Post-processed row "
+                exec.setProgress(0.6667+(0.333*count) / rowCount, "Post-processed row "
                         + count + "/" + rowCount + ".");
                 exec.checkCanceled();
             }
-            
+
         } finally {
             matchTable.close();
             // clean up the memory we used:

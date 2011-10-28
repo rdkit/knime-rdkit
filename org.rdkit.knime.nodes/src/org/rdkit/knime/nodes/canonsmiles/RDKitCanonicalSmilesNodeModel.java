@@ -252,14 +252,12 @@ public class RDKitCanonicalSmilesNodeModel extends NodeModel {
                     }
                 }
                 try {
-                	if(canSmiles==""){
+                	if(canSmiles.length() == 0){
                 		canSmiles = RDKFuncs.MolToSmiles(mol, true);
                 	}
                     return new SmilesCell(canSmiles);
                 } finally {
-                	if(mol != null) {
-                		mol.delete();
-                	}
+            		mol.delete();
                 }
             }
         });

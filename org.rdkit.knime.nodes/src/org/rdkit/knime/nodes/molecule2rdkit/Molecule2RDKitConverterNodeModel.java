@@ -209,13 +209,11 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 boolean sanitize=!m_quickAndDirty.getBooleanValue();
 
                 try {
-                    if (molCell.isMissing()) {
-                        mol = null;
-                    } else if (smilesInput) {
+                    if (smilesInput) {
                         String value = ((SmilesValue)molCell).getSmilesValue();
                         mol = RWMol.MolFromSmiles(value,0,sanitize);
                         smiles=value;
-                    } else {
+                    } else if (!molCell.isMissing()) {
                         String value = ((SdfValue)molCell).getSdfValue();
                         mol = RWMol.MolFromMolBlock(value,sanitize);
                     }

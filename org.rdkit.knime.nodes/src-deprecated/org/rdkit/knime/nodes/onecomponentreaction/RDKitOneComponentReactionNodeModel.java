@@ -90,6 +90,7 @@ import org.rdkit.knime.types.RDKitMolValue;
  *
  * @author Greg Landrum
  */
+@Deprecated
 public class RDKitOneComponentReactionNodeModel extends NodeModel {
 
     private final SettingsModelString m_first =
@@ -185,9 +186,10 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                 throw new InvalidSettingsException("Invalid (empty) smarts");
             }
             rxn = ChemicalReaction.ReactionFromSmarts(smartsString);
-            if (rxn == null)
+            if (rxn == null) {
                 throw new InvalidSettingsException("unparseable reaction smarts: "
                         + smartsString);
+            }
         } else {
             // read from rxn file
             String rxnFileLocation = m_rxnFileInput.getStringValue();
@@ -210,10 +212,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                         "Unable to parse rxn file (RDKit lib returned null)");
             }
         }
-        if (rxn.getNumReactantTemplates() != 1)
+        if (rxn.getNumReactantTemplates() != 1) {
             throw new InvalidSettingsException(
                     "reaction should have exactly one reactant, it has: "
                             + rxn.getNumReactantTemplates());
+        }
 
 	   if(!rxn.validate()){
 		   throw new InvalidSettingsException("reaction smarts has errors");

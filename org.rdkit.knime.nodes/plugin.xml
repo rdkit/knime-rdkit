@@ -46,13 +46,13 @@
       <node
             after="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"
             category-path="/community/rdkit"
-            factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
-            id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
+            factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"
+            id="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>
       <node
             after="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"
             category-path="/community/rdkit"
-            factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"
-            id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
+            factory-class="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory"
+            id="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory"/>
       <node
             after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"
             category-path="/community/rdkit/experimental"

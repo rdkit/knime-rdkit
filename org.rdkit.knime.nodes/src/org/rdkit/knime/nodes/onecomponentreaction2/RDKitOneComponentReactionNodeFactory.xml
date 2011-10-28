@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="one_comp_react.png" type="Manipulator">
+    <name>RDKit One Component Reaction</name>
+
+    <shortDescription>
+        Applies a reaction to an input RDKit Mol column
+	</shortDescription>
+
+    <fullDescription>
+        <intro>
+            Applies a reaction to an input RDKit Mol column.
+            <p>
+                The output table contains a row for each product produced by applying the reaction to the inputs.
+                <br />
+                Each row contains the product molecule, index information, and the reactant molecule that was used.
+            </p>
+            <p>The reaction can either be defined by a SMARTS pattern in the dialog or by providing a Rxn value at the
+                second input port.</p>
+        </intro>
+
+        <option name="RDKit Mol column">The column from the first table containing reactant molecules</option>
+        <option name="Rxn column">The column from the second table containing the Rxn</option>
+        <option name="Reaction SMARTS">
+            A reaction SMARTS describing the reaction.
+            <br />
+            For a description of the format, please see Chapter 2 of the
+            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>
+            .
+        </option>
+
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Molecules">Table with RDKit Molecule column</inPort>
+        <inPort index="1" name="Reaction">Table with reaction values; if there are multiple rows only the first row is
+            considered</inPort>
+        <outPort index="0" name="Product molecules">Product molecules</outPort>
+    </ports>
+</knimeNode>

@@ -64,6 +64,7 @@ import org.rdkit.knime.types.RDKitMolValue;
  *
  * @author Greg Landrum
  */
+@Deprecated
 public class RDKitOneComponentReactionNodeDialogPane extends
         DefaultNodeSettingsPane {
 

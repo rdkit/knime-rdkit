@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="two_comp_react.png" type="Manipulator">
+    <name>RDKit Two Component Reaction</name>
+
+    <shortDescription>
+        Applies a reaction to two RDKit Mol columns
+	</shortDescription>
+    <fullDescription>
+        <intro>
+            Applies a reaction to two RDKit Mol columns.
+            <p>
+                The output table contains a row for each product produced by applying the reaction to the inputs.
+                <br />
+                Each row contains the product molecule, index information, and the reactant molecules that were used.
+            </p>
+            <p>The reaction can either be defined by a SMARTS pattern in the dialog or by providing a Rxn value at the
+                third
+                input port.</p>
+        </intro>
+
+        <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
+        <option name="Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
+        <option name="Rxn column">The column from the second table containing the Rxn</option>
+        <option name="Reaction SMARTS">
+            A reaction SMARTS describing the reaction.
+            <br />
+            For a description of the format, please see Chapter 2 of the
+            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>
+            .
+        </option>
+        <option name="Do Matrix Expansion">If checked, each reactant 1 will be combined with each reactant 2
+            yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
+            sequentially, with the longer list determining the number of output rows.</option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Reactant 1">Data with RDKit Mol column</inPort>
+        <inPort index="1" name="Reactant 2">Data with RDKit Mol column</inPort>
+        <inPort index="2" name="Reaction">Table with reaction values; if there are multiple rows only the first row is
+            considered</inPort>
+        <outPort index="0" name="Product molecules">Product molecules</outPort>
+    </ports>
+</knimeNode>

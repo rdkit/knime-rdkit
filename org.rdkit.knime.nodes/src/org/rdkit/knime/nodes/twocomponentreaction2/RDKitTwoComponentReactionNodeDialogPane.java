@@ -149,7 +149,8 @@ public class RDKitTwoComponentReactionNodeDialogPane extends NodeDialogPane {
         m_settings.loadSettingsForDialog(settings);
 
         // FIXME change this once the problems has been solved in the core
-        boolean rxnTablePresent = (specs[2].getNumColumns() > 0);
+        boolean rxnTablePresent = (specs[2] != null)
+            && (specs[2].getNumColumns() > 0);
 
         m_firstColumn.update(specs[0], m_settings.firstColumn());
         m_secondColumn.update(specs[0], m_settings.secondColumn());

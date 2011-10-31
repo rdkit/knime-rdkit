@@ -126,8 +126,9 @@ public class RDKitOneComponentReactionNodeDialogPane extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        // FIXME change this once the problems has been solved in the core
-        boolean rxnTablePresent = (specs[1].getNumColumns() > 0);
+        // FIXME remove the column check once 2.5. is released
+        boolean rxnTablePresent = (specs[1] != null)
+            && (specs[1].getNumColumns() > 0);
 
         m_firstColumn.update(specs[0], m_settings.firstColumn());
         m_rxnLabel.setVisible(rxnTablePresent);

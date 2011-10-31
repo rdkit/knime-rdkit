@@ -334,7 +334,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 
         // get the reaction:
         ChemicalReaction rxn =
-                (inData[1] != null) ? readRxnFromTable(inData[1])
+                (inData[2] != null) ? readRxnFromTable(inData[2])
                         : readRxnFromSmarts();
 
         int parseErrorCount1 = 0;

@@ -138,9 +138,9 @@ public class OneComponentSettings {
      * @param settings a settings object
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
-        settings.getString("firstColumn", null);
-        settings.getString("rxnColumn", null);
-        settings.getString("reactionSmarts", "");
+        m_firstColumn = settings.getString("firstColumn", null);
+        m_rxnColumn = settings.getString("rxnColumn", null);
+        m_reactionSmarts = settings.getString("reactionSmarts", "");
     }
 
     /**
@@ -151,8 +151,8 @@ public class OneComponentSettings {
      */
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString("firstColumn");
-        settings.getString("rxnColumn");
-        settings.getString("reactionSmarts");
+        m_firstColumn = settings.getString("firstColumn");
+        m_rxnColumn = settings.getString("rxnColumn");
+        m_reactionSmarts = settings.getString("reactionSmarts");
     }
 }

@@ -188,10 +188,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                                     + "Use \"Molecule to RDKit\" node for Smiles or SDF.");
                 }
             }
+            findRxnColumnIndices(inSpecs[1]);
         }
 
         // further input spec check
-        findColumnIndices(inSpecs[0]);
+        findRDKitColumnIndices(inSpecs[0]);
 
         return createOutSpecs();
     }
@@ -236,7 +237,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                     "Table with Rxn does not have any rows");
         }
 
-        int colIndex = findColumnIndices(table.getDataTableSpec())[0];
+        int colIndex = findRxnColumnIndices(table.getDataTableSpec());
         DataRow row = table.iterator().next();
         RxnValue rxnValue = (RxnValue)row.getCell(colIndex);
 
@@ -253,7 +254,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
         return rxn;
     }
 
-    private int[] findColumnIndices(final DataTableSpec spec)
+    private int findRDKitColumnIndices(final DataTableSpec spec)
             throws InvalidSettingsException {
         String first = m_settings.firstColumn();
         if (first == null) {
@@ -269,7 +270,26 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
             throw new InvalidSettingsException("Column '" + first
                     + "' does not contain SMILES");
         }
-        return new int[]{firstIndex};
+        return firstIndex;
+    }
+
+    private int findRxnColumnIndices(final DataTableSpec spec)
+            throws InvalidSettingsException {
+        String rxn = m_settings.rxnColumn();
+        if (rxn == null) {
+            throw new InvalidSettingsException("Not configured yet");
+        }
+        int rxnIndex = spec.findColumnIndex(rxn);
+        if (rxnIndex < 0) {
+            throw new InvalidSettingsException(
+                    "No such column in input table: " + rxn);
+        }
+        DataType firstType = spec.getColumnSpec(rxnIndex).getType();
+        if (!firstType.isCompatible(RxnValue.class)) {
+            throw new InvalidSettingsException("Column '" + rxn
+                    + "' does not contain Rxn");
+        }
+        return rxnIndex;
     }
 
     /**
@@ -284,7 +304,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                 exec.createDataContainer(createOutSpecs()[0]);
 
         // check user settings against input spec here
-        final int[] indices = findColumnIndices(inSpec);
+        final int rdkitIndex = findRDKitColumnIndices(inSpec);
 
         // get the reaction:
         ChemicalReaction rxn =
@@ -299,12 +319,12 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
                 DataRow row = it.next();
                 count++;
 
-                DataCell firstCell = row.getCell(indices[0]);
+                DataCell firstCell = row.getCell(rdkitIndex);
                 if (firstCell.isMissing()) {
                     continue;
                 } else {
                     DataType firstType =
-                            inSpec.getColumnSpec(indices[0]).getType();
+                            inSpec.getColumnSpec(rdkitIndex).getType();
                     ROMol mol = null;
                     if (firstType.isCompatible(RDKitMolValue.class)) {
                         mol = ((RDKitMolValue)firstCell).readMoleculeValue();

@@ -51,6 +51,8 @@ import java.io.IOException;
 import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
@@ -67,7 +69,7 @@ import org.knime.core.data.StringValue;
  * @author Greg Landrum
  */
 public class RDKitMolCell2 extends DataCell implements StringValue,
-        RDKitMolValue {
+        RDKitMolValue, SmilesValue, SdfValue {
 
     /**
      * Convenience access member for
@@ -160,6 +162,32 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     public String getSmilesValue() {
         return m_smilesString;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getSdfValue() {
+        ROMol mol = readMoleculeValue();
+        try {
+            // Convert to SDF
+            if(mol.getNumConformers() == 0){
+                mol.compute2DCoords();
+            }
+            String value = RDKFuncs.MolToMolBlock(mol);
+            // KNIME SDF type requires string to be terminated
+            // by $$$$ -- see org.knime.chem.types.SdfValue for details
+            String postfix = "\n$$$$\n";
+            if (!value.endsWith(postfix)) {
+                StringBuilder valueBuilder = new StringBuilder();
+                valueBuilder.append(value);
+                valueBuilder.append(postfix);
+                value = valueBuilder.toString();
+            }
+            return value;
+        } finally {
+            mol.delete();
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -167,7 +195,7 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     public boolean isSmilesCanonical() {
         return m_smilesIsCanonical;
     }
-    
+
     /**
      * {@inheritDoc}
      */

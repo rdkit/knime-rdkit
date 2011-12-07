@@ -240,10 +240,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     result = DataType.getMissingCell();
                 } else {
                     try {
-                    	if(sanitize){
-                    		result = RDKitMolCellFactory.createRDKitMolCell(mol);
-                            // may throw exception while deriving smiles string...
-                        } else {
+                    	if(!sanitize){
                         	RDKFuncs.cleanUp((RWMol)mol);
                         	mol.updatePropertyCache(false);
                         	RDKFuncs.symmetrizeSSSR(mol);
@@ -259,13 +256,13 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                         	if(smiles==""){
                         		smiles=RDKFuncs.MolToSmiles(mol,false,false,0,false);
                         	}
-                        	result = RDKitMolCellFactory.createRDKitMolCell(mol,smiles);
                         }
-                        if (generateCoordinates) {
-                            if(forceGeneration || mol.getNumConformers() == 0) {
-                                mol.compute2DCoords();
-                            }
-                        }
+                    	if (generateCoordinates) {
+                    	    if(forceGeneration || mol.getNumConformers() == 0) {
+                    	        mol.compute2DCoords();
+                    	    }
+                    	}
+                    	result = RDKitMolCellFactory.createRDKitMolCell(mol,smiles);
                     } catch (Exception e) {
                         StringBuilder error = new StringBuilder();
                         error.append("Error creating RDKit cell from ROMol ");

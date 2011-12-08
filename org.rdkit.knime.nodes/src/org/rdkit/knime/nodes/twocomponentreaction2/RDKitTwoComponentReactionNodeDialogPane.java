@@ -153,7 +153,7 @@ public class RDKitTwoComponentReactionNodeDialogPane extends NodeDialogPane {
             && (specs[2].getNumColumns() > 0);
 
         m_firstColumn.update(specs[0], m_settings.firstColumn());
-        m_secondColumn.update(specs[0], m_settings.secondColumn());
+        m_secondColumn.update(specs[1], m_settings.secondColumn());
         m_rxnLabel.setVisible(rxnTablePresent);
         m_rxnColumn.setVisible(rxnTablePresent);
         m_smartsLabel.setVisible(!rxnTablePresent);

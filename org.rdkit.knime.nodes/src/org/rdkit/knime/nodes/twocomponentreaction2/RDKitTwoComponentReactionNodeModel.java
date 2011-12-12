@@ -248,9 +248,9 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 
     private void validateRxn(final ChemicalReaction rxn)
             throws InvalidSettingsException {
-        if (rxn.getNumReactantTemplates() != 1) {
+        if (rxn.getNumReactantTemplates() != 2) {
             throw new InvalidSettingsException(
-                    "reaction should have exactly one reactant, it has: "
+                    "reaction should have exactly two reactants, it has: "
                             + rxn.getNumReactantTemplates());
         }
 

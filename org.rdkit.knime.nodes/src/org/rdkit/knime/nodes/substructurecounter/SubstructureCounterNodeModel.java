@@ -127,6 +127,7 @@ public class SubstructureCounterNodeModel extends NodeModel {
 		DataTableSpec inSpecQuery = inData[1].getDataTableSpec();
 		ColumnRearranger rearranger;
 		ROMol[] patterns = new ROMol[inData[1].getRowCount()];
+		String[] queryArr = new String[inData[1].getRowCount()];
 		try {
 			// find the rdkit column indices in molecule table and query table
 			final int[] indices = findColumnIndices(new DataTableSpec[] {
@@ -137,19 +138,32 @@ public class SubstructureCounterNodeModel extends NodeModel {
 				if (!row.getCell(indices[1]).isMissing()) {
 					patterns[i] = ((RDKitMolValue) row.getCell(indices[1]))
 							.readMoleculeValue();
+					if(patterns[i]==null){
+						queryArr[i]="col_"+(i+1);
+					} else {
+						queryArr[i]=patterns[i].MolToSmiles(true);
+					}
 				} else {
 					patterns[i] = null;
+					queryArr[i] = "col_"+(i+1);
 				}
 				i++;
 			}
+			/*
 			// Creating an array of unique query molecules
 			Set<String> s = new HashSet<String>();
 			for (int j = 0; j < patterns.length; j++) {
 				if (null != patterns[j]) {
-					s.add(patterns[j].MolToSmiles());
+					String smi=patterns[j].MolToSmiles();
+					if(! s.contains(smi)){
+						s.add(smi);
+					} else {
+						patterns[j]=null;
+					}
 				}
-			}
 			String[] queryArr = (String[]) s.toArray(new String[] {});
+			}*/
+
 			// Read the rdkit molecules and find the count of the query patterns
 			// for each molecule.
 			HashMap<RowKey, long[]> countMap = countMatchesinMolecule(

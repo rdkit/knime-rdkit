@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit functional group filter</name>
+    
+    <shortDescription>
+        Node for filtering set of molecules using functional groups.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This node can be used for filtering sets of molecules based on named substructures (functional groups).</intro>
+        
+        <option name="Column name:">It specifies which column contains the set of RDKit molecules.</option>
+        <option name="File path:">File containing functional group definitions. This input is optional. If not specified, then the default functional group definitions is used.</option>
+       <option name="Filters:">List of available functional group filters. Select the ones that needs to be applied. The qualifier and the count of functional group pattern also need to be specified.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input Molecules">Table containing a set of RDkit molecules.</inPort>
+        <outPort index="0" name="Molecules passing the filter">Table containing molecules that pass the filter.</outPort>
+        <outPort index="1" name="Molecules failing the filter">Table containing molecules that does not pass the filter.</outPort>
+    </ports>    
+    
+</knimeNode>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit Salt Stripper</name>
+    
+    <shortDescription>
+        Node for stripping salts from molecules.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This node is used for removing salts from RDKit molecules and display the salt stripped molecules in an additional column in the output table. The user can optionally input salt definitions into the node. If no salt definition is provided by the user then the default salt definitions will be applied.</intro>
+        <option name="Input Molecule Column: ">The name of the column in first table containing RDKit molecules for stripping.</option>
+        <option name="Salt Definition Column: ">The name of the column in second table containing  RDKit molecules as salt definitions. This input is optional and can be left as "None".</option>
+        <option name="Keep Original Molecule Column ? ">Selection box indicating whether or not the original molecule column should be kept.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Molecule input">Table having at least one RDKit molecule type column containing RDKit molecules for stripping.</inPort>
+        <inPort index="1" name="Salt definitions">Table containing RDKit molecules as salt definitions. This table is optional.</inPort>
+        <outPort index="0" name="Molecules without salts">Table containing one additional column containing salt stripped RDKit molecules.</outPort>
+    </ports>    
+</knimeNode>

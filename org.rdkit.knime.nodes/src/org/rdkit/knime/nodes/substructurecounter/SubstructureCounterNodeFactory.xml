@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./rdkit_substruct_counter.png" type="Manipulator">
+    <name>Substructure Counter</name>
+    
+    <shortDescription>
+        To calculate the number of times a query molecule is present in the input molecule.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This node is used to calculate the number of times a particular query molecule is present in an input molecule. 
+        	The number of times the query molecule present in the input molecule can be repeated. 
+        	This node has the option to choose the unique number of times the query molecule is present in the input molecule.
+        </intro>
+        
+        
+        <option name="Input Molecule Column:">The name of the column in first table containing input molecules for which the substructure is to be counted.</option>
+        <option name="Input Query Column:">The name of the column in second table containing query molecules which will act as substructure for the input molecules</option>
+        <option name="Count Unique Matches Only?">This option is selected if user requires unique matches of the query molecule in an input molecule.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input Molecule Table">Table with input molecule column</inPort>
+        <inPort index="1" name="Query Molecule Table">Table with input query column</inPort>
+        <outPort index="0" name="Number of substructures">Input molecule table with one additional column for each row in the query molecule table. 
+        		The new columns added contains number of times that a query is found in the molecule.</outPort>
+    </ports>    
+    
+</knimeNode>

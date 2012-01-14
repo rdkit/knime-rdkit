@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes for Knime
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.1.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.knime.base;bundle-version="2.2.0",
@@ -13,16 +13,20 @@ Export-Package: org.RDKit,
  org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.addcoordinates;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.canonsmiles;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ org.rdkit.knime.nodes.descriptorcalculation,
  org.rdkit.knime.nodes.diversitypicker,
+ org.rdkit.knime.nodes.fingerprintreadwrite,
+ org.rdkit.knime.nodes.functionalgroupfilter,
  org.rdkit.knime.nodes.molecule2rdkit,
  org.rdkit.knime.nodes.moleculesubstructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.molfragmenter,
- org.rdkit.knime.nodes.multiplesubstrucfilter,
  org.rdkit.knime.nodes.murckoscaffold,
  org.rdkit.knime.nodes.onecomponentreaction2;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.rdkfingerprint;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.rdkit2molecule;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.rgroups,
+ org.rdkit.knime.nodes.saltstripper,
  org.rdkit.knime.nodes.substructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.nodes.twocomponentreaction2;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings"
-Bundle-ActivationPolicy: lazy
+ org.rdkit.knime.nodes.substructurecounter,
+ org.rdkit.knime.nodes.twocomponentreaction2;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
+ .

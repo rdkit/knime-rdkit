@@ -330,6 +330,15 @@ public class RDKitFingerprintNodeModel extends NodeModel {
                                     bitVector.set(i);
                             }
                             fingerprint.delete();
+                        } else if ("avalon".equals(m_fpType.getStringValue())) {
+                            ExplicitBitVect fingerprint=new ExplicitBitVect(m_numBits.getIntValue());
+                            RDKFuncs.getAvalonFP(mol,fingerprint,m_numBits.getIntValue(),false,false,
+                            		RDKFuncs.getAvalonSimilarityBits());
+                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
+                                if (fingerprint.getBit(i))
+                                    bitVector.set(i);
+                            }
+                            fingerprint.delete();
                         } else if ("layered".equals(m_fpType.getStringValue())) {
                             ExplicitBitVect fingerprint;
                             fingerprint =

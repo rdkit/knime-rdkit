@@ -74,7 +74,7 @@ public class RDKitFingerprintNodeDialogPane extends DefaultNodeSettingsPane {
                 createSmilesColumnModel(), "RDKit Mol column: ", 0,
                 RDKitMolValue.class));
         super.addDialogComponent(new DialogComponentStringSelection(
-                createFPTypeModel(), "FP type ", "morgan", "featmorgan", "atompair", "torsion", "rdkit", "layered"));
+                createFPTypeModel(), "FP type ", "morgan", "featmorgan", "atompair", "torsion", "rdkit", "avalon", "layered"));
 
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));

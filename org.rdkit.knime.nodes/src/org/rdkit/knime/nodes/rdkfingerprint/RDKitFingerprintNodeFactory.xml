@@ -18,6 +18,7 @@
 		  <li>AtomPair: Atom-pair fingerprint</li>
 		  <li>Torsion: Topological-torsion fingeprint</li>
 		  <li>RDKit: Daylight-like topological fingerprint</li>
+		  <li>Avalon: Fingerprint from the Avalon toolkit (http://sourceforge.net/p/avalontoolkit/)</li>
 		  <li>Layered: An experimental substructure-matching fingerprint</li>
 		</ul>
 		</option>

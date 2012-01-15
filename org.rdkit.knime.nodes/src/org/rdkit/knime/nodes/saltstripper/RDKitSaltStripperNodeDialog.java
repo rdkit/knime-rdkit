@@ -102,7 +102,7 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
      * @return settings model for checkbox
      */
     static final SettingsModelBoolean createOrigMoleculeModel() {
-        return new SettingsModelBoolean("keep_molecule_column", true);
+        return new SettingsModelBoolean("keep_molecule_column", false);
     }
 }
 

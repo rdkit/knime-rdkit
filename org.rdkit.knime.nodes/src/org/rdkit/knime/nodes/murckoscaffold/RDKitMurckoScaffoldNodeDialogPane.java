@@ -71,7 +71,9 @@ public class RDKitMurckoScaffoldNodeDialogPane extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(
-                createBooleanModel(), "Remove source column"));
+        		createRemoveSourceModel(), "Remove source column"));
+        super.addDialogComponent(new DialogComponentBoolean(
+                createDoFrameworksModel(), "Create frameworks"));
     }
 
     /**
@@ -91,7 +93,13 @@ public class RDKitMurckoScaffoldNodeDialogPane extends DefaultNodeSettingsPane {
     /**
      * @return settings model for check box whether to remove source columns.
      */
-    static final SettingsModelBoolean createBooleanModel() {
+    static final SettingsModelBoolean createRemoveSourceModel() {
         return new SettingsModelBoolean("remove_source_columns", false);
+    }
+    /**
+     * @return settings model for check box whether to generate frameworks
+     */
+    static final SettingsModelBoolean createDoFrameworksModel() {
+        return new SettingsModelBoolean("do_frameworks", false);
     }
 }

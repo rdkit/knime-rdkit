@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.RDKit.Bond.BondType;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
@@ -94,7 +95,10 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
             RDKitMurckoScaffoldNodeDialogPane.createNewColumnModel();
 
     private final SettingsModelBoolean m_removeSourceCols =
-            RDKitMurckoScaffoldNodeDialogPane.createBooleanModel();
+            RDKitMurckoScaffoldNodeDialogPane.createRemoveSourceModel();
+
+    private final SettingsModelBoolean m_doFrameworks =
+        RDKitMurckoScaffoldNodeDialogPane.createDoFrameworksModel();
 
     private static NodeLogger LOGGER = NodeLogger.getLogger(
             RDKitMurckoScaffoldNodeModel.class);
@@ -236,6 +240,18 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
                     temp1.delete();
                     if(temp2.getNumAtoms()>0){
                     	RDKFuncs.sanitizeMol(temp2);
+                    	if(m_doFrameworks.getBooleanValue()){
+                    		for(int aidx=0;aidx<temp2.getNumAtoms();aidx++){
+                    			temp2.getAtomWithIdx(aidx).setAtomicNum(6);
+                    			temp2.getAtomWithIdx(aidx).setIsAromatic(false);
+                    			temp2.getAtomWithIdx(aidx).setMass(12.011);
+                    			temp2.getAtomWithIdx(aidx).setNoImplicit(false);
+                    		}
+                    		for(int bidx=0;bidx<temp2.getNumBonds();bidx++){
+                    			temp2.getBondWithIdx(bidx).setBondType(BondType.SINGLE);
+                    			temp2.getBondWithIdx(bidx).setIsAromatic(false);
+                    		}
+                    	}
                     	res = RDKitMolCellFactory.createRDKitMolCell(temp2);
                     } else {
                     	res=DataType.getMissingCell();
@@ -292,6 +308,11 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
         m_first.loadSettingsFrom(settings);
         m_concate.loadSettingsFrom(settings);
         m_removeSourceCols.loadSettingsFrom(settings);
+        try {
+        	m_doFrameworks.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+         
+        }
     }
 
     /**
@@ -302,6 +323,7 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
         m_first.saveSettingsTo(settings);
         m_concate.saveSettingsTo(settings);
         m_removeSourceCols.saveSettingsTo(settings);
+        m_doFrameworks.saveSettingsTo(settings);
     }
 
     /**
@@ -313,5 +335,7 @@ public class RDKitMurckoScaffoldNodeModel extends NodeModel {
         m_first.validateSettings(settings);
         m_concate.validateSettings(settings);
         m_removeSourceCols.validateSettings(settings);
+        // added later:
+        // m_doFrameworks.validateSettings(settings);
     }
 }

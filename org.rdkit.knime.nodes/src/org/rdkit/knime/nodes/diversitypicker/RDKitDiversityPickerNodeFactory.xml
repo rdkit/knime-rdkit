@@ -16,6 +16,7 @@
 
         <option name="Fingerprint column">The column containing the fingerprints</option>
         <option name="Number to pick">Number of diverse rows to pick.</option>
+        <option name="Random seed">Random number seed to use.</option>
     </fullDescription>
 
     <ports>

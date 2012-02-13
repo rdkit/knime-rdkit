@@ -52,6 +52,7 @@ import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -70,7 +71,9 @@ public class RDKitDiversityPickerNodeDialogPane
                 createFirstColumnModel(), "Fingerprint column: ", 0,
                 BitVectorValue.class));
         super.addDialogComponent(new DialogComponentNumber(createNumPicksModel(),
-        "Number to pick", 1));
+        						"Number to pick", 1));
+        super.addDialogComponent(new DialogComponentNumberEdit(createRandomSeedModel(),
+                				"Random seed", 10));
     }
 
     /**
@@ -81,9 +84,15 @@ public class RDKitDiversityPickerNodeDialogPane
     }
 
     /**
-     * @return settings model for the exact match toggle
+     * @return settings model for the number of picks box
      */
     static final SettingsModelInteger createNumPicksModel() {
         return new SettingsModelInteger("num_picks", 10);
+    }
+    /**
+     * @return settings model for the random seed box
+     */
+    static final SettingsModelInteger createRandomSeedModel() {
+        return new SettingsModelInteger("random_seed", -1);
     }
 }

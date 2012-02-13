@@ -91,6 +91,9 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
     private final SettingsModelInteger m_numPicks =
             RDKitDiversityPickerNodeDialogPane.createNumPicksModel();
 
+    private final SettingsModelInteger m_randomSeed =
+        RDKitDiversityPickerNodeDialogPane.createRandomSeedModel();
+
     private static final NodeLogger LOGGER = NodeLogger
     .getLogger(RDKitDiversityPickerNodeModel.class);
 
@@ -205,7 +208,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
             }
             exec.setProgress(0.35,"Doing diversity pick.");
             LOGGER.debug("doing diversity pick");
-            Int_Vect iv=RDKFuncs.pickUsingFingerprints(fps, m_numPicks.getIntValue());
+            Int_Vect iv=RDKFuncs.pickUsingFingerprints(fps, m_numPicks.getIntValue(),m_randomSeed.getIntValue());
             exec.setProgress(0.667);
             exec.checkCanceled();
             LOGGER.debug("finishd");
@@ -276,6 +279,10 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.loadSettingsFrom(settings);
         m_numPicks.loadSettingsFrom(settings);
+        try{
+        	m_randomSeed.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+        }
     }
 
     /**
@@ -285,6 +292,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_first.saveSettingsTo(settings);
         m_numPicks.saveSettingsTo(settings);
+        m_randomSeed.saveSettingsTo(settings);
     }
 
     /**
@@ -295,5 +303,7 @@ public class RDKitDiversityPickerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_first.validateSettings(settings);
         m_numPicks.validateSettings(settings);
+        // added later:
+        // m_randomSeed.validateSettings(settings);
     }
 }

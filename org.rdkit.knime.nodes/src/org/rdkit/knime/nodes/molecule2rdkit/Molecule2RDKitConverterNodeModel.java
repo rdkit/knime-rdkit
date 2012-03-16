@@ -58,6 +58,7 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -139,7 +140,8 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             List<String> compatibleCols = new ArrayList<String>();
             for (DataColumnSpec c : inSpecs[0]) {
                 if (c.getType().isCompatible(SmilesValue.class)
-                        || c.getType().isCompatible(SdfValue.class)) {
+                        || c.getType().isCompatible(SdfValue.class) 
+                        || c.getType().isCompatible(SmartsValue.class)) {
                     compatibleCols.add(c.getName());
                 }
             }
@@ -152,7 +154,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 setWarningMessage("Auto guessing: using column \""
                         + compatibleCols.get(0) + "\".");
             } else {
-                throw new InvalidSettingsException("Neither Smiles nor SDF "
+                throw new InvalidSettingsException("No Smiles, Smarts, or SDF "
                         + "compatible "
                         + "column in input table.");
             }
@@ -192,6 +194,9 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
             getMolColIndex(inSpec, m_first.getStringValue().trim());
         final boolean smilesInput = inSpec.getColumnSpec(molColIdx).getType().
             isCompatible(SmilesValue.class);
+        final boolean smartsInput = inSpec.getColumnSpec(molColIdx).getType().
+        	isCompatible(SmartsValue.class);
+    
         final AtomicInteger parseErrorCount = new AtomicInteger();
         final int totalRowCount = inData[0].getRowCount();
         int cpuCount = (3 * Runtime.getRuntime().availableProcessors()) / 2;
@@ -213,6 +218,10 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                         String value = ((SmilesValue)molCell).getSmilesValue();
                         mol = RWMol.MolFromSmiles(value,0,sanitize);
                         smiles=value;
+                    } else if(smartsInput){
+                        String value = ((SmartsValue)molCell).getSmartsValue();
+                        mol = RWMol.MolFromSmarts(value,0,true);
+                        smiles=value;
                     } else if (!molCell.isMissing()) {
                         String value = ((SdfValue)molCell).getSdfValue();
                         mol = RWMol.MolFromMolBlock(value,sanitize);
@@ -232,7 +241,7 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                 if (mol == null) {
                     StringBuilder error = new StringBuilder();
                     error.append("Error parsing ");
-                    error.append(smilesInput ? "SMILES " : "SDF ");
+                    error.append(smilesInput ? "SMILES " : (smartsInput ? "SMARTS" : "SDF ") );
                     error.append("while processing row: \"");
                     error.append(row.getKey()).append("\"");
                     LOGGER.debug(error.toString());
@@ -240,7 +249,9 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
                     result = DataType.getMissingCell();
                 } else {
                     try {
-                    	if(!sanitize){
+                    	if(smartsInput){
+                    		mol.updatePropertyCache(false);
+                    	} else if(!sanitize){
                         	RDKFuncs.cleanUp((RWMol)mol);
                         	mol.updatePropertyCache(false);
                         	RDKFuncs.symmetrizeSSSR(mol);
@@ -361,9 +372,10 @@ public class Molecule2RDKitConverterNodeModel extends NodeModel {
         }
         DataType molColType = inSpec.getColumnSpec(molColIndex).getType();
         if (!molColType.isCompatible(SmilesValue.class)
-                && !molColType.isCompatible(SdfValue.class)) {
+                && !molColType.isCompatible(SdfValue.class) 
+                && !molColType.isCompatible(SmartsValue.class)) {
             throw new InvalidSettingsException("Column '" + colName
-                    + "' does not contain smiles or SDF.");
+                    + "' does not contain smiles, smarts, or SDF.");
         }
         return molColIndex;
     }

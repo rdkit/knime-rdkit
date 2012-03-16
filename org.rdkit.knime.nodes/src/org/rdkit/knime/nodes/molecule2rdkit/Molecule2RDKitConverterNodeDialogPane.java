@@ -52,6 +52,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -75,7 +76,7 @@ public class Molecule2RDKitConverterNodeDialogPane extends
     Molecule2RDKitConverterNodeDialogPane() {
         super.addDialogComponent(new DialogComponentColumnNameSelection(
                 createFirstColumnModel(), "Molecule column: ", 0,
-                SmilesValue.class, SdfValue.class));
+                SmilesValue.class, SmartsValue.class, SdfValue.class));
         super.addDialogComponent(new DialogComponentString(
                 createNewColumnModel(), "New column name: "));
         super.addDialogComponent(new DialogComponentBoolean(

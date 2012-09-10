@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./fingerprint_writer.png" type="Sink">
+    <name>Fingerprint Writer (deprecated)</name>
+    
+    <shortDescription>
+        Node to write fingerprints from an input table to a FPS file.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This node can be used to write a FPS  file using knime fingerprints from an input table. The format of the FPS file is mentioned here: http://code.google.com/p/chem-fingerprints/wiki/FPS </intro>
+        
+        <option name="Output file:">The location of the output file where the FPS file will be created.</option>
+        <option name="Write row ID">Whether or not the row ids will be written to the FPS file</option>
+        <option name="Id column:">The input column containing the fingerprint Ids in case the user wants to read it from an input column to be written to the .fps file.</option>
+        <option name="Overwrite if file exists">Whether or not the existing FPS file should be overwritten.</option>
+		<option name="Fingerprint column:">The input column containing knime fingerprints.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input fingerprints">Table containing the knime fingerprints.</inPort>
+    </ports>    
+</knimeNode>

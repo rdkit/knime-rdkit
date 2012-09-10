@@ -6,7 +6,6 @@
  * Copyright (C) 2010
  * Novartis Institutes for BioMedical Research
  *
- *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
  *  published by the Free Software Foundation.
@@ -53,22 +52,30 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "Molecule2RDKitConverter" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class Molecule2RDKitConverterNodeFactory
-        extends NodeFactory<Molecule2RDKitConverterNodeModel> {
+public class Molecule2RDKitConverterNodeFactory extends
+        NodeFactory<Molecule2RDKitConverterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new Molecule2RDKitConverterNodeDialogPane();
+        return new Molecule2RDKitConverterNodeDialog();
     }
 
     /**
+     * Creates a model for the Molecule2RDKitConverter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public Molecule2RDKitConverterNodeModel createNodeModel() {
@@ -76,16 +83,21 @@ public class Molecule2RDKitConverterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<Molecule2RDKitConverterNodeModel> createNodeView(
-            final int viewIndex, final Molecule2RDKitConverterNodeModel nodeModel) {
+            final int viewIndex,
+            final Molecule2RDKitConverterNodeModel nodeModel) {
         return null;
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     protected int getNrNodeViews() {
@@ -93,7 +105,9 @@ public class Molecule2RDKitConverterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does possess a dialog for configuration.
+     * 
+	 * @return Always true.
      */
     @Override
     protected boolean hasDialog() {

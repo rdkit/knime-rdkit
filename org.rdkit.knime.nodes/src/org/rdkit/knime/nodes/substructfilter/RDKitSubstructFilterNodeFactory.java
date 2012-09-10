@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,30 +53,32 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitSubstructFilter" Node.
+ * 
  * @author Greg Landrum
+ * ²author Manuel Schwarze
  */
-public class RDKitSubstructFilterNodeFactory
+public class RDKitSubstructFilterNodeFactory 
         extends NodeFactory<RDKitSubstructFilterNodeModel> {
 
     /**
+     * Creates a model for the RDKitSubstructureFilter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitSubstructFilterNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitSubstructFilterNodeModel createNodeModel() {
         return new RDKitSubstructFilterNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitSubstructFilterNodeModel> createNodeView(
@@ -84,21 +86,33 @@ public class RDKitSubstructFilterNodeFactory
             final RDKitSubstructFilterNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitSubstructFilterNodeDialog();
+    }
 }
+

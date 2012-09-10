@@ -50,33 +50,58 @@
  */
 package org.rdkit.knime.types;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
 
+import org.RDKit.ROMol;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
 import org.knime.base.data.xml.SvgValueRenderer;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
-import org.knime.core.node.NodeLogger;
 import org.w3c.dom.svg.SVGDocument;
 
 /**
  * This a renderer that draws nice 2D depictions of RDKit molecules.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Manuel Schwarze, Novartis
  */
 public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
         implements SvgProvider {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RDKitMolValueRenderer.class);
+	
+	// 
+	// Constants
+	//
+	
+    /** Serial number. */
+	private static final long serialVersionUID = 8956038655901963406L;
 
-    private static final Font NO_SVG_FONT = new Font(Font.SANS_SERIF,
-            Font.ITALIC, 12);
+	/** The font used for drawing empty cells. */
+    private static final Font MISSING_CELL_FONT = new Font("Helvetica", Font.PLAIN, 12);
 
+    /** The font used for drawing error messages. */
+    private static final Font NO_SVG_FONT = new Font("Helvetica", Font.ITALIC, 12);
+
+    /** The font used for drawing Smiles in error conditions, if available. */
+    private static final Font SMILES_FONT = new Font("Helvetica", Font.PLAIN, 12);
+
+    //
+    // Members
+    //
+    
+    /** Flag to tell the painting method that the cell is a missing cell. */
+    private boolean m_bIsMissingCell;
+    
+    /** Smiles value of the currently painted cell. Only used in error conditions. */
+    private String m_strSmiles;
+    
+    /** The SVG structure to paint, if it could be determined properly. */
     private SVGDocument m_svgDocument;
 
     /**
@@ -84,41 +109,53 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
      */
     @Override
     protected void setValue(final Object value) {
-        if (!(value instanceof RDKitMolValue)) { // might be missing
-            m_svgDocument = null;
-            return;
-        }
-
-        RDKitMolValue mol = (RDKitMolValue)value;
-        String svg = mol.readMoleculeValue().ToSVG(8,50);
-
-        String parserClass = XMLResourceDescriptor.getXMLParserClassName();
-        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
-
-        /*
-         * The document factory loads the XML parser
-         * (org.apache.xerces.parsers.SAXParser), using the thread's context
-         * class loader. In KNIME desktop (and batch) this is correctly set, in
-         * the KNIME server the thread is some TCP-socket-listener-thread, which
-         * fails to load the parser class (class loading happens in
-         * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
-         * follow the call)
-         */
-        Thread t = Thread.currentThread();
-        ClassLoader contextClassLoader = t.getContextClassLoader();
-        t.setContextClassLoader(getClass().getClassLoader());
-
-        try {
-            m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
-            // remove xml:space='preserved' attribute because it causes atom
-            // labels to be printed off their places
-            m_svgDocument.getRootElement().removeAttributeNS(
-                    "http://www.w3.org/XML/1998/namespace", "space");
-        } catch (Exception ex) {
-            m_svgDocument = null;
-            LOGGER.error("Could not render molecule", ex);
-        } finally {
-            t.setContextClassLoader(contextClassLoader);
+    	// Reset values important for painting
+    	m_svgDocument = null;
+    	m_strSmiles = null;
+    	m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
+    	
+        if (value instanceof RDKitMolValue) { 
+        	// Try to render the cell
+	        RDKitMolValue molCell = (RDKitMolValue)value;
+            m_strSmiles = molCell.getSmilesValue();
+	        ROMol mol = null;
+	        Thread t = Thread.currentThread();
+	        ClassLoader contextClassLoader = t.getContextClassLoader();
+	        t.setContextClassLoader(getClass().getClassLoader());
+	        
+	        try {
+	        	mol = molCell.readMoleculeValue();
+		        String svg = mol.ToSVG(8,50);
+		
+		        String parserClass = XMLResourceDescriptor.getXMLParserClassName();
+		        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
+		
+		        /*
+		         * The document factory loads the XML parser
+		         * (org.apache.xerces.parsers.SAXParser), using the thread's context
+		         * class loader. In KNIME desktop (and batch) this is correctly set, in
+		         * the KNIME server the thread is some TCP-socket-listener-thread, which
+		         * fails to load the parser class (class loading happens in
+		         * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
+		         * follow the call)
+		         */
+	            m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
+	            // remove xml:space='preserved' attribute because it causes atom
+	            // labels to be printed off their places
+	            m_svgDocument.getRootElement().removeAttributeNS(
+	                    "http://www.w3.org/XML/1998/namespace", "space");
+	        } 
+	        catch (Exception ex) {
+	        	// If conversion fails we set a null value, which will show up as error messgae
+	            m_svgDocument = null;
+	        	// Logging something here may swam the log files - not desired.
+	        } 
+	        finally {
+	       		t.setContextClassLoader(contextClassLoader);
+	        	if (mol != null) {
+	        		mol.delete();
+	        	}
+	        }
         }
     }
 
@@ -144,13 +181,37 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
     @Override
     protected void paintComponent(final Graphics g) {
         super.paintComponent(g);
-        if (m_svgDocument == null) {
-            g.setFont(NO_SVG_FONT);
-            g.drawString("No 2D depiction available", 2, 14);
-            return;
+        
+        // Case 1: A missing cell
+        if (m_bIsMissingCell) {
+            g.setFont(MISSING_CELL_FONT);
+            g.drawString("?", 2, 12);
         }
-
-        SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
+        
+        // Case 2: A SVG structure is available
+        else if (m_svgDocument != null) {
+        	try {
+        		SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
+        	}
+        	catch (Exception excPainting) {
+                g.setFont(NO_SVG_FONT);
+                g.drawString("Painting failed for", 2, 14);
+                g.setFont(SMILES_FONT);
+                g.drawString(m_strSmiles, 2, 28);
+        	}
+        }      
+        
+        // Case 3: An error occurred in the RDKit
+        else {
+            g.setFont(NO_SVG_FONT);
+            g.setColor(Color.red);
+            g.drawString("2D depiction failed" + (m_strSmiles == null ? "" : " for"), 2, 14);
+            if (m_strSmiles != null) {
+                g.setFont(SMILES_FONT);
+            	g.drawString(m_strSmiles, 2, 28);
+            }
+            g.setColor(Color.black);            
+        }
     }
 
     /**

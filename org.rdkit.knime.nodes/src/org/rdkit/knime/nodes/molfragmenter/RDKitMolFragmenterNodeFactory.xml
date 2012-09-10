@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="molfragmenter.png" type="Manipulator">
-    <name>Molecule fragmenter</name>
+    <name>RDKit Molecule Fragmenter</name>
 
     <shortDescription>
         Fragments a set of RDKit molecules

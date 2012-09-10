@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,120 +48,142 @@
  */
 package org.rdkit.knime.nodes.descriptorcalculation;
 
-import java.awt.Container;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.util.HashSet;
-import java.util.Set;
+import java.awt.Component;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.Border;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.Icon;
+import javax.swing.JList;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentEnumFilterPanel;
+import org.rdkit.knime.util.SettingsModelEnumerationArray;
 
 /**
- * The NodeDialog for the "DescriptorCalculationNode" Node is used to specify the user adjustable setting.
- * This node dialog is derived from {@link org.knime.core.node.NodeDialogPane}.
+ * <code>NodeDialog</code> for the "RDKitDescriptorCalculation" Node.
+ * 
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+ * creation of a simple dialog with standard components. If you need a more 
+ * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Dillip K Mohanty
+ * @author Manuel Schwarze
  */
-public class DescriptorCalculationNodeDialog extends NodeDialogPane {
+public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
 
-
-    /*
-     * The tab's name.
-     */
-    private static final String TAB = "Settings";
-
-    /*
-     * The settings object for descriptor node.
-     */
-	private final DescriptorCalcSettings _settings = new DescriptorCalcSettings();
+	//
+	// Constructor
+	//
 	
-	@SuppressWarnings("unchecked")
-	/*
-     * The dropdown box instance contains the rdkit molecule column.
+    /**
+     * Create a new dialog pane with default components to configure an input column,
+     * the name of a new column, which will contain the calculation results, an option
+     * to tell, if the source column shall be removed from the result table.
      */
-	private final ColumnSelectionComboxBox _molColumn = new ColumnSelectionComboxBox(
-			(Border) null, RDKitMolValue.class);
+    @SuppressWarnings("unchecked")
+	DescriptorCalculationNodeDialog() {
+        super.addDialogComponent(new DialogComponentColumnNameSelection(
+                createInputColumnNameModel(), "RDKit Mol column: ", 0,
+                RDKitMolValue.class));
+        
+        DialogComponentEnumFilterPanel<Descriptor> panelDescriptors =
+        	new DialogComponentEnumFilterPanel<Descriptor>(
+        		createDescriptorsModel(), "Available descriptors: (Hover your mouse over a descriptor to get a short description)", null, true);
+        panelDescriptors.setListCellRenderer(new DefaultListCellRenderer() {
+
+        	//
+        	// Constants
+        	//
+        	
+            /** Serial number. */
+			private static final long serialVersionUID = -3432992669822820183L;
+
+			/** Icon used for list items of descriptors that calculate more than one column. */
+			private final Icon MULTI_VALUE_ICON = CollectionDataValue.UTILITY.getIcon();
+			
+			//
+			// Public Methods
+			//
+			
+			/**
+             * {@inheritDoc}
+             */
+            @Override
+            public Component getListCellRendererComponent(
+                    final JList list, final Object value, final int index,
+                    final boolean isSelected, final boolean cellHasFocus) {
+                // The super method will reset the icon if we call this method
+                // last. So we let super do its job first and then we take care
+                // that everything is properly set.
+                Component c =  super.getListCellRendererComponent(list, value, index,
+                        isSelected, cellHasFocus);
+                
+                assert (c == this);
+                
+                if (value instanceof Descriptor) {
+                	Descriptor descriptor = (Descriptor)value;
+                	
+                	// Set text
+                    setText(descriptor.toString());
+                    
+                    // Set icon
+                    DataType[] arrDataTypes = descriptor.getDataTypes(); 
+                    if (arrDataTypes != null && arrDataTypes.length == 1) {
+                    	setIcon(arrDataTypes[0].getIcon());
+                    }
+                    else {
+                        setIcon(MULTI_VALUE_ICON);                    	
+                    }
+
+                	// Set tooltip
+                    String strTooltip = descriptor.getDescription();
+                    if (strTooltip != null) {
+                    	strTooltip = "<html>" + 
+                    	strTooltip.
+                			replace("<=", "&le;"). 
+                			replace(">=", "&ge;"). 
+                    		replace("<", "&lt;"). 
+                    		replace(">", "&gt;"). 
+                    		replace("\n", "<br>") + 
+                    	"</html>";
+                    }
+                    
+                	list.setToolTipText(strTooltip);
+                }
+                
+                
+                return this;
+            }        	
+        });
+        
+        super.addDialogComponent(panelDescriptors);
+    }
+
+    //
+    // Static Methods
+    //
     
     /**
-     * Creates a new {@link NodeDialogPane} for the column filter in order to
-     * set the desired columns.
+     * Creates the settings model to be used for the input column.
+     * 
+     * @return Settings model for input column selection.
      */
-    DescriptorCalculationNodeDialog() {
-        super();
-        JPanel colPanel = new JPanel();
-        colPanel.add(new JLabel("Molecule column:"));
-        colPanel.add(_molColumn);
-        JPanel p1 = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.EAST;
-		c.insets = new Insets(2, 2, 2, 2);
-		c.gridy = 0;
-		c.gridx = 0;
-		//Add the Column dropdown panel
-		p1.add(colPanel, c, 0);
-		c.gridy++;
-		c.gridx = 0;
-		c.gridwidth = 2;
-		c.anchor = GridBagConstraints.WEST;	
-		JLabel l = new JLabel("Available descriptors:");
-		l.setAlignmentX(Container.LEFT_ALIGNMENT);
-		//Add label
-		p1.add(l, c, 1);
-		c.gridy++;
-        
-		//Add descriptor filter panel
-		JPanel p = new DescriptorFilterPanel();
-		p1.add(p, c , 2);
-		
-        super.addTab(TAB, p1);
+    static final SettingsModelString createInputColumnNameModel() {
+        return new SettingsModelString("input_column", null);
     }
 
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-    	
-    	_settings.loadSettingsForDialog(settings);
-    	_molColumn.update(specs[0], _settings.colName);
-    	
-        if (DescriptorCalculationNodeModel.names == null
-                || DescriptorCalculationNodeModel.names.size() == 0) {
-            throw new NotConfigurableException("No descriptors available for "
-                    + "selection.");
-        }
-    	
-    	String[] desclist = _settings.selectedDescriptors;
-        HashSet<String> list = new HashSet<String>();
-        for (int i = 0; i < desclist.length; i++) {
-                list.add(desclist[i]);
-        }
-        
-        // set inclusion list on the panel
-        JPanel p1 = (JPanel)getTab(TAB);
-        DescriptorFilterPanel p = (DescriptorFilterPanel)p1.getComponent(2);
-        p.update(DescriptorCalculationNodeModel.names, list);
-    }
-
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
-        throws InvalidSettingsException {
-    	JPanel p1 = (JPanel)getTab(TAB);
-        DescriptorFilterPanel p = (DescriptorFilterPanel)p1.getComponent(2);
-        Set<String> list = p.getIncludedDescriptorSet();
-        _settings.colName = _molColumn.getSelectedColumn();
-		_settings.selectedDescriptors = (String[]) list.toArray(new String[] {});
-		_settings.saveSettings(settings);
-        
+    /**
+     * Creates the settings model to be used for the selected descriptors.
+     * All descriptors are added as default value.
+     * 
+     * @return Settings model for selected descriptors.
+     */
+    static final SettingsModelEnumerationArray<Descriptor> createDescriptorsModel() {
+        return new SettingsModelEnumerationArray<Descriptor>(Descriptor.class, 
+        		"selectedDescriptors", Descriptor.class.getEnumConstants());
     }
 }

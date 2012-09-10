@@ -1,10 +1,11 @@
 /*
- * ------------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
  *
- *  Copyright (C) 2003 - 2010
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ * Copyright (C) 2012
+ * Novartis Institutes for BioMedical Research
+ *
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -43,17 +44,9 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   Nov 4, 2010 (wiswedel): created
+ * ---------------------------------------------------------------------
  */
 package org.rdkit.knime.nodes.rdkit2molecule;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
@@ -67,244 +60,282 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
+import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsModelEnumeration;
+import org.rdkit.knime.util.SettingsUtils;
 
 /**
- *
- * @author Bernd Wiswedel
+ * This class implements the node model of the RDKit2Molecule node
+ * providing calculations based on the open source RDKit library.
+ * 
+ * @author Manuel Schwarze 
  */
-public class RDKit2MoleculeConverterNodeModel extends NodeModel {
+public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNodeModel {
 
-    private final SettingsModelString m_first =
-        RDKit2MoleculeConverterNodeDialogPane.createFirstColumnModel();
+	//
+	// Enumeration
+	//
 
-    private final SettingsModelString m_concate =
-        RDKit2MoleculeConverterNodeDialogPane.createNewColumnModel();
+	/** Defines supported destination formats. */
+    public enum DestinationFormat {
+    	
+        Smiles {
+        	@Override
+        	public String toString() {
+        		return "Smiles";
+        	}
+        	
+        	@Override
+        	public DataType getDataType() {
+        		return SmilesCell.TYPE;
+        	}
+        	
+        	@Override
+        	public DataCell convertRdkitMolecule(ROMol mol) {
+        		return new SmilesCell(RDKFuncs.MolToSmiles(mol, true)); 
+        	}
+        },
+        
+        SDF {
+        	@Override
+        	public String toString() {
+        		return "SDF";
+        	}
+        	@Override
+        	public DataType getDataType() {
+        		return SdfCell.TYPE;
+        	}
+        	
+        	@Override
+        	public DataCell convertRdkitMolecule(ROMol mol) {
+    			// Calculate 2D Coordinates, if necessary
+                if(mol.getNumConformers() == 0) {
+                    mol.compute2DCoords();
+                }
+                
+                // Fix SDF value
+                String strSdf = RDKFuncs.MolToMolBlock(mol);
+                // KNIME SDF type requires string to be terminated
+                // by $$$$ -- see org.knime.chem.types.SdfValue for details
+                if (!strSdf.endsWith(SDF_POSTFIX)) {
+                	strSdf += SDF_POSTFIX;
+                }
+                
+                // Create the SDF cell
+                return SdfCellFactory.create(strSdf);
+        	}
+        };
+        
+        /**
+         * Determines the target cell data type of KNIME for this destination format.
+         * 
+         * @return KNIME Data Type associated with the destination format. 
+         * 		Null, if not implemented.
+         */
+        public DataType getDataType() {
+        	return null;
+        }
+        
+        /**
+         * Returns by default a missing cell. Every enumeration value should
+         * implement its own conversion.
+         * 
+         * @param mol RDKit Molecule to be converted.
+         * 
+         * @return The converted data cell. Missing cell, if not implemented.
+         */
+        public DataCell convertRdkitMolecule(ROMol mol) {
+        	return DataType.getMissingCell();
+        }
+    }
+	
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RDKit2MoleculeConverterNodeModel.class);
+	
+	
+	/** Input data info index for Mol value. */
+	protected static final int INPUT_COLUMN_MOL = 0;
+	
+	/** The string KNIME expects an SDF string to end with. */
+	private static final String SDF_POSTFIX = "\n$$$$\n";
+	
+	//
+	// Members
+	//
+	
+	/** Settings model for the column name of the input column. */
+    private final SettingsModelString m_modelInputColumnName =
+            registerSettings(RDKit2MoleculeConverterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
+    // Accept also deprecated keys
 
-    private final SettingsModelBoolean m_removeSourceCols =
-        RDKit2MoleculeConverterNodeDialogPane.createBooleanModel();
+    /** Settings model for the column name of the new column to be added to the output table. */
+    private final SettingsModelString m_modelNewColumnName =
+    		registerSettings(RDKit2MoleculeConverterNodeDialog.createNewColumnNameModel());
 
-    private final SettingsModelString m_destinationFormat =
-        RDKit2MoleculeConverterNodeDialogPane.createDestinationFormatModel();
+    /** Settings model for the option to remove the source column from the output table. */
+    private final SettingsModelBoolean m_modelRemoveSourceColumns =
+    		registerSettings(RDKit2MoleculeConverterNodeDialog.createRemoveSourceColumnsOptionModel());
 
+    /** Settings model for the option to remove the source column from the output table. */
+    private final SettingsModelEnumeration<DestinationFormat> m_modelDestinationFormat =
+    		registerSettings(RDKit2MoleculeConverterNodeDialog.createDestinationFormatModel());
+     
+    //
+    // Constructor
+    //
+    
     /**
-     * Create new node model with one data in- and one outport.
+     * Create new node model with one data in- and one out-port.
      */
     RDKit2MoleculeConverterNodeModel() {
         super(1, 1);
     }
 
+    //
+    // Protected Methods
+    //
+    
     /**
      * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check whether native RDKit library has been loaded successfully
-        RDKitTypesPluginActivator.checkErrorState();
+    	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+    	
+        // Auto guess the input column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
+        		"Auto guessing: Using column %COLUMN_NAME%.", 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
 
-        if (null == m_first.getStringValue()) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(RDKitMolValue.class)) {
-                    compatibleCols.add(c.getName());
-                }
-            }
-            if (compatibleCols.size() == 1) {
-                // auto-configure
-                m_first.setStringValue(compatibleCols.get(0));
-            } else if (compatibleCols.size() > 1) {
-                // auto-guessing
-                m_first.setStringValue(compatibleCols.get(0));
-                setWarningMessage("Auto guessing: using column \""
-                        + compatibleCols.get(0) + "\".");
-            } else {
-                throw new InvalidSettingsException("No RDKit compatible "
-                        + "column in input table.");
-            }
-        }
-        if (null == m_concate.getStringValue()) {
-            if (null != m_first.getStringValue()) {
-                // auto-configure
-                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
-                        m_first.getStringValue() + " (Molecule)");
-                m_concate.setStringValue(newName);
-            } else {
-                m_concate.setStringValue("Molecule");
-            }
-        }
-        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{rearranger.createSpec()};
-    }
+        // Determines, if the input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+        
+        // Auto guess the new column name and make it unique
+        String strInputColumnName = m_modelInputColumnName.getStringValue();
+        SettingsUtils.autoGuessColumnName(inSpecs[0], null, 
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? 
+        			new String[] { strInputColumnName } : null),
+        		m_modelNewColumnName, strInputColumnName + " (Molecule)");
 
-    private int[] findColumnIndices(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        String first = m_first.getStringValue();
-        if (first == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int firstIndex = spec.findColumnIndex(first);
-        if (firstIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + first);
-        }
-        DataType firstType = spec.getColumnSpec(firstIndex).getType();
-        if (!firstType.isCompatible(RDKitMolValue.class)) {
-            throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain RDKit.");
-        }
-        return new int[]{firstIndex};
+        // Determine, if the new column name has been set and if it is really unique
+        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] { 
+        			m_modelInputColumnName.getStringValue() } : null),
+        		m_modelNewColumnName, 
+        		"Output column has not been specified yet.",
+        		"The name %COLUMN_NAME% of the new column exists already in the input.");
+
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // Generate output specs
+        return getOutputTableSpecs(inSpecs);
     }
 
     /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
-        ColumnRearranger rearranger = createColumnRearranger(inSpec);
-        BufferedDataTable outTable =
-                exec.createColumnRearrangeTable(inData[0], rearranger, exec);
-        return new BufferedDataTable[]{outTable};
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+    	InputDataInfo[] arrDataInfo = null;
+    	
+    	// Specify input of table 1
+    	if (inPort == 0) {
+    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
+    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
+    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+    				RDKitMolValue.class);
+    	}
+    	
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
     }
+ 
+    /**
+     * {@inheritDoc}
+     */
+	protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+		AbstractRDKitCellFactory[] arrOutputFactories = null;
+    	
+    	// Specify output of table 1
+    	if (outPort == 0) {
+    		// Allocate space for all factories (usually we have only one)
+    		arrOutputFactories = new AbstractRDKitCellFactory[1]; 
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        // check user settings against input spec here
-        final int[] indices = findColumnIndices(spec);
-        String inputCol = m_first.getStringValue();
-        String newName = m_concate.getStringValue();
-        if ((spec.containsName(newName) && !newName.equals(inputCol))
-              ||  (spec.containsName(newName) && newName.equals(inputCol)
-              && !m_removeSourceCols.getBooleanValue())) {
-            throw new InvalidSettingsException("Cannot create column \""
-                    + newName + "\" since it is already in the input.");
+    		// Factory 1:
+    		// ==========
+    		// Generate column specs for the output table columns produced by this factory
+    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+    		arrOutputSpec[0] = new DataColumnSpecCreator(
+    				m_modelNewColumnName.getStringValue(), m_modelDestinationFormat.getValue().getDataType())
+    				.createSpec();
+    		
+    		final DestinationFormat destType = m_modelDestinationFormat.getValue();
+    
+    		// Generate factory 
+    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+           		getWarningConsolidator(), null, arrOutputSpec) {
+	   			
+	   		    /**
+	   		     * This method implements the calculation logic to generate the new cells based on 
+	   		     * the input made available in the first (and second) parameter.
+	   		     * {@inheritDoc}
+	   		     */
+	   			@Override
+	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
+	   		    	DataCell outputCell = null;
+	   		    	
+	   		    	// Calculate the new cells
+	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
+	   		    	outputCell = destType.convertRdkitMolecule(mol);
+	   		    	
+	   		        return new DataCell[] { outputCell };
+	   		    }
+	   		};
+	   		
+	   		// Enable or disable this factory to allow parallel processing 		
+	   		arrOutputFactories[0].setAllowParallelProcessing(true);	   		
+    	}
+    	
+    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+    }
+	
+    /**
+     * {@inheritDoc}
+     * This implementation removes additionally the compound source column, if specified in the settings.
+     */
+	protected ColumnRearranger createColumnRearranger(int outPort,
+			DataTableSpec inSpec) throws InvalidSettingsException {
+    	// Perform normal work 
+        ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
+        
+        // Remove the input column, if desired
+        if (m_modelRemoveSourceColumns.getBooleanValue()) {
+            result.remove(createInputDataInfos(0, inSpec)[INPUT_COLUMN_MOL].getColumnIndex());
         }
-        ColumnRearranger result = new ColumnRearranger(spec);
-        DataColumnSpecCreator appendSpec = null;
-        final boolean convertToSmiles = m_destinationFormat.getStringValue().
-                equals(RDKit2MoleculeConverterNodeDialogPane.SMILES_FORMAT);
-        if (convertToSmiles) {
-            appendSpec = new DataColumnSpecCreator(newName, SmilesCell.TYPE);
-        } else {
-            appendSpec = new DataColumnSpecCreator(newName, SdfCell.TYPE);
-        }
-        result.append(new SingleCellFactory(appendSpec.createSpec()) {
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell firstCell = row.getCell(indices[0]);
-                if (firstCell.isMissing()) {
-                    return DataType.getMissingCell();
-                }
-                RDKitMolValue rdkit = (RDKitMolValue)firstCell;
-                ROMol mol = rdkit.readMoleculeValue();
-
-                try {
-                    if (convertToSmiles) {
-                        // Convert to Smiles
-                        String value = RDKFuncs.MolToSmiles(mol, true);
-                        return new SmilesCell(value);
-                    } else {
-                        // Convert to SDF
-                        if(mol.getNumConformers() == 0){
-                            mol.compute2DCoords();
-                        }
-                        String value = RDKFuncs.MolToMolBlock(mol);
-                        // KNIME SDF type requires string to be terminated
-                        // by $$$$ -- see org.knime.chem.types.SdfValue for details
-                        String postfix = "\n$$$$\n";
-                        if (!value.endsWith(postfix)) {
-                            StringBuilder valueBuilder = new StringBuilder();
-                            valueBuilder.append(value);
-                            valueBuilder.append(postfix);
-                            value = valueBuilder.toString();
-                        }
-                        return SdfCellFactory.create(value);
-                    }
-                } finally {
-                    mol.delete();
-                }
-            }
-        });
-        if (m_removeSourceCols.getBooleanValue()) {
-            result.remove(indices);
-        }
+        
         return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // nothing to reset
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_first.loadSettingsFrom(settings);
-        m_concate.loadSettingsFrom(settings);
-        m_removeSourceCols.loadSettingsFrom(settings);
-        m_destinationFormat.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_first.saveSettingsTo(settings);
-        m_concate.saveSettingsTo(settings);
-        m_removeSourceCols.saveSettingsTo(settings);
-        m_destinationFormat.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_first.validateSettings(settings);
-        m_concate.validateSettings(settings);
-        m_removeSourceCols.validateSettings(settings);
-        m_destinationFormat.validateSettings(settings);
-    }
+    } 
 }

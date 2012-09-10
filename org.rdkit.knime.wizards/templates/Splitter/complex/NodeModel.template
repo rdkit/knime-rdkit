@@ -1,0 +1,288 @@
+/* 
+ * This source code, its documentation and all related files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright (C)__CURRENT_YEAR__
+ * Novartis Institutes for BioMedical Research
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ */
+package __BASE_PACKAGE__;
+
+import org.RDKit.ROMol;
+import org.RDKit.RWMol;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.nodes.AbstractRDKitSplitterNodeModel;
+import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsUtils;
+
+/**
+ * This class implements the node model of the __NODE_NAME__ node
+ * providing a row filter based on the open source RDKit library.
+ * __DESCRIPTION__
+ * @author __VENDOR_NAME__ 
+ */
+public class __NODE_NAME__NodeModel extends AbstractRDKitSplitterNodeModel {
+
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
+			.getLogger(__NODE_NAME__NodeModel.class);
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Add more input columns or change the name of the existing one. This index is used
+	//       to access easily so-called InputDataInfo objects, which connect a concrete column
+	//       of an input table with the column selection model of the node settings.
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/** Input data info index for Mol value. */
+	protected static final int INPUT_COLUMN_MOL = 0;
+	
+	//
+	// Members
+	//
+	
+	/** Settings model for the column name of the input column. */
+    private final SettingsModelString m_modelInputColumnName =
+            registerSettings(__NODE_NAME__NodeDialog.createInputColumnNameModel());
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Add more settings here in the same style as above:
+    //   1. Create a static method in the dialog class to generate the setting model.
+    //   2. Call this new method and assign it to the model member variable.
+    //   3. Don't forget to call registerSettings(...) as this will ensure proper handling. 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    //
+    // Internals
+    //
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Add internal member variables here to save intermediate execution results or
+    //   settings derived from the user's configuration driving the behavior of execution. 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //
+    // Constructor
+    //
+    
+    /**
+     * Create new node model with one data in- and multiple out-ports.
+     */
+    __NODE_NAME__NodeModel() {
+
+	    ///////////////////////////////////////////////////////////////////////////////////////////////////
+		// TODO: Change the number of output ports to split into more than two tables. 
+    	///////////////////////////////////////////////////////////////////////////////////////////////////
+    	
+     	super(1, 2);
+    }
+
+    //
+    // Protected Methods
+    //
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+    	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+    	
+        // Auto guess the input column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
+        		"Auto guessing: Using column %COLUMN_NAME%.", 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+
+        // Determines, if the input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+
+	    ///////////////////////////////////////////////////////////////////////////////////////////////////
+		// TODO: Add more checks here based on other settings models you may have added.
+		// 		 Call getWarningConsolidator().saveWarning("A warning for the user");
+		//       if something is incorrect.
+    	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // Generate output specs
+        return getOutputTableSpecs(inSpecs);
+    }
+
+    /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+    	InputDataInfo[] arrDataInfo = null;
+    	
+   	    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    	// TODO: For every input port table generate here an array of InputDataInfo objects,
+    	//       but only for the columns of interest. This links a SettingsModel that contains
+    	//       a column name to the input column of the table. It also defines how we want to
+    	//       deal with empty cells. Define one of the policy values here. Provide a default
+    	//       value if you want to use the default value if the cell is empty during execution.
+    	//       Also provide a list of DataValue classes that are acceptable. Based on this information
+    	//       part of the settings validation is performed.
+    	///////////////////////////////////////////////////////////////////////////////////////////////////
+    	
+    	// Specify input of table 1
+    	if (inPort == 0) {
+    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
+    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
+    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+    				RDKitMolValue.class);
+    	}
+    	
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+    }
+    
+	/**
+	 * Returns the percentage of pre-processing activities from the total execution.
+	 *
+	 * @return Percentage of pre-processing. Returns __PRE_PROC_PERCENTAGE__d.
+	 */
+	protected double getPreProcessingPercentage() {
+		return __PRE_PROC_PERCENTAGE__d;
+	}
+	
+	/**
+	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
+	 * the row-by-row processing starts. All necessary pre-calculations can be done here. Results of the method
+	 * should be made available through member variables, which get picked up by the other methods like
+	 * process(InputDataInfo[], DataRow) in the factory or 
+	 * {@link #postProcessing(BufferedDataTable[], BufferedDataTable[], ExecutionContext)} in the model.
+	 * 
+	 * @param inData The input tables of the node.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
+	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
+	 * 
+	 * @throws Exception Thrown, if pre-processing fails.
+	 */
+	protected void preProcessing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
+		final ExecutionContext exec) throws Exception {
+		   
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+        // TODO: You may do generate data here, which are needed to process the results
+        //       later row by row. The calculations in this method are normally based on 
+        //       the passed in inData table(s). Results are not made available via return
+        //       value, but should be stored as member variables of this model class.
+        //       These intermediate results can be used in the determineTargetTable(...) method
+        //       that defines the filtering / splitting condition.
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		// Does not do anything by default
+		exec.setProgress(1.0d);
+	}	
+
+	/**
+	 * Returns the percentage of post-processing activities from the total execution.
+	 *
+	 * @return Percentage of post-processing. Returns __POST_PROC_PERCENTAGE__d.
+	 */
+	protected double getPostProcessingPercentage() {
+		return __POST_PROC_PERCENTAGE__d;
+	}     
+	
+	/**
+	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, after
+	 * the row-by-row processing has ended a new result table set has been created. 
+	 * All necessary post-calculations can be done here, e.g. creating a completely new table by filtering
+	 * the intermediate table. The returned table array will be returned also from the execute method. 
+	 * 
+	 * @param inData The input tables of the node.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 * @param processingResult Tables of the core processing.
+	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
+	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
+	 * 
+	 * @return The final result tables to be returned by {@link #execute(BufferedDataTable[], ExecutionContext)}.
+	 * 		By default it just returns the tables passed in as processingResult tables.
+	 * 
+	 * @throws Exception Thrown, if post-processing fails.
+	 */
+	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo, 
+		final BufferedDataTable[] processingResult, final ExecutionContext exec) throws Exception {
+				   
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+        // TODO: Generate final result data here, which are based on the core processing
+        //       results passed in as processingResult table(s). Final results are made 
+        //       available via return value and become the final result table(s) of the 
+        //       KNIME node.  
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		// Does not do anything by default - just returns the core result table(s) again
+		exec.setProgress(1.0d);
+		return processingResult;
+	}	  
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void cleanupIntermediateResults() {
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+        // TODO: Reset any intermediate result here. Be careful to check for null before accessing
+        //       methods of an intermediate result object. It may have never been instantiated, if
+        //       the user pressed cancel before.
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+	}	 	
+
+    /**
+     * {@inheritDoc}
+     * This implementation splits the input table in two. The second result table contains all rows 
+     * with missing cells and molecules with 0 atoms. The first result table contains all other rows.
+     * 
+     * @return 0 to keep the "good" row in first table, or 1 for the rest.
+     */
+    @Override
+    public int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo,
+        int iUniqueWaveId) throws InputDataInfo.EmptyCellException {
+
+    	///////////////////////////////////////////////////////////////////////////////////////////////////
+    	// TODO: Change the following condition to implement the splitter. The current one is splitting
+    	//       between missing cells and molecules with 0 atoms as well as the rest. 
+    	//       It is common to base decisions on intermediate pre-processing results, which would be 
+    	//       stored in a transient member variable of the model.
+    	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    	// The default output goes to the second table
+    	int iOutPort = 1;
+	    	
+    	// Check the input cell if the condition is fulfilled for the first table
+    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
+    	if (mol != null) {
+    		RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+	        if (temp.getNumAtoms() > 0) {
+	        	iOutPort = 0;
+	        }
+    	}
+ 
+    	return iOutPort;
+    }
+}

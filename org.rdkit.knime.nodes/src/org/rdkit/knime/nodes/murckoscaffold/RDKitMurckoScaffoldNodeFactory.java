@@ -6,7 +6,6 @@
  * Copyright (C) 2010
  * Novartis Institutes for BioMedical Research
  *
- *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
  *  published by the Free Software Foundation.
@@ -53,8 +52,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitMurckoScaffold" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
 public class RDKitMurckoScaffoldNodeFactory extends
         NodeFactory<RDKitMurckoScaffoldNodeModel> {
@@ -64,11 +65,17 @@ public class RDKitMurckoScaffoldNodeFactory extends
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitMurckoScaffoldNodeDialogPane();
+        return new RDKitMurckoScaffoldNodeDialog();
     }
 
     /**
+     * Creates a model for the RDKitMurckoScaffold functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitMurckoScaffoldNodeModel createNodeModel() {
@@ -76,7 +83,9 @@ public class RDKitMurckoScaffoldNodeFactory extends
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitMurckoScaffoldNodeModel> createNodeView(
@@ -86,7 +95,9 @@ public class RDKitMurckoScaffoldNodeFactory extends
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     protected int getNrNodeViews() {
@@ -94,7 +105,9 @@ public class RDKitMurckoScaffoldNodeFactory extends
     }
 
     /**
-     * {@inheritDoc}
+     * This node does possess a dialog for configuration.
+     * 
+	 * @return Always true.
      */
     @Override
     protected boolean hasDialog() {

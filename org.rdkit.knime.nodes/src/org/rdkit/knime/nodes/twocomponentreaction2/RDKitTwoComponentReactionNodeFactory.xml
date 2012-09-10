@@ -4,7 +4,7 @@
     <name>RDKit Two Component Reaction</name>
 
     <shortDescription>
-        Applies a reaction to two RDKit Mol columns
+        Applies a reaction to two RDKit Mol columns.
 	</shortDescription>
     <fullDescription>
         <intro>
@@ -15,8 +15,7 @@
                 Each row contains the product molecule, index information, and the reactant molecules that were used.
             </p>
             <p>The reaction can either be defined by a SMARTS pattern in the dialog or by providing a Rxn value at the
-                third
-                input port.</p>
+                third input port.</p>
         </intro>
 
         <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
@@ -31,7 +30,7 @@
         </option>
         <option name="Do Matrix Expansion">If checked, each reactant 1 will be combined with each reactant 2
             yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
-            sequentially, with the longer list determining the number of output rows.</option>
+            sequentially, with the shorter list determining the number of output rows.</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Reactant 1">Data with RDKit Mol column</inPort>

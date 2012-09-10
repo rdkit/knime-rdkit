@@ -53,30 +53,32 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitOneComponentReaction" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitOneComponentReactionNodeFactory extends
-        NodeFactory<RDKitOneComponentReactionNodeModel> {
+public class RDKitOneComponentReactionNodeFactory 
+        extends NodeFactory<RDKitOneComponentReactionNodeModel> {
 
     /**
+     * Creates a model for the RDKitOneComponentReaction functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitOneComponentReactionNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitOneComponentReactionNodeModel createNodeModel() {
         return new RDKitOneComponentReactionNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitOneComponentReactionNodeModel> createNodeView(
@@ -84,21 +86,33 @@ public class RDKitOneComponentReactionNodeFactory extends
             final RDKitOneComponentReactionNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitOneComponentReactionNodeDialog();
+    }
 }
+

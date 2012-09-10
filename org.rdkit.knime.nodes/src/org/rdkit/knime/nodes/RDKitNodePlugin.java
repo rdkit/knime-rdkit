@@ -61,20 +61,36 @@ import org.osgi.framework.BundleContext;
  */
 public class RDKitNodePlugin extends Plugin {
 
+	//
+	// Constants
+	//
+	
     /** Make sure that this *always* matches the ID in plugin.xml. */
     public static final String PLUGIN_ID = "org.knime.workshop.rdkit";
 
-    // The shared instance.
+    //
+    // Global Variables.
+    //
+    
+    /** The shared instance of the plugin. */
     private static RDKitNodePlugin plugin;
 
+    //
+    // Constructor
+    // 
+    
     /**
      * The constructor.
      */
     public RDKitNodePlugin() {
         super();
-        plugin = this;
+        setDefault(this);
     }
 
+    // 
+    // Public Methods
+    //
+    
     /**
      * This method is called upon plug-in activation.
      *
@@ -107,4 +123,14 @@ public class RDKitNodePlugin extends Plugin {
         return plugin;
     }
 
+	/**
+	  * Set the static plugin variable to the instance of the plugin.
+	  * 
+	  * @param defaultPlugin the plugin instance to be set as default.
+	  */
+    private static synchronized void 
+    	setDefault(final RDKitNodePlugin defaultPlugin) {
+    	plugin = defaultPlugin;
+    }
+    
 }

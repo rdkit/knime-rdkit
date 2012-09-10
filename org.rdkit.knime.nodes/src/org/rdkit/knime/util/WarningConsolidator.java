@@ -1,0 +1,554 @@
+/* 
+ * This source code, its documentation and all related files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright (C) 2012
+ * Novartis Institutes for BioMedical Research
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ */
+package org.rdkit.knime.util;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * This class gathers warnings from different situations and produces on request 
+ * a summary warning message taking into account how often a warning occurred
+ * and in what context it occurred. It is also capable of merging multiple
+ * warning consolidator objects together and generating one summary as well.
+ * A context can be a row, a batch, a list of images, etc. When warnings are saved,
+ * they can be assigned to such an context (specified only as contextId later on). 
+ * The warning consolidator then tracks how often a warning occurred within a context.
+ * 
+ * @author Manuel Schwarze
+ */
+public class WarningConsolidator {
+	
+	/**
+	 * A context consists of an id, a name (e.g. row) and a plural name (e.g. rows)
+	 * and is used to separate warnings and assign them to specific contexts, e.g.
+	 * rows and batches.
+	 * 
+	 * @author Manuel Schwarze
+	 */
+	public static class Context {
+		
+		// 
+		// Members
+		//
+		
+		/** A calculated hash code for this context. This is returned when calling {@link #hashCode()}. */
+		private int m_iHashCode;
+		
+		/** 
+		 * Determines, if context information shall also be included in the generated consolidation
+		 * of all context warnings, if there is only a single warning logged for this context.
+		 */
+		private boolean m_bShowAlsoIfJustSingle;
+		
+		/** A unique id of this context. */
+		private String m_id;
+		
+		/** A friendly name of the context, e.g. Row, Batch, Line, Result, etc. Used in summary. */
+		private String m_name;
+		
+		/** A friendly plural name of the context, e.g. Rows, Batches, Lines, Results, etc. Used in summary. */
+		private String m_pluralName;
+		
+		//
+		// Constructor
+		//
+		
+		/**
+		 * Creates a new context.
+		 * 
+		 * @param contextId Id of the context to be used later when referring to it. Must not be null.
+		 * @param contextName Name of the context. Must not be null.
+		 * @param contextNamePlural Plural name of the context. Must not be null.
+		 * @param bShowAlsoIfJustSingle Set to false, if the summary should not mention the context, if there is only one total context.
+		 */
+		public Context(String contextId, String contextName, String contextNamePlural, 
+				boolean bShowAlsoIfJustSingle) {
+			if (contextId == null || contextName == null || contextNamePlural == null) {
+				throw new IllegalArgumentException("Context parameters must not be null.");
+			}
+			
+			m_id = contextId;
+			m_name = contextName;
+			m_pluralName = contextNamePlural;
+			m_bShowAlsoIfJustSingle = bShowAlsoIfJustSingle;
+			
+			m_iHashCode = (m_id + m_name + m_pluralName).hashCode();
+		}
+		
+		//
+		// Public Methods
+		//
+		
+		/**
+		 * Returns the context id.
+		 * 
+		 * @return Context id.
+		 */
+		public String getId() {
+			return m_id;
+		}
+		
+		/**
+		 * Returns the context name.
+		 * 
+		 * @return Context name.
+		 */
+		public String getName() {
+			return m_name;
+		}
+		
+		/**
+		 * Returns the context plural name.
+		 * 
+		 * @return Context plural name.
+		 */
+		public String getPluralName() {
+			return m_pluralName;
+		}	
+		
+		/**
+		 * Returns true, if the context summary should also be shown, if there is just a single
+		 * total context, e.g. one single batch.
+		 * 
+		 * @return True or false.
+		 */
+		public boolean isShownAlsoIfJustSingle() {
+			return m_bShowAlsoIfJustSingle;
+		}
+		
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public int hashCode() {
+			return m_iHashCode;
+		}
+		
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public boolean equals(Object o) {
+			boolean bRet = false;
+			
+			if (o instanceof Context) {
+				bRet = (m_iHashCode == ((Context)o).m_iHashCode);
+			}
+			
+			return bRet;
+		}
+	}
+
+	// 
+	// Constants
+	//
+	
+	/** Pre-defined context for rows. */
+	private static final Context NO_CONTEXT = new Context("noContext", "", "", true);
+	
+	/** Pre-defined context for rows. */
+	public static final Context ROW_CONTEXT = new Context("row", "row", "rows", true);
+	
+	/** Pre-defined context for batches. */
+	public static final Context BATCH_CONTEXT = new Context("batch", "batch", "batches", false);
+
+	/** Prefix of a search string to be used for matching full strings only. */
+	private static final String SEARCH_POLICY_FULL = "FULL:";
+	
+	/** Prefix of a search string to be used to treat it as regular expression. */
+	private static final String SEARCH_POLICY_REGEX = "REGEX:";
+	
+	/** Prefix of a search string to be used for matching also sub strings. */
+	private static final String SEARCH_POLICY_SUBSTRING = "SUB:";
+	
+	
+	//
+	// Members
+	//
+	
+	/**
+	 * List of all registered context, mapped from Context ID to Context object.
+	 */
+	private transient Map<String, Context> m_mapContexts;
+	
+	/**
+	 * Stores warnings and how often they occurred in a certain context. 
+	 */
+	private transient Map<String, Map<String, Integer>> m_hWarningOccurrences;
+	
+	//
+	// Constructors
+	//
+	
+	/**
+	 * Creates a new warning consolidator without any specified contexts.
+	 */
+	public WarningConsolidator() {
+		this(new Context[0]);
+	}
+	
+	/**
+	 * Creates a new warning consolidator with the specified contexts.
+	 * 
+	 * @param contexts Arbitrary list of contexts that will be used for registering
+	 * 		warnings in the future.
+	 */
+	public WarningConsolidator(Context... contexts) {
+		m_mapContexts = new HashMap<String, Context>();
+		m_hWarningOccurrences = new HashMap<String, Map<String, Integer>>();
+		
+		for (Context context : contexts) {
+			registerContext(context);
+		}
+		
+		registerContext(NO_CONTEXT);
+	}
+	
+	/**
+	 * Creates a new warning consolidator based on existing warning consolidators.
+	 * All warnings and contexts will be merged together into the new one.
+	 * Later added warnings in the passed in warning consolidators will not be
+	 * considered anymore.
+	 * 
+	 * @param consolidators Arbitrary list of warning consolidators.
+	 */
+	public WarningConsolidator(WarningConsolidator... consolidators) {
+		super();
+		
+		for (WarningConsolidator wc : consolidators) {
+			for (Context context : wc.getContexts()) {
+				registerContext(context);
+			}
+			for (String contextId : wc.m_hWarningOccurrences.keySet()) {
+				Map<String, Integer> mapContextWarnings = m_hWarningOccurrences.get(contextId);
+				merge(contextId, mapContextWarnings);
+			}
+		}
+	}
+	
+	// 
+	// Public Methods
+	//
+	
+	/**
+	 * Registers the specified context. A context can be a row, a batch, an list of images, etc.
+	 * When warnings are saved later they can be assigned to such an context (specified only
+	 * as contextId later on). The warning consolidator then tracks how often a warning
+	 * occurred within a context. If a context with the same contextId was already registered,
+	 * it will override it.
+	 * 
+	 * @param context Context of future warnings.
+	 */
+	public void registerContext(Context context) {
+		if (context != null) {
+			m_mapContexts.put(context.getId(), context);
+		}
+	}
+	
+	/**
+	 * Returns all registered contexts.
+	 * 
+	 * @return Array of contexts. Never null, but maybe empty.
+	 */
+	public Context[] getContexts() {
+		return m_mapContexts.values().toArray(new Context[m_mapContexts.size()]);
+	}
+	
+	/**
+	 * Determines the registered context for the specified contextId.
+	 * 
+	 * @param contextId 	Context Id of interest.
+	 * 
+	 * @return Context or null, if not registered.
+	 */
+	public Context getContext(String contextId) {
+		return m_mapContexts.get(contextId);
+	}
+	
+	/**
+	 * Deletes all warning messages.
+	 */
+	public void clear() {
+		m_hWarningOccurrences.clear();
+	}
+	
+	/**
+	 * Saves a warning message for later summarizing all of them into a single warning message.
+	 * This warning will be stored without a context and will not track occurrences.
+	 * 
+	 * @param warning Warning message to save. Can be null to do nothing.
+	 */
+	public synchronized void saveWarning(final String warning) {
+		saveWarning(null, warning, 1);
+	}
+	
+	/**
+	 * Saves a warning message for later summarizing all of them into a single warning message.
+	 * It will remember how often a certain warning message occurred.
+	 * 
+	 * @param contextId Context of the warning. Can be null, if warning does not belong to any context.
+	 * @param warning Warning message to save. Can be null to do nothing.
+	 */
+	public synchronized void saveWarning(final String contextId, final String warning) {
+		saveWarning(contextId, warning, 1);
+	}
+	
+	/**
+	 * Saves all warning messages from the passed in consolidator. Also, takes over
+	 * all contexts of the passed in consolidator as well.
+	 * 
+	 * @param consolidator Warning consolidator. Can be null to do nothing.
+	 */
+	public synchronized void saveWarnings(WarningConsolidator anotherConsolidator) {
+		if (anotherConsolidator != null && anotherConsolidator != this) {
+			for (Context context : anotherConsolidator.getContexts()) {
+				registerContext(context);
+			}
+			for (String contextId : anotherConsolidator.m_hWarningOccurrences.keySet()) {
+				Map<String, Integer> mapContextWarnings = m_hWarningOccurrences.get(contextId);
+				merge(contextId, mapContextWarnings);
+			}
+		}
+	}
+	
+	/**
+	 * Generates a string that contains all warning messages that occurred
+	 * during the factoring process.
+	 * 
+	 * @param mapContextOccurrences Maps context ids to number of occurrences (e.g. number of rows). Can be null.
+	 * 
+	 * @return Warnings or null, if no warnings occurred.
+	 */
+	public String getWarnings(Map<String, Integer> mapContextOccurrences) {
+		return getWarnings(mapContextOccurrences, null, null);
+	}
+	
+	/**
+	 * Generates a string that contains warning messages that occurred
+	 * during the factoring process, but gives additionally the option to suppress
+	 * certain warnings, if they are matching search criteria specified in the second and third
+	 * parameter. 
+	 * 
+	 * @param mapContextOccurrences Maps context ids to number of occurrences (e.g. number of rows). Can be null.
+	 * @param listSuppressWarnings List of search strings. Every warning will be checked before consolidation,
+	 * 		if it contains a search string that is part of the list. Can be null.
+	 * 		Every search string in the list can start
+	 * 		with either "FULL:" (default when nothing is specified), "REGEX:" or "SUB:", 
+	 * 		which influences the search and matching behavior.
+	 * 		If "FULL:" (or nothing) is used the search string must match the entire warning string. If "REGEX:" is
+	 * 		used Search strings will be interpreted as regular expression and succeeds if the result is not empty.
+	 * 		If "SUB:" is used the search string is interpreted as substring.
+	 * @param listSuppressContexts List of context ids to be suppressed. Can be null. Only warnings that don't belong to the specified
+	 * 		context will be returned. To address warnings without a context use {@link #NO_CONTEXT}.getId().
+	 * 
+	 * @return Warnings or null, if no (non-suppressed) warnings occurred.
+	 */
+	public String getWarnings(Map<String, Integer> mapContextOccurrences, List<String> listSuppressWarnings,
+			List<String> listSuppressContexts) {
+		final StringBuilder sbSummary = new StringBuilder();
+		final StringBuilder sbWarnings = new StringBuilder();
+		final StringBuilder sbContextStats = new StringBuilder();
+
+		// Sort contexts by id
+		List<String> listContextIds = StringUtils.sort(m_hWarningOccurrences.keySet());
+		
+		// Put warnings without any context first
+		if (listContextIds.remove(NO_CONTEXT.getId())) {
+			listContextIds.add(0, NO_CONTEXT.getId());
+		}
+		
+		// Consolidate
+		for (String contextId : listContextIds) {
+			sbWarnings.setLength(0); // Reset
+			
+			Context context = m_mapContexts.get(contextId);
+			Map<String, Integer> m_hWarningOccurrencesInContext = m_hWarningOccurrences.get(contextId);
+			
+			// Determine, if we want to suppress the warning based on a passed in context id
+			if (m_hWarningOccurrencesInContext != null && 
+				(listSuppressContexts == null || !listSuppressContexts.contains(contextId))) {
+				
+				// Process all warnings of the context
+				for (String warning : m_hWarningOccurrencesInContext.keySet()) {
+					
+					// Determine, if we want to suppress the warning based on a passed in search criteria
+					if (shouldWarningBeIncluded(warning, listSuppressWarnings)) {
+						if (sbWarnings.length() > 0) {
+							sbWarnings.append("\n");
+						}
+						
+						// Find out how many times a warning occurred within a context
+						int processed = -1; // Default is unknown
+						final int occurred = m_hWarningOccurrencesInContext.get(warning);
+			
+						if (mapContextOccurrences != null) {
+							Integer intProcessed = mapContextOccurrences.get(contextId);
+							if (intProcessed != null) {
+								processed = intProcessed.intValue();
+							}
+						}
+						
+						sbWarnings.append(warning);
+	
+						// Append context occurrence statistics
+						if (!NO_CONTEXT.getId().equals(context.getId()) && 
+								(context.isShownAlsoIfJustSingle() || processed == -1 || processed > 1)) {
+							sbContextStats.setLength(0);
+							
+							if (processed == occurred) {
+								sbContextStats.append("All " + context.getPluralName());
+							}
+							else if (processed > occurred){
+								sbContextStats.append(occurred).append(" of ").append(processed).append(" ").
+									append(processed == 1 ? context.getName() : context.getPluralName());
+							}
+							else {
+								sbContextStats.append(occurred).append(" times");
+							}
+							
+							sbWarnings.append(" [").append(sbContextStats.toString()).append("]");
+						}
+					}
+				}
+				
+				if (sbSummary.length() > 0 && sbWarnings.length() > 0) {
+					sbSummary.append("\n");
+				}
+				
+				sbSummary.append(sbWarnings.toString());
+			}
+		}
+		
+		return (sbSummary.length() > 0 ? sbSummary.toString() : null);
+	}	
+	
+	/**
+	 * Determines for the specific warning, if it should be included in the warning
+	 * consolidation, or if it should be suppressed based on the second parameter.
+	 * 
+	 * @param warning Warning to check. Must not be null.
+	 * @param listSuppressWarnings List of search strings. The warning will be checked,
+	 * 		if it contains a search string that is part of the list. Can be null. 
+	 * 		Every search string in the list can start
+	 * 		with either "FULL:" (default when nothing is specified), "REGEX:" or "SUB:", 
+	 * 		which influences the search and matching behavior.
+	 * 		If "FULL:" (or nothing) is used the search string must match the entire warning string. If "REGEX:" is
+	 * 		used Search strings will be interpreted as regular expression and succeeds if the result is not empty.
+	 * 		If "SUB:" is used the search string is interpreted as substring.
+	 * 
+	 * @return True, if warning shall be included. False, if it should be suppressed.
+	 */
+	protected boolean shouldWarningBeIncluded(String warning, List<String> listSuppressWarnings) {
+		// Pre-check
+		if (warning == null) {
+			throw new IllegalArgumentException("Warning must not be null.");
+		}
+		
+		boolean bInclude = true;
+		
+		if (listSuppressWarnings != null) {
+			for (String criteria : listSuppressWarnings) {
+				if (criteria.startsWith(SEARCH_POLICY_REGEX)) {
+					if (warning.matches(criteria.substring(SEARCH_POLICY_REGEX.length()))) {
+						bInclude = false;
+						break;
+					}
+				}
+				else if (criteria.startsWith(SEARCH_POLICY_SUBSTRING)) {
+					if (warning.indexOf(criteria.substring(SEARCH_POLICY_SUBSTRING.length())) != -1) {
+						bInclude = false;
+						break;
+					}
+				}
+				else if (criteria.startsWith(SEARCH_POLICY_FULL)) {
+					if (warning.equals(criteria.substring(SEARCH_POLICY_FULL.length()))) {
+						bInclude = false;
+						break;
+					}
+				}
+				else {
+					if (warning.equals(criteria)) {
+						bInclude = false;
+						break;
+					}
+				}
+			}
+		}
+		
+		return bInclude;
+	}
+	
+	//
+	// Private Methods
+	//
+	
+	/**
+	 * Saves a warning message for later summarizing all of them into a single warning message.
+	 * It will consider the specified number of occurrences.
+	 * 
+	 * @param contextId Context of the warning. Can be null, if warning does not be belong to any context.
+	 * @param warning Warning message to save. Can be null to do nothing.
+	 * @param occurrences Number of occurrences.
+	 */
+	private synchronized void saveWarning(final String contextId, final String warning, int occurrences) {
+		if (warning != null) {
+			Context context = NO_CONTEXT;
+			
+			if (contextId != null) {
+				context = getContext(contextId);
+			}
+			
+			// Register context, if not found
+			if (context == null) {
+				context = new Context(contextId, contextId, contextId + "s", true);
+				registerContext(context);
+			}
+			
+			// Find warning map for context, create if not found
+			Map<String, Integer> mapContextWarnings = m_hWarningOccurrences.get(context.getId());
+			if (mapContextWarnings == null) {
+				mapContextWarnings = new HashMap<String, Integer>();
+				m_hWarningOccurrences.put(context.getId(), mapContextWarnings);
+			}
+			
+			// Find warning and increase occurrence, create if not found
+			final Integer occurred = mapContextWarnings.get(warning);
+			int occurredNew = occurrences;
+			
+			if (occurred != null) {
+				occurredNew = occurred.intValue() + occurrences;
+			}
+			
+			mapContextWarnings.put(warning, occurredNew);
+		}
+	}	
+	
+	/**
+	 * Merges the specified warnings and their occurrences into this Warning Consolidator object.
+	 * 
+	 * @param contextId Context ID of warnings. Can be null to use the NO_CONTEXT.
+	 * @param mapContextWarnings Warnings and their occurrences. Can be null.
+	 */
+	private void merge(String contextId, Map<String, Integer> mapContextWarnings) {
+		if (mapContextWarnings != null) {
+			if (contextId == null) {
+				contextId = NO_CONTEXT.getId();
+			}
+			for (String warning : mapContextWarnings.keySet()) {
+				saveWarning(warning, contextId, mapContextWarnings.get(warning));
+			}
+		}
+	}
+}

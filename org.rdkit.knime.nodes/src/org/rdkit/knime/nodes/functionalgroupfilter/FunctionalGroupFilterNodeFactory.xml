@@ -1,24 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./default.png" type="Manipulator">
-    <name>RDKit functional group filter</name>
+    <name>RDKit Functional Group Filter</name>
     
     <shortDescription>
-        Node for filtering set of molecules using functional groups.
+        Node for filtering set of molecules containing functional groups specified by the user.
     </shortDescription>
     
     <fullDescription>
-        <intro>This node can be used for filtering sets of molecules based on named substructures (functional groups).</intro>
+        <intro>
+        	This node can be used for filtering sets of molecules based on named substructures (functional groups based on SMARTS).
+        </intro>
         
-        <option name="Column name:">It specifies which column contains the set of RDKit molecules.</option>
-        <option name="File path:">File containing functional group definitions. This input is optional. If not specified, then the default functional group definitions is used.</option>
-       <option name="Filters:">List of available functional group filters. Select the ones that needs to be applied. The qualifier and the count of functional group pattern also need to be specified.</option>
+        <option name="RDKit Mol column">It specifies which column contains the set of RDKit molecules.</option>
+        <option name="Functional group definition file">
+        	File containing functional group definitions. This input is optional. Alternatively you may
+        	press "Load Defaults" to use default functional group definitions. Pressing the info button
+        	on the very right shows the content of the currently selected definitions incl. all SMARTS
+        	that describe the functional groups.
+        </option>
+        <option name="List of functional group filters">Defines the conditions for filtering molecules.
+        	Select the ones that needs to be applied on the molecules. 
+        	If no filter pattern is selected, molecules are sent to the matching output table.
+        </option>
+        <option name="Recording of first non-matching pattern in new column">
+        	If checked, an additional column (the name can be specified) containing the first 
+        	non-matching pattern is added to the table of failing molecules.
+        </option>
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Input Molecules">Table containing a set of RDkit molecules.</inPort>
+        <inPort index="0" name="RDKit Molecules">Table containing a set of RDKit molecules.</inPort>
         <outPort index="0" name="Molecules passing the filter">Table containing molecules that pass the filter.</outPort>
-        <outPort index="1" name="Molecules failing the filter">Table containing molecules that does not pass the filter.</outPort>
+        <outPort index="1" name="Molecules failing the filter">Table containing molecules that do not pass the filter.</outPort>
     </ports>    
     
 </knimeNode>

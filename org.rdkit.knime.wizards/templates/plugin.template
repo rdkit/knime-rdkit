@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   	<!-- This is an example for providing an own category in the RDKit nodes category
+	<extension
+	  	point="org.knime.workbench.repository.categories">
+	  	<category
+	        description="My RDKit Nodes" 
+	        icon="icons/rdkit_small.png"
+	        level-id="myRDKitNodes"
+	        name="My RDKit Nodes"
+			path="/community/rdkit">
+	  	</category>
+	</extension>   
+   	-->
+   
+	<extension point="org.knime.workbench.repository.nodes">
+      	<node category-path="/community/rdkit"
+            factory-class="__BASE_PACKAGE__.__NODE_NAME__NodeFactory"
+            id="__BASE_PACKAGE__.__NODE_NAME__NodeFactory"/>
+   	</extension>
+   
+</plugin>

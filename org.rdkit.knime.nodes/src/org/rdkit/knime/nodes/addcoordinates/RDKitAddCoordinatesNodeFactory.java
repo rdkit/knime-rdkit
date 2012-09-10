@@ -3,9 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
- *
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -53,30 +52,32 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeFactory</code> for the RDKit based "RDKitAddCoordinates" Node.
  *
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitAddCoordinatesNodeFactory
+public class RDKitAddCoordinatesNodeFactory 
         extends NodeFactory<RDKitAddCoordinatesNodeModel> {
 
     /**
+     * Creates a model for the RDKitAddCoordinates functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitAddCoordinatesNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitAddCoordinatesNodeModel createNodeModel() {
         return new RDKitAddCoordinatesNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitAddCoordinatesNodeModel> createNodeView(
@@ -84,21 +85,33 @@ public class RDKitAddCoordinatesNodeFactory
             final RDKitAddCoordinatesNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitAddCoordinatesNodeDialog();
+    }
 }
+

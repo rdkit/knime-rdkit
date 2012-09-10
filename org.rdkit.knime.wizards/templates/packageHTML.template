@@ -1,0 +1,28 @@
+<!--
+/* 
+ * This source code, its documentation and all related files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright (C)__CURRENT_YEAR__
+ * Novartis Institutes for BioMedical Research
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ */
+-->
+<body>
+This package implements functionality based on the RDKit library. 
+(insert package description here)
+<p>
+The <code>__NODE_NAME__Model</code> ... 
+(short comments on the classes)
+<p>
+The <code>__NODE_NAME__Dialog</code> ... 
+(short comments on the classes)
+<p>
+More comments ...
+<br>
+</body>

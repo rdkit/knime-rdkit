@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./fingerprint_reader.png" type="Source">
+    <name>RDKit Fingerprint Reader</name>
+    
+    <shortDescription>
+        Node to read fingerprints from a FPS file into an output table.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	This node reads an FPS file with its fingerprint records into a KNIME table. 
+        	The format of the .fps file is mentioned here: http://code.google.com/p/chem-fingerprints/wiki/FPS
+        </intro>
+        
+        <option name="Input FPS file">The location of the FPS file containing fingerprint records.</option>
+        <option name="Use IDs from file as row IDs (Requires unique IDs!)">
+        	Flag to determine, if IDs read from a fingerprint record of the file shall be used as row IDs. 
+        	This will fail, if the FPS file does not contain unique fingerprint IDs. </option>
+    </fullDescription>
+    
+    <ports>
+        <outPort index="0" name="Fingerprint table">Table containing fingerprints.</outPort>
+    </ports>    
+</knimeNode>

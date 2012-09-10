@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="org.rdkit.knime.nodes.testing" default="unzipAllTests">
+	<scriptdef name="splitpath" language="javascript">
+		<attribute name="path" />
+		<attribute name="propertyPath" />
+		<attribute name="propertyFile" />
+		<![CDATA[
+	       var path = attributes.get("path");
+		   var index1 = path.lastIndexOf("/");
+		   var index2 = path.lastIndexOf("\\");
+		   var partPath = path; 
+		   var partFile = path; 
+		   if (index1 >= 0 || index2 >= 0) {
+				if (index1 >= 0) {
+					partPath = path.substring(0, index1);
+					partFile = path.substring(index1 + 1);
+				}
+				else {
+					partPath = path.substring(0, index2);
+					partFile = path.substring(index2 + 1);
+				}
+		   }
+		   var propPath = attributes.get("propertypath");
+		   var propFile = attributes.get("propertyfile");
+		   if (propPath != null && propPath != "") {
+	       	  project.setProperty(propPath, partPath);
+		   }
+		   if (propFile != null && propFile != "") {
+	       	  project.setProperty(propFile, partFile);
+		   }
+	     ]]>
+	</scriptdef>
+	
+	<scriptdef name="splitnamewithextension" language="javascript">
+		<attribute name="file" />
+		<attribute name="propertyname" />
+		<attribute name="propertyextension" />
+		<![CDATA[
+	       var file = attributes.get("file");
+		   var index = file.lastIndexOf(".");
+		   var partName = file; 
+		   var partExt = ""; 
+		   if (index >= 0) {
+				partName = file.substring(0, index);
+				partExt = file.substring(index + 1);
+		   }
+		   var propName = attributes.get("propertyname");
+		   var propExt = attributes.get("propertyextension");
+		   if (propName != null && propName != "") {
+	       	  project.setProperty(propName, partName);
+		   }
+		   if (propExt != null && propExt != "") {
+	       	  project.setProperty(propExt, partExt);
+		   }
+	     ]]>
+	</scriptdef>	
+
+	<!-- =================================================================== -->
+	<!-- Define properties + directories                                     -->
+	<!-- =================================================================== -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="lib/ant-contrib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<!-- =================================================================== -->
+	<!-- Outputs the Environment information									-->
+	<!-- =================================================================== -->
+	<target name="envinfo">
+		<echo message="OS detected: ${os.name}" />
+		<echo message="Java VM detected: ${java.version} Java HOME: ${java.home}" />
+
+		<!-- Check OS -->
+		<condition property="Windows">
+			<os family="Windows" />
+		</condition>
+		<condition property="Solaris">
+			<os name="SunOS" />
+		</condition>
+		<condition property="AIX">
+			<os name="AIX" />
+		</condition>
+		<condition property="Linux">
+			<os name="Linux" />
+		</condition>
+	</target>
+
+	<target name="init" depends="envinfo, clean">
+		<mkdir dir="regression-tests/workspace" />
+		<mkdir dir="regression-tests/executed-workflows" />
+		<mkdir dir="regression-tests/test-results" />
+	</target>
+
+	<target name="clean" depends="envinfo">
+		<delete dir="regression-tests/workspace" />
+		<delete dir="regression-tests/executed-workflows" />
+	</target>
+
+	<target name="unzipAllTests" depends="envinfo, clean, init">
+		<foreach target="unzipTests" param="testZip" inheritall="true" parallel="true" trim="true">
+			<path>
+				<fileset dir="regression-tests/zips">
+					<include name="**/*.zip" />
+				</fileset>
+			</path>
+		</foreach>
+	</target>
+
+	<target name="unzipTests" if="testZip">
+	    <echo message="Unpacking Tests from '${testZip}'" /> 
+		<splitpath path="${testZip}" propertypath="fullZipPath" propertyfile="zipName" />
+		<splitpath path="${fullZipPath}" propertypath="" propertyfile="testsDirName" />
+		<splitnamewithextension file="${zipName}" propertyname="testName" propertyextension="" />
+		<unzip src="${testZip}" dest="regression-tests/workspace"/>
+	    <echo message="Cleaning up old unnecessary .svn files from entire workspace" /> 
+		<delete includeemptydirs="true">
+			<fileset dir="regression-tests/workspace" 
+				defaultexcludes="false" includes="**\*.svn\" />
+		</delete>
+	</target>	
+</project>

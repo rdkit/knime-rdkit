@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="__NODE_TYPE__">
+    <name>__NODE_MENU_NAME__</name>
+    
+    <shortDescription>
+        __DESCRIPTION__
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>__DESCRIPTION__
+        
+        Insert long description here...
+        
+        </intro>
+        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with RDKit Molecules">Description of first input port...</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Result table">Description of first output port...</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+</knimeNode>

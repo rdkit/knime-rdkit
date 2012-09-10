@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="org.rdkit.knime.nodes.testing" default="init">
+	<!-- =================================================================== -->
+	<!-- Outputs the Environment information									-->
+	<!-- =================================================================== -->
+	<target name="envinfo">
+		<echo message="OS detected: ${os.name}" />
+		<echo message="Java VM detected: ${java.version} Java HOME: ${java.home}" />
+
+		<!-- Check OS -->
+		<condition property="Windows">
+			<os family="Windows" />
+		</condition>
+		<condition property="Solaris">
+			<os name="SunOS" />
+		</condition>
+		<condition property="AIX">
+			<os name="AIX" />
+		</condition>
+		<condition property="Linux">
+			<os name="Linux" />
+		</condition>
+	</target>
+
+	<target name="init" depends="envinfo, clean">
+		<mkdir dir="junit-tests/test-results" />
+		<mkdir dir="junit-tests/workspace" />
+	</target>
+
+	<target name="clean" depends="envinfo">
+		<delete dir="junit-tests/test-results" />
+		<delete dir="junit-tests/workspace" />
+	</target>	
+</project>

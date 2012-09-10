@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,22 +53,30 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitMolFragmenter" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitMolFragmenterNodeFactory
-        extends NodeFactory<RDKitMolFragmenterNodeModel> {
+public class RDKitMolFragmenterNodeFactory extends
+        NodeFactory<RDKitMolFragmenterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitMolFragmenterNodeDialogPane();
+        return new RDKitMolFragmenterNodeDialog();
     }
 
     /**
+     * Creates a model for the RDKitMolFragmenter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitMolFragmenterNodeModel createNodeModel() {
@@ -76,7 +84,9 @@ public class RDKitMolFragmenterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitMolFragmenterNodeModel> createNodeView(
@@ -86,7 +96,9 @@ public class RDKitMolFragmenterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     protected int getNrNodeViews() {
@@ -94,11 +106,12 @@ public class RDKitMolFragmenterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does possess a dialog for configuration.
+     * 
+	 * @return Always true.
      */
     @Override
     protected boolean hasDialog() {
         return true;
     }
-
 }

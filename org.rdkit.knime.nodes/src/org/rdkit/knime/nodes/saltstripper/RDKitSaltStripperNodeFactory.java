@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,24 +53,44 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This NodeFactory for the "RDKitSaltStripper" Node is used to get the node components registered.
- * It creates the node views and node dialog components. 
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitSaltStripper" Node.
+ * 
  * @author Dillip K Mohanty
+ * @author Manuel Schwarze
  */
 public class RDKitSaltStripperNodeFactory 
         extends NodeFactory<RDKitSaltStripperNodeModel> {
 
     /**
+     * Creates a model for the RDKitSaltStripper functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitSaltStripperNodeModel createNodeModel() {
         return new RDKitSaltStripperNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<RDKitSaltStripperNodeModel> createNodeView(
+            final int viewIndex,
+            final RDKitSaltStripperNodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     public int getNrNodeViews() {
@@ -78,16 +98,9 @@ public class RDKitSaltStripperNodeFactory
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<RDKitSaltStripperNodeModel> createNodeView(final int viewIndex,
-            final RDKitSaltStripperNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
     public boolean hasDialog() {
@@ -101,6 +114,5 @@ public class RDKitSaltStripperNodeFactory
     public NodeDialogPane createNodeDialogPane() {
         return new RDKitSaltStripperNodeDialog();
     }
-
 }
 

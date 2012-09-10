@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,11 +48,7 @@
  */
 package org.rdkit.knime.nodes.rgroups;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.RDKit.Atom;
 import org.RDKit.RDKFuncs;
@@ -64,68 +60,79 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SafeGuardedResource;
+import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.WarningConsolidator;
 
 /**
- *
+ * This class implements the node model of the RDKitRGroups node
+ * providing calculations based on the open source RDKit library.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze 
  */
-public class RDKitRGroupsNodeModel extends NodeModel {
+public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 
-    private final SettingsModelString m_first =
-            RDKitRGroupsNodeDialogPane.createFirstColumnModel();
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RDKitRGroupsNodeModel.class);
+	
+	/** Input data info index for Mol value. */
+	protected static final int INPUT_COLUMN_MOL = 0;
+	
+	//
+	// Members
+	//
+	
+	/** Settings model for the column name of the input column. */
+    private final SettingsModelString m_modelInputColumnName =
+            registerSettings(RDKitRGroupsNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
 
-    private final SettingsModelString m_smarts =
-            RDKitRGroupsNodeDialogPane.createSmartsModel();
+    /** Settings model for the core smarts to be used for the R-Group Decomposition. */
+    private final SettingsModelString m_modelCoreSmarts =
+    		registerSettings(RDKitRGroupsNodeDialog.createSmartsModel());
 
-    //private final SettingsModelBoolean m_removeSourceCols =
-    //    RDKitRGroupsNodeDialogPane.createBooleanModel();
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RDKitRGroupsNodeModel.class);
-
+    /** Settings model for the option to remove empty Rx columns. */
+    private final SettingsModelBoolean m_modelRemoveEmptyColumns =
+    		registerSettings(RDKitRGroupsNodeDialog.createRemoveEmptyColumnsModel(), true);
+    
+    //
+    // Intermediate Results
+    //
+    
+    private AtomicInteger[] m_aiFilledCellCounter = null;
+    
+    //
+    // Constructor
+    //
+    
     /**
-     * Create new node model with one data in- and one outport.
+     * Create new node model with one data in- and one out-port.
      */
     RDKitRGroupsNodeModel() {
         super(1, 1);
     }
 
-    private DataTableSpec[] createOutSpecs(final DataTableSpec[] inSpecs,ROMol core) {
-	    Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
-	    cSpec.clear();
-	    for(int i=0;i<inSpecs[0].getNumColumns();i++){
-	    	cSpec.add(inSpecs[0].getColumnSpec(i));
-	    }
-	
-	    for(int i=0;i<core.getNumAtoms();i++){
-			String label="R"+(i+1);
-			DataColumnSpecCreator appendSpec =
-				new DataColumnSpecCreator(label, RDKitMolCellFactory.TYPE);
-			cSpec.add(appendSpec.createSpec());
-		}
-	    DataTableSpec mSpec =
-	        new DataTableSpec("output 1",
-	                cSpec.toArray(new DataColumnSpec[cSpec.size()]));
-	
-	    return new DataTableSpec[]{mSpec};
-    }
+    //
+    // Protected Methods
+    //
     
     /**
      * {@inheritDoc}
@@ -133,217 +140,285 @@ public class RDKitRGroupsNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check whether native RDKit library has been loaded successfully
-        RDKitTypesPluginActivator.checkErrorState();
+    	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+    	
+        // Auto guess the input column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
+        		"Auto guessing: Using column %COLUMN_NAME%.", 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
 
-        if (null == m_first.getStringValue()) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(RDKitMolValue.class)) {
-                    compatibleCols.add(c.getName());
-                }
-            }
-            if (compatibleCols.size() == 1) {
-                // auto-configure
-                m_first.setStringValue(compatibleCols.get(0));
-            } else if (compatibleCols.size() > 1) {
-                // auto-guessing
-                m_first.setStringValue(compatibleCols.get(0));
-                setWarningMessage("Auto guessing: using column \""
-                        + compatibleCols.get(0) + "\".");
-            } else {
-                throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use \"Molecule to RDKit\" "
-                        + "node for Smiles or SDF.");
-            }
-        }
-        if (m_smarts.getStringValue().isEmpty()) {
-            throw new InvalidSettingsException("Please provide a core "
-                    + "SMARTS.");
-        }
-        ROMol core;
-        core = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
-        if (core == null)
-            throw new InvalidSettingsException("unparseable core smarts: "
-                    + m_smarts.getStringValue());
-        // further input spec check
-        findColumnIndices(inSpecs[0]);
+        // Determines, if the input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
-        return createOutSpecs(inSpecs,core);
+        // Check core SMARTS
+        if (m_modelCoreSmarts.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Please provide a core SMARTS.");
+        }
+        
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // Generate output specs
+        return m_modelRemoveEmptyColumns.getBooleanValue() ? null : getOutputTableSpecs(inSpecs);
     }
-
-    private int[] findColumnIndices(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        String first = m_first.getStringValue();
-        if (first == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int firstIndex = spec.findColumnIndex(first);
-        if (firstIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + first);
-        }
-        DataType firstType = spec.getColumnSpec(firstIndex).getType();
-        if (!firstType.isCompatible(RDKitMolValue.class)) {
-            throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain SMILES");
-        }
-        return new int[]{firstIndex};
-    }
-
 
     /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
-        final int[] indices = findColumnIndices(inSpec);
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+    	InputDataInfo[] arrDataInfo = null;
+    	
+    	// Specify input of table 1
+    	if (inPort == 0) {
+    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
+    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
+    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+    				RDKitMolValue.class);
+    	}
+    	
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+    }
+    
+    /**
+     * Returns the output table specification of the specified out port. 
+     * 
+     * @param outPort Index of output port in focus. Zero-based.
+     * @param inSpecs All input table specifications.
+     * 
+     * @return The specification of all output tables.
+     * 
+     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with 
+     * 		given DataTableSpec elements.
+     */
+    protected DataTableSpec getOutputTableSpec(final int outPort, 
+    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    	DataTableSpec spec = null;
+    	
+    	switch (outPort) {
+    		case 0:
+    			spec = new DataTableSpec("RGroups", inSpecs[0], 
+    					new DataTableSpec(createOutputFactory(null).getColumnSpecs()));
+    			break;
+    	}
+    			
+    	return spec;
+    }
+ 
+    /**
+     * Generates the output factory that calculates the R Group Decomposition.
+     * 
+     * @return Factory instance.
+     */
+	protected AbstractRDKitCellFactory createOutputFactory(final InputDataInfo[] arrInputDataInfo)
+		throws InvalidSettingsException {
+ 		// Generate column specs for the output table columns produced by this factory
+	    final String coreSmarts = m_modelCoreSmarts.getStringValue();
+	    
+	    // Note: The cleanup will be performed only at the end of entire execution
+        final SafeGuardedResource<ROMol> core = markForCleanup(new SafeGuardedResource<ROMol>(!coreSmarts.contains("$")) {
+        	protected ROMol createResource() {
+        		return markForCleanup(RWMol.MolFromSmarts(coreSmarts, 0, true));
+        	};
+        });
         
-        ROMol core;
-        core = RWMol.MolFromSmarts(m_smarts.getStringValue(),0,true);
-        if (core == null)
-            throw new InvalidSettingsException("unparseable core smarts: "
-                    + m_smarts.getStringValue());
+        ROMol coreCheck = core.get();
+        if (coreCheck == null)
+            throw new InvalidSettingsException("Unparseable core SMARTS: '"
+                    + coreSmarts + "'");
+	        	
+        // The number of atoms in the core SMARTS defines the number of output columns
+        final int iCoreAtomNumber = (int)coreCheck.getNumAtoms();
+        m_aiFilledCellCounter = new AtomicInteger[iCoreAtomNumber];
+        DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iCoreAtomNumber];
+	    for (int i = 0; i < arrOutputSpec.length; i++) {
+	    	m_aiFilledCellCounter[i] = new AtomicInteger();
+	    	arrOutputSpec[i] = new DataColumnSpecCreator("R" + (i + 1), 
+	    			RDKitMolCellFactory.TYPE).createSpec();
+		}
 
-        DataTableSpec[] outSpecs=createOutSpecs(new DataTableSpec[]{inSpec},core);        
-        
-        BufferedDataContainer outTable =
-            exec.createDataContainer(outSpecs[0]);
-        
-        final int rowCount = inData[0].getRowCount();
-        try {
-            int count=0;
-            RowIterator it = inData[0].iterator();
-            while (it.hasNext()) {
-                DataRow row = it.next();
-                DataCell[] cells = new DataCell[outTable.getTableSpec().getNumColumns()];
-                for(int i=0;i<row.getNumCells();i++){
-                	cells[i]=row.getCell(i);
-                }
-                int firstRGroup=row.getNumCells();
-                for(int i=0;i<core.getNumAtoms();i++){
-                	cells[firstRGroup+i]=DataType.getMissingCell();
-                }
+		// Generate factory 
+	    AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+       		getWarningConsolidator(), arrInputDataInfo, arrOutputSpec) {
+   			
+   			@Override
+   		    /**
+   		     * This method implements the calculation logic to generate the new cells based on 
+   		     * the input made available in the first (and second) parameter.
+   		     * {@inheritDoc}
+   		     */
+   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
+   		    	// Calculate the new cells
+                DataCell[] outputCells = createEmptyCells(iCoreAtomNumber);
+   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
                 
-                DataCell firstCell = row.getCell(indices[0]);
-                if (!firstCell.isMissing() && 
-                		firstCell.getType().isCompatible(RDKitMolValue.class)){
-                    ROMol mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-                    try {
-	                    ROMol chains = RDKFuncs.replaceCore(mol, core,true,true);
-	                    mol.delete();
+                try {
+                	// Get the molecule with replaced core
+                    ROMol chains = markForCleanup(RDKFuncs.replaceCore(mol, core.get(), true, true), iUniqueWaveId);   
+                    
+                    if (chains != null) {
+	                    ROMol_Vect frags = markForCleanup(RDKFuncs.getMolFrags(chains), iUniqueWaveId);
+	                    int iFragsSize = (int)frags.size();
 	                    
-	                    if(chains==null) continue;
-	                    ROMol_Vect frags=RDKFuncs.getMolFrags(chains);
-	                    chains.delete();
-	                    
-	                    for(int j=0;j<frags.size();j++){
-	                    	ROMol frag=frags.get(j);
-	                    	boolean found=false;
-	                    	for(int atIdx=0;atIdx<frag.getNumAtoms();atIdx++){
-	                    		Atom at=frag.getAtomWithIdx(atIdx);
-	                    		if(at.getAtomicNum()==0){
-	                    			int massLabel=(int)Math.floor(at.getMass()+.1);
-	                    			// dummies are labeled by the zero-based atom index they're attached
-	                    			// to. To make things clearer to the user, increment these.
-	                        		at.setMass(massLabel+1);
-	                       			cells[firstRGroup+massLabel]=RDKitMolCellFactory.createRDKitMolCell(
-	                                      frag);
+	                    // Iterate through all fragments
+	                    for (int i = 0; i < iFragsSize; i++) {
+	                    	ROMol frag = frags.get(i);
+	                    	int iNumAtoms = (int)frag.getNumAtoms();
+	                    	boolean found = false;
+	                    	
+	                    	// Iterate through all atoms
+	                    	for (int atomIndex = 0; atomIndex < iNumAtoms; atomIndex++) {
+	                    		Atom atom = frag.getAtomWithIdx(atomIndex);
+	                    		if (atom.getAtomicNum() == 0) {
+	                    			int massLabel= (int)Math.floor(atom.getMass() + 0.1d);
+	                    			
+	                    			// Dummies are labeled by the zero-based atom index they're attached to.
+	                    			// To make things clearer to the user, increment these.
+	                        		atom.setMass(massLabel + 1);
+	                       			outputCells[massLabel] = RDKitMolCellFactory.createRDKitMolCell(frag);
+	                       			m_aiFilledCellCounter[massLabel].incrementAndGet();
 	                       			found=true;
 	                      			break;
 	                    		}
 	                    	}
-	                    	if(!found){
-	                          String msg =
-	                                "attachment label not found for a side chain in row: "+count+1;
-	                          LOGGER.warn(msg);
-	                          setWarningMessage(msg);
-	                    	}
 	                    	
+	                    	if (!found) {
+	                    		String msg = "Attachment label not found for a side chain.";
+	                    		getWarningConsolidator().saveWarning(
+	                    				WarningConsolidator.ROW_CONTEXT.getId(), msg);
+	                    		LOGGER.warn(msg + " (Row '" + row.getKey() + "')");
+	                    	}
 	                    }
-	                    frags.delete();
-                    } catch (Exception e) {
-                    	String msg = "could not construct valid output molecule in row: "+count+1;
-                        LOGGER.warn(msg);
-                        setWarningMessage(msg);
-                        continue;
                     }
+                } 
+                catch (Exception e) {
+            		String msg = "Could not construct a valid output molecule.";
+            		getWarningConsolidator().saveWarning(
+            				WarningConsolidator.ROW_CONTEXT.getId(), msg);
+            		LOGGER.warn(msg + " (Row '" + row.getKey() + "')");
                 }
-                DataRow drow= new DefaultRow(row.getKey(),cells);
-                outTable.addRowToTable(drow);
-                count++;
-                exec.setProgress(count / (double)rowCount, "Processed row "
-                        + count + "/" + rowCount + " (\"" + row.getKey()
-                        + "\")");
-                exec.checkCanceled();
-            }
-        } finally {
-            outTable.close();
+   		    	
+   		        return outputCells;
+   		    }
+   		};
+   		
+   		// Enable or disable this factory to allow parallel processing 	
+   		// Note: In this implementation always parallel processing is used
+   		factory.setAllowParallelProcessing(true);	   		
+    	
+    	return factory;
+    }
+	
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] processing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
+    		final ExecutionContext exec) throws Exception {
+        final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
+        
+        // Contains the rows with the result columns
+        final BufferedDataContainer rGroupTable = exec.createDataContainer(arrOutSpecs[0]);
+        
+        // Setup main factory
+        final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
+        
+        final AbstractRDKitNodeModel.ResultProcessor resultProcessor = 
+        	new AbstractRDKitNodeModel.ResultProcessor() {
+			
+        	/**
+        	 * {@inheritDoc}
+        	 * This implementation determines, if all result cells are missing.
+        	 * Only if there is at least one R Group Cell filled, we will add
+        	 * the row to the result table. Otherwise it gets dumped.
+        	 */
+			@Override
+			public void processResults(long rowIndex, DataRow row, DataCell[] arrResults) {      
+		        for (int i = 0; i < arrResults.length; i++) {
+		        	if (!arrResults[i].isMissing()) {
+			        	rGroupTable.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, -1));
+			        	break;
+		        	}
+		        }
+			}
+		};
+        
+        // Get settings and define data specific behavior
+        final int iTotalRowCount = inData[0].getRowCount();
+		
+        // Runs the multiple threads to do the work
+        try {
+        	new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount, 
+       			getWarningConsolidator(), exec).run(inData[0]);
+        } 
+        catch (Exception e) {
+            exec.checkCanceled();
+            throw e;
         }
-                
-
-        return new BufferedDataTable[]{outTable.getTable()};
+        
+        rGroupTable.close();
+        
+        return new BufferedDataTable[] { rGroupTable.getTable() };
+    }		
+    
+    /**
+     * {@inheritDoc}
+     * This implementation returns always 0.05d.
+     * 
+     * @return Returns always 0.05d.
+     */
+    @Override
+    protected double getPostProcessingPercentage() {
+    	return 0.05d;
     }
+    
+    /**
+     * In the case that the option to remove empty Rx columns is enabled,
+     * this post processing routine will do exactly that.
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] postProcessing(BufferedDataTable[] inData,
+    		InputDataInfo[][] arrInputDataInfo,
+    		BufferedDataTable[] processingResult, ExecutionContext exec)
+    		throws Exception {
+    	
+    	BufferedDataTable[] arrResults = processingResult;
 
+    	// Determine, if the user wants to remove all empty Rx columns
+    	if (m_modelRemoveEmptyColumns.getBooleanValue()) {
+	    	if (processingResult != null && processingResult.length == 1) {
+	    		ColumnRearranger rearranger = new ColumnRearranger(processingResult[0].getDataTableSpec());
+	    		
+	    		for (int i = 0; i < m_aiFilledCellCounter.length; i++) {
+	    			if (m_aiFilledCellCounter[i].get() == 0) {
+	    				rearranger.remove("R" + (i + 1));
+	    			}
+	    		}
+
+	    		// Create the new table without empty Rx columns
+	    		arrResults = new BufferedDataTable[] { 
+	    				exec.createColumnRearrangeTable(processingResult[0], rearranger, exec)
+	    		};
+	    	}
+    	}
+    	
+    	return arrResults;
+    }
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void reset() {
-        // nothing to reset
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_first.loadSettingsFrom(settings);
-        m_smarts.loadSettingsFrom(settings);
-        //m_removeSourceCols.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_first.saveSettingsTo(settings);
-        m_smarts.saveSettingsTo(settings);
-        //m_removeSourceCols.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_first.validateSettings(settings);
-        m_smarts.validateSettings(settings);
-        //m_removeSourceCols.validateSettings(settings);
+    protected void cleanupIntermediateResults() {
+    	m_aiFilledCellCounter = null;
     }
 }

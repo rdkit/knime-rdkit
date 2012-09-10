@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="canonical_smiles.png" type="Manipulator">
-	<name>RDKit Canon Smiles</name>
-	
-	<shortDescription>
-	    Generates RDKit canonical smiles for an input RDKit Mol column
-	</shortDescription>
-	
-	<fullDescription>
-		<intro>Generates RDKit canonical smiles for an input RDKit Mol column and appends
-		it to the table.</intro>
-	</fullDescription>
-	
-	<ports>
-		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
-		<outPort index="0" name="Data with canonical smiles">Data with canonical SMILES column</outPort>
-	</ports>	
+    <name>RDKit Canon SMILES</name>
+    
+    <shortDescription>
+        Generates RDKit canonical SMILES for an input RDKit Mol column.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	Generates RDKit canonical SMILES for an input RDKit Mol column and appends
+			it to the table.
+		</intro>
+        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+        <option name="New column name">The name of the new column, which will contain the canonical SMILES.</option>
+        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with RDKit Molecules">Data with RDKit Mol column</inPort>
+        <outPort index="0" name="Data with canonical SMILES">Data with canonical SMILES column</outPort>
+    </ports>    
 </knimeNode>

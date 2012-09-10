@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,11 +48,10 @@
  */
 package org.rdkit.knime.nodes.substructurecounter;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.RDKit.Match_Vect_Vect;
 import org.RDKit.ROMol;
@@ -61,417 +60,451 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.AbstractCellFactory;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
+import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.nodes.AdditionalHeaderInfo;
+import org.rdkit.knime.nodes.TableViewSupport;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsUtils;
 
 /**
- * This is the model implementation of SubstructureCounter. This Node calculates
- * the the number of times the query molecule is present in the input molecule.
- * 
- * 
+ * This class implements the node model of the RDKitSubstructureCounter node
+ * providing calculations based on the open source RDKit library.
+ *
  * @author Swarnaprava Singh
+ * @author Manuel Schwarze
  */
-public class SubstructureCounterNodeModel extends NodeModel {
+public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeModel
+	implements TableViewSupport {
 
-	// the logger instance
-	private static final NodeLogger logger = NodeLogger
+	//
+	// Constants
+	//
+
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(SubstructureCounterNodeModel.class);
-	// Dialog component for getting the input molecule column
-	private final SettingsModelString m_MolInput = SubstructureCounterNodeDialog
-			.createMoleculeInputModel();
-	// Dialog component for getting the query molecule column
-	private final SettingsModelString m_QueryInput = SubstructureCounterNodeDialog
-			.createQueryInputModel();
-	// Dialog component to choose if unique matches are to be calculated
-	private final SettingsModelBoolean m_UniqueMatches = SubstructureCounterNodeDialog
-			.createCBCountUniqueMatches();
+
+	/** Input data info index for Mol value (first table). */
+	protected static final int INPUT_COLUMN_MOL = 0;
+
+	/** Input data info index for Query Molecule (second table). */
+	protected static final int INPUT_COLUMN_QUERY = 0;
+
+	//
+	// Members
+	//
+
+	/** Settings model for the column name of the input column. */
+    private final SettingsModelString m_modelInputColumnName =
+    	registerSettings(SubstructureCounterNodeDialog.createInputColumnNameModel(), "input_column", "inputMolCol");
+    // Accept also deprecated keys
+
+	/** Settings model for the column name of the query molecule column. */
+	private final SettingsModelString m_modelQueryColumnName =
+		registerSettings(SubstructureCounterNodeDialog.createQueryInputModel());
+
+	/** Settings model for the option to count unique matches only. */
+	private final SettingsModelBoolean m_modelUniqueMatchesOnly =
+		registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
+
+	//
+	// Intermediate Results
+	//
+
+	/** Percentage for pre-processing. Set when execution starts up. */
+	private double m_dPreProcessingShare;
+
+	/** Column names. Result of pre-processing. */
+	private String[] m_arrResultColumnNames;
+
+	/** SMILES strings of query molecules read from second input table. Result of pre-processing. */
+	private String[] m_arrQueriesAsSmiles;
+
+	/** ROMol objects of query molecules read from second input table. Result of pre-processing. */
+	private ROMol[] m_arrQueriesAsRDKitMols;
+
+    //
+    // Constructor
+    //
+
+    /**
+     * Create new node model with one data in- and one out-port.
+     */
+    SubstructureCounterNodeModel() {
+        super(2, 1);
+    }
+
+    //
+    // Protected Methods
+    //
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+    	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+
+        // Auto guess the input mol column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
+        		"Auto guessing: Using column %COLUMN_NAME% as Mol input column.",
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator());
+
+        // Determines, if the mol input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the first input table changed?");
+
+        // Auto guess the query mol column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+        		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
+        		"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
+        		"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator());
+
+        // Determines, if the query mol column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+        		"Query molecule column has not been specified yet.",
+        		"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
+
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // We cannot know how many columns we will generate before execution
+        return new DataTableSpec[] { null };
+    }
+
+    /**
+     * This implementation generates input data info object for the input mol column
+     * as well as the query molecule column and connects it with the information coming
+     * from the appropriate setting models.
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+		throws InvalidSettingsException {
+
+    	InputDataInfo[] arrDataInfo = null;
+
+    	switch (inPort) {
+    		case 0: // First table with molecule column
+	    		arrDataInfo = new InputDataInfo[1]; // We have only one input mol column
+	    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+	    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+	    				RDKitMolValue.class);
+	    		break;
+
+    		case 1: // Second table with query molecule column
+	    		arrDataInfo = new InputDataInfo[1]; // We have only one query molecule column
+	    		arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
+	    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+	    				RDKitMolValue.class);
+	    		break;
+    	}
+
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+    }
+
+
+    /**
+     * Returns the output table specification of the specified out port. This implementation
+     * works based on a ColumnRearranger and delivers only a specification for
+     * out port 0, based on an input table on in port 0. Override this method if
+     * other behavior is needed.
+     *
+     * @param outPort Index of output port in focus. Zero-based.
+     * @param inSpecs All input table specifications.
+     *
+     * @return The specification of all output tables.
+     *
+     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+     * 		given DataTableSpec elements.
+     *
+     * @see #createOutputFactories(int)
+     */
+    @Override
+    protected DataTableSpec getOutputTableSpec(final int outPort,
+    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    	DataTableSpec spec = null;
+
+    	if (outPort == 0) {
+    		// Create the column rearranger, which will generate the spec
+	        spec = createColumnRearranger(outPort, inSpecs[0]).createSpec();
+    	}
+
+    	return spec;
+    }
+
+    /**
+     * {@inheritDoc}
+     * Calculates additionally to the normal execution procedure the pre-processing
+     * percentage.
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    		final ExecutionContext exec) throws Exception {
+    	// Calculate pre-processing share based on overall rows
+    	m_dPreProcessingShare = (double)inData[1].getRowCount() /
+    		(double)(inData[0].getRowCount() + inData[1].getRowCount());
+
+    	// Perform normalized execution
+    	return super.execute(inData, exec);
+    }
+
+    /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
+     * {@inheritDoc}
+     */
+	@Override
+    protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
+		throws InvalidSettingsException {
+
+		AbstractRDKitCellFactory[] arrOutputFactories = null;
+
+    	// Specify output of table 1
+    	if (outPort == 0) {
+    		// Allocate space for all factories (usually we have only one)
+    		arrOutputFactories = new AbstractRDKitCellFactory[1];
+
+    		// Factory 1:
+    		// ==========
+    		// Generate column specs for the output table columns produced by this factory
+    		// This is only possible, if pre-processing took already place and we know about
+    		// query molecules
+    		final int iResultColumnCount = m_arrResultColumnNames.length;
+    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iResultColumnCount];
+    		for (int i = 0; i < iResultColumnCount; i++) {
+    			// Create spec with additional information
+    			DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[i], IntCell.TYPE);
+    			new AdditionalHeaderInfo("Smiles", m_arrQueriesAsSmiles[i], -1).writeInColumnSpec(creator);
+        		arrOutputSpec[i] = creator.createSpec();
+    		}
+
+    		// Provide unique matches only option
+    		final boolean bUniqueMatchesOnly = m_modelUniqueMatchesOnly.getBooleanValue();
+
+    		// Generate factory
+    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+           		getWarningConsolidator(), null, arrOutputSpec) {
+
+	   			@Override
+	   		    /**
+	   		     * This method implements the calculation logic to generate the new cells based on
+	   		     * the input made available in the first (and second) parameter.
+	   		     * {@inheritDoc}
+	   		     */
+	   		    public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+	   		    	DataCell[] arrOutputCells = createEmptyCells(iResultColumnCount);
+
+	   		    	// Calculate the new cells
+	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row),
+	   		    			iUniqueWaveId);
+
+	   		    	for (int i = 0; i < iResultColumnCount; i++) {
+	   		    		final ROMol query = m_arrQueriesAsRDKitMols[i];
+	   		    		if (mol != null && query != null) {
+	   		    			Match_Vect_Vect ms = markForCleanup(
+	   		    					mol.getSubstructMatches(query, bUniqueMatchesOnly), iUniqueWaveId);
+	   		    			arrOutputCells[i] = new IntCell((int)ms.size());
+	   		    		}
+	   		    	}
+
+	   		        return arrOutputCells;
+	   		    }
+	   		};
+
+	   		// Enable or disable this factory to allow parallel processing
+	   		arrOutputFactories[0].setAllowParallelProcessing(true);
+    	}
+
+    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+    }
 
 	/**
-	 * Constructor for the node model. This node has 2 input ports and 1 output
-	 * port. Port 0 is for the input molecule table. Port 1 is for the query
-	 * molecule table.
+	 * Returns the percentage of pre-processing activities from the total execution.
+	 *
+	 * @return Percentage of pre-processing.
 	 */
-	protected SubstructureCounterNodeModel() {
-		super(2, 1);
+	@Override
+    protected double getPreProcessingPercentage() {
+		return m_dPreProcessingShare;
 	}
 
 	/**
-	 * This method implements the business logic for the calculation of the
-	 * substructures in the molecules.
-	 * 
-	 * {@inheritDoc}
+	 * Converts the query molecule cells into SMILES and ROMol values. The SMILES values will
+	 * be used to name the new target columns. The ROMol values will be used to count the
+	 * substructures using RDKit functionality. For invalid query cells a warning will be
+	 * generated and they will not be taken into account when counting substructures.<br />
+	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
+	 * the row-by-row processing starts. All necessary pre-calculations can be done here. Results of the method
+	 * should be made available through member variables, which get picked up by the other methods like
+	 * process(InputDataInfo[], DataRow) in the factory or
+	 * {@link #postProcessing(BufferedDataTable[], BufferedDataTable[], ExecutionContext)} in the model.
+	 *
+	 * @param inData The input tables of the node.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
+	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
+	 *
+	 * @throws Exception Thrown, if pre-processing fails.
+	 *
+	 * @see #m_arrResultColumnNames
+	 * @see #m_arrQueriesAsSmiles
+	 * @see #m_arrQueriesAsRDKitMols
 	 */
 	@Override
-	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-			final ExecutionContext exec) throws Exception {
-		logger.debug("Enter execute");
-		DataTableSpec inSpecMolecule = inData[0].getDataTableSpec();
-		DataTableSpec inSpecQuery = inData[1].getDataTableSpec();
-		ColumnRearranger rearranger;
-		ROMol[] patterns = new ROMol[inData[1].getRowCount()];
-		String[] queryArr = new String[inData[1].getRowCount()];
-		try {
-			// find the rdkit column indices in molecule table and query table
-			final int[] indices = findColumnIndices(new DataTableSpec[] {
-					inSpecMolecule, inSpecQuery });
-			int i = 0;
-			// Creating an array of the ROMol query Molecules
-			for (DataRow row : inData[1]) {
-				if (!row.getCell(indices[1]).isMissing()) {
-					patterns[i] = ((RDKitMolValue) row.getCell(indices[1]))
-							.readMoleculeValue();
-					if(patterns[i]==null){
-						queryArr[i]="col_"+(i+1);
-					} else {
-						queryArr[i]=patterns[i].MolToSmiles(true);
+    protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+		final ExecutionContext exec) throws Exception {
+
+		int iQueryRowCount = inData[1].getRowCount();
+		List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
+		List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
+		List<ROMol> listQueriesAsRDKitMols = new ArrayList<ROMol>(iQueryRowCount);
+		List<RowKey> listEmptyQueries = new ArrayList<RowKey>();
+		List<RowKey> listInvalidQueries = new ArrayList<RowKey>();
+		List<RowKey> listDuplicatedQueries = new ArrayList<RowKey>();
+		Map<String, Integer> mapDuplicates = new HashMap<String, Integer>();
+
+		int iRow = 0;
+
+		// Creating an arrays of SMILES and ROMol query molecules
+		for (DataRow row : inData[1]) {
+
+			// Get ROMol value
+			ROMol mol = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
+
+			// Generate column labels (SMILES)
+			// If we cannot get a mol, we remember the empty column
+			if (mol == null) {
+				listEmptyQueries.add(row.getKey());
+			}
+			// Otherwise: Get canonical SMILES from the query molecule
+			else {
+				String strSmiles = mol.MolToSmiles(true);
+				String strColumnName = strSmiles;
+
+				// Fallback, if SMILES conversion failed
+				if (strSmiles == null) {
+					listInvalidQueries.add(row.getKey());
+				}
+				// Otherwise: Everything is fine - use this query
+				else {
+					// Check for duplicate, still include it, but warn
+					Integer intCount = mapDuplicates.get(strSmiles);
+					if (intCount != null) {
+						int iDuplicate = intCount + 1;
+						mapDuplicates.put(strSmiles, iDuplicate);
+						listDuplicatedQueries.add(row.getKey());
+						strColumnName += " (Duplicate " + iDuplicate + ")";
 					}
-				} else {
-					patterns[i] = null;
-					queryArr[i] = "col_"+(i+1);
-				}
-				i++;
-			}
-			/*
-			// Creating an array of unique query molecules
-			Set<String> s = new HashSet<String>();
-			for (int j = 0; j < patterns.length; j++) {
-				if (null != patterns[j]) {
-					String smi=patterns[j].MolToSmiles();
-					if(! s.contains(smi)){
-						s.add(smi);
-					} else {
-						patterns[j]=null;
+					else {
+						mapDuplicates.put(strSmiles, 0);
 					}
-				}
-			String[] queryArr = (String[]) s.toArray(new String[] {});
-			}*/
 
-			// Read the rdkit molecules and find the count of the query patterns
-			// for each molecule.
-			HashMap<RowKey, long[]> countMap = countMatchesinMolecule(
-					exec.createSubExecutionContext(0.5), patterns, inData,
-					indices);
-			// create column rearranger
-			rearranger = createColumnRearranger(inSpecMolecule, inSpecQuery,
-					queryArr, patterns, countMap);
-		} finally {
-			// delete the patterns ROMol objects
-			for (ROMol p : patterns) {
-				if (p != null) {
-					p.delete();
+					// Ensure that our target column name is unique
+					strColumnName = DataTableSpec.getUniqueColumnName(
+							inData[1].getDataTableSpec(), strColumnName);
+					listColumnNames.add(strColumnName);
+					listQueriesAsRDKitMols.add(mol);
+					listQueriesAsSmiles.add(strSmiles);
 				}
 			}
+
+			iRow++;
+
+			exec.setProgress(new StringBuilder("Analyzing query molecules (")
+				.append(iRow)
+				.append(" of ")
+				.append(iQueryRowCount)
+				.append(")").toString());
 		}
-		BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[0],
-				rearranger, exec.createSubExecutionContext(0.5));
-		logger.debug("Exit execute");
-		return new BufferedDataTable[] { outTable };
+
+		// Store queries and column labels (SMILES) in intermediate result member variables
+		m_arrResultColumnNames = listColumnNames.toArray(
+				new String[listColumnNames.size()]);
+		m_arrQueriesAsRDKitMols = listQueriesAsRDKitMols.toArray(
+				new ROMol[listQueriesAsRDKitMols.size()]);
+		m_arrQueriesAsSmiles = listQueriesAsSmiles.toArray(
+				new String[listQueriesAsSmiles.size()]);
+
+		// Generate warnings
+		generateWarning(listEmptyQueries, iQueryRowCount, "Ignoring empty");
+		generateWarning(listInvalidQueries, iQueryRowCount, "Ignoring invalid");
+		generateWarning(listDuplicatedQueries, iQueryRowCount, "Found duplicated");
+
+		// Show the warning already immediately
+		generateWarnings();
+
+		// Help the garbage collector
+		listColumnNames.clear();
+		listQueriesAsRDKitMols.clear();
+		listQueriesAsSmiles.clear();
+		listEmptyQueries.clear();
+		listInvalidQueries.clear();
+		listDuplicatedQueries.clear();
+		mapDuplicates.clear();
+
+		exec.setProgress(1.0d);
 	}
 
-	/**
-	 * Counts the number of matches for each query molecule and stores it in a
-	 * map.
-	 * 
-	 * @param exec
-	 * @param patterns
-	 * @param inData
-	 * @param indices
-	 * @return
-	 * @throws CanceledExecutionException
-	 */
-	private HashMap<RowKey, long[]> countMatchesinMolecule(
-			ExecutionContext exec, ROMol[] patterns,
-			final BufferedDataTable[] inData, int[] indices)
-			throws CanceledExecutionException {
-
-		final boolean countUniqueMatchesOnly = m_UniqueMatches
-				.getBooleanValue();
-
-		long[] counter = new long[patterns.length];
-		HashMap<RowKey, long[]> countMap = new HashMap<RowKey, long[]>();
-		if (inData[0].getRowCount() != 0) {
-			for (DataRow row : inData[0]) {
-				DataCell cell = row.getCell(indices[0]);
-				if (!cell.isMissing()) {
-					ROMol mol = null;
-					try {
-						// read each cell value to get RDKit molecules
-						RDKitMolValue rdkit = (RDKitMolValue) cell;
-						mol = rdkit.readMoleculeValue();
-						counter = new long[patterns.length];
-						for (int pidx = 0; pidx < patterns.length; pidx++) {
-							ROMol p = patterns[pidx];
-							if (p != null && mol != null) {
-								// Get the count of matching structures.
-								Match_Vect_Vect ms = mol.getSubstructMatches(p,
-										countUniqueMatchesOnly);
-								counter[pidx] = ms.size();
-							}
-						}
-						countMap.put(row.getKey(), counter);
-					} finally {
-						// delete the ROMol object created for each rdkit
-						// molecule.
-						mol.delete();
-					}
-				}
-				if (exec != null) {
-					exec.setProgress(countMap.size()
-							/ (double) inData[0].getRowCount());
-					exec.getProgressMonitor().checkCanceled();
-				}
-			}
-		}
-		return countMap;
-	}
-
-	/**
-	 * The count columns will be added to the output table. The number of
-	 * columns added is equal to the number of distinct query molecules present
-	 * in the input table. The getCells() method is overridden for creation of
-	 * an array of long cells.
-	 * 
-	 * @param inSpecMolecule
-	 *            : spec of the rdkit molecule column
-	 * @param inSpecQuery
-	 *            : spec of the query molecule column
-	 * @param arrQuery
-	 *            : Array of query molecules as smiles.
-	 * @param patterns
-	 *            : Array of query molecules ROMol objects
-	 * @param countMap
-	 *            : Map containing count values of matching structures.
-	 * @return ColumnRearranger
-	 * @throws InvalidSettingsException
-	 */
-	private ColumnRearranger createColumnRearranger(
-			final DataTableSpec inSpecMolecule,
-			final DataTableSpec inSpecQuery, String[] arrQuery,
-			final ROMol[] patterns, final HashMap<RowKey, long[]> countMap)
-			throws InvalidSettingsException {
-
-		// find the index of rdkit molecule column.
-		final int[] rdkitMolIndex = findColumnIndices(new DataTableSpec[] {
-				inSpecMolecule, inSpecQuery });
-		ColumnRearranger result = new ColumnRearranger(inSpecMolecule);
-		// Create the output specs
-		final DataColumnSpec[] pSpecs = createOutSpec(inSpecMolecule, arrQuery);
-		// append the new columns
-		result.append(new AbstractCellFactory(pSpecs) {
-			@Override
-			public DataCell[] getCells(DataRow row) {
-				DataCell cell = row.getCell(rdkitMolIndex[0]);
-				DataCell[] cells = new DataCell[patterns.length];
-				long[] count = countMap.get(row.getKey());
-				for (int pidx = 0; pidx < patterns.length; pidx++) {
-					if (cell.isMissing()) {
-						cells[pidx] = DataType.getMissingCell();
-					} else {
-						cells[pidx] = new LongCell(count[pidx]);
-					}
-				}
-				return cells;
-			}
-		});
-		return result;
-	}
-
-	/**
-	 * This method creates and returns the array of column specifications for
-	 * the output table. The output table is the input molecule table with one
-	 * additional column for each row in the query molecule table.
-	 * 
-	 * @param inSpec
-	 *            : Input table specification.
-	 * @param arrQuery
-	 *            : String array of the query molecules which will be the column
-	 *            names for the output table.
-	 * @return DataColumnSpec[] : Array Column Specification for the output
-	 *         table.
-	 */
-	private DataColumnSpec[] createOutSpec(DataTableSpec inSpec,
-			String[] arrQuery) {
-		DataColumnSpec[] cspec = new DataColumnSpec[arrQuery.length];
-		for (int i = 0; i < arrQuery.length; i++) {
-			cspec[i] = new DataColumnSpecCreator(arrQuery[i], DoubleCell.TYPE)
-					.createSpec();
-		}
-		return cspec;
-	}
-
-	/**
-	 * This method calculates and return the indices of the array of indices of
-	 * the column containing the RDKit column in the input table.
-	 * 
-	 * @param specs
-	 *            : array of input table specifications.
-	 * @return int[]: returns an int array of indices.
-	 * @throws InvalidSettingsException
-	 */
-	private int[] findColumnIndices(DataTableSpec[] specs)
-			throws InvalidSettingsException {
-		logger.debug("Enter findColumnIndices");
-		String rdkit = m_MolInput.getStringValue();
-
-		if (rdkit == null) {
-			throw new InvalidSettingsException("Not configured yet");
-		}
-		int rdkitIndex = specs[0].findColumnIndex(rdkit);
-		if (rdkitIndex < 0) {
-			throw new InvalidSettingsException(
-					"No such column in input table: " + rdkit);
-		}
-		DataType firstType = specs[0].getColumnSpec(rdkitIndex).getType();
-		if (!firstType.isCompatible(RDKitMolValue.class)) {
-			throw new InvalidSettingsException("Column '" + rdkit
-					+ "' does not contain RDKit molecules");
-		}
-
-		String query = m_QueryInput.getStringValue();
-		if (query == null) {
-			throw new InvalidSettingsException("Not configured yet");
-		}
-		int queryIndex = specs[1].findColumnIndex(query);
-		if (queryIndex < 0) {
-			throw new InvalidSettingsException(
-					"No such column in input table: " + query);
-		}
-		DataType queryType = specs[1].getColumnSpec(queryIndex).getType();
-		if (!queryType.isCompatible(RDKitMolValue.class)) {
-			throw new InvalidSettingsException("Column '" + query
-					+ "' does not contain RDKit molecules");
-		}
-		logger.debug("Exit findColumnIndices");
-		return new int[] { rdkitIndex, queryIndex };
-	}
-
-	/**
-	 * {@inheritDoc} This method is used to specify the structure of the output
-	 * table.
-	 * 
-	 */
-	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-			throws InvalidSettingsException {
-		logger.debug("Inside configure");
-		if (null == m_MolInput.getStringValue()) {
-			List<String> compatibleCols = new ArrayList<String>();
-			for (DataColumnSpec c : inSpecs[0]) {
-				if (c.getType().isCompatible(RDKitMolValue.class)) {
-					compatibleCols.add(c.getName());
-				}
-			}
-			if (compatibleCols.size() == 1) {
-				// auto-configure
-				m_MolInput.setStringValue(compatibleCols.get(0));
-			} else if (compatibleCols.size() > 1) {
-				m_MolInput.setStringValue(compatibleCols.get(0));
-				setWarningMessage("Auto guessing: using column \""
-						+ compatibleCols.get(0) + "\".");
-			} else {
-				throw new InvalidSettingsException("No RDKit compatible "
-						+ "column in input table.");
-			}
-		}
-		if (null == m_QueryInput.getStringValue()) {
-			List<String> compatibleCols1 = new ArrayList<String>();
-			for (DataColumnSpec c : inSpecs[1]) {
-				if (c.getType().isCompatible(RDKitMolValue.class)) {
-					compatibleCols1.add(c.getName());
-				}
-			}
-			if (compatibleCols1.size() == 1) {
-				// auto-configure
-				m_QueryInput.setStringValue(compatibleCols1.get(0));
-			} else if (compatibleCols1.size() > 1) {
-				m_QueryInput.setStringValue(compatibleCols1.get(0));
-				setWarningMessage("Auto guessing: using column \""
-						+ compatibleCols1.get(0) + "\".");
-			} else {
-				throw new InvalidSettingsException("No RDKit compatible "
-						+ "column in input table.");
-			}
-		}
-		logger.debug("Exit configure");
-		return new DataTableSpec[] { null };
-	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void reset() {
-		// Nothing to reset
+	protected void cleanupIntermediateResults() {
+		m_arrQueriesAsRDKitMols = null;
+		m_arrQueriesAsSmiles = null;
+		m_arrResultColumnNames = null;
+		m_dPreProcessingShare = 0;
 	}
+
+	//
+	// Private Methods
+	//
 
 	/**
-	 * {@inheritDoc}
+	 * Generates and saves a warning message, if applicable, based on the
+	 * specified list of row keys (can be empty) and the message stump.
+	 *
+	 * @param listRowKeys List of row keys. Must not be null.
+	 * @param iTotalQueries Total number of processed queries.
+	 * @param strMsgStump Stump of the warning message to be generated.
 	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		m_MolInput.saveSettingsTo(settings);
-		m_QueryInput.saveSettingsTo(settings);
-		m_UniqueMatches.saveSettingsTo(settings);
+	private void generateWarning(final List<RowKey> listRowKeys, final int iTotalQueries,
+			final String strMsgStump) {
+		int iQueryCount = listRowKeys.size();
 
+		if (iQueryCount > 0) {
+			String strMsg = strMsgStump + " quer";
+			if (iQueryCount <= 10) {
+				String rowKeyList = listRowKeys.toString();
+				strMsg += "y in the following rows: " +
+					rowKeyList.substring(1, rowKeyList.length() - 1);
+			}
+			else {
+				strMsg +="ies.";
+			}
+
+			strMsg += " [" + iQueryCount + " of " + iTotalQueries +
+					(iTotalQueries == 1 ? " query]" : " queries]");
+
+			getWarningConsolidator().saveWarning(strMsg);
+		}
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		m_MolInput.loadSettingsFrom(settings);
-		m_QueryInput.loadSettingsFrom(settings);
-		m_UniqueMatches.loadSettingsFrom(settings);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		m_MolInput.validateSettings(settings);
-		m_QueryInput.validateSettings(settings);
-		m_UniqueMatches.validateSettings(settings);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-
-	}
-
 }

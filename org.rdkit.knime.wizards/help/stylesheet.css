@@ -1,0 +1,38 @@
+* {
+	font-family: Verdana;
+	font-size: 8pt;
+	color: rgb(79, 79, 79);
+}
+
+h1 {
+	font-family: Verdana;
+	font-size: 14pt;
+	font-weight: bold;
+	letter-spacing: -1px;
+	color: rgb(125, 30, 30);
+	border-bottom: 2px groove red;
+	margin: 20px auto 10px auto;
+}
+
+h2 {
+	font-family: Verdana;
+	font-size: 9pt;
+	font-weight: bold;
+	letter-spacing: -1px;
+	color: rgb(125, 30, 30);
+	margin: 10px auto 5px auto;
+}
+
+img {
+	border: 0px none;
+	margin: 0px 0px 0px 0px;
+}
+
+ul {
+	margin: 0px auto 0px auto;
+}
+
+p {
+	margin: 0px auto 5px auto;
+}
+

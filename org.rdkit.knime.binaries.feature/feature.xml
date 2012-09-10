@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.binaries.feature"
       label="RDKit binaries (obsolete, do not install)"
-      version="2.0.0.qualifier"
+      version="1.1.0.qualifier"
       provider-name="NIBR">
 
    <description>

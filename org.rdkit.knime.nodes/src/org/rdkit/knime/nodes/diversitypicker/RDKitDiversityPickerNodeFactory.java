@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,22 +53,30 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitDiversityPicker" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitDiversityPickerNodeFactory
-        extends NodeFactory<RDKitDiversityPickerNodeModel> {
+public class RDKitDiversityPickerNodeFactory extends
+        NodeFactory<RDKitDiversityPickerNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitDiversityPickerNodeDialogPane();
+        return new RDKitDiversityPickerNodeDialog();
     }
 
     /**
+     * Creates a model for the RDKitDiversityPicker functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitDiversityPickerNodeModel createNodeModel() {
@@ -76,7 +84,9 @@ public class RDKitDiversityPickerNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitDiversityPickerNodeModel> createNodeView(
@@ -86,7 +96,9 @@ public class RDKitDiversityPickerNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     protected int getNrNodeViews() {
@@ -94,7 +106,9 @@ public class RDKitDiversityPickerNodeFactory
     }
 
     /**
-     * {@inheritDoc}
+     * This node does possess a dialog for configuration.
+     * 
+	 * @return Always true.
      */
     @Override
     protected boolean hasDialog() {

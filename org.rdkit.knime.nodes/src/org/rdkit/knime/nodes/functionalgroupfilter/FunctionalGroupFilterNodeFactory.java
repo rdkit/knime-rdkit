@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,24 +53,44 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This NodeFactory for the "FunctionalGroupFilter" Node is used to get the node components registered.
- * It creates the node views and node dialog components. 
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitFunctionalGroupFilter" Node.
+ * 
  * @author Dillip K Mohanty
+ * @author Manuel Schwarze
  */
 public class FunctionalGroupFilterNodeFactory 
         extends NodeFactory<FunctionalGroupFilterNodeModel> {
 
     /**
+     * Creates a model for the RDKitFunctionalGroupFilter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public FunctionalGroupFilterNodeModel createNodeModel() {
         return new FunctionalGroupFilterNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<FunctionalGroupFilterNodeModel> createNodeView(
+            final int viewIndex,
+            final FunctionalGroupFilterNodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     public int getNrNodeViews() {
@@ -78,16 +98,9 @@ public class FunctionalGroupFilterNodeFactory
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<FunctionalGroupFilterNodeModel> createNodeView(final int viewIndex,
-            final FunctionalGroupFilterNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
     public boolean hasDialog() {
@@ -101,6 +114,5 @@ public class FunctionalGroupFilterNodeFactory
     public NodeDialogPane createNodeDialogPane() {
         return new FunctionalGroupFilterNodeDialog();
     }
-
 }
 

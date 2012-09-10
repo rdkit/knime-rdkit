@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,305 +48,114 @@
  */
 package org.rdkit.knime.nodes.moleculesubstructfilter;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
-
 import org.RDKit.ROMol;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsUtils;
 
 /**
- * This class is the model for the dictionary based substructure filter node.
- *
- * @author Greg Landrum
- * @author Thorsten Meinl, University of Konstanz
+ * This class implements the node model of the RDKitMoleculeSubstructFilter node
+ * providing calculations based on the open source RDKit library.
+ * 
+ * @author Manuel Schwarze, Novartis
  */
-public class RDKitMoleculeSubstructFilterNodeModel extends NodeModel {
-    private final RDKitMoleculeSubstructFilterSettings m_settings =
-            new RDKitMoleculeSubstructFilterSettings();
+public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitSubstructFilterNodeModel {
 
-    /**
-     * Create new node model with one data in- and one outport.
-     */
-    RDKitMoleculeSubstructFilterNodeModel() {
-        super(2, 2);
-    }
-
-    private DataTableSpec[] createOutSpecs(final DataTableSpec[] inSpecs) {
-        Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
-        cSpec.clear();
-        for(int i=0;i<inSpecs[0].getNumColumns();i++){
-        	cSpec.add(inSpecs[0].getColumnSpec(i));
-        }
-        DataColumnSpecCreator crea=new DataColumnSpecCreator("Matched Substructs",ListCell.getCollectionType(IntCell.TYPE));
-       	cSpec.add(crea.createSpec());
-        return new DataTableSpec[]{
-        		new DataTableSpec("Passed molecules",
-        				cSpec.toArray(new DataColumnSpec[cSpec.size()])),
-                new DataTableSpec("Failed molecules",
-                        cSpec.toArray(new DataColumnSpec[cSpec.size()]))
-        		};
-    }
-
-    /**
+	//
+	// Constructor
+	//
+	
+	/**
+	 * Creates the node model for a molecule substructure filter based on a RDKit Mol query column.
+	 */
+	@SuppressWarnings("unchecked")
+	public RDKitMoleculeSubstructFilterNodeModel() {
+		super(RDKitMolValue.class);
+	}
+	
+	//
+	// Protected Methods
+	//
+	
+	/**
      * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check whether native RDKit library has been loaded successfully
-        RDKitTypesPluginActivator.checkErrorState();
+    	// Perform all checks except for the query column
+    	super.configure(inSpecs);
+ 
+    	// Auto guess the input mol column if not set - f    	
+        // Auto guess the query mol column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class, 
+        		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match         		
+        		"Auto guessing: Using column %COLUMN_NAME% as query molecule column.", 
+        		"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
 
-        if (m_settings.rdkitColumn() == null) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(RDKitMolValue.class)) {
-                    compatibleCols.add(c.getName());
-                }
-            }
-            if (compatibleCols.size() == 1) {
-                // auto-configure
-                m_settings.rdkitColumn(compatibleCols.get(0));
-            } else if (compatibleCols.size() > 1) {
-                // auto-guessing
-                m_settings.rdkitColumn(compatibleCols.get(0));
-                setWarningMessage("Auto guessing: using column \""
-                        + compatibleCols.get(0) + "\" as RDKit Mol column.");
-            } else {
-                throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use \"Molecule to RDKit\" "
-                        + "node for Smiles or SDF.");
-            }
-        }
-        if (m_settings.queryColumn() == null) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[1]) {
-                if (c.getType().isCompatible(RDKitMolValue.class)) {
-                    compatibleCols.add(c.getName());
-                }
-            }
-            if (compatibleCols.size() == 1) {
-                // auto-configure
-                m_settings.queryColumn(compatibleCols.get(0));
-            } else if (compatibleCols.size() > 1) {
-                // auto-guessing
-                m_settings.queryColumn(compatibleCols.get(0));
-                setWarningMessage("Auto guessing: using column \""
-                        + compatibleCols.get(0) + "\" as query molecule column.");
-            } else {
-                throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use \"Molecule to RDKit\" "
-                        + "node for Smiles or SDF.");
-            }
-        }
+        // Determines, if the query mol column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,  
+        		"Query molecule column has not been specified yet.",
+        		"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
 
-        // further input spec check
-        findColumnIndices(inSpecs);
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
 
-        return createOutSpecs(inSpecs);
-    }
+        // Generate output specs
+        return getOutputTableSpecs(inSpecs);
+    }	
 
-    private int[] findColumnIndices(final DataTableSpec[] specs)
-            throws InvalidSettingsException {
-        String rdkit = m_settings.rdkitColumn();
-        if (rdkit == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int rdkitIndex = specs[0].findColumnIndex(rdkit);
-        if (rdkitIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + rdkit);
-        }
-        DataType firstType = specs[0].getColumnSpec(rdkitIndex).getType();
-        if (!firstType.isCompatible(RDKitMolValue.class)) {
-            throw new InvalidSettingsException("Column '" + rdkit
-                    + "' does not contain RDKit molecules");
-        }
+	/**
+	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
+	 * the row-by-row processing starts. All necessary pre-calculations can be done here. Results of the method
+	 * should be made available through member variables, which get picked up by the other methods like
+	 * process(InputDataInfo[], DataRow) in the factory or 
+	 * {@link #postProcessing(BufferedDataTable[], BufferedDataTable[], ExecutionContext)} in the model.
+	 * 
+	 * @param inData The input tables of the node.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
+	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
+	 * 
+	 * @throws Exception Thrown, if pre-processing fails.
+	 */
+	protected void preProcessing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
+		final ExecutionContext exec) throws Exception {
 
-        String query = m_settings.queryColumn();
-        if (query == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int queryIndex = specs[1].findColumnIndex(query);
-        if (queryIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + query);
-        }
-        DataType queryType = specs[1].getColumnSpec(queryIndex).getType();
-        if (!queryType.isCompatible(RDKitMolValue.class)) {
-            throw new InvalidSettingsException("Column '" + query
-                    + "' does not contain RDKit molecules");
-        }
+		int i = 0;
+		int iRowCount = inData[1].getRowCount();
+		ROMol[] arrPatterns = new ROMol[iRowCount];
+		int iTotalPatternAtomsCount = 0;
+		int iTotalEmptyPatternCells = 0;
+		
+		exec.setMessage("Evaluate query molecules");
+		
+		// Get all query molecules (empty cells will result in null values according to our empty cell policy
+		for (DataRow row : inData[1]) {
+			arrPatterns[i] = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
+			if (arrPatterns[i] == null) {
+				iTotalEmptyPatternCells++;
+			}
+			else {
+				iTotalPatternAtomsCount += arrPatterns[i].getNumAtoms();
+			}
+			
+			if (i % 20 == 0) {
+				reportProgress(exec, i, iRowCount, row, "Evaluate query molecules");
+			}
 
-        return new int[]{rdkitIndex, queryIndex};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-    	DataTableSpec inSpec = inData[0].getDataTableSpec();
-        DataTableSpec[] outSpecs=createOutSpecs(new DataTableSpec[]{inSpec});
-    	BufferedDataContainer matchTable =
-            exec.createDataContainer(outSpecs[0]);
-        BufferedDataContainer failTable =
-            exec.createDataContainer(outSpecs[1]);
-
-        // check user settings against input spec here
-        final int[] indices =
-                findColumnIndices(new DataTableSpec[]{
-                        inData[0].getDataTableSpec(),
-                        inData[1].getDataTableSpec()});
-
-        ROMol[] patterns = new ROMol[inData[1].getRowCount()];
-        int i = 0;
-        for (DataRow row : inData[1]) {
-        	if(!row.getCell(indices[1]).isMissing()){
-        		patterns[i] = ((RDKitMolValue)row.getCell(indices[1])).readMoleculeValue();
-        	} else {
-        		patterns[i]=null;
-        	}
-            i++;
-        }
-
-        final int rowCount = inData[0].getRowCount();
-        int matchCount = 0;
-        try {
-            int count = 0;
-            RowIterator it = inData[0].iterator();
-            while (it.hasNext()) {
-                DataRow row = it.next();
-                List<IntCell> fragsHere = new ArrayList<IntCell>();
-                int patternMatchCount = 0;
-                count++;
-                DataCell firstCell = row.getCell(indices[0]);
-                if (!firstCell.isMissing()) {
-                    ROMol mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-                    try {
-                        for (int pidx=0;pidx<patterns.length;pidx++){
-                        	ROMol p=patterns[pidx];
-                            if (p!=null && mol.hasSubstructMatch(p)) {
-                            	fragsHere.add(new IntCell(pidx+1));
-                                patternMatchCount++;
-                            }
-                        }
-                    } finally {
-                        mol.delete();
-                    }
-                }
-                DataCell[] cells = new DataCell[outSpecs[0].getNumColumns()];
-                for(int idx=0;idx<cells.length-1;idx++){
-                	cells[idx]=row.getCell(idx);
-                }
-                cells[cells.length-1] = CollectionCellFactory.createListCell(fragsHere);
-                DataRow drow= new DefaultRow(row.getKey(),cells);
-
-                if (((m_settings.minimumMatches() == 0) && (patternMatchCount == patterns.length))
-                        || ((m_settings.minimumMatches() > 0)&&(patternMatchCount >= m_settings.minimumMatches()))) {
-                    matchTable.addRowToTable(drow);
-                    matchCount += 1;
-                } else {
-                    failTable.addRowToTable(drow);
-                }
-                exec.setProgress(count / (double)rowCount, "Processed row "
-                        + count + "/" + rowCount + " (\"" + row.getKey()
-                        + "\") -- " + matchCount + " matches");
-                exec.checkCanceled();
-            }
-        } finally {
-            matchTable.close();
-            failTable.close();
-            for (ROMol p : patterns) {
-                if (p != null) {
-                    p.delete();
-                }
-            }
-        }
-        return new BufferedDataTable[]{matchTable.getTable(),
-                failTable.getTable()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // nothing to reset
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_settings.loadSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_settings.saveSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        RDKitMoleculeSubstructFilterSettings s =
-                new RDKitMoleculeSubstructFilterSettings();
-        s.loadSettings(settings);
-        if (s.minimumMatches() < 0) {
-            throw new InvalidSettingsException("Minimum matches must be >= 0");
-        }
-    }
+			i++;
+		}
+		
+		setPreprocessingResults(arrPatterns, iTotalEmptyPatternCells, iTotalPatternAtomsCount);
+		
+		// Does not do anything by default
+		exec.setProgress(1.0d);
+	}			 
 }

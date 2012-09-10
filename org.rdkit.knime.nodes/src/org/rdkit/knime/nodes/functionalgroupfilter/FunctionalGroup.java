@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,107 +48,215 @@
  */
 package org.rdkit.knime.nodes.functionalgroupfilter;
 
-import java.io.Serializable;
+import java.text.ParseException;
 
-import org.RDKit.ROMol;
+/**
+ * The class to represent a functional group and its properties.
+ * 
+ * @author Dillip K Mohanty
+ * @author Manuel Schwarze
+ */
+public class FunctionalGroup {
 
-public class FunctionalGroup implements Serializable {
+	//
+	// Constants
+	//
+
+	public static final String INDENT = "    ";
+	
+	//
+	// Members
+	//
+	
+	/** The unique name of the functional group. */
+	private String m_strName = null;
+	
+	/** The smart pattern of the functional group. */
+	private String m_strSmarts = null;
+	
+	/** The label of the functional group. */
+	private String m_strLabel = null;
+	
+	/** The removal reaction of the functional group. */
+	private String m_strRemovalReaction = null;
+	
+	/** The display label of the functional group. */
+	private String m_strDisplayLabel = null;
+	
+	//
+	// Constructor
+	//
+	
+	/**
+	 * Creates a new functional group from the specified line that has been taken
+	 * from a definition file. It must be in the following format:<br>
+	 * Name\tSmarts\tLabel\tRemovalReaction (optional)<br>
+	 * Optional leading and trailing whitespaces will be cut off.
+	 * The Label will be taken as display name.
+	 * 
+	 * @param strLine Line of functional group definition file. Must not be null.
+	 * 
+	 * @throws ParseException Thrown, if the functional group could not be
+	 * 		parsed from the specified line. The message will contain the error.
+	 */
+	public FunctionalGroup(String strLine) throws ParseException {
+		if (strLine == null) {
+			throw new IllegalArgumentException("Function group line must not be null.");
+		}
+		
+		String[] tokens = strLine.split("[\t]+");
+
+		if (tokens == null) {
+			throw new ParseException("Unable to identify fields of " +
+					"function group definition.", 0);
+		}
+		
+		if (tokens.length < 2) {
+			throw new ParseException("Not enough fields specified for " +
+					"function group definition.", 0);
+		}
+		
+		m_strName = tokens[0].trim();
+		
+		if (m_strName.isEmpty()) {
+			throw new ParseException("No valid name specified for " +
+					"function group definition.", 0);
+		}
+		
+		m_strSmarts = tokens[1].trim();
+		
+		if (m_strSmarts.isEmpty()) {
+			throw new ParseException("No valid SMARTS specified for " +
+					"function group definition.", 0);
+		}
+
+		// Be gracious and ignore a missing label
+		if (tokens.length > 2) {
+			m_strLabel = tokens[2].trim();
+		}
+		if (m_strLabel == null || m_strLabel.isEmpty()) {
+			m_strLabel = m_strName.replace(".", " ");
+		}
+
+		
+		if (tokens.length > 3) {
+			m_strRemovalReaction = tokens[3].trim();
+			
+			if (m_strRemovalReaction.isEmpty()) {
+				m_strRemovalReaction = null;
+			}
+		}
+		
+		// Indent the display label, if the line starts with whitespaces
+		m_strDisplayLabel = (!strLine.startsWith(m_strName) ? INDENT : "") + m_strLabel;
+	}
+	
+	/**
+	 * Creates a new functional group with the specified values functional group.
+	 * 
+	 * @param uniqueName The unique name of the group. Must not be null.
+	 * @param smarts The SMARTS to identify the group. Must not be null.
+	 * @param label A friendly name of the group. Usually also used as display label.
+	 * 		Must not be null.
+	 * @param removalReaction Reaction to remove the functional group from the molecule. 
+	 * 		This is necessary for cases like boronic ethers where the full functional 
+	 * 		group cannot be specified in SMARTS. Can be null.
+	 */
+	public FunctionalGroup(String uniqueName, String smarts, String label, 
+			String removalReaction, String displayLabel) {
+		m_strName = uniqueName;
+		m_strSmarts = smarts;
+		m_strLabel = label;
+		m_strRemovalReaction = removalReaction;
+		m_strDisplayLabel = displayLabel;
+	}
+
+	//
+	// Public Methods
+	//
 
 	/**
-	 * serialVersionUID
+	 * Returns the unique name of the functional group.
+	 * 
+	 * @return The unique name.
 	 */
-	private static final long serialVersionUID = -351727842042946879L;
-	
-	private static final String QUALIFIER_EXACTLY = "Exactly(=)";
-	
-	private String name = null;
-	
-	private String smarts = null;
-	
-	private String label = null;
-	
-	private String removalReaction = null;
-	
-	private String displayLabel = null;
-	
-	private ROMol funcMol = null;
-	
-	private long funcCount = 0;
-	
-	private boolean isSelected = false;
-	
-	private String qualifier = QUALIFIER_EXACTLY;//Set default value
-	
-	public boolean isSelected() {
-		return isSelected;
-	}
-
-	public void setSelected(boolean isSelected) {
-		this.isSelected = isSelected;
-	}
-
-	public long getFuncCount() {
-		return funcCount;
-	}
-
-	public void setFuncCount(long funcCount) {
-		this.funcCount = funcCount;
-	}
-
 	public String getName() {
-		return name;
+		return m_strName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
+	/**
+	 * Returns the SMARTS to identify the functional group.
+	 * 
+	 * @return The SMARTS to identify the functional group.
+	 */
 	public String getSmarts() {
-		return smarts;
+		return m_strSmarts;
 	}
 
-	public void setSmarts(String smarts) {
-		this.smarts = smarts;
-	}
-
+	/**
+	 * Returns the label of the functional group.
+	 * 
+	 * @return The label of the functional group.
+	 */
 	public String getLabel() {
-		return label;
+		return m_strLabel;
 	}
 
-	public void setLabel(String label) {
-		this.label = label;
-	}
-
-	public String getDisplayLabel() {
-		return displayLabel;
-	}
-
-	public void setDisplayLabel(String displayLabel) {
-		this.displayLabel = displayLabel;
-	}
-
-	public ROMol getFuncMol() {
-		return funcMol;
-	}
-
-	public void setFuncMol(ROMol funcMol) {
-		this.funcMol = funcMol;
-	}
-
+	/**
+	 * Returns the optional removal reaction to remove the functional 
+	 * group from the molecule. This is necessary for cases like 
+	 * boronic ethers where the full functional group cannot be 
+	 * specified in SMARTS. 
+	 * 
+	 * @return The removal reaction, if set. Otherwise null.
+	 */
 	public String getRemovalReaction() {
-		return removalReaction;
+		return m_strRemovalReaction;
 	}
 
-	public void setRemovalReaction(String removalReaction) {
-		this.removalReaction = removalReaction;
+	/**
+	 * Returns the label that will be used to display the functional
+	 * group to the user.
+	 * 
+	 * @return The display label.
+	 */
+	public String getDisplayLabel() {
+		return m_strDisplayLabel;
 	}
 
-	public String getQualifier() {
-		return qualifier;
+	/**
+	 * Sets an alternative display label for this functional group.
+	 * 
+	 * @param displayLabel The displayLabel to set. Must not be null.
+	 */
+	public void setDisplayLabel(String displayLabel) {
+		if (displayLabel == null) {
+			throw new IllegalArgumentException("The display label must not be null.");
+		}
+		
+		m_strDisplayLabel = displayLabel;
 	}
-
-	public void setQualifier(String qualifier) {
-		this.qualifier = qualifier;
+	
+	/**
+	 * Creates a string presentation for this functional group to
+	 * be used as a tooltip.
+	 * 
+	 * @return Tooltip representation.
+	 */
+	public String getTooltip() {
+		// Include name and SMARTS
+		StringBuffer sb = new StringBuffer("<html><strong>")
+			.append(m_strName).append(":</strong> ")
+			.append(m_strSmarts);
+		
+		// Optionally: Include removal reaction
+		if (m_strRemovalReaction != null) {
+			sb.append("<br>")
+			.append("<strong>Removal Reaction: </strong>")
+			.append(m_strRemovalReaction)
+			.append("<html>");
+		}
+		
+		return sb.toString();
 	}
-
 }

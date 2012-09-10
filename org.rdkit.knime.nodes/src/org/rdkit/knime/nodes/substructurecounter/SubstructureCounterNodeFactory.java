@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -51,44 +51,60 @@ package org.rdkit.knime.nodes.substructurecounter;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.rdkit.knime.nodes.RDKitInteractiveView;
 
 /**
- * This NodeFactory for the "Substructure Counter" Node is used to get the node components registered.
- * It creates the node views and node dialog components. 
+ * <code>NodeFactory</code> for the RDKit based "RDKitSubstructureCounter" Node.
  * 
- *
  * @author Swarnaprava Singh
+ * @author Manuel Schwarze
  */
 public class SubstructureCounterNodeFactory 
         extends NodeFactory<SubstructureCounterNodeModel> {
 
     /**
+     * Creates a model for the RDKitSubstructureCounter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public SubstructureCounterNodeModel createNodeModel() {
         return new SubstructureCounterNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<SubstructureCounterNodeModel> createNodeView(
+            final int viewIndex,
+            final SubstructureCounterNodeModel nodeModel) {
+        if (viewIndex != 0) {
+            throw new IllegalArgumentException();
+        }
+        return new RDKitInteractiveView<SubstructureCounterNodeModel>(nodeModel, false, 0);
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
     public int getNrNodeViews() {
-        return 0;
+        return 1;
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<SubstructureCounterNodeModel> createNodeView(final int viewIndex,
-            final SubstructureCounterNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
     public boolean hasDialog() {
@@ -102,6 +118,5 @@ public class SubstructureCounterNodeFactory
     public NodeDialogPane createNodeDialogPane() {
         return new SubstructureCounterNodeDialog();
     }
-
 }
 

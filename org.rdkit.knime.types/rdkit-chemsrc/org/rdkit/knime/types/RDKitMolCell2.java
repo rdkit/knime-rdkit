@@ -71,7 +71,12 @@ import org.knime.core.data.StringValue;
 public class RDKitMolCell2 extends DataCell implements StringValue,
         RDKitMolValue, SmilesValue, SdfValue {
 
-    /**
+    /** Serial number. */
+	private static final long serialVersionUID = -5474087790061027859L;
+
+	private static final String SDF_POSTFIX = "\n$$$$\n";
+	
+	/**
      * Convenience access member for
      * <code>DataType.getType(RDKitMolCell2.class)</code>.
      *
@@ -166,26 +171,41 @@ public class RDKitMolCell2 extends DataCell implements StringValue,
     /** {@inheritDoc} */
     @Override
     public String getSdfValue() {
+    	String value;
+    	
         ROMol mol = readMoleculeValue();
+        
         try {
             // Convert to SDF
-            if(mol.getNumConformers() == 0){
+        	if(mol.getNumConformers() == 0){
                 mol.compute2DCoords();
             }
-            String value = RDKFuncs.MolToMolBlock(mol);
+            
+            value = RDKFuncs.MolToMolBlock(mol);
+            
             // KNIME SDF type requires string to be terminated
             // by $$$$ -- see org.knime.chem.types.SdfValue for details
-            String postfix = "\n$$$$\n";
-            if (!value.endsWith(postfix)) {
-                StringBuilder valueBuilder = new StringBuilder();
-                valueBuilder.append(value);
-                valueBuilder.append(postfix);
-                value = valueBuilder.toString();
+            if (!value.endsWith(SDF_POSTFIX)) {
+            	value += SDF_POSTFIX;
             }
-            return value;
-        } finally {
+        }
+        catch (Exception exc) {
+        	// Converting the RDKit molecule into Sdf Value failed.
+        	// In that case we return an empty string value.
+        	// Logging something here may swam the log files - not desired.
+        	// Note: Implementing the SdfValue interface actually violates
+        	//       one of the KNIME Development Rules, saying that 
+        	//       a DataCell should only implement Value interfaces, if
+        	//       the representation in that format is "loss-free".
+        	//       E.g. DoubleCell does NOT implement IntValue, because it
+        	//       would loose information. The same happens here now.
+        	value = "";
+        }
+        finally {
             mol.delete();
         }
+
+        return value;
     }
 
     /**

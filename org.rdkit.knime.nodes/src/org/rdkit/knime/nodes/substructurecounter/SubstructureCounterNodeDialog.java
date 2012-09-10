@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -56,52 +56,69 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 
 /**
- * Dialog pane for configuring Substructure Counter node options.
+ * <code>NodeDialog</code> for the "RDKitSubstructureCounter" Node.
+ *
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+ * creation of a simple dialog with standard components. If you need a more 
+ * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Swarnaprava Singh
+ * @author Manuel Schwarze
  */
 public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 
-    @SuppressWarnings("unchecked")
-	protected SubstructureCounterNodeDialog() {
-        super();
-        
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createMoleculeInputModel(), "Input Molecule Column: ", 0, 
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createQueryInputModel(), "Input Query Column: ", 1, 
-                RDKitMolValue.class));
-        
-        super.addDialogComponent(
-         		new DialogComponentBoolean(createCBCountUniqueMatches(),
-         				"Count Unique Matches Only?"));
-    }
+	//
+	// Constructor
+	//
+	
     /**
-     * This method returns the column name for the input molecule column.
-     * 
-     * @return SettingsModelString:Name of the input molecule column in the input table.
+     * Create a new dialog pane with default components to configure an input column,
+     * the name of a new column, which will contain the calculation results, an option
+     * to tell, if the source column shall be removed from the result table.
      */
-    static final SettingsModelString createMoleculeInputModel() {
-		return new SettingsModelString("inputMolCol", null);
-	}
+    @SuppressWarnings("unchecked")
+	SubstructureCounterNodeDialog() {
+        super.addDialogComponent(new DialogComponentColumnNameSelection(
+                createInputColumnNameModel(), "RDKit Mol column: ", 0,
+                RDKitMolValue.class));
+        super.addDialogComponent(new DialogComponentColumnNameSelection(
+                createQueryInputModel(), "Input query column: ", 1, 
+                RDKitMolValue.class));
+        super.addDialogComponent(
+         		new DialogComponentBoolean(createUniqueMatchesOnlyModel(),
+         				"Count unique matches only"));
+    }
+
+    //
+    // Static Methods
+    //
+    
     /**
-     * This method returns the column name for the selected query column.
+     * Creates the settings model to be used for the input column.
      * 
-     * @return SettingsModelString:Name of the query column in the input query table.
+     * @return Settings model for input column selection.
+     */
+    static final SettingsModelString createInputColumnNameModel() {
+        return new SettingsModelString("input_column", null);
+    }
+
+    /**
+     * Creates the settings model to be used to specify the query molecule column.
+     * 
+     * @return Settings model for query column selection.
      */
     static final SettingsModelString createQueryInputModel() {
 		return new SettingsModelString("inputQueryCol", null);
 	}
+    
     /**
-     * This method returns the choice of the user should he requires to count the 
-     * unique matching query structures or all the matching structures.
+     * Creates the settings model to be used to specify the option
+     * to select only unique matches.
      * 
-     * @return SettingsModelBoolean: returns true/false if this option is checked.
+     * @return Settings model for unique matches option.
      */
-    static final SettingsModelBoolean createCBCountUniqueMatches() {
+    static final SettingsModelBoolean createUniqueMatchesOnlyModel() {
 		return new SettingsModelBoolean("countUniqueMatches", true);
 		
 	}
 }
-

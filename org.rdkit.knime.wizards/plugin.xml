@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   	<extension point="org.eclipse.ui.newWizards">
+   	<wizard
+    	category="org.knime.workbench.ui.wizards.category"
+    	class="org.rdkit.knime.wizards.RDKitNodesWizards"
+	    descriptionImage="icons/rdkit_wizard.png"
+	    finalPerspective="org.eclipse.pde.ui.PDEPerspective"
+	    hasPages="true"
+	    icon="icons/rdkit_small.png"
+	    id="org.rdkit.knime.wizards.RDKitNodesWizards"
+	    name="Create a new RDKit Node"
+	    preferredPerspectives="org.eclipse.pde.ui.PDEPerspective"
+	    project="true">
+	 		<description>
+		    	This wizards creates the framework for a new KNIME Node based on RDKit functionality.
+	 		</description>
+	</wizard>	
+   	</extension>
+</plugin>

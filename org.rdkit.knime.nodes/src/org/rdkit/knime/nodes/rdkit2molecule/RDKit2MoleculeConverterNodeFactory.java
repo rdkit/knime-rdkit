@@ -1,10 +1,11 @@
 /*
- * ------------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
  *
- *  Copyright (C) 2003 - 2010
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ * Copyright (C) 2012
+ * Novartis Institutes for BioMedical Research
+ *
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -43,10 +44,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   Nov 4, 2010 (wiswedel): created
+ * ---------------------------------------------------------------------
  */
 package org.rdkit.knime.nodes.rdkit2molecule;
 
@@ -55,51 +53,66 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKit2Molecule" Node.
+ * 
  * @author Bernd Wiswedel
+ * @author Manuel Schwarze
  */
-public class RDKit2MoleculeConverterNodeFactory
+public class RDKit2MoleculeConverterNodeFactory 
         extends NodeFactory<RDKit2MoleculeConverterNodeModel> {
 
     /**
+     * Creates a model for the RDKit2Molecule functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKit2MoleculeConverterNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKit2MoleculeConverterNodeModel createNodeModel() {
         return new RDKit2MoleculeConverterNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKit2MoleculeConverterNodeModel> createNodeView(
-            final int viewIndex, final RDKit2MoleculeConverterNodeModel nodeModel) {
+            final int viewIndex,
+            final RDKit2MoleculeConverterNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKit2MoleculeConverterNodeDialog();
+    }
 }
+

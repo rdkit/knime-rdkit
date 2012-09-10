@@ -1,0 +1,83 @@
+/* 
+ * This source code, its documentation and all related files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright (C)__CURRENT_YEAR__
+ * Novartis Institutes for BioMedical Research
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ */
+package __BASE_PACKAGE__;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * <code>NodeFactory</code> for the RDKit based "__NODE_NAME__" Node.
+ * __DESCRIPTION__
+ *
+ * @author __VENDOR_NAME__
+ */
+public class __NODE_NAME__NodeFactory 
+        extends NodeFactory<__NODE_NAME__NodeModel> {
+
+    /**
+     * Creates a model for the __NODE_NAME__ functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
+     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+     */
+    @Override
+    public __NODE_NAME__NodeModel createNodeModel() {
+        return new __NODE_NAME__NodeModel();
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<__NODE_NAME__NodeModel> createNodeView(
+            final int viewIndex,
+            final __NODE_NAME__NodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new __NODE_NAME__NodeDialog();
+    }
+}
+

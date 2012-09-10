@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,30 +53,32 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * <code>NodeFactory</code> for the RDKit based "RDKitCanonicalSmiles" Node.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitCanonicalSmilesNodeFactory extends
-        NodeFactory<RDKitCanonicalSmilesNodeModel> {
+public class RDKitCanonicalSmilesNodeFactory 
+        extends NodeFactory<RDKitCanonicalSmilesNodeModel> {
 
     /**
+     * Creates a model for the RDKitCanonicalSmiles functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitCanonicalSmilesNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitCanonicalSmilesNodeModel createNodeModel() {
         return new RDKitCanonicalSmilesNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitCanonicalSmilesNodeModel> createNodeView(
@@ -84,21 +86,33 @@ public class RDKitCanonicalSmilesNodeFactory extends
             final RDKitCanonicalSmilesNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitCanonicalSmilesNodeDialog();
+    }
 }
+

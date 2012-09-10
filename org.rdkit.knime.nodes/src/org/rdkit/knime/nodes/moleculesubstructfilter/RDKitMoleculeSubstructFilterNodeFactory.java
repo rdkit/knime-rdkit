@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,33 +53,33 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This factory class creates all necessary objects for the dictionary based
- * substructure filter node.
- *
- * @author Greg Landrum
+ * <code>NodeFactory</code> for the RDKit based "RDKitMoleculeSubstructFilter" Node.
+ * 
+ * @author Greg Landrum, Novartis
  * @author Thorsten Meinl, University of Konstanz
+ * @author Manuel Schwarze, Novartis
  */
-public class RDKitMoleculeSubstructFilterNodeFactory
+public class RDKitMoleculeSubstructFilterNodeFactory 
         extends NodeFactory<RDKitMoleculeSubstructFilterNodeModel> {
 
     /**
+     * Creates a model for the RDKitMoleculeSubstructFilter functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
      * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitMoleculeSubstructFilterNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
      */
     @Override
     public RDKitMoleculeSubstructFilterNodeModel createNodeModel() {
         return new RDKitMoleculeSubstructFilterNodeModel();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always null.
      */
     @Override
     public NodeView<RDKitMoleculeSubstructFilterNodeModel> createNodeView(
@@ -87,21 +87,33 @@ public class RDKitMoleculeSubstructFilterNodeFactory
             final RDKitMoleculeSubstructFilterNodeModel nodeModel) {
         return null;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitMoleculeSubstructFilterNodeDialog();
+    }
 }
+

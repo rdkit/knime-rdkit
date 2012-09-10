@@ -19,7 +19,7 @@
                 second input port.</p>
         </intro>
 
-        <option name="RDKit Mol column">The column from the first table containing reactant molecules</option>
+        <option name="Reactant RDKit Mol column">The column from the first table containing reactant molecules</option>
         <option name="Rxn column">The column from the second table containing the Rxn</option>
         <option name="Reaction SMARTS">
             A reaction SMARTS describing the reaction.

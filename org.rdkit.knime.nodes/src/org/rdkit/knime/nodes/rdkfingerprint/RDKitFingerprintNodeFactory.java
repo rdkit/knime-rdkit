@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -53,8 +53,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeFactory</code> for the RDKit based "RDKitFingerprint" Node.
  *
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
 public class RDKitFingerprintNodeFactory extends
         NodeFactory<RDKitFingerprintNodeModel> {
@@ -64,7 +66,7 @@ public class RDKitFingerprintNodeFactory extends
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitFingerprintNodeDialogPane();
+        return new RDKitFingerprintNodeDialog();
     }
 
     /**

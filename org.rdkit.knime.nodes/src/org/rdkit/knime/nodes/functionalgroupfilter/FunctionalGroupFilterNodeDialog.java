@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2011
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,629 +48,548 @@
  */
 package org.rdkit.knime.nodes.functionalgroupfilter;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.GridBagConstraints;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.Iterator;
-import java.util.List;
+import java.io.InputStream;
 
-import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingWorker;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableColumn;
+import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
-import org.knime.core.node.util.FilesHistoryPanel;
-import org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupNodeSettings.LineProperty;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.nodes.functionalgroupfilter.SettingsModelFunctionalGroupConditions.Qualifier;
 import org.rdkit.knime.types.RDKitMolValue;
-
+import org.rdkit.knime.util.DialogComponentTable;
+import org.rdkit.knime.util.FileUtils;
+import org.rdkit.knime.util.LayoutUtils;
+import org.rdkit.knime.util.SpinnerEditor;
 
 /**
- * This is the dialog for the Functional Group Filter node. It lets the user
- * choose a RDKit column from the incoming table and also to load functional
- * group definitions file if the default file is not not be used for filtering
- * purposes. The user can then select which functional groups filter he wants to
- * be applied to each molecule.
+ * <code>NodeDialog</code> for the "RDKitFunctionalGroupFilter" Node.
+ *
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+ * creation of a simple dialog with standard components. If you need a more 
+ * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Dillip K Mohanty
+ * @author Manuel Schwarze
  */
-public class FunctionalGroupFilterNodeDialog extends NodeDialogPane {
-
-	/**
-	 * This class is used for loading the functional group to the dialog pane.
-	 * 
-	 * @author Dillip K Mohanty
-	 * 
-	 */
-	private class FileScanner extends
-			SwingWorker<ArrayList<FunctionalGroup>, Object[]> {
-
-		@Override
-		protected ArrayList<FunctionalGroup> doInBackground() throws Exception {
-			return scanFile();
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		protected void done() {
-			m_filePanel.setCursor(Cursor
-					.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			ArrayList<FunctionalGroup> properties;
-			try {
-				properties = get();
-			} catch (Exception ex) {
-//				JOptionPane.showMessageDialog(m_filePanel,
-//						"Could not extract properties: "
-//								+ ex.getCause().getMessage(), "Error",
-//						JOptionPane.ERROR_MESSAGE);
-				LOGGER.error("Could not properly extract properties", ex);
-				return;
-			}
-			m_propsModel.update(properties);
-		}
-
-		/**
-		 * This method makes a call to readFuncGroupPatterns() method for
-		 * reading the functional group definition file and return the list of
-		 * FunctionalGroup objects to be displayed on the dialog panel.
-		 * 
-		 * @return ArrayList<FunctionalGroup>
-		 * @throws Exception
-		 */
-		private ArrayList<FunctionalGroup> scanFile() throws Exception {
-			FunctionalGroupFilter funcGrpFilter = new FunctionalGroupFilter();
-			ArrayList<FunctionalGroup> funcGroupDefnList = funcGrpFilter
-					.readFuncGroupPatterns(m_funcSettings.getFileUrl());
-			return funcGroupDefnList;
-		}
-	}
-
-	/**
-	 * This class is used for handling the spinner characteristics for each
-	 * group.
-	 * 
-	 * @author Dillip K Mohanty
-	 * 
-	 */
-	public class SpinnerEditor extends AbstractCellEditor implements
-			TableCellEditor {
-
-		/**
-		 * SerialVersionUID
-		 */
-		private static final long serialVersionUID = -7322590161328326802L;
-
-		final JSpinner spinner = new JSpinner(new SpinnerNumberModel(0, 0, 100,
-				1));
-
-		// Prepares the spinner component and returns it.
-		public Component getTableCellEditorComponent(JTable table,
-				Object value, boolean isSelected, int row, int column) {
-			spinner.setValue(value);
-			return spinner;
-		}
-
-		// Enables the editor only for clicks.
-		public boolean isCellEditable(EventObject evt) {
-			return true;
-		}
-
-		// Returns the spinners current value.
-		public Object getCellEditorValue() {
-			return spinner.getValue();
-		}
-	}
-
-	/**
-	 * This class is used for handling the functional group definitions shown as
-	 * a table model.
-	 * 
-	 * @author Dillip K Mohanty
-	 * 
-	 */
-	private static class PropertiesTableModel extends AbstractTableModel {
-
-		/**
-		 * SerialVersionUID
-		 */
-		private static final long serialVersionUID = 7390119658041208690L;
-
-		private final List<LineProperty> m_properties = new ArrayList<LineProperty>();
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public String getColumnName(final int column) {
-			switch (column) {
-			case 0:
-				return "Select";
-			case 1:
-				return "Functional Group Name";
-			case 2:
-				return "Qualifier";
-			case 3:
-				return "Count";
-			default:
-				return "???";
-			}
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public Class<?> getColumnClass(final int columnIndex) {
-			switch (columnIndex) {
-			case 0:
-				return Boolean.class;
-			case 1:
-				return String.class;
-			case 2:
-				return String.class;
-			case 3:
-				return Integer.class;
-			default:
-				return Object.class;
-			}
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public boolean isCellEditable(final int rowIndex, final int columnIndex) {
-			switch (columnIndex) {
-			case 0:
-				return true;
-			case 2:
-				return true;
-			case 3:
-				return true;
-			default:
-				return false;
-			}
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public int getColumnCount() {
-			return 4;
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public int getRowCount() {
-			return m_properties.size();
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public Object getValueAt(final int rowIndex, final int columnIndex) {
-			switch (columnIndex) {
-			case 0:
-				return m_properties.get(rowIndex).isSelect();
-			case 1:
-				return m_properties.get(rowIndex).getName();
-			case 2:
-				return m_properties.get(rowIndex).getQualifier();
-			case 3:
-				return m_properties.get(rowIndex).getCount();
-			default:
-				return "???";
-			}
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void setValueAt(final Object value, final int rowIndex,
-				final int columnIndex) {
-			switch (columnIndex) {
-			case 0:
-				m_properties.get(rowIndex).setSelect((Boolean) value);
-				break;
-			case 2:
-				m_properties.get(rowIndex).setQualifier((String) value);
-				break;
-			case 3:
-				m_properties.get(rowIndex).setCount((Integer) value);
-				break;
-			}
-		}
-
-		/**
-		 * Updates the table model with the found properties.
-		 * 
-		 * @param props
-		 *            a list of Functional groups
-		 */
-		public void update(final ArrayList<FunctionalGroup> props) {
-			m_properties.clear();
-
-			synchronized (props) {
-				for (Iterator<FunctionalGroup> iterator = props.iterator(); iterator
-						.hasNext();) {
-					FunctionalGroup functionalGroup = iterator.next();
-					m_properties.add(new LineProperty(false, functionalGroup
-							.getDisplayLabel(), functionalGroup.getQualifier()
-							.toString(), Long.valueOf(
-							functionalGroup.getFuncCount()).intValue()));
-				}
-			}
-
-			fireTableDataChanged();
-		}
-
-		/**
-		 * Returns the properties shown in the table.
-		 * 
-		 * @return a list of the shown properties
-		 */
-		public List<LineProperty> getProperties() {
-			return m_properties;
-		}
-
-		/**
-		 * Updates the table model with the given properties.
-		 * 
-		 * @param props
-		 *            a list of properties
-		 */
-		public void update(final Iterable<LineProperty> props) {
-			m_properties.clear();
-			for (LineProperty p : props) {
-				m_properties.add(new LineProperty(p));
-			}
-		}
-	}
-
-	private static final NodeLogger LOGGER = NodeLogger
+public class FunctionalGroupFilterNodeDialog extends DefaultNodeSettingsPane {
+	
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(FunctionalGroupFilterNodeDialog.class);
-
-	// static final FilenameFilter FILTER = new FilenameFilter() {
-	// @Override
-	// public boolean accept(final File dir, final String name) {
-	// String s = name.toLowerCase();
-	// return s.endsWith(".txt");
-	// }
-	// };
-
-	/**
-	 * Instance of main dialog panel
-	 */
-	private JPanel m_dialogPanel;
-
-	/**
-	 * Instance of file scanner (swing worker object)
-	 */
-	private FileScanner m_fileScanner;
 	
-	/**
-	 * Instance of load default button 
-	 */
-	private final JButton m_default = new JButton("Load default");
+	/** Button image for showing definition info. */
+	private static final Icon INFO_ICON = LayoutUtils.createImageIcon(
+			FunctionalGroupFilterNodeDialog.class, 
+			"/org/rdkit/knime/nodes/functionalgroupfilter/info.png", null);
 	
-	/**
-	 * Node Settings instance to transfer values from dialog pane to node model.
-	 */
-	private final FunctionalGroupNodeSettings m_funcSettings = new FunctionalGroupNodeSettings();
+	//
+	// Members
+	//
 
-	@SuppressWarnings("unchecked")
-	/**
-	 * Instance of molecule column combo box which shows only RDKit molecule type.
-	 */
-	private final ColumnSelectionComboxBox m_molColumn = new ColumnSelectionComboxBox(
-			(Border) null, RDKitMolValue.class);
+	/** An error border to be shown, if the custom definition file name is not existing. */
+	private Border m_borderInputFileError = BorderFactory.createLineBorder(Color.RED);
+	
+	/** The model for setting the input file for the functional group settings. */
+	private SettingsModelString m_modelInputFile;
+	
+	/** The model for all condition settings. */
+	private SettingsModelFunctionalGroupConditions m_modelConditions;
+	
+	/** The GUI component to select the custom definition file. */
+	private JComponent m_compInputFile;
 
-	/**
-	 * Instance of Files History panel
-	 */
-	private final FilesHistoryPanel m_file = new FilesHistoryPanel(
-			FunctionalGroupFilterNodeDialog.class.toString());
-
-	/**
-	 * Instance of Column Selection Combo Box panel
-	 */
-	private final JPanel m_columnPanel = new JPanel(new GridBagLayout());
-
-	/**
-	 * Instance of File panel
-	 */
-	private final JPanel m_filePanel = new JPanel(new GridBagLayout());
-
-	/**
-	 * Instance of functional group filter panel
-	 */
-	private final JPanel m_propertiesPanel = new JPanel(new GridBagLayout());
-
-	/**
-	 * Instance of properties model
-	 */
-	private final PropertiesTableModel m_propsModel = new PropertiesTableModel();
-
-	/**
-	 * Instance of table which holds properties model
-	 */
-	private final JTable m_propertiesTable = new JTable(m_propsModel);
-
-	/**
-	 * Create the dialog pane components for configuring Functional Group Filter
-	 * node.
-	 */
-	protected FunctionalGroupFilterNodeDialog() {
-		super();
-
-		m_dialogPanel = new JPanel();
-		m_dialogPanel.setLayout(new BoxLayout(m_dialogPanel, BoxLayout.Y_AXIS));
-		m_dialogPanel.add(Box.createVerticalGlue());
-		// Table Column selection panel
-		m_dialogPanel.add(createColumnPanel());
-		// Functional group definition file selection panel
-		m_dialogPanel.add(createFileNamePanel());
-		// Filter panel
-		m_dialogPanel.add(createFilterPanel());
-		m_dialogPanel.add(Box.createVerticalGlue());
-		super.addTab("Settings", m_dialogPanel);
-	}
-
-	/**
-	 * Method for creating the Column selection panel in the node dialog
-	 * 
-	 * @return JPanel
-	 */
-	private JPanel createColumnPanel() {
-		JPanel p = m_columnPanel;
-		// Sets a border for the panel
-		p.setBorder(BorderFactory.createTitledBorder(
-				BorderFactory.createEtchedBorder(), "Select molecule column"));
-		JLabel commentLabel = new JLabel(" Column name :");
-		p.add(commentLabel);
-		p.add(Box.createHorizontalGlue());
-		p.add(m_molColumn);
-		return p;
-	}
-
-	/**
-	 * Method for creating the File selection panel in the node dialog
-	 * 
-	 * @return JPanel
-	 */
-	private JPanel createFileNamePanel() {
-
-		JPanel p = m_filePanel;
-		// Sets a border for the panel
-		p.setBorder(BorderFactory.createTitledBorder(
-				BorderFactory.createEtchedBorder(),
-				"Select functional group definition file (Optional)"));
-		
-		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0;
-		c.gridy = 0;
-		c.insets = new Insets(2, 0, 2, 0);
-		c.anchor = GridBagConstraints.WEST;
-		// Add label
-		p.add(new JLabel(" File path : "), c);
-		c.gridx = 1;
-		c.weightx = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		// Add File history panel
-		p.add(m_file, c);
-		
-		m_file.setSelectMode(JFileChooser.FILES_AND_DIRECTORIES);
-		m_file.addChangeListener(new ChangeListener() {
+	//
+	// Constructor
+	//
+	
+    /**
+     * Create a new dialog pane with default components to configure an input column,
+     * the name of a new column, which will contain the calculation results, an option
+     * to tell, if the source column shall be removed from the result table.
+     */
+    @SuppressWarnings("unchecked")
+	FunctionalGroupFilterNodeDialog() {
+    	// Create models first
+    	SettingsModelString modelInputColumn = createInputColumnNameModel();
+        m_modelInputFile = createInputFileModel();
+        m_modelInputFile.addChangeListener(new ChangeListener() {
 			@Override
-			public void stateChanged(final ChangeEvent e) {
-				if (m_file.getSelectedFile() != null && !m_file.getSelectedFile().trim().equals("")) {
-					m_filePanel.setCursor(Cursor
-							.getPredefinedCursor(Cursor.WAIT_CURSOR));
-					ArrayList<FunctionalGroup> properties = new ArrayList<FunctionalGroup>();
-					m_funcSettings.setFileUrl(m_file.getSelectedFile());
-					m_propsModel.update(properties);
-					if (m_fileScanner != null) {
-						m_fileScanner.cancel(true);
-					}
-					m_fileScanner = new FileScanner();
-					m_fileScanner.execute();
-				}
+			public void stateChanged(ChangeEvent e) {
+				refreshFunctionalGroupDefinitions();
 			}
 		});
-        c.gridx++;
+        m_modelConditions = createFunctionalGroupConditionsModel(true);
+        SettingsModelBoolean modelRecordFailedPatternOption =  
+        	createRecordFailedPatternOptionModel();
+        SettingsModelString modelNewFailedPatternColumnName =
+        	createNewFailedPatternColumnNameModel(modelRecordFailedPatternOption);
+    	
+    	// Create GUI components
+        DialogComponentColumnNameSelection compInputColumn = 
+        	new DialogComponentColumnNameSelection(
+        		modelInputColumn, "", 0,
+                RDKitMolValue.class);
+        super.addDialogComponent(compInputColumn);
 
-        p.add(m_default, c);
-        m_default.addActionListener(new ActionListener() {
+        DialogComponentFileChooser compInputFile = new DialogComponentFileChooser(
+        		m_modelInputFile, "FunctionGroupDefinitionFileHistory", 
+        		JFileChooser.OPEN_DIALOG);
+        super.addDialogComponent(compInputFile);
+        m_compInputFile = (JComponent)
+        	((JPanel)compInputFile.getComponentPanel().getComponent(0)).getComponent(0);
+        
+        // Create a button to load a default definition file
+        JButton btnLoadDefault = new JButton("Load Defaults");
+        btnLoadDefault.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onLoadDefaultDefinitionFile();
+			}
+		});
+        
+        JButton btnShowDefinitionFile = new JButton(INFO_ICON);
+        btnShowDefinitionFile.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onShowDefinitionFile();
+			}
+		});
+        
+        DialogComponentTable compTable = createConditionsTable();
+        super.addDialogComponent(compTable);
+        
+        DialogComponentBoolean compRecordFailedPattern = 
+        	new DialogComponentBoolean(
+        		modelRecordFailedPatternOption, 
+        		"Enable recording in the following new column:");
+        super.addDialogComponent(compRecordFailedPattern);
+        
+        DialogComponentString compNewColumnName = 
+        	new DialogComponentString(modelNewFailedPatternColumnName, null, true, 30);
+        super.addDialogComponent(compNewColumnName);
+    	
+        // Relayout the components
+    	JPanel panel = (JPanel)getTab("Options");
+    	panel.setLayout(new GridBagLayout());
+    	panel.removeAll();
+    	int iRow = 0;
+    	
+    	JPanel panelSub = new JPanel(new GridBagLayout());
+    	panelSub.setBorder(BorderFactory.createTitledBorder("Select molecule column"));
+    	LayoutUtils.constrain(panelSub, new JLabel("RDKit Mol column: "), 
+    			0, 0, 1, LayoutUtils.REMAINDER,
+    			LayoutUtils.NONE, LayoutUtils.WEST, 0.0d, 0.0d,
+    			0, 10, 5, 10);	
+    	LayoutUtils.constrain(panelSub, ((JPanel)compInputColumn.
+    			getComponentPanel().getComponent(1)).getComponent(0), 
+    			1, 0, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
+    			LayoutUtils.HORIZONTAL, LayoutUtils.CENTER, 1.0d, 0.0d,
+    			0, 10, 5, 10);	
+ 
+    	LayoutUtils.constrain(panel, panelSub, 
+    			0, iRow++, LayoutUtils.REMAINDER, 1, 
+    			LayoutUtils.HORIZONTAL, LayoutUtils.CENTER, 1.0d, 0.0d,
+    			10, 10, 0, 10);
+    	
+    	panelSub = new JPanel(new GridBagLayout());
+    	
+    	panelSub.setBorder(BorderFactory.createTitledBorder("Select functional group definition file (Optional)"));
+    	LayoutUtils.constrain(panelSub, m_compInputFile, 
+    			0, 0, 1, LayoutUtils.REMAINDER, 
+    			LayoutUtils.HORIZONTAL, LayoutUtils.CENTER, 1.0d, 0.0d,
+    			0, 10, 0, 7);
+       	LayoutUtils.constrain(panelSub, ((JPanel)compInputFile.getComponentPanel().
+       				getComponent(0)).getComponent(0), // The browse button
+    			1, 0, 1, LayoutUtils.REMAINDER, 
+    			LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+    			0, 0, 0, 7);
+    	LayoutUtils.constrain(panelSub, btnLoadDefault, 
+    			2, 0, 1, LayoutUtils.REMAINDER, 
+    			LayoutUtils.NONE, LayoutUtils.EAST, 0.0d, 0.0d,
+    			0, 0, 0, 7);
+     	LayoutUtils.constrain(panelSub, btnShowDefinitionFile, 
+    			3, 0, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
+    			LayoutUtils.NONE, LayoutUtils.EAST, 0.0d, 0.0d,
+    			0, 0, 0, 10);
+    	
+    	LayoutUtils.constrain(panel, panelSub, 
+    			0, iRow++, LayoutUtils.REMAINDER, 1, 
+    			LayoutUtils.HORIZONTAL, LayoutUtils.CENTER, 1.0d, 0.0d,
+    			3, 10, 0, 10);
+ 
+    	panelSub = new JPanel(new GridBagLayout());
+    	panelSub.setBorder(BorderFactory.createTitledBorder("List of available functional group filters"));
+     	LayoutUtils.constrain(panelSub, compTable.getComponentPanel(), 
+    			0, 0, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
+    			LayoutUtils.BOTH, LayoutUtils.CENTER, 1.0d, 1.0d,
+    			0, 10, 10, 10);
+    	
+    	LayoutUtils.constrain(panel, panelSub, 
+    			0, iRow++, LayoutUtils.REMAINDER, 1, 
+    			LayoutUtils.BOTH, LayoutUtils.CENTER, 1.0d, 1.0d,
+    			3, 10, 0, 10);
+    	
+    	panelSub = new JPanel(new GridBagLayout());
+    	panelSub.setBorder(BorderFactory.createTitledBorder("Recording of first non-matching pattern in new column"));
+    	LayoutUtils.constrain(panelSub, compRecordFailedPattern.getComponentPanel(), 
+    			0, 0, 1, LayoutUtils.REMAINDER,
+    			LayoutUtils.NONE, LayoutUtils.WEST, 0.0d, 0.0d,
+    			0, 0, 0, 0);
+    	LayoutUtils.constrain(panelSub, compNewColumnName.getComponentPanel().getComponent(1), 
+    			1, 0, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
+    			LayoutUtils.HORIZONTAL, LayoutUtils.EAST, 1.0d, 0.0d,
+    			0, 0, 0, 10);
+       	
+    	LayoutUtils.constrain(panel, panelSub, 
+    			0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
+    			LayoutUtils.HORIZONTAL, LayoutUtils.CENTER, 1.0d, 0.0d,
+    			3, 10, 10, 10);   
+    	
+    	panel.setPreferredSize(new Dimension(500, 510));
+    }
+    
+    //
+    // Protected Methods
+    //
+    
+    /**
+     * Refresh the functional group definitions from either the default or
+     * a custom definition file. This is called after all settings have
+     * been loaded into the dialog.
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(NodeSettingsRO settings,
+    		DataTableSpec[] specs) throws NotConfigurableException {
+        refreshFunctionalGroupDefinitions();
+    }
+
+    /**
+     * Loads the functional group settings from the custom file or from the
+     * default definition file and refreshs the condition table with the data.
+     */
+    protected void refreshFunctionalGroupDefinitions() {
+	   	try {
+	    	m_modelConditions.updateConditions(
+	    			FunctionalGroupFilterNodeModel.createDefinitionsFromFile(m_modelInputFile));
+	    	setFileError(false);
+    	}
+    	catch (InvalidSettingsException exc) {
+    		// Occurs if the specified file cannot be accessed 
+    		// (e.g not existing, no permissions, etc.)
+    		setFileError(true);
+    	}
+    }
+    
+    /**
+     * Loads the default definition file from a plug-in resource.
+     * This gets triggered by a button click of the user.
+     */
+    protected void onLoadDefaultDefinitionFile() {
+    	m_modelInputFile.setStringValue(
+    			FunctionalGroupFilterNodeModel.DEFAULT_DEFINITION_ID);
+    }
+    
+    /**
+     * Shows the definition file that is currently used.
+     */
+    protected void onShowDefinitionFile() {
+    	try {
+	    	InputStream in = FunctionalGroupFilterNodeModel.
+	    		getDefinitionFileInputStream(m_modelInputFile);
+	    	
+	    	String strDefinitions = FileUtils.getContentFromResource(in);
+	       	
+	    	JTextArea ta = new JTextArea(strDefinitions, 25, 90);
+	    	ta.setEditable(false);
+	    	JScrollPane scrollPane = new JScrollPane(ta);
+	 
+	    	JOptionPane.showOptionDialog(getPanel(), 
+	    			scrollPane, "Functional Group Definitions", 
+	    			JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, 
+	    			new Object[] { "Close" }, "Close");
+    	}
+    	catch (Exception exc) {
+    		String strMsg = "The functional group definition file '" +
+    				m_modelInputFile.getStringValue() + "' could not " +
+    				"be opened" + (exc.getMessage() != null ? 
+    					" for the following reason:\n" + exc.getMessage() : ".");
+    		LOGGER.warn(strMsg, exc);
+    		JOptionPane.showMessageDialog(getPanel(), strMsg, 
+    				"Error", JOptionPane.ERROR_MESSAGE);
+     	}
+    }
+    
+    /**
+     * Creates the renderer that shall be used in the qualifier column.
+     * 
+     * @return Table cell renderer.
+     */
+     protected TableCellRenderer createCenteredCellRenderer() {
+    	 DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+    	 renderer.setHorizontalAlignment(JLabel.CENTER);
+    	 return renderer;
+     }
+    
+    /**
+     * Creates the editor that shall be used in the qualifier column.
+     * We use a combobox that contains the qualifiers.
+     * 
+     * @return Table cell renderer.
+     */
+     protected TableCellEditor createQualifierCellEditor() {
+		JComboBox comboBox = new JComboBox();
+		comboBox.setRenderer(new DefaultListCellRenderer());
+		((DefaultListCellRenderer)comboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
+
+		// Adds the list of qualifiers to the drop down
+		for (Qualifier qualifier : Qualifier.values()) {
+			comboBox.addItem(qualifier);
+		}
+
+		return new DefaultCellEditor(comboBox);
+    }
+ 
+    /**
+     * Creates the editor that shall be used in the count column.
+     * We use a spinner editor.
+     * 
+     * @return Table cell renderer.
+     */
+    protected TableCellEditor createCountCellEditor() {
+    	return new SpinnerEditor(new SpinnerNumberModel(0, 0, 100, 1));
+    }
+    
+    /**
+     * Shows or hides a red border from the file input component expressing
+     * an error condition when the file could not be loaded.
+     * 
+     * @param bEnabled Set to true to show an error, false otherwise.
+     */
+    protected void setFileError(boolean bEnabled) {
+    	Border border = m_compInputFile.getBorder();
+    	
+    	if (bEnabled) {
+    		boolean bErrorBorderFound = false;
+    		
+    		// Check, if our error border is already set
+    		if (border == m_borderInputFileError) {
+    			bErrorBorderFound = true;
+    		}
+    		else if (border instanceof CompoundBorder && 
+    				((CompoundBorder)border).getOutsideBorder() == 
+    					m_borderInputFileError) {
+    			bErrorBorderFound = true;
+    		}
+
+    		if (!bErrorBorderFound) {
+    			if (border == null) {
+    				m_compInputFile.setBorder(m_borderInputFileError);
+    			}
+    			else {
+    				m_compInputFile.setBorder(BorderFactory.createCompoundBorder(
+    						m_borderInputFileError, border));
+    			}
+    		}
+    	}
+    	else { // Disable error
+    		// Check, if our error border is still set
+    		if (border == m_borderInputFileError) {
+    			m_compInputFile.setBorder(null);
+    		}
+    		else if (border instanceof CompoundBorder && 
+    				((CompoundBorder)border).getOutsideBorder() == 
+    					m_borderInputFileError) {
+    			m_compInputFile.setBorder(((CompoundBorder)border).getInsideBorder());
+    		}
+    	}
+    }
+    
+    //
+    // Private Methods
+    //
+    
+    /**
+     * Creates the table component for configuring the conditions.
+     * 
+     * @return Dialog component table.
+     */
+    private DialogComponentTable createConditionsTable() {
+    	DialogComponentTable tableComp = new DialogComponentTable(
+        		m_modelConditions, null) {
+        	public String getToolTipTextForCell(int iRow, int iCol) {
+        		String strTooltip = null;
+        		
+        		if (iCol == SettingsModelFunctionalGroupConditions.COLUMN_DISPLAY_NAME) {
+        			strTooltip = m_modelConditions.getTooltip(iRow);
+        		}
+        		
+        		return strTooltip;
+        	}
+        };
+        tableComp.setMaxColumnWidths(60, -1, 50, 50);
+        
+        final JTable table = tableComp.getTable();
+        table.setCellSelectionEnabled(false);
+		table.setColumnSelectionAllowed(false);
+        table.setRowHeight(20);
+		TableCellRenderer headerRenderer = 
+			table.getTableHeader().getDefaultRenderer();
+		if (headerRenderer instanceof JLabel) {
+			((JLabel)headerRenderer).setHorizontalAlignment(SwingUtilities.CENTER);
+		}
+		tableComp.getColumn(SettingsModelFunctionalGroupConditions.
+        		COLUMN_QUALIFIER).setCellRenderer(createCenteredCellRenderer());
+        tableComp.getColumn(SettingsModelFunctionalGroupConditions.
+        		COLUMN_QUALIFIER).setCellEditor(createQualifierCellEditor());
+        tableComp.getColumn(SettingsModelFunctionalGroupConditions.
+        		COLUMN_COUNT).setCellRenderer(createCenteredCellRenderer());
+        tableComp.getColumn(SettingsModelFunctionalGroupConditions.
+        		COLUMN_COUNT).setCellEditor(createCountCellEditor()); 
+        
+        final JPopupMenu contextMenu = new JPopupMenu("Helpers ...");
+        JMenuItem itemActivateAll = new JMenuItem("Activate All");
+        JMenuItem itemDeactivateAll = new JMenuItem("Deactivate All");
+        JMenuItem itemResetAll = new JMenuItem("Reset Everything");
+        contextMenu.add(itemActivateAll);
+        contextMenu.add(itemDeactivateAll);
+        contextMenu.add(itemResetAll);
+        itemActivateAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				m_modelConditions.setAllActivated(true);
+			}
+		});
+        itemDeactivateAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				m_modelConditions.setAllActivated(false);
+			}
+		});
+        itemResetAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				m_modelConditions.resetAll();
+			}
+		});
+        
+        table.setComponentPopupMenu(contextMenu);
+        
+        
+        return tableComp;
+    }
+ 
+    //
+    // Static Methods
+    //
+
+    /**
+     * Creates the settings model to be used for the input column.
+     * 
+     * @return Settings model for input column selection.
+     */
+    static final SettingsModelString createInputColumnNameModel() {
+        return new SettingsModelString("input_column", null);
+    }
+
+    /**
+     * Creates the settings model to be used for the input file selection.
+     * 
+     * @return Settings model for input file selection.
+     */
+    static final SettingsModelString createInputFileModel() {
+        return new SettingsModelString("filename", 
+        		FunctionalGroupFilterNodeModel.DEFAULT_DEFINITION_ID);
+    }
+    
+    /**
+     * Creates the settings model to be define function group filter conditions.
+     * 
+     * @param bCacheOldSettings Set to true when instantiated by the dialog.
+     * 		This will cache old settings when switching between different
+     * 		definition files.
+     * 
+     * @return Settings model for definition of functional group filter conditions.
+     */
+    static final SettingsModelFunctionalGroupConditions 
+    	createFunctionalGroupConditionsModel(boolean bCacheOldSettings) {
+        return new SettingsModelFunctionalGroupConditions("conditions", bCacheOldSettings);
+    }    
+    
+    /**
+     * Creates the settings model to be used to determine, if the pattern
+     * that failed to match is getting recorded in a new column.
+     * 
+     * @return Settings model for option to record failed pattern.
+     */
+    static final SettingsModelBoolean createRecordFailedPatternOptionModel() {
+        return new SettingsModelBoolean("recordPattern", false);
+    }
+    
+    /**
+     * Creates the settings model to be used to specify the new column name
+     * for the failed pattern (only used if record failed patter option is
+     * enabled).
+     * 
+     * @param modelRecordFailedPatterns Model that determines, if the
+     * 		new column name field is enabled or disabled.
+     * 
+     * @return Settings model for failed pattern column name.
+     */
+    static final SettingsModelString createNewFailedPatternColumnNameModel(
+    		final SettingsModelBoolean modelRecordFailedPatterns) {
+        final SettingsModelString result =
+        	new SettingsModelString("failed_pattern_column_name", null);
+        modelRecordFailedPatterns.addChangeListener(new ChangeListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
-            	m_filePanel.setCursor(Cursor
-						.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				ArrayList<FunctionalGroup> properties = new ArrayList<FunctionalGroup>();
-				m_funcSettings.setFileUrl("");
-				m_file.setSelectedFile("");
-				m_propsModel.update(properties);
-				if (m_fileScanner != null) {
-					m_fileScanner.cancel(true);
-				}
-				m_fileScanner = new FileScanner();
-				m_fileScanner.execute();
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(modelRecordFailedPatterns.getBooleanValue());
             }
         });
-		return p;
-	}
-
-	/**
-	 * Method for creating the Filter panel in the node dialog
-	 * 
-	 * @return JPanel
-	 */
-	private JPanel createFilterPanel() {
-
-		JPanel p = m_propertiesPanel;
-		// Sets a border for the panel
-		p.setBorder(BorderFactory.createTitledBorder(
-				BorderFactory.createEtchedBorder(),
-				"List of available functional group filters"));
-		GridBagConstraints c = new GridBagConstraints();
-
-		c.gridx = 0;
-		c.gridy = 0;
-		c.insets = new Insets(2, 2, 2, 2);
-		c.fill = GridBagConstraints.BOTH;
-
-		JScrollPane sp = new JScrollPane(m_propertiesTable);
-		p.add(sp, c);
-
-		TableColumn selectColumn = m_propertiesTable.getColumnModel()
-				.getColumn(0);
-		selectColumn.setMaxWidth(50);
-
-		TableColumn qualColumn = m_propertiesTable.getColumnModel()
-				.getColumn(2);
-		qualColumn.setMaxWidth(100);
-
-		TableColumn countColumn = m_propertiesTable.getColumnModel().getColumn(
-				3);
-		countColumn.setMaxWidth(100);
-
-		m_propertiesTable.setRowHeight(22);
-
-		JComboBox comboBox = new JComboBox();
-		comboBox.setRenderer(new DefaultListCellRenderer() {
-
-			/**
-			 * SerialVersionUID
-			 */
-			private static final long serialVersionUID = -2023841628996120350L;
-
-			@Override
-			public Component getListCellRendererComponent(final JList list,
-					final Object value, final int index,
-					final boolean isSelected, final boolean cellHasFocus) {
-				String typeText = (String) value;
-				return super.getListCellRendererComponent(list, typeText,
-						index, isSelected, cellHasFocus);
-			}
-
-		});
-		// Addds the list of values to the dropdown
-		comboBox.addItem("LessThan(<)");
-		comboBox.addItem("AtMost(<=)");
-		comboBox.addItem("Exactly(=)");
-		comboBox.addItem("AtLeast(>=)");
-		comboBox.addItem("MoreThan(>)");
-
-		qualColumn.setCellEditor(new DefaultCellEditor(comboBox));
-
-		qualColumn.setCellRenderer(new DefaultTableCellRenderer() {
-			/**
-			 * SerialVersionUID
-			 */
-			private static final long serialVersionUID = 5994382641090249175L;
-
-			/**
-			 * {@inheritDoc}
-			 */
-			@Override
-			public Component getTableCellRendererComponent(final JTable table,
-					final Object value, final boolean isSelected,
-					final boolean hasFocus, final int row, final int column) {
-				String typeText = (String) value;
-				return super.getTableCellRendererComponent(table, typeText,
-						isSelected, hasFocus, row, column);
-			}
-		});
-
-		countColumn.setCellEditor(new SpinnerEditor());
-		return p;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadSettingsFrom(final NodeSettingsRO settings,
-			final DataTableSpec[] specs) throws NotConfigurableException {
-
-		m_funcSettings.loadSettingsForDialog(settings);
-		m_molColumn.update(specs[0], m_funcSettings.getColName());
-
-		m_file.setSelectedFile(m_funcSettings.getFileUrl());
-		if (m_funcSettings.properties() != null
-				&& m_funcSettings.properties().size() > 0) {
-			m_propsModel.update(m_funcSettings.properties());
-		} else {
-			if (m_fileScanner != null) {
-				m_fileScanner.cancel(true);
-			}
-			m_fileScanner = new FileScanner();
-			m_fileScanner.execute();
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings)
-			throws InvalidSettingsException {
-
-		m_funcSettings.setColName(m_molColumn.getSelectedColumn());
-		m_funcSettings.setFileUrl(m_file.getSelectedFile());
-		m_funcSettings.clearProperties();
-		for (FunctionalGroupNodeSettings.LineProperty p : m_propsModel
-				.getProperties()) {
-			m_funcSettings
-					.addProperty(new FunctionalGroupNodeSettings.LineProperty(p));
-		}
-		m_funcSettings.saveSettings(settings);
-	}
-
-	@Override
-	public void onClose() {
-		super.onClose();
-		if (m_fileScanner != null) {
-			m_fileScanner.cancel(true);
-		}
-	}
-}
+        result.setEnabled(modelRecordFailedPatterns.getBooleanValue());
+        return result;
+    }
+  }

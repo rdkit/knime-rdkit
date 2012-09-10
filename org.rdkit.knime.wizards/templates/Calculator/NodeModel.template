@@ -1,0 +1,232 @@
+/* 
+ * This source code, its documentation and all related files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright (C)__CURRENT_YEAR__
+ * Novartis Institutes for BioMedical Research
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ */
+package __BASE_PACKAGE__;
+
+import org.RDKit.RDKFuncs;
+import org.RDKit.ROMol;
+import org.RDKit.RWMol;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
+import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitMolCellFactory;
+import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsUtils;
+
+/**
+ * This class implements the node model of the __NODE_NAME__ node
+ * providing calculations based on the open source RDKit library.
+ * __DESCRIPTION__
+ * @author __VENDOR_NAME__ 
+ */
+public class __NODE_NAME__NodeModel extends AbstractRDKitCalculatorNodeModel {
+
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger
+			.getLogger(__NODE_NAME__NodeModel.class);
+	
+	
+	/** Input data info index for Mol value. */
+	protected static final int INPUT_COLUMN_MOL = 0;
+	
+	//
+	// Members
+	//
+	
+	/** Settings model for the column name of the input column. */
+    private final SettingsModelString m_modelInputColumnName =
+            registerSettings(__NODE_NAME__NodeDialog.createInputColumnNameModel());
+
+    /** Settings model for the column name of the new column to be added to the output table. */
+    private final SettingsModelString m_modelNewColumnName =
+    		registerSettings(__NODE_NAME__NodeDialog.createNewColumnNameModel());
+
+    /** Settings model for the option to remove the source column from the output table. */
+    private final SettingsModelBoolean m_modelRemoveSourceColumns =
+    		registerSettings(__NODE_NAME__NodeDialog.createRemoveSourceColumnsOptionModel());
+    
+    //
+    // Constructor
+    //
+    
+    /**
+     * Create new node model with one data in- and one out-port.
+     */
+    __NODE_NAME__NodeModel() {
+        super(1, 1);
+    }
+
+    //
+    // Protected Methods
+    //
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+    	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+    	
+        // Auto guess the input column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
+        		"Auto guessing: Using column %COLUMN_NAME%.", 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+
+        // Determines, if the input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+        
+        // Auto guess the new column name and make it unique
+        String strInputColumnName = m_modelInputColumnName.getStringValue();
+        SettingsUtils.autoGuessColumnName(inSpecs[0], null, 
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? 
+        			new String[] { strInputColumnName } : null),
+        		m_modelNewColumnName, strInputColumnName + " (__NODE_NAME__)");
+
+        // Determine, if the new column name has been set and if it is really unique
+        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] { 
+        			m_modelInputColumnName.getStringValue() } : null),
+        		m_modelNewColumnName, 
+        		"Output column has not been specified yet.",
+        		"The name %COLUMN_NAME% of the new column exists already in the input.");
+
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // Generate output specs
+        return getOutputTableSpecs(inSpecs);
+    }
+
+    /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+    	InputDataInfo[] arrDataInfo = null;
+    	
+    	// Specify input of table 1
+    	if (inPort == 0) {
+    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
+    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
+    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+    				RDKitMolValue.class);
+    	}
+    	
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+    }
+ 
+    /**
+     * {@inheritDoc}
+     */
+	protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+		AbstractRDKitCellFactory[] arrOutputFactories = null;
+    	
+    	// Specify output of table 1
+    	if (outPort == 0) {
+    		// Allocate space for all factories (usually we have only one)
+    		arrOutputFactories = new AbstractRDKitCellFactory[1]; 
+
+    		// Factory 1:
+    		// ==========
+    		// Generate column specs for the output table columns produced by this factory
+    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+    		arrOutputSpec[0] = new DataColumnSpecCreator(
+    				m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+    				.createSpec();
+    
+    		// Generate factory 
+    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+           		getWarningConsolidator(), null, arrOutputSpec) {
+	   			
+	   			@Override
+	   		    /**
+	   		     * This method implements the calculation logic to generate the new cells based on 
+	   		     * the input made available in the first (and second) parameter.
+	   		     * {@inheritDoc}
+	   		     */
+	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
+	   		    	DataCell outputCell = null;
+	   		    	
+	   		    	// Calculate the new cells
+	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
+	   		    	
+	   		    	///////////////////////////////////////////////////////////////////////////////////////////////////
+	   		    	// TODO: Replace the following sample line(s) to perform the calculation of your choice. You may
+	   		    	//       deliver one or multiple output cells depending on your column specs that you defined
+	   		    	//       above.
+	   		    	///////////////////////////////////////////////////////////////////////////////////////////////////
+   		    		
+	   		    	RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+	   		        
+	   		        if (temp.getNumAtoms() > 0) {
+	   		        	RDKFuncs.sanitizeMol(temp);
+	   		        	outputCell = RDKitMolCellFactory.createRDKitMolCell(temp);
+	   		        }
+	   		        else {
+	   		        	outputCell = DataType.getMissingCell();
+	                }
+	   		    	
+	   		        return new DataCell[] { outputCell };
+	   		    }
+	   		};
+	   		
+	   		// Enable or disable this factory to allow parallel processing 		
+	   		arrOutputFactories[0].setAllowParallelProcessing(__PARALLEL_PROCESSING__);	   		
+    	}
+    	
+    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+    }
+	
+    /**
+     * {@inheritDoc}
+     * This implementation removes additionally the compound source column, if specified in the settings.
+     */
+	protected ColumnRearranger createColumnRearranger(int outPort,
+			DataTableSpec inSpec) throws InvalidSettingsException {
+    	// Perform normal work 
+        ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
+        
+        // Remove the input column, if desired
+        if (m_modelRemoveSourceColumns.getBooleanValue()) {
+            result.remove(createInputDataInfos(0, inSpec)[INPUT_COLUMN_MOL].getColumnIndex());
+        }
+        
+        return result;
+    } 
+}

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,15 +48,9 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
-import org.RDKit.RWMol;
 import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -64,76 +58,129 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.vector.bitvector.DenseBitVector;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
+import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsModelEnumeration;
+import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.WarningConsolidator;
 
 /**
- *
+ * This class implements the node model of the "RDKitFingerprint" node
+ * providing calculations based on the open source RDKit library.
+ * 
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitFingerprintNodeModel extends NodeModel {
+public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel {
+	
+	//
+	// Enumeration
+	//
 
-    private final SettingsModelString m_smiles = RDKitFingerprintNodeDialogPane
-            .createSmilesColumnModel();
+	/** Defines supported fingerprint types. */
+    public enum FingerprintType {
+        morgan, featmorgan, atompair, torsion, rdkit, avalon, layered;
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+        	
+        	switch (this) {
+        		case morgan:
+        			return "Morgan";
+        		case featmorgan:
+        			return "FeatMorgan";
+        		case atompair:
+        			return "AtomPair";
+        		case torsion:
+        			return "Torsion";
+        		case rdkit:
+        			return "RDKit";
+        		case avalon:
+        			return "Avalon";
+        		case layered:
+        			return "Layered";
+        	}
+        	
+        	return super.toString();
+        }
+    }
 
-    private final SettingsModelString m_concate =
-            RDKitFingerprintNodeDialogPane.createNewColumnModel();
-
-    private final SettingsModelBoolean m_removeSourceCols =
-            RDKitFingerprintNodeDialogPane.createBooleanModel();
-
-    private final SettingsModelString m_fpType = RDKitFingerprintNodeDialogPane
-            .createFPTypeModel();
-
-    private final SettingsModelIntegerBounded m_minPath =
-            RDKitFingerprintNodeDialogPane.createMinPathModel();
-
-    private final SettingsModelIntegerBounded m_maxPath =
-            RDKitFingerprintNodeDialogPane.createMaxPathModel();
-
-    private final SettingsModelIntegerBounded m_numBits =
-            RDKitFingerprintNodeDialogPane.createNumBitsModel();
-
-    private final SettingsModelIntegerBounded m_radius =
-            RDKitFingerprintNodeDialogPane.createRadiusModel();
-
-    private final SettingsModelIntegerBounded m_layerFlags =
-            RDKitFingerprintNodeDialogPane.createLayerFlagsModel();
-
+	//
+	// Constants
+	//
+	
+	/** The logger instance. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RDKitFingerprintNodeModel.class);
 
-    /**
-     * Temporarily used during execution to track the number of rows
-     * with parsing error.
-     */
-    private int m_parseErrorCount;
+	/** 
+	 * This lock prevents two calls at the same time into the RDKKit FeatureInvariants functionality,
+	 * which has caused crashes under Windows 7 before. Once there is a fix 
+	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
+	 */
+	private static final Object LOCK = new Object();
+	
+	/** Input data info index for Mol value. */
+	protected static final int INPUT_COLUMN_MOL = 0;
 
-    /**
-     * Temporarily used during execution to track the number of rows
-     * with where finger print could not be computed.
-     */
-    private int m_fingerPrintErrorCount;
+	//
+	// Members
+	//
+	
+	/** Model for the input column. */
+    private final SettingsModelString m_modelInputColumnName = 
+    	registerSettings(RDKitFingerprintNodeDialog.createSmilesColumnModel(), true);
 
+    /** Model for the name of the new column. */
+    private final SettingsModelString m_modelNewColumnName =
+    	registerSettings(RDKitFingerprintNodeDialog.createNewColumnModel(), true);
 
+    /** Model for the option to remove the input column. */
+    private final SettingsModelBoolean m_modelRemoveSourceColumns =
+    	registerSettings(RDKitFingerprintNodeDialog.createBooleanModel(), true);
+
+    /** Model for the fingerprint type to apply. */
+    private final SettingsModelEnumeration<FingerprintType> m_modelFingerprintType = 
+    	registerSettings(RDKitFingerprintNodeDialog.createFPTypeModel(), true);
+
+    /** Model for the minimum path length to be used for calculations. */
+    private final SettingsModelIntegerBounded m_modelMinPath =
+    	registerSettings(RDKitFingerprintNodeDialog.createMinPathModel(), true);
+
+    /** Model for the maximum path length to be used for calculations. */
+    private final SettingsModelIntegerBounded m_modelMaxPath =
+    	registerSettings(RDKitFingerprintNodeDialog.createMaxPathModel(), true);
+
+    /** Model for the number of fingerprint bits to be used for calculations. */
+    private final SettingsModelIntegerBounded m_modelNumBits =
+    	registerSettings(RDKitFingerprintNodeDialog.createNumBitsModel(), true);
+
+    /** Model for the radius to be used for calculations. */
+    private final SettingsModelIntegerBounded m_modelRadius =
+    	registerSettings(RDKitFingerprintNodeDialog.createRadiusModel(), true);
+
+    /** Model for the layer flags to be used for calculations. */
+    private final SettingsModelIntegerBounded m_modelLayerFlags =
+    	registerSettings(RDKitFingerprintNodeDialog.createLayerFlagsModel(), true);
+
+    //
+    // Constructors
+    //
+    
     /**
      * Create new node model with one data in- and one outport.
      */
@@ -147,307 +194,205 @@ public class RDKitFingerprintNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check whether native RDKit library has been loaded successfully
-        RDKitTypesPluginActivator.checkErrorState();
+       	// Reset warnings and check RDKit library readiness
+    	super.configure(inSpecs);
+    	
+        // Auto guess the input column if not set - fails if no compatible column found
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
+        		"Auto guessing: Using column %COLUMN_NAME%.", 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
 
-        if (null == m_smiles.getStringValue()) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
-                if (c.getType().isCompatible(RDKitMolValue.class)) {
-                    compatibleCols.add(c.getName());
-                }
-            }
-            if (compatibleCols.size() == 1) {
-                // auto-configure
-                m_smiles.setStringValue(compatibleCols.get(0));
-            } else if (compatibleCols.size() > 1) {
-                // auto-guessing
-                m_smiles.setStringValue(compatibleCols.get(0));
-                setWarningMessage("Auto guessing: using column \""
-                        + compatibleCols.get(0) + "\".");
-            } else {
-                throw new InvalidSettingsException("No RDKit Mol compatible "
-                        + "column in input table. Use \"Molecule to RDKit\" "
-                        + "node for Smiles or SDF.");
-            }
-        }
-        if(m_minPath.getIntValue() > m_maxPath.getIntValue() ){
-        	throw new InvalidSettingsException("minimum path length is larger than maximum path length.");
+        // Determines, if the input column exists - fails if it does not
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
+        		"Input column has not been specified yet.",
+        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+        
+        // Auto guess the new column name and make it unique
+        String strInputColumnName = m_modelInputColumnName.getStringValue();
+        SettingsUtils.autoGuessColumnName(inSpecs[0], null, 
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? 
+        			new String[] { strInputColumnName } : null),
+        		m_modelNewColumnName, strInputColumnName + " (Fingerprint)");
+
+        // Determine, if the new column name has been set and if it is really unique
+        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
+        		(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] { 
+        			m_modelInputColumnName.getStringValue() } : null),
+        		m_modelNewColumnName, 
+        		"Output column has not been specified yet.",
+        		"The name %COLUMN_NAME% of the new column exists already in the input.");
+        
+        // Determine, if path values are in conflict
+        if (m_modelMinPath.getIntValue() > m_modelMaxPath.getIntValue()) {
+        	throw new InvalidSettingsException("Minimum path length is larger than maximum path length.");
         }
 
-        if (null == m_concate.getStringValue()) {
-            if (null != m_smiles.getStringValue()) {
-                // auto-configure
-                String newName = DataTableSpec.getUniqueColumnName(inSpecs[0],
-                        m_smiles.getStringValue() + " (Fingerprint)");
-                m_concate.setStringValue(newName);
-            } else {
-                m_concate.setStringValue("RDKit Fingerprint");
-            }
-        }
-        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{rearranger.createSpec()};
+        // Consolidate all warnings and make them available to the user
+        generateWarnings();
+
+        // Generate output specs
+        return getOutputTableSpecs(inSpecs);
     }
-
-    private int[] findColumnIndices(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        String first = m_smiles.getStringValue();
-        if (first == null) {
-            throw new InvalidSettingsException("Not configured yet");
-        }
-        int firstIndex = spec.findColumnIndex(first);
-        if (firstIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column in input table: " + first);
-        }
-        DataType firstType = spec.getColumnSpec(firstIndex).getType();
-        if (!firstType.isCompatible(RDKitMolValue.class)) {
-            throw new InvalidSettingsException("Column '" + first
-                    + "' does not contain SMILES");
-        }
-        return new int[]{firstIndex};
-    }
-
+    
+    /**
+     * This implementation generates input data info object for the input mol column
+     * and connects it with the information coming from the appropriate setting model.
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+    	InputDataInfo[] arrDataInfo = null;
+    	
+    	// Specify input of table 1
+    	if (inPort == 0) {
+    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
+    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
+    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+    				RDKitMolValue.class);
+    	}
+    	
+    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+    }       
+    
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
-        ColumnRearranger rearranger = createColumnRearranger(inSpec);
-        m_parseErrorCount = 0;
-        m_fingerPrintErrorCount = 0;
-        BufferedDataTable outTable =
-                exec.createColumnRearrangeTable(inData[0], rearranger, exec);
-        StringBuilder msg = new StringBuilder();
-        if (m_parseErrorCount > 0) {
-            msg.append("Error parsing Smiles for " + m_parseErrorCount
-                    + " rows.");
-        }
-        if (m_fingerPrintErrorCount > 0) {
-            msg.append(" ");
-            msg.append("Error computing fingerprint for "
-                    + m_fingerPrintErrorCount + " rows.");
-        }
-        if (msg.length() > 0) {
-            setWarningMessage(msg.toString());
-        }
-        return new BufferedDataTable[]{outTable};
-    }
+	protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
+		throws InvalidSettingsException {
+    	
+		AbstractRDKitCellFactory[] arrOutputFactories = null;
+    	
+    	// Specify output of table 1
+    	if (outPort == 0) {
+    		// Allocate space for all factories (usually we have only one)
+    		arrOutputFactories = new AbstractRDKitCellFactory[1]; 
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        // check user settings against input spec here
-        final int[] indices = findColumnIndices(spec);
-        String inputCol = m_smiles.getStringValue();
-        String newName = m_concate.getStringValue();
-        if ((spec.containsName(newName) && !newName.equals(inputCol))
-              ||  (spec.containsName(newName) && newName.equals(inputCol)
-              && !m_removeSourceCols.getBooleanValue())) {
-            throw new InvalidSettingsException("Cannot create column "
-                    + newName + "since it is already in the input.");
-        }
-        ColumnRearranger result = new ColumnRearranger(spec);
-        DataColumnSpecCreator appendSpec =
-                new DataColumnSpecCreator(newName, DenseBitVectorCell.TYPE);
-        result.append(new SingleCellFactory(appendSpec.createSpec()) {
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell firstCell = row.getCell(indices[0]);
-                if (firstCell.isMissing()) {
-                    return DataType.getMissingCell();
-                }
-                DataType firstType = spec.getColumnSpec(indices[0]).getType();
-                ROMol mol = null;
-                if (firstType.isCompatible(RDKitMolValue.class)) {
-                    mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-                } else {
-                    String smiles = ((StringValue)firstCell).toString();
-                    mol = RWMol.MolFromSmiles(smiles);
-                }
-                if (mol == null) {
-                    LOGGER.debug("Error parsing smiles "
-                            + "while processing row: " + row.getKey());
-                    m_parseErrorCount++;
-                    return DataType.getMissingCell();
-                } else {
-                    // transfer the bitset into a dense bit vector
-                    DenseBitVector bitVector =
-                            new DenseBitVector(m_numBits.getIntValue());
-                    try {
-                        if ("rdkit".equals(m_fpType.getStringValue())) {
-                            ExplicitBitVect fingerprint;
-                            fingerprint =
-                                    RDKFuncs.RDKFingerprintMol(mol,
-                                            m_minPath.getIntValue(),
-                                            m_maxPath.getIntValue(),
-                                            m_numBits.getIntValue(),
-                                            2);
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
-                            }
-                            fingerprint.delete();
-                        } else if ("atompair".equals(m_fpType.getStringValue())) {
-                                ExplicitBitVect fingerprint;
-                                fingerprint =
-                                        RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol,m_numBits.getIntValue());
-                                for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                    if (fingerprint.getBit(i))
-                                        bitVector.set(i);
-                                }
-                                fingerprint.delete();
-                        } else if ("torsion".equals(m_fpType.getStringValue())) {
-                            ExplicitBitVect fingerprint;
-                            fingerprint =
-                                    RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol,m_numBits.getIntValue());
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
-                            }
-                            fingerprint.delete();
-                        } else if ("morgan".equals(m_fpType.getStringValue())) {
-                            ExplicitBitVect fingerprint;
-                            fingerprint =
-                                    RDKFuncs.getMorganFingerprintAsBitVect(mol,m_radius.getIntValue(),
-                                    		m_numBits.getIntValue());
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
-                            }
-                            fingerprint.delete();
+    		// Factory 1:
+    		// ==========
+    		// Generate column specs for the output table columns produced by this factory
+    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+    		arrOutputSpec[0] = new DataColumnSpecCreator(
+    				m_modelNewColumnName.getStringValue(), DenseBitVectorCell.TYPE)
+    				.createSpec();
+    
+    		// Generate factory 
+    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+           		getWarningConsolidator(), null, arrOutputSpec) {
+	   			
+	   			@Override
+	   		    /**
+	   		     * This method implements the calculation logic to generate the new cells based on 
+	   		     * the input made available in the first (and second) parameter.
+	   		     * {@inheritDoc}
+	   		     */
+	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
+	   		    	DataCell outputCell = null;
+	   		    	
+	   		    	// Calculate the new cells
+	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
 
-                        } else if ("featmorgan".equals(m_fpType.getStringValue())) {
-                        	UInt_Vect ivs=new UInt_Vect(mol.getNumAtoms());
-                        	RDKFuncs.getFeatureInvariants(mol, ivs);
-                            ExplicitBitVect fingerprint;
-                            fingerprint =
-                                    RDKFuncs.getMorganFingerprintAsBitVect(mol,m_radius.getIntValue(),
-                                    		m_numBits.getIntValue(),ivs);
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
+                    // Transfer the bitset into a dense bit vector
+                    DenseBitVector bitVector = new DenseBitVector(m_modelNumBits.getIntValue());                   
+                    ExplicitBitVect fingerprint = null;
+
+                    // Calculate fingerprint
+                	switch (m_modelFingerprintType.getValue()) {
+	                	case rdkit:
+	                        fingerprint = markForCleanup(RDKFuncs.RDKFingerprintMol(mol,
+	                        		m_modelMinPath.getIntValue(), m_modelMaxPath.getIntValue(),
+	                        		m_modelNumBits.getIntValue(), 2));
+	                		break;
+	                		
+	                	case atompair:
+	                        fingerprint = markForCleanup(RDKFuncs.getHashedAtomPairFingerprintAsBitVect(
+	                        		mol, m_modelNumBits.getIntValue()));
+	                		break;
+	                			                		
+	                	case torsion:
+	                        fingerprint = markForCleanup(RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(
+	                        		mol, m_modelNumBits.getIntValue()));
+	                		break;
+	                		
+	                	case morgan:
+	                        fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
+	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue()));
+	                		break;
+	                		
+	                	case featmorgan:
+	                    	UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
+	                    	synchronized (LOCK) {
+	                    		RDKFuncs.getFeatureInvariants(mol, ivs);
+	                    	}
+	                        fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
+	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue(), ivs));
+	                		break;
+	                		
+	                	case avalon:
+	                		int bitNumber = m_modelNumBits.getIntValue();
+							fingerprint = markForCleanup(new ExplicitBitVect(bitNumber));
+							RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
+							 		RDKFuncs.getAvalonSimilarityBits());
+							break;
+	                		
+	                	case layered:
+	                        fingerprint = markForCleanup(RDKFuncs.LayeredFingerprintMol(
+	                        		mol, m_modelLayerFlags.getIntValue(), m_modelMinPath.getIntValue(),
+	                        		m_modelMaxPath.getIntValue(), m_modelNumBits.getIntValue()));
+	                		break;
+	                		
+	                	default:
+	                		String strMsg = "Fingerprint Type '" + m_modelFingerprintType.getValue() + 
+	                			"' cannot be handled by this node.";
+	                		LOGGER.error(strMsg);
+	                    	throw new RuntimeException(strMsg);
+                	}
+                    
+                    // Transfer to bit vector
+                    if (fingerprint != null) {
+                    	final long lBits = fingerprint.getNumBits();
+                        for (long i = 0; i < lBits; i++) {
+                            if (fingerprint.getBit(i)) {
+                                bitVector.set(i);
                             }
-                            fingerprint.delete();
-                        } else if ("avalon".equals(m_fpType.getStringValue())) {
-                            ExplicitBitVect fingerprint=new ExplicitBitVect(m_numBits.getIntValue());
-                            RDKFuncs.getAvalonFP(mol,fingerprint,m_numBits.getIntValue(),false,false,
-                            		RDKFuncs.getAvalonSimilarityBits());
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
-                            }
-                            fingerprint.delete();
-                        } else if ("layered".equals(m_fpType.getStringValue())) {
-                            ExplicitBitVect fingerprint;
-                            fingerprint =
-                                    RDKFuncs.LayeredFingerprintMol(mol,
-                                            m_layerFlags.getIntValue(),
-                                            m_minPath.getIntValue(),
-                                            m_maxPath.getIntValue(),
-                                            m_numBits.getIntValue());
-                            for (int i = 0; i < fingerprint.getNumBits(); i++) {
-                                if (fingerprint.getBit(i))
-                                    bitVector.set(i);
-                            }
-                            fingerprint.delete();
                         }
-                    } catch (Exception ex) {
-                        LOGGER.debug("Error while creating fingerprint "
-                            + "for row: " + row.getKey());
-                        m_fingerPrintErrorCount++;
-                        return DataType.getMissingCell();
-                    } finally {
-                        mol.delete();
-                    }
-                    DenseBitVectorCellFactory fact =
-                            new DenseBitVectorCellFactory(bitVector);
-                    return fact.createDataCell();
-                }
-            }
-        });
-        if (m_removeSourceCols.getBooleanValue()) {
-            result.remove(indices);
+                        
+                        outputCell = new DenseBitVectorCellFactory(bitVector).createDataCell();
+	   		        }
+	   		        else {
+	   		        	getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+	   		        		"Error computing fingerprint - Setting value as missing cell.");
+	   		        	outputCell = DataType.getMissingCell();
+	                }
+	   		    	
+	   		        return new DataCell[] { outputCell };
+	   		    }
+	   		};
+	   		
+	   		// Enable this factory to allow parallel processing	   		
+	   		arrOutputFactories[0].setAllowParallelProcessing(true);
+    	}
+    	
+    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+    }    
+
+    /**
+     * {@inheritDoc}
+     * This implementation removes additionally the compound source column, if specified in the settings.
+     */
+	@Override
+	protected ColumnRearranger createColumnRearranger(int outPort,
+			DataTableSpec inSpec) throws InvalidSettingsException {
+    	// Perform normal work 
+        ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
+        
+        // Remove the input column, if desired
+        if (m_modelRemoveSourceColumns.getBooleanValue()) {
+            result.remove(createInputDataInfos(0, inSpec)[INPUT_COLUMN_MOL].getColumnIndex());
         }
+        
         return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // nothing to reset
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // node does not have internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_smiles.loadSettingsFrom(settings);
-        m_concate.loadSettingsFrom(settings);
-        m_removeSourceCols.loadSettingsFrom(settings);
-        m_fpType.loadSettingsFrom(settings);
-        m_minPath.loadSettingsFrom(settings);
-        m_maxPath.loadSettingsFrom(settings);
-        m_numBits.loadSettingsFrom(settings);
-        m_radius.loadSettingsFrom(settings);
-        m_layerFlags.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_smiles.saveSettingsTo(settings);
-        m_concate.saveSettingsTo(settings);
-        m_removeSourceCols.saveSettingsTo(settings);
-        m_fpType.saveSettingsTo(settings);
-        m_minPath.saveSettingsTo(settings);
-        m_maxPath.saveSettingsTo(settings);
-        m_numBits.saveSettingsTo(settings);
-        m_radius.saveSettingsTo(settings);
-        m_layerFlags.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_smiles.validateSettings(settings);
-        m_concate.validateSettings(settings);
-        m_removeSourceCols.validateSettings(settings);
-        m_fpType.validateSettings(settings);
-        m_minPath.validateSettings(settings);
-        m_maxPath.validateSettings(settings);
-        m_numBits.validateSettings(settings);
-        m_radius.validateSettings(settings);
-        m_layerFlags.validateSettings(settings);
-    }
+	}
 }

@@ -14,8 +14,10 @@
 package org.rdkit.knime.util;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -202,6 +204,7 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     	else {
     		@SuppressWarnings("unchecked")
 			T[] arrNewValues = (T[])Array.newInstance(m_enumType, newValuesAsString.length);
+    		List<T> listPlaceholders = findFlowVariablePlaceholders();
     		for (int i = 0; i < newValuesAsString.length; i++) {
 
 	    		try {
@@ -212,7 +215,7 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
 	    			// Second try: The toString() value of an enumeration value
 	    			for (T enumValue : m_enumType.getEnumConstants()) {
 	    				String strRepresentation = enumValue.toString();
-	    				if (newValuesAsString[i].equals(strRepresentation)) {
+	    				if (newValuesAsString[i].equalsIgnoreCase(strRepresentation)) {
 	    					arrNewValues[i] = enumValue;
 	    					break;
 	    				}
@@ -228,14 +231,46 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
 	    				}
 	    			}
 
-	    			// Fourth case: Fallback to default values and break
+	    			// Fourth case: Use placeholder values or set to null, if totally unknown
 	    			if (arrNewValues[i] == null) {
-		    			LOGGER.warn("Value '" + newValuesAsString[i] +
-		    					"' could not be selected. It is unknown in this version. " +
-		    					"Using default values for all selections.");
-		    			arrNewValues = m_arrDefaultValues;
+	    				if (newValuesAsString[i].isEmpty()) {
+	    					// Note: If the new value string is empty, the reason is most likely
+	    					// that it is controlled by a flow variable, which is currently
+	    					// unavailable. - In this case we will use flow variable placeholders,
+	    					// if available. Otherwise we set the value to null and issue
+	    					// a warning.
+	    					if (!listPlaceholders.isEmpty()) {
+	    						arrNewValues[i] = listPlaceholders.get(0);
+	    					}
+	    					else {
+	    						arrNewValues[i] = null;
+				    			LOGGER.warn("One of the selected values which is controlled" +
+				    					" by a flow variable could not be maintained due to" +
+				    					" the lack of flow variable placeholders. This may" +
+				    					" have negative side-effects when a node gets reconfigured.");
+	    					}
+	    				}
+	    				else {
+	    					String strResolution;
+	    					if (!listPlaceholders.isEmpty()) {
+	    						arrNewValues[i] = listPlaceholders.get(0);
+	    						strResolution = "It has been replaced by a flow variable placeholder.";
+	    					}
+	    					else {
+	    						arrNewValues[i] = null;
+	    						strResolution = "It will be removed when reconfiguring the node.";
+	    					}
+			    			LOGGER.warn("Value '" + newValuesAsString[i] +
+			    					"' could not be selected. It is unknown in this version. " +
+			    					strResolution);
+	    				}
 		    			break;
 	    			}
+	    		}
+	    		
+	    		// Take a flow variable placeholder off the list if it was used
+	    		if (listPlaceholders.contains(arrNewValues[i])) {
+	    			listPlaceholders.remove(arrNewValues[i]);
 	    		}
     		}
 
@@ -262,7 +297,7 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
         	int iCount = m_arrValues.length;
         	arrRet = new String[iCount];
         	for (int i = 0; i < iCount; i++) {
-        		arrRet[i] = m_arrValues[i].name();
+        		arrRet[i] = (m_arrValues[i] == null ? "" : m_arrValues[i].name());
         	}
         }
 
@@ -332,5 +367,28 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     @Override
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";
+    }
+    
+    //
+    // Private Methods
+    //
+    
+    /**
+     * Traverses all enumeration values of the specified enum type
+     * and filters out and returns all constants that start with
+     * "FlowVariablePlaceHolder".
+     * 
+     * @param enumType Enumeration type.
+     * 
+     * @return List of all FlowVariablePlaceHolderXXX enumeration constants.
+     */
+    public List<T> findFlowVariablePlaceholders() {
+    	List<T> listPlaceHolders = new ArrayList<T>();
+    	for (T enumConstant : m_enumType.getEnumConstants()) {
+    		if (enumConstant.name().startsWith("FlowVariablePlaceHolder")) {
+    			listPlaceHolders.add(enumConstant);
+    		}
+    	}
+    	return listPlaceHolders;
     }
 }

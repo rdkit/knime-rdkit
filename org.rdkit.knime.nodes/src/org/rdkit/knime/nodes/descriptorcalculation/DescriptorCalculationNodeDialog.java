@@ -55,6 +55,7 @@ import javax.swing.Icon;
 import javax.swing.JList;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -102,6 +103,9 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
             /** Serial number. */
 			private static final long serialVersionUID = -3432992669822820183L;
 
+			/** Icon used for flow variable placeholders and unknown items. */
+			private final Icon UNKNOWN_ICON = DataValue.UTILITY.getIcon();
+
 			/** Icon used for list items of descriptors that calculate more than one column. */
 			private final Icon MULTI_VALUE_ICON = CollectionDataValue.UTILITY.getIcon();
 			
@@ -135,8 +139,11 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
                     if (arrDataTypes != null && arrDataTypes.length == 1) {
                     	setIcon(arrDataTypes[0].getIcon());
                     }
+                    else if (arrDataTypes != null && arrDataTypes.length > 1){
+                    	setIcon(MULTI_VALUE_ICON);
+                    }
                     else {
-                        setIcon(MULTI_VALUE_ICON);                    	
+                        setIcon(UNKNOWN_ICON);                    	
                     }
 
                 	// Set tooltip

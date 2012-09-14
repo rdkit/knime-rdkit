@@ -212,8 +212,10 @@ public class DescriptorCalculationNodeModel extends AbstractRDKitCalculatorNodeM
 
 	   		    	int iOffset = 0;
 	   		    	for (Descriptor descriptor : arrDescriptors) {
-	   		    		for (DataCell cell : descriptor.calculate(mol, warningConsolidator)) {
-	   		    			arrAllResults[iOffset++] = cell;
+	   		    		if (descriptor != null) {
+		   		    		for (DataCell cell : descriptor.calculate(mol, warningConsolidator)) {
+		   		    			arrAllResults[iOffset++] = cell;
+		   		    		}
 	   		    		}
 	   		    	}
 	   		    	
@@ -251,15 +253,17 @@ public class DescriptorCalculationNodeModel extends AbstractRDKitCalculatorNodeM
 			List<String> listNewNames = new ArrayList<String>();
 			
 			for (Descriptor descriptor : arrDescriptors) {
-				int iColumnCount = descriptor.getColumnCount();
-				DataType[] arrTypes = descriptor.getDataTypes();
-				String[] arrTitles = descriptor.getPreferredColumnTitles();
-				
-				for (int i = 0; i < iColumnCount; i++) {
-					String strUniqueColumnName = SettingsUtils.makeColumnNameUnique(
-							arrTitles[i], inSpec, listNewNames);
-					listNewNames.add(strUniqueColumnName);
-    				listNewColumns.add(new DataColumnSpecCreator(strUniqueColumnName, arrTypes[i]).createSpec());
+				if (descriptor != null) {
+					int iColumnCount = descriptor.getColumnCount();
+					DataType[] arrTypes = descriptor.getDataTypes();
+					String[] arrTitles = descriptor.getPreferredColumnTitles();
+					
+					for (int i = 0; i < iColumnCount; i++) {
+						String strUniqueColumnName = SettingsUtils.makeColumnNameUnique(
+								arrTitles[i], inSpec, listNewNames);
+						listNewNames.add(strUniqueColumnName);
+	    				listNewColumns.add(new DataColumnSpecCreator(strUniqueColumnName, arrTypes[i]).createSpec());
+					}
 				}
 			}
 		}

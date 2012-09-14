@@ -245,8 +245,89 @@ public enum Descriptor {
 		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
 			return convertToCellArray(RDKFuncs.calcPEOE_VSA(mol), warningConsolidator);
 		}
-	};
+	},
 	
+	FlowVariablePlaceHolder1(null, 0, "Use this as placeholder for " +
+			"descriptors that shall be controlled by flow variables. " +
+			"It is recommended not to mix normal descriptor and placeholders.") {
+		
+		@Override
+		public String toString() {
+			return "Placeholder 1";
+		}
+		
+		@Override
+		public DataCell[] calculate(ROMol mol,
+				WarningConsolidator warningConsolidator) {
+			return new DataCell[0];
+		}
+	},
+	
+	FlowVariablePlaceHolder2(null, 0, "Use this as placeholder for " +
+			"descriptors that shall be controlled by flow variables. " +
+			"It is recommended not to mix normal descriptor and placeholders.") {
+		
+		@Override
+		public String toString() {
+			return "Placeholder 2";
+		}
+		
+		@Override
+		public DataCell[] calculate(ROMol mol,
+				WarningConsolidator warningConsolidator) {
+			return new DataCell[0];
+		}
+	},
+	
+	
+	FlowVariablePlaceHolder3(null, 0, "Use this as placeholder for " +
+			"descriptors that shall be controlled by flow variables. " +
+			"It is recommended not to mix normal descriptor and placeholders.") {
+		
+		@Override
+		public String toString() {
+			return "Placeholder 3";
+		}
+		
+		@Override
+		public DataCell[] calculate(ROMol mol,
+				WarningConsolidator warningConsolidator) {
+			return new DataCell[0];
+		}
+	},
+	
+	FlowVariablePlaceHolder4(null, 0, "Use this as placeholder for " +
+			"descriptors that shall be controlled by flow variables. " +
+			"It is recommended not to mix normal descriptor and placeholders.") {
+		
+		@Override
+		public String toString() {
+			return "Placeholder 4";
+		}
+		
+		@Override
+		public DataCell[] calculate(ROMol mol,
+				WarningConsolidator warningConsolidator) {
+			return new DataCell[0];
+		}
+	},
+	
+	FlowVariablePlaceHolder5(null, 0, "Use this as placeholder for " +
+			"descriptors that shall be controlled by flow variables. " +
+			"It is recommended not to mix normal descriptor and placeholders.") {
+		
+		@Override
+		public String toString() {
+			return "Placeholder 5";
+		}
+		
+		@Override
+		public DataCell[] calculate(ROMol mol,
+				WarningConsolidator warningConsolidator) {
+			return new DataCell[0];
+		}
+	};
+		
     // 
     // Members
     //

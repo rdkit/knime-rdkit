@@ -623,7 +623,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
     }
 
     /**
-     * Removes the specified enumeration items form either include or exclude list and
+     * Removes the specified enumeration items from either include or exclude list and
      * notifies all listeners. Does not throw an exception if the argument
      * contains <code>null</code> elements or is not contained in any of the
      * lists.
@@ -734,7 +734,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	protected void updateComponent() {
 		SettingsModelEnumerationArray<T> model = ((SettingsModelEnumerationArray<T>)getModel());
 		T[] arrIncluded = model.getValues();
-		Set<T> setIncluded = new LinkedHashSet<T>();;
+		Set<T> setIncluded = new LinkedHashSet<T>();
 		
 		if (arrIncluded != null) {
 	        for (T item : arrIncluded) {

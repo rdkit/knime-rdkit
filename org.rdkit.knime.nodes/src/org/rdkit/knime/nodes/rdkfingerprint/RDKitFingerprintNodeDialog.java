@@ -97,7 +97,7 @@ public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentNumber(
                 createMaxPathModel(), "Max Path Length: ", 1));
         super.addDialogComponent(new DialogComponentNumberEdit(
-                createLayerFlagsModel(), "LayerFlags: ", 8));
+                createLayerFlagsModel(), "Layer Flags: ", 8));
     }
 
     /**

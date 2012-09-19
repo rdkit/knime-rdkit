@@ -128,9 +128,10 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
             .getLogger(RDKitFingerprintNodeModel.class);
 
 	/** 
-	 * This lock prevents two calls at the same time into the RDKKit FeatureInvariants functionality,
-	 * which has caused crashes under Windows 7 before. Once there is a fix 
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
+	 * This lock prevents two calls at the same time into the RDKKit FeatureInvariants 
+	 * and Avalon Fingerprint functionality, which has caused crashes under Windows 7 before. 
+	 * Once there is a fix implemented in the RDKit (or somewhere else?) we can 
+	 * remove this LOCK again.
 	 */
 	private static final Object LOCK = new Object();
 	
@@ -333,8 +334,10 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                	case avalon:
 	                		int bitNumber = m_modelNumBits.getIntValue();
 							fingerprint = markForCleanup(new ExplicitBitVect(bitNumber));
-							RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
-							 		RDKFuncs.getAvalonSimilarityBits());
+							synchronized (LOCK) {
+								RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
+								 		RDKFuncs.getAvalonSimilarityBits());
+							}
 							break;
 	                		
 	                	case layered:

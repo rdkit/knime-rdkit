@@ -278,13 +278,13 @@ public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 	                    	for (int atomIndex = 0; atomIndex < iNumAtoms; atomIndex++) {
 	                    		Atom atom = frag.getAtomWithIdx(atomIndex);
 	                    		if (atom.getAtomicNum() == 0) {
-	                    			int massLabel= (int)Math.floor(atom.getMass() + 0.1d);
+	                    			int iso= (int)atom.getIsotope();
 	                    			
 	                    			// Dummies are labeled by the zero-based atom index they're attached to.
 	                    			// To make things clearer to the user, increment these.
-	                        		atom.setMass(massLabel + 1);
-	                       			outputCells[massLabel] = RDKitMolCellFactory.createRDKitMolCell(frag);
-	                       			m_aiFilledCellCounter[massLabel].incrementAndGet();
+	                        		atom.setIsotope(iso + 1);
+	                       			outputCells[iso] = RDKitMolCellFactory.createRDKitMolCell(frag);
+	                       			m_aiFilledCellCounter[iso].incrementAndGet();
 	                       			found=true;
 	                      			break;
 	                    		}

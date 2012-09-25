@@ -75,8 +75,10 @@ import org.knime.core.data.container.BlobDataCell;
 public class RDKitMolCell extends BlobDataCell implements StringValue,
         RDKitMolValue {
 
-    /** Do not compress blobs, see {@link BlobDataCell#USE_COMPRESSION}. */
-    @SuppressWarnings("hiding")
+    /** Serial number. */
+	private static final long serialVersionUID = -6447956060653055892L;
+
+	/** Do not compress blobs, see {@link BlobDataCell#USE_COMPRESSION}. */
     public static final boolean USE_COMPRESSION = false;
 
     /**

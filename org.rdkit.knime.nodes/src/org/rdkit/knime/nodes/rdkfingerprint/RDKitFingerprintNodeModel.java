@@ -324,9 +324,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                		
 	                	case featmorgan:
 	                    	UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
-	                    	synchronized (LOCK) {
-	                    		RDKFuncs.getFeatureInvariants(mol, ivs);
-	                    	}
+	                    	RDKFuncs.getFeatureInvariants(mol, ivs);
 	                        fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
 	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue(), ivs));
 	                		break;

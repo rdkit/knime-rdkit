@@ -350,11 +350,9 @@ public abstract class AbstractRDKitSubstructFilterNodeModel extends AbstractRDKi
 				for (int i = 0; i < m_arrPatterns.length; i++) {
 					ROMol molPattern = m_arrPatterns[i];
 					if (molPattern != null ) {
-						synchronized (molPattern) {
-							if (mol.hasSubstructMatch(molPattern)) {
-								listFragments.add(new IntCell(i + 1));
-								iNumberOfMatchingPatterns++;
-							}
+						if (mol.hasSubstructMatch(molPattern)) {
+							listFragments.add(new IntCell(i + 1));
+							iNumberOfMatchingPatterns++;
 						}
 					}
 				}

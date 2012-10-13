@@ -304,34 +304,34 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                	case rdkit:
 	                        fingerprint = markForCleanup(RDKFuncs.RDKFingerprintMol(mol,
 	                        		m_modelMinPath.getIntValue(), m_modelMaxPath.getIntValue(),
-	                        		m_modelNumBits.getIntValue(), 2));
+	                        		m_modelNumBits.getIntValue(), 2), iUniqueWaveId);
 	                		break;
 	                		
 	                	case atompair:
 	                        fingerprint = markForCleanup(RDKFuncs.getHashedAtomPairFingerprintAsBitVect(
-	                        		mol, m_modelNumBits.getIntValue()));
+	                        		mol, m_modelNumBits.getIntValue()), iUniqueWaveId);
 	                		break;
 	                			                		
 	                	case torsion:
 	                        fingerprint = markForCleanup(RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(
-	                        		mol, m_modelNumBits.getIntValue()));
+	                        		mol, m_modelNumBits.getIntValue()), iUniqueWaveId);
 	                		break;
 	                		
 	                	case morgan:
 	                        fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
-	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue()));
+	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue()), iUniqueWaveId);
 	                		break;
 	                		
 	                	case featmorgan:
 	                    	UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
 	                    	RDKFuncs.getFeatureInvariants(mol, ivs);
 	                        fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
-	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue(), ivs));
+	                        		mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue(), ivs), iUniqueWaveId);
 	                		break;
 	                		
 	                	case avalon:
 	                		int bitNumber = m_modelNumBits.getIntValue();
-							fingerprint = markForCleanup(new ExplicitBitVect(bitNumber));
+							fingerprint = markForCleanup(new ExplicitBitVect(bitNumber), iUniqueWaveId);
 							synchronized (LOCK) {
 								RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
 								 		RDKFuncs.getAvalonSimilarityBits());
@@ -341,7 +341,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                	case layered:
 	                        fingerprint = markForCleanup(RDKFuncs.LayeredFingerprintMol(
 	                        		mol, m_modelLayerFlags.getIntValue(), m_modelMinPath.getIntValue(),
-	                        		m_modelMaxPath.getIntValue(), m_modelNumBits.getIntValue()));
+	                        		m_modelMaxPath.getIntValue(), m_modelNumBits.getIntValue()), iUniqueWaveId);
 	                		break;
 	                		
 	                	default:

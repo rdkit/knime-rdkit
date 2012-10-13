@@ -464,6 +464,9 @@ public enum Descriptor {
     /**
      * Converts the passed in double vector (RDKit style) into a
      * DoubleCell array filling non-existing values with missing cells.
+     * Note: This method deletes passed in Double_Vect object afterwards.
+     * It should not be registered for cleaning up before for performance
+     * reasons.
      * 
      * @param vecDouble RDKit double vector. Can be null.
      * @param warningConsolidator Warning consolidator to save and consolidate
@@ -482,30 +485,35 @@ public enum Descriptor {
     		arrCells = AbstractRDKitCellFactory.createEmptyCells(iColumns);
     	}
     	else {
-	    	arrCells = new DoubleCell[iColumns];
-			int iLen = (int)vecDouble.size();
-	
-			// If the results are too big, truncate them and warn
-			if (iLen > iColumns) {
-				if (warningConsolidator != null) {
-					warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), 
-						new StringBuilder("RDKit calculated more descriptor columns than expected for descriptor '")
-							.append(toString()).append("': ").append(iLen).append(" instead of ").append(iColumns)
-							.append(" - Truncating them.").toString());
+    		try {
+		    	arrCells = new DoubleCell[iColumns];
+				int iLen = (int)vecDouble.size();
+		
+				// If the results are too big, truncate them and warn
+				if (iLen > iColumns) {
+					if (warningConsolidator != null) {
+						warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), 
+							new StringBuilder("RDKit calculated more descriptor columns than expected for descriptor '")
+								.append(toString()).append("': ").append(iLen).append(" instead of ").append(iColumns)
+								.append(" - Truncating them.").toString());
+					}
+					
+					iLen = iColumns;
 				}
 				
-				iLen = iColumns;
-			}
-			
-			// Convert Double_Vect to DoubleCell array
-			for (int i = 0; i < iLen; i++) {
-				arrCells[i] = new DoubleCell(vecDouble.get(i));
-			}
-			
-			// Fill the rest with missing cells
-			for (int i = iLen; i < iColumns; i++) {
-				arrCells[i] = DataType.getMissingCell();
-			}
+				// Convert Double_Vect to DoubleCell array
+				for (int i = 0; i < iLen; i++) {
+					arrCells[i] = new DoubleCell(vecDouble.get(i));
+				}
+				
+				// Fill the rest with missing cells
+				for (int i = iLen; i < iColumns; i++) {
+					arrCells[i] = DataType.getMissingCell();
+				}
+    		}
+    		finally {
+    			vecDouble.delete();
+    		}
     	}
     	
 		return arrCells;    	

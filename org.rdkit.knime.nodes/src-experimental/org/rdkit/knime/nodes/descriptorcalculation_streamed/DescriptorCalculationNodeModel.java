@@ -46,39 +46,37 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.rdkit.knime.nodes.canonsmiles;
+package org.rdkit.knime.nodes.descriptorcalculation2;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
-import org.RDKit.RWMol;
-import org.knime.chem.types.SmilesCell;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
+import org.rdkit.knime.nodes.AbstractRDKitStreamableCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.SettingsModelEnumerationArray;
 import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.WarningConsolidator;
 
 /**
- * This class implements the node model of the RDKitCanonicalSmiles node
+ * This class implements the node model of the RDKitDescriptorCalculation node
  * providing calculations based on the open source RDKit library.
  * 
+ * @author Dillip K Mohanty
  * @author Manuel Schwarze 
  */
-public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeModel {
+public class DescriptorCalculationNodeModel extends AbstractRDKitStreamableCalculatorNodeModel {
 
 	//
 	// Constants
@@ -86,7 +84,7 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 	
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
-			.getLogger(RDKitCanonicalSmilesNodeModel.class);
+			.getLogger(DescriptorCalculationNodeModel.class);
 	
 	
 	/** Input data info index for Mol value. */
@@ -98,16 +96,12 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 	
 	/** Settings model for the column name of the input column. */
     private final SettingsModelString m_modelInputColumnName =
-            registerSettings(RDKitCanonicalSmilesNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
-    // Accept also old deprecated keys
-
-    /** Settings model for the column name of the new column to be added to the output table. */
-    private final SettingsModelString m_modelNewColumnName =
-    		registerSettings(RDKitCanonicalSmilesNodeDialog.createNewColumnNameModel());
-
-    /** Settings model for the option to remove the source column from the output table. */
-    private final SettingsModelBoolean m_modelRemoveSourceColumns =
-    		registerSettings(RDKitCanonicalSmilesNodeDialog.createRemoveSourceColumnsOptionModel());
+            registerSettings(DescriptorCalculationNodeDialog.createInputColumnNameModel(), "input_column", "colName");
+    // Accept also deprecated keys
+    
+    /** Settings model for selected descriptors. */
+    private final SettingsModelEnumerationArray<Descriptor> m_modelDescriptors = 
+    		registerSettings(DescriptorCalculationNodeDialog.createDescriptorsModel());
     
     //
     // Constructor
@@ -116,52 +110,41 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
     /**
      * Create new node model with one data in- and one out-port.
      */
-    RDKitCanonicalSmilesNodeModel() {
+    DescriptorCalculationNodeModel() {
         super(1, 1);
     }
 
     //
     // Protected Methods
     //
-    
+
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
     	// Reset warnings and check RDKit library readiness
     	super.configure(inSpecs);
     	
         // Auto guess the input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, 
-        		Arrays.asList(RDKitMolValue.class, SmilesValue.class), 0, 
+        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
         		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No RDKit Mol or SMILES compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert from SDF.", getWarningConsolidator()); 
+        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
+        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
 
         // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, 
-        		Arrays.asList(RDKitMolValue.class, SmilesValue.class), 
+        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
         		"Input column has not been specified yet.",
         		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+
+        // Check, if descriptor selection is empty
+        Descriptor[] arrDescriptors = m_modelDescriptors.getValues();
+        if (arrDescriptors == null || arrDescriptors.length == 0) {
+        	getWarningConsolidator().saveWarning(
+        			"There is no descriptor selected. The result table will be the same as the input table.");
+        }
         
-        // Auto guess the new column name and make it unique
-        String strInputColumnName = m_modelInputColumnName.getStringValue();
-        SettingsUtils.autoGuessColumnName(inSpecs[0], null, 
-        		(m_modelRemoveSourceColumns.getBooleanValue() ? 
-        			new String[] { strInputColumnName } : null),
-        		m_modelNewColumnName, strInputColumnName + " (Canonical)");
-
-        // Determine, if the new column name has been set and if it is really unique
-        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
-        		(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] { 
-        			m_modelInputColumnName.getStringValue() } : null),
-        		m_modelNewColumnName, 
-        		"Output column has not been specified yet.",
-        		"The name %COLUMN_NAME% of the new column exists already in the input.");
-
         // Consolidate all warnings and make them available to the user
         generateWarnings();
 
@@ -185,12 +168,12 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
     		arrDataInfo = new InputDataInfo[1]; // We have only one input column
     		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
     				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-    				RDKitMolValue.class, SmilesValue.class);
+    				RDKitMolValue.class);
     	}
     	
     	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
     }
- 
+    
     /**
      * {@inheritDoc}
      */
@@ -206,15 +189,14 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 
     		// Factory 1:
     		// ==========
-    		// Generate column specs for the output table columns produced by this factory
-    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-    		arrOutputSpec[0] = new DataColumnSpecCreator(
-    				m_modelNewColumnName.getStringValue(), SmilesCell.TYPE)
-    				.createSpec();
+    		final Descriptor[] arrDescriptors = m_modelDescriptors.getValues();
+    		final DataColumnSpec[] arrNewColumns = createDescriptorColumnSpecs(inSpec);
+    		final int iNewColumnCount = arrNewColumns.length;
+    		final WarningConsolidator warningConsolidator = getWarningConsolidator();
     		
     		// Generate factory 
     	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-           		getWarningConsolidator(), null, arrOutputSpec) {
+           		getWarningConsolidator(), null, arrNewColumns) {
 	   			
 	   			@Override
 	   		    /**
@@ -223,38 +205,21 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 	   		     * {@inheritDoc}
 	   		     */
 	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-	   		    	DataCell outputCell = DataType.getMissingCell(); // Default value, if something fails
-	   		    	
-	   		    	// Get the ROMol object for the cell
-	   		    	if (arrInputDataInfo[INPUT_COLUMN_MOL].isCompatible(RDKitMolValue.class)) {
-	   		    		ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
-	                    
-	   		    		// Always recalculate the canonical SMILES form as the underlying 
-	   		    		// algorithm, platform, etc. may have changed, which could lead to other results
-                    	try {
-                    		mol = markForCleanup(new RWMol(mol), iUniqueWaveId);
-                    		RDKFuncs.sanitizeMol((RWMol)mol);
-                    		outputCell = new SmilesCell(RDKFuncs.MolToSmiles(mol, true));
-                    	} 
-                    	catch (Exception e) {
-                    		String strMsg = "Could not sanitize molecule. Result cell will be empty.";
-                            LOGGER.debug(strMsg + " (row '" + row.getKey() + "')");
-                    	}
-	   		    	}
-	   		    	else { // It must be a SMILES compatible value
-	   		    		ROMol mol = markForCleanup(RWMol.MolFromSmiles(
-	   		    				arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row)), iUniqueWaveId);
-	                    
-	                    if (mol != null) {
-		   		    		outputCell = new SmilesCell(RDKFuncs.MolToSmiles(mol, true));
-	                    }
-	                    else {
-                    		String strMsg = "Error parsing SMILES. Result cell will be empty.";
-                            LOGGER.debug(strMsg + " (row '" + row.getKey() + "')");
-	 	   		    	}
+	   		    	DataCell[] arrAllResults = new DataCell[iNewColumnCount];
+
+	   		    	// Calculate the new cells
+	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
+
+	   		    	int iOffset = 0;
+	   		    	for (Descriptor descriptor : arrDescriptors) {
+	   		    		if (descriptor != null) {
+		   		    		for (DataCell cell : descriptor.calculate(mol, warningConsolidator)) {
+		   		    			arrAllResults[iOffset++] = cell;
+		   		    		}
+	   		    		}
 	   		    	}
 	   		    	
-	   		        return new DataCell[] { outputCell };
+	   		        return arrAllResults;
 	   		    }
 	   		};
 	   		
@@ -265,20 +230,44 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
     	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
     }
 	
+	//
+	// Private Methods
+	//
+	
     /**
-     * {@inheritDoc}
-     * This implementation removes additionally the compound source column, if specified in the settings.
+     * Returns the column specifications for the new descriptor columns to be created
+     * by this node.
+     * 
+     * @param inSpec Input table specification to be used to check that new column
+     * 		names are unique.
+     * 
+     * @return The specification of all descriptor columns to be created.
+     * 
+     * @see #createOutputFactories(int)
      */
-	protected ColumnRearranger createColumnRearranger(int outPort,
-			DataTableSpec inSpec) throws InvalidSettingsException {
-    	// Perform normal work 
-        ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
-        
-        // Remove the input column, if desired
-        if (m_modelRemoveSourceColumns.getBooleanValue()) {
-            result.remove(createInputDataInfos(0, inSpec)[INPUT_COLUMN_MOL].getColumnIndex());
-        }
-        
-        return result;
-    } 
+	private DataColumnSpec[] createDescriptorColumnSpecs(DataTableSpec inSpec) {
+		final Descriptor[] arrDescriptors = m_modelDescriptors.getValues();
+		final List<DataColumnSpec> listNewColumns = new ArrayList<DataColumnSpec>();
+		
+		if (arrDescriptors != null) {
+			List<String> listNewNames = new ArrayList<String>();
+			
+			for (Descriptor descriptor : arrDescriptors) {
+				if (descriptor != null) {
+					int iColumnCount = descriptor.getColumnCount();
+					DataType[] arrTypes = descriptor.getDataTypes();
+					String[] arrTitles = descriptor.getPreferredColumnTitles();
+					
+					for (int i = 0; i < iColumnCount; i++) {
+						String strUniqueColumnName = SettingsUtils.makeColumnNameUnique(
+								arrTitles[i], inSpec, listNewNames);
+						listNewNames.add(strUniqueColumnName);
+	    				listNewColumns.add(new DataColumnSpecCreator(strUniqueColumnName, arrTypes[i]).createSpec());
+					}
+				}
+			}
+		}
+		
+		return listNewColumns.toArray(new DataColumnSpec[listNewColumns.size()]);
+	}
 }

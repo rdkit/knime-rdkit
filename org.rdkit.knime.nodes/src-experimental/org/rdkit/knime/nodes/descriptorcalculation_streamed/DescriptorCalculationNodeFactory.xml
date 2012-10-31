@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./rdkit_descriptor_calc.png" type="Manipulator">
+    <name>RDKit Descriptor Calculation</name>
+    
+    <shortDescription>
+        Node for descriptor calculation of RDKit Molecules.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	This node is used for calculating the descriptors for each molecule in the input table.
+        	The user has the option to choose which descriptors need to be calculated and the calculated descriptor 
+        	values for each molecule in the input table are shown in its own column in the output table.
+        </intro>
+        
+        <option name="Molecule column">The name of the column in input table containing RDKit molecules.</option>
+        <option name="Available descriptors">The list of descriptors that are available for calculation.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="RDKit Molecules">Table containing RDKit Molecules.</inPort>
+        <outPort index="0" name="Molecules with calculated descriptors">Table containing calculated descriptor values.</outPort>
+    </ports>    
+</knimeNode>

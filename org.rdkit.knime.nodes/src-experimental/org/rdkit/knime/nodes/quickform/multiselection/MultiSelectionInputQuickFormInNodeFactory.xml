@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="quickform_multisel.png" type="QuickForm">
+    <name>Multi Selection QuickForm</name>
+
+    <shortDescription>
+      Defines a list of options and allows to select multiple values,
+      which are returned in a table and as a comma-separated variable.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+              Defines a list of options and allows to select multiple values,
+      		  which are returned in a table and as a variable. 
+		      The selection can also be controlled from a quickfrom (WebPortal).
+            </p>
+        </intro>
+        <option name="Label">
+          A descriptive label that will be shown in, for instance the web port.
+        </option>
+        <option name="Description">
+          Some lines of description that will be shown in the remote control 
+          form, for instance by means of a tooltip.
+        </option>
+        <option name="Weight">
+          A weight value that influences the position of the component in
+          the final layout. Lighter elements will be placed at the top, whereas
+          heavier items will be placed nearer the bottom. The value is relative
+          to the weights of the other components in the workflow (absolute 
+          value is not relevant, only the relative comparison to other
+          elements).
+        </option>
+        <option name="Variable Name">
+          Variable identifier.
+        </option>
+        <option name="Variable Value">
+          Variable value containing the select value names.
+        </option>
+        <option name="Column Name">
+          Column name to be used for the output table with the selected options.
+        </option>
+        <option name="Choice List">
+          Choices to be added and removed and selected as pre-selected default values.
+        </option>
+        <option name="Use Only A One-Line GUI Component">
+          Option to use a small GUI component for selection of choices.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <outPort index="0" name="Data table with one column">
+            A table with one column and selected values.
+        </outPort>
+    </ports>
+</knimeNode>

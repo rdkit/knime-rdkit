@@ -494,6 +494,50 @@ public class SettingsUtils {
     		final String[] arrExclColumnNames, final SettingsModelString settingNewColumnName, 
     		String strErrorIfNotSet, String strErrorIfNotUnique) 
     	throws InvalidSettingsException {
+
+    	if (settingNewColumnName == null) {
+    		throw new IllegalArgumentException("Settings model for new column name must not be null.");
+    	}
+    	
+    	return checkColumnNameUniqueness(inSpec, arrMoreColumnNames, arrExclColumnNames, 
+    			settingNewColumnName.getStringValue(), strErrorIfNotSet, strErrorIfNotUnique);
+    }
+    
+    /**
+     * Determines based on the passed in table specification and column names, if
+     * the specified column name would cause a name conflict. 
+     * 
+     * @param inSpec A table specification containing column specifications, which shall
+     * 		be considered in the uniqueness check. Must not be null.
+     * @param arrMoreColumnNames Array of additional column names, which would exist in 
+     * 		the new name space and should be considered for uniqueness check. Can be null.
+     * 		It is also ok, if some elements in the array are null - they will be ignored.
+     * @param arrExclColumnNames Array of column names to exclude from the uniqueness check,
+     * 		e.g. because these columns will be removed. Can be null.
+     * 		It is also ok, if some elements in the array are null - they will be ignored.
+     * @param strNewColumnName The name of a new column that shall be checked for uniqueness. 
+     * 		Can be null, if not set yet, but results in an exception if the strErrorIfNotSet
+     * 		parameter is set.
+     * @param strErrorIfNotSet If not set to null, this will be used as error message when
+     * 		no column name has been set yet (is null). Set it
+     * 		to null, if no exception shall be thrown by this method.
+     * @param strErrorIfNotUnique If not set to null, this will be used as error message when
+     * 		no column was found matching the passed in name (name not unique). Set it
+     * 		to null, if no exception shall be thrown by this method.
+     * 		You may use the placeholder %COLUMN_NAME%, which
+     * 		will be replaced with the concrete column name that was not found.
+     * 
+     * @return True, if the name is unique. False otherwise.
+     * 
+     * @throws InvalidSettingsException Thrown, if the last parameter is not null, and
+     * 		if the column name is not unique. Also thrown, if the second last parameter is
+     * 		not null, and if the column name had not been set yet.
+     */
+    public static boolean checkColumnNameUniqueness(final DataTableSpec inSpec, 
+    		final String[] arrMoreColumnNames,
+    		final String[] arrExclColumnNames, final String strNewColumnName, 
+    		String strErrorIfNotSet, String strErrorIfNotUnique) 
+    	throws InvalidSettingsException {
     	
     	boolean bRet = true;
     	
@@ -501,13 +545,9 @@ public class SettingsUtils {
     	if (inSpec == null) {
     		throw new IllegalArgumentException("Input table spec must not be null.");
     	}
-    	if (settingNewColumnName == null) {
-    		throw new IllegalArgumentException("Settings model for new column name must not be null.");
-    	}
     	
     	// Check, if we have no setting yet
-    	String strNewColumnName = settingNewColumnName.getStringValue();
-    	if (strNewColumnName == null) {
+     	if (strNewColumnName == null) {
     		if (strErrorIfNotSet != null) {
     			throw new InvalidSettingsException(strErrorIfNotSet);
     		}

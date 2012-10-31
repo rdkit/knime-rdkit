@@ -171,6 +171,17 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
      * interactive view data structures.
      */
     private TableContentModel[] m_arrOutContModel;
+    
+    /** 
+     * Stores an exception that occurred when executing the node. This information is used
+     * when finishExecution is called to determine how to treat RDKit objects when cleaning up.
+     */
+    private Throwable m_excEncountered; 
+    
+    /**
+     * Timestamp when execution started.
+     */
+    private long m_lExecutionStartTs;
 
     //
     // Constructors
@@ -689,9 +700,9 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-    	long lStart = System.currentTimeMillis();
+    	m_lExecutionStartTs = System.currentTimeMillis();
     	BufferedDataTable[] arrResultTables = null;
-    	Throwable excEncountered = null;
+    	m_excEncountered = null;
 
     	try {
     		// We use a nested try / catch block here as a trick to know about the
@@ -722,53 +733,11 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		        generateWarnings(createWarningContextOccurrencesMap(inData, arrInputDataInfo, arrResultTables));
     		}
     		catch (Throwable exc) {
-    			excEncountered = exc;
+    			m_excEncountered = exc;
     		}
     	}
     	finally {
-    		// Free all RDKit resources - but carefully consider different scenarios
-    		try {
-	    		// 1. Everything went well - no exception was thrown. Everything should be ready for cleanup
-	    		if (excEncountered == null) {
-	    			cleanupMarkedObjects();
-	    		}
-				// 2. Something went wrong, maybe the user canceled - if we have executed the node using
-	    		//    multiple threads, some of them could be still using RDKit Objects
-	    		else {
-	    			quarantineAndCleanupMarkedObjects();
-	    		}
-    		}
-    		catch (Exception excCleanup) {
-    			LOGGER.warn("Cleanup of RDKit objects failed. " + excCleanup.getMessage());
-    			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
-    		}
-
-    		// Cleanup all intermediate results
-    		try {
-    			cleanupIntermediateResults();
-    		}
-    		catch (Exception excCleanup) {
-    			LOGGER.warn("Cleanup of intermediate execution results failed. " + excCleanup.getMessage());
-    			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
-    		}
-
-            long lEnd = System.currentTimeMillis();
-            LOGGER.info("Execution of " + getClass().getSimpleName() + " took " + (lEnd - lStart) + "ms.");
-
-            if (excEncountered != null) {
-            	if (excEncountered instanceof Exception) {
-            		// E.g. CanceledExecutionException
-            		throw (Exception)excEncountered;
-	            }
-	            else if (excEncountered instanceof Error){
-	            	// E.g. OutOfMemoryException
-	            	throw (Error)excEncountered;
-	            }
-	            else {
-	            	// Normally, you should not extend directly Throwable, so this case should not really happen
-	            	throw new RuntimeException(excEncountered);
-	            }
-            }
+    		finishExecution();
     	}
 
     	// Prepares conservation of certain tables
@@ -859,6 +828,56 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 */
 	protected void cleanupIntermediateResults() {
 		// Does not do anything be default.
+	}
+	
+	/**
+	 * Called at the end of node execution. All overall cleanup code is placed here.
+	 * Nodes which override this method must call super to avoid memory leaks.
+	 */
+	protected void finishExecution() throws Exception {
+		// Free all RDKit resources - but carefully consider different scenarios
+		try {
+    		// 1. Everything went well - no exception was thrown. Everything should be ready for cleanup
+    		if (m_excEncountered == null) {
+    			cleanupMarkedObjects();
+    		}
+			// 2. Something went wrong, maybe the user canceled - if we have executed the node using
+    		//    multiple threads, some of them could be still using RDKit Objects
+    		else {
+    			quarantineAndCleanupMarkedObjects();
+    		}
+		}
+		catch (Exception excCleanup) {
+			LOGGER.warn("Cleanup of RDKit objects failed. " + excCleanup.getMessage());
+			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
+		}
+
+		// Cleanup all intermediate results
+		try {
+			cleanupIntermediateResults();
+		}
+		catch (Exception excCleanup) {
+			LOGGER.warn("Cleanup of intermediate execution results failed. " + excCleanup.getMessage());
+			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
+		}
+
+        long lEnd = System.currentTimeMillis();
+        LOGGER.info("Execution of " + getClass().getSimpleName() + " took " + (lEnd - m_lExecutionStartTs) + "ms.");
+
+        if (m_excEncountered != null) {
+        	if (m_excEncountered instanceof Exception) {
+        		// E.g. CanceledExecutionException
+        		throw (Exception)m_excEncountered;
+            }
+            else if (m_excEncountered instanceof Error){
+            	// E.g. OutOfMemoryException
+            	throw (Error)m_excEncountered;
+            }
+            else {
+            	// Normally, you should not extend directly Throwable, so this case should not really happen
+            	throw new RuntimeException(m_excEncountered);
+            }
+        }
 	}
 
 	/**

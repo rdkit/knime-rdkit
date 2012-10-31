@@ -244,7 +244,7 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
         		String strMsg = "Failed to process data" +
         			(exc.getMessage() != null ? " due to " + exc.getMessage() : "") + 
         			". Generating empty result cells.";
-            	LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')");
+            	LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", exc);
             	getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
                 arrOutputCells = createEmptyCells(getColumnSpecs().length);
         	}

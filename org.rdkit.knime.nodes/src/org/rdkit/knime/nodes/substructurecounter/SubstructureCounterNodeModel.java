@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.RDKit.Match_Vect_Vect;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -395,33 +396,44 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			}
 			// Otherwise: Get canonical SMILES from the query molecule
 			else {
-				String strSmiles = mol.MolToSmiles(true);
-				String strColumnName = strSmiles;
+				String strQueryMolString = null;
+				
+				// Check (by heuristics) if we have a SMARTS as query molecule
+				if (mol.getNumAtoms() > 0 && mol.getAtomWithIdx(0).hasQuery()) {
+					strQueryMolString = RDKFuncs.MolToSmarts(mol);
+				}
+				
+				// Or a SMILES (or SMARTS convertion failed)
+				if (strQueryMolString == null) {
+					strQueryMolString = mol.MolToSmiles(true);
+				}
 
-				// Fallback, if SMILES conversion failed
-				if (strSmiles == null) {
+				// Fallback, if SMARTS/SMILES conversion failed
+				if (strQueryMolString == null) {
 					listInvalidQueries.add(row.getKey());
 				}
 				// Otherwise: Everything is fine - use this query
 				else {
+					String strColumnName = strQueryMolString;
+
 					// Check for duplicate, still include it, but warn
-					Integer intCount = mapDuplicates.get(strSmiles);
+					Integer intCount = mapDuplicates.get(strQueryMolString);
 					if (intCount != null) {
 						int iDuplicate = intCount + 1;
-						mapDuplicates.put(strSmiles, iDuplicate);
+						mapDuplicates.put(strQueryMolString, iDuplicate);
 						listDuplicatedQueries.add(row.getKey());
 						strColumnName += " (Duplicate " + iDuplicate + ")";
 					}
 					else {
-						mapDuplicates.put(strSmiles, 0);
+						mapDuplicates.put(strQueryMolString, 0);
 					}
 
 					// Ensure that our target column name is unique
-					strColumnName = DataTableSpec.getUniqueColumnName(
-							inData[1].getDataTableSpec(), strColumnName);
+					strColumnName = SettingsUtils.makeColumnNameUnique(strColumnName, 
+							inData[0].getDataTableSpec(), listColumnNames);
 					listColumnNames.add(strColumnName);
 					listQueriesAsRDKitMols.add(mol);
-					listQueriesAsSmiles.add(strSmiles);
+					listQueriesAsSmiles.add(strQueryMolString);
 				}
 			}
 

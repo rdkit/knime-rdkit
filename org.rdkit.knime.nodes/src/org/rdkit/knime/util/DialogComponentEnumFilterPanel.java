@@ -748,14 +748,18 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 
         for (int i = 0; i < m_listEnums.size(); i++) {
             final T item = m_listEnums.get(i);
-            m_setOrderedValues.add(item);
-
-            if (!m_setHiddenValues.contains(item)) {
-	            if (setIncluded != null && setIncluded.contains(item)) {
-	                m_listModelInclude.addElement(item);
-	            }
-	            else {
-	                m_listModelExclude.addElement(item);
+            
+            // Add only items that are not considered flow variable placeholders
+            if (!model.isFlowVariablePlaceholder(item)) {
+	            m_setOrderedValues.add(item);
+	
+	            if (!m_setHiddenValues.contains(item)) {
+		            if (setIncluded != null && setIncluded.contains(item)) {
+		                m_listModelInclude.addElement(item);
+		            }
+		            else {
+		                m_listModelExclude.addElement(item);
+		            }
 	            }
             }
         }

@@ -1,15 +1,50 @@
 /*
- * This source code, its documentation and all related files
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
  * Copyright (C) 2012
  * Novartis Institutes for BioMedical Research
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
  */
 package org.rdkit.knime.util;
 
@@ -66,8 +101,8 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     //
 
     /**
-     * Creates a new object holding an enumeration value. The current value will
-     * be set to the specified default value.
+     * Creates a new object holding a list of enumeration values. The current value will
+     * be set to the specified default value list.
      *
      * @param enumType Enumeration class this setting is based on. Must not be null.
      * @param configName The identifier the value is stored with in the
@@ -321,7 +356,9 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
-            setValuesAsString(settings.getStringArray(m_configName));
+        	String[] arrSettings = settings.getStringArray(m_configName);
+        	arrSettings = removeFlowValuePlaceholders(arrSettings);
+            setValuesAsString(arrSettings);
         } catch (final IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
         }
@@ -333,6 +370,7 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
     	String[] arrValuesAsString = getValuesAsString();
+    	arrValuesAsString = addFlowValuePlaceholders(arrValuesAsString);
         settings.addStringArray(m_configName, arrValuesAsString);
     }
 
@@ -345,7 +383,9 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
         try {
             // use the current value, if no value is stored in the settings
         	String[] arrDefaultValuesAsString = getValuesAsString();
-            setValuesAsString(settings.getStringArray(m_configName, arrDefaultValuesAsString));
+        	String[] arrSettings = settings.getStringArray(m_configName, arrDefaultValuesAsString);
+        	arrSettings = removeFlowValuePlaceholders(arrSettings);
+            setValuesAsString(arrSettings);
         } catch (final IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
         }
@@ -358,7 +398,97 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
     	String[] arrValuesAsString = getValuesAsString();
+    	arrValuesAsString = addFlowValuePlaceholders(arrValuesAsString);
         settings.addStringArray(m_configName, arrValuesAsString);
+    }
+    
+    /**
+     * Fills up the array (null is treated like an empty array) with
+     * flow value placeholder values, if they are not existing yet in 
+     * the array. The returned array will contain not more elements
+     * in total as the total number of flow variable placeholders of
+     * the enumeration. This means, if there are 2 "real" elements already
+     * and 5 placeholders exist, this method will only add 3 placeholders.
+     * 
+     * @param arrValuesAsString Existing value array. Can be null.
+     * 
+     * @return Array with all placeholders added, which were not in the array yet.
+     * 		Never null, but maybe empty (if there are no placeholders in the
+     * 		enumeration).
+     */
+    protected String[] addFlowValuePlaceholders(String[] arrValuesAsString) {
+    	List<String> listRet = new ArrayList<String>();
+    	List<T> listPlaceholders = findFlowVariablePlaceholders();
+    	
+    	// Add existing values
+    	if (arrValuesAsString != null) {
+    		for (String item : arrValuesAsString) {
+    			if (item != null) {
+    				listRet.add(item);
+    			}
+    		}
+    	}
+    	
+    	// Add placeholders, if they are not contained in the list yet
+    	if (listPlaceholders != null) {
+    		for (T item : listPlaceholders) {
+    			if (listRet.size() < listPlaceholders.size()) {
+	    			String strPlaceholder = item.name();
+	    			if (!listRet.contains(strPlaceholder)) {
+	    				listRet.add(strPlaceholder);
+	    			}
+    			}
+    			else {
+    				// Do not add more elements to the list
+    				// as there are placeholders
+    				break;
+    			}
+    		}
+    	}
+    	
+    	return listRet.toArray(new String[listRet.size()]);	
+    }
+    
+    /**
+     * Removes all flow value placeholder values from the array 
+     * (null is treated like an empty array).
+     * 
+     * @param arrValuesAsString Existing value array (potentially with 
+     * 		placeholder values). Can be null.
+     * 
+     * @return Array with all placeholders removed. Returns null, if null was passed in.
+     * 		Returns an empty array, if all values were placeholders before.
+     */
+    protected String[] removeFlowValuePlaceholders(String[] arrValuesAsString) {
+    	String[] arrRet = null;
+    	
+    	if (arrValuesAsString != null) {
+	    	List<String> listRet = new ArrayList<String>();
+	    	List<T> listPlaceholders = findFlowVariablePlaceholders();
+	    	
+	    	// Remove existing placeholder values
+	    	if (arrValuesAsString != null) {
+	    		for (String strItem : arrValuesAsString) {
+	    			try {
+	    				// Add the item only, if it is not a placeholder
+		    			if (strItem == null || 
+		    				!listPlaceholders.contains(Enum.valueOf(m_enumType, strItem))) {
+		    				listRet.add(strItem);
+		    			}
+	    			}
+	    			catch (Exception exc) {
+	    				// We ignore this exception here - it would mean that 
+	    				// an item was found, which is definitely not one of the 
+	    				// placeholder values - so just add the item
+	    				listRet.add(strItem);
+	    			}
+	    		}
+	    	}
+	    	
+	    	arrRet = listRet.toArray(new String[listRet.size()]);	
+    	}
+    	
+    	return arrRet;
     }
 
     /**
@@ -369,9 +499,20 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
         return getClass().getSimpleName() + " ('" + m_configName + "')";
     }
     
-    //
-    // Private Methods
-    //
+    /**
+     * Determines, if the passed in enumeration item is shall
+     * be treated as flow variable placeholder. This is the case,
+     * if it's name starts with "FlowVariablePlaceHolder".
+     * 
+     * @param item Enumeration item. Can be null.
+     * 
+     * @return True, if the specified item is considered one of the 
+     * 	 	FlowVariablePlaceHolderXXX enumeration constants. False,
+     * 		if null was passed in or if it is not such a constant.
+     */
+    public boolean isFlowVariablePlaceholder(T item) {
+    	return (item == null || item.name().startsWith("FlowVariablePlaceHolder"));
+    }
     
     /**
      * Traverses all enumeration values of the specified enum type
@@ -385,7 +526,7 @@ public class SettingsModelEnumerationArray<T extends Enum<T>> extends SettingsMo
     public List<T> findFlowVariablePlaceholders() {
     	List<T> listPlaceHolders = new ArrayList<T>();
     	for (T enumConstant : m_enumType.getEnumConstants()) {
-    		if (enumConstant.name().startsWith("FlowVariablePlaceHolder")) {
+    		if (isFlowVariablePlaceholder(enumConstant)) {
     			listPlaceHolders.add(enumConstant);
     		}
     	}

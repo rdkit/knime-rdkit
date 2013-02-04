@@ -24,7 +24,7 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -data &quot;${workspace_loc:org.rdkit.knime.testing/regression-tests}/workspace&quot;"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms512M -ea -Xmx1000M -XX:MaxPermSize=256M"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms512M -ea -Xmx1000M -XX:MaxPermSize=256M -XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dknime.enable.fastload=true -Dknime.user.env=dev"/>
 <stringAttribute key="pde.version" value="3.3"/>
 <stringAttribute key="product" value="org.knime.product.KNIME_PRODUCT"/>
 <setAttribute key="selected_features">

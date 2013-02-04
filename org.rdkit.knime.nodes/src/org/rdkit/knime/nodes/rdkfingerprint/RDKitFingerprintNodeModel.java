@@ -333,7 +333,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                		int bitNumber = m_modelNumBits.getIntValue();
 							fingerprint = markForCleanup(new ExplicitBitVect(bitNumber), iUniqueWaveId);
 							synchronized (LOCK) {
-								RDKFuncs.getAvalonFP(mol.MolToSmiles(), true, fingerprint, bitNumber, false, false,
+								RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
 								 		RDKFuncs.getAvalonSimilarityBits());
 							}
 							break;

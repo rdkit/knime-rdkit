@@ -90,9 +90,17 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentBoolean(
                 createRemoveSourceColumnsOptionModel(), "Remove source column"));
         
+        super.createNewGroup("Error Handling");
         super.addDialogComponent(new DialogComponentButtonGroup(
-                createSeparateRowsModel(), "Error Handling", true,
+                createSeparateRowsModel(), null, true,
                 ParseErrorPolicy.values()));
+        SettingsModelBoolean generateErrorInformationColumn =
+        	 createGenerateErrorInfoOptionModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+        		generateErrorInformationColumn, "Generate error information column"));
+        super.addDialogComponent(new DialogComponentString(
+                createErrorInfoColumnNameModel(generateErrorInformationColumn),
+                "Error Information Column Name: "));
         
         super.createNewGroup("2D Coordinates");
         SettingsModelBoolean generateCoordinatesModel =
@@ -102,6 +110,7 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentBoolean(
                 createForceGenerateCoordinatesModel(generateCoordinatesModel),
                 "Force Generation"));
+        
         super.closeCurrentGroup();
         
         super.createNewTab("Advanced");
@@ -147,6 +156,10 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
+     * Creates the radio button option how to deal with rows that fail
+     * the conversion. Either set a missing value (false) or put them into separate
+     * table at port 1 (true).
+     * 
      * @return new settings model for the flag 'send bad rows to port1'
      */
     static final SettingsModelString createSeparateRowsModel() {
@@ -154,6 +167,40 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
                 ParseErrorPolicy.SPLIT_ROWS.getActionCommand());
     }
 
+    /**
+     * Creates the checkbox option if an error column shall be added
+     * for rows that fail the conversion.
+     * 
+     * @return new settings model for the option to generate an error column.
+     */
+    static final SettingsModelBoolean createGenerateErrorInfoOptionModel() {
+        return new SettingsModelBoolean("generateErrorInfo", false);
+    }
+    
+    /**
+     * Creates the model to specify a column name for the optional
+     * error information column. This option is dependent on the passed 
+     * in model state.
+     * 
+     * @param modelGenerateErrorInfo Model that determines, if the
+     * 		error information column name model is enabled or disabled.
+     * 
+     * @return The error information column name model.
+     */
+    static final SettingsModelString createErrorInfoColumnNameModel(
+    		final SettingsModelBoolean modelGenerateErrorInfo) {
+        final SettingsModelString result =
+            new SettingsModelString("errorInfoColumnName", "");
+        modelGenerateErrorInfo.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
+            }
+        });
+        result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
+        return result;
+    }
+    
     /**
      * @return new settings model whether to also compute coordinates
      */

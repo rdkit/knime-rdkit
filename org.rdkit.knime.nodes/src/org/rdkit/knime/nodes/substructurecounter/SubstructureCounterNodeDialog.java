@@ -48,6 +48,10 @@
  */
 package org.rdkit.knime.nodes.substructurecounter;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -87,6 +91,13 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
         super.addDialogComponent(
          		new DialogComponentBoolean(createUniqueMatchesOnlyModel(),
          				"Count unique matches only"));
+        SettingsModelBoolean modelUseQueryNameColumnOption = createUseQueryNameColumnModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+        		modelUseQueryNameColumnOption, "Use names in the following column as query names"));
+        super.addDialogComponent(new DialogComponentColumnNameSelection(
+                createQueryNameColumnModel(modelUseQueryNameColumnOption), "Query names column: ", 1,
+                StringValue.class));
+
     }
 
     //
@@ -119,6 +130,41 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
      */
     static final SettingsModelBoolean createUniqueMatchesOnlyModel() {
 		return new SettingsModelBoolean("countUniqueMatches", true);
-		
 	}
+    
+    /**
+     * Creates the settings model to be used to specify the option
+     * to use data of specific input table column as column names
+     * instead of using the SMILES or SMARTS string.
+     * 
+     * @return Settings model for using column names from input table option.
+     */
+    static final SettingsModelBoolean createUseQueryNameColumnModel() {
+    	return new SettingsModelBoolean("useQueryNameColumn", false);
+    }
+
+    /**
+     * Creates the settings model to be used to specify the (optional)
+     * query name column.
+     * 
+     * @return Settings model for optional query name column selection.
+     */
+     static final SettingsModelString createQueryNameColumnModel(final SettingsModelBoolean modelUseQueryNameColumnOption) {
+    	final SettingsModelString modelWithDependency = new SettingsModelString("queryNameColumn", null);
+    	
+    	// React on any changes
+    	modelUseQueryNameColumnOption.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// Enable or disable the model
+				modelWithDependency.setEnabled(modelUseQueryNameColumnOption.getBooleanValue());
+			}
+		});
+        
+        // Enable this model based on the dependent model's state
+        modelWithDependency.setEnabled(modelUseQueryNameColumnOption.getBooleanValue());
+    	
+        return modelWithDependency;
+    }
 }

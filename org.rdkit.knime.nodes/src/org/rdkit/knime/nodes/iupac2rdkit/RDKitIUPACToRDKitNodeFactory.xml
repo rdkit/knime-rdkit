@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./to_rdkit.png" type="Manipulator">
+    <name>IUPAC to RDKit</name>
+    
+    <shortDescription>
+        Converts IUPAC names to RDKit molecules.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        Converts IUPAC names to RDKit molecules. Internally, the conversion is done to SMILES first
+        using the OPSIN library, and afterwards an RDKit molecule is created from the SMILES value.
+        </intro>
+        <option name="IUPAC name column">The input column with IUPAC names.</option>
+        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with IUPAC names">Table containing IUPAC names</inPort>
+        <outPort index="0" name="Successful conversions">Successfully converted RDKit molecules</outPort>
+        <outPort index="1" name="Failed conversions">All input rows where the IUPAC name could not be converted successfully</outPort>
+    </ports>    
+</knimeNode>

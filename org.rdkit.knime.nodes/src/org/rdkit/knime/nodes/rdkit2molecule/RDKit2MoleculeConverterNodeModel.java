@@ -52,6 +52,7 @@ import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.chem.types.SdfCell;
 import org.knime.chem.types.SdfCellFactory;
+import org.knime.chem.types.SmartsCell;
 import org.knime.chem.types.SmilesCell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -88,11 +89,6 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
     	
         Smiles {
         	@Override
-        	public String toString() {
-        		return "Smiles";
-        	}
-        	
-        	@Override
         	public DataType getDataType() {
         		return SmilesCell.TYPE;
         	}
@@ -103,11 +99,19 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
         	}
         },
         
-        SDF {
+        Smarts {       	
         	@Override
-        	public String toString() {
-        		return "SDF";
+        	public DataType getDataType() {
+        		return SmartsCell.TYPE;
         	}
+        	
+        	@Override
+        	public DataCell convertRdkitMolecule(ROMol mol) {
+        		return new SmartsCell(RDKFuncs.MolToSmarts(mol, false)); // Do not include stereo chemistry 
+        	}
+        },
+        
+        SDF {
         	@Override
         	public DataType getDataType() {
         		return SdfCell.TYPE;
@@ -188,7 +192,7 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
     private final SettingsModelBoolean m_modelRemoveSourceColumns =
     		registerSettings(RDKit2MoleculeConverterNodeDialog.createRemoveSourceColumnsOptionModel());
 
-    /** Settings model for the option to remove the source column from the output table. */
+    /** Settings model for the destination format of the molecule. */
     private final SettingsModelEnumeration<DestinationFormat> m_modelDestinationFormat =
     		registerSettings(RDKit2MoleculeConverterNodeDialog.createDestinationFormatModel());
      

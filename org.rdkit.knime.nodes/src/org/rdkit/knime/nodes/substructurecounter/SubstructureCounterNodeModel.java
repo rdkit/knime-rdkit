@@ -62,6 +62,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -101,6 +102,9 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Input data info index for Query Molecule (second table). */
 	protected static final int INPUT_COLUMN_QUERY = 0;
 
+	/** Input data info index for Substructure Name (second table). */
+	protected static final int INPUT_COLUMN_NAME = 1;
+
 	//
 	// Members
 	//
@@ -118,6 +122,14 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	private final SettingsModelBoolean m_modelUniqueMatchesOnly =
 		registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
 
+	/** Settings model for the option to use a query name column. */
+	private final SettingsModelBoolean m_modelUseQueryNameColumn =
+		registerSettings(SubstructureCounterNodeDialog.createUseQueryNameColumnModel(), true);
+
+	/** Settings model for the column name of the query name column. */
+	private final SettingsModelString m_modelQueryNameColumn =
+		registerSettings(SubstructureCounterNodeDialog.createQueryNameColumnModel(m_modelUseQueryNameColumn), true);
+
 	//
 	// Intermediate Results
 	//
@@ -128,7 +140,10 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Column names. Result of pre-processing. */
 	private String[] m_arrResultColumnNames;
 
-	/** SMILES strings of query molecules read from second input table. Result of pre-processing. */
+	/** 
+	 * SMILES or SMARTS strings of query molecules read from second input table. 
+	 * Result of pre-processing. 
+	 */
 	private String[] m_arrQueriesAsSmiles;
 
 	/** ROMol objects of query molecules read from second input table. Result of pre-processing. */
@@ -181,6 +196,21 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
         		"Query molecule column has not been specified yet.",
         		"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
 
+        // Check, if query name column exists, if user wants to use it
+        if (m_modelUseQueryNameColumn.getBooleanValue()) {
+            // Auto guess the query name column if not set - fails if no compatible column found
+            SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
+            		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
+            		"Auto guessing: Using column %COLUMN_NAME% as query name column.",
+            		"No String compatible column (to be used as query name) in query molecule table.", 
+            		getWarningConsolidator());
+
+            // Determines, if the query name column exists - fails if it does not
+            SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
+            		"Substructure name column has not been specified yet.",
+            		"Substructure name column %COLUMN_NAME% does not exist. Has the second input table changed?");
+        }
+        
         // Consolidate all warnings and make them available to the user
         generateWarnings();
 
@@ -209,12 +239,18 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	    				RDKitMolValue.class);
 	    		break;
 
-    		case 1: // Second table with query molecule column
-	    		arrDataInfo = new InputDataInfo[1]; // We have only one query molecule column
+    		case 1: // Second table with query molecule column and optional name column
+    			boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
+	    		arrDataInfo = new InputDataInfo[bUseNameColumn ? 2 : 1]; 
 	    		arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
 	    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 	    				RDKitMolValue.class);
-	    		break;
+	    		if (bUseNameColumn) {
+		    		arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelQueryNameColumn,
+		    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+		    				StringValue.class);
+	    		}
+		    	break;
     	}
 
     	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
@@ -371,7 +407,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	@Override
     protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 		final ExecutionContext exec) throws Exception {
-
+		boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
 		int iQueryRowCount = inData[1].getRowCount();
 		List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
 		List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
@@ -379,6 +415,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		List<RowKey> listEmptyQueries = new ArrayList<RowKey>();
 		List<RowKey> listInvalidQueries = new ArrayList<RowKey>();
 		List<RowKey> listDuplicatedQueries = new ArrayList<RowKey>();
+		List<RowKey> listEmptyNames = new ArrayList<RowKey>();
 		Map<String, Integer> mapDuplicates = new HashMap<String, Integer>();
 
 		int iRow = 0;
@@ -412,11 +449,23 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 				if (strQueryMolString == null) {
 					listInvalidQueries.add(row.getKey());
 				}
+				
 				// Otherwise: Everything is fine - use this query
 				else {
-					String strColumnName = strQueryMolString;
+					String strColumnName = strQueryMolString; // Default name
+					
+					// Optionally use a query name as header
+					if (bUseNameColumn) {
+						String strName = arrInputDataInfo[1][INPUT_COLUMN_NAME].getString(row);
+						if (strName != null) {
+							strColumnName = strName;
+						}
+						else {
+							listEmptyNames.add(row.getKey());
+						}
+					}
 
-					// Check for duplicate, still include it, but warn
+					// Check for query duplicate, still include it, but warn
 					Integer intCount = mapDuplicates.get(strQueryMolString);
 					if (intCount != null) {
 						int iDuplicate = intCount + 1;
@@ -458,6 +507,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		generateWarning(listEmptyQueries, iQueryRowCount, "Ignoring empty");
 		generateWarning(listInvalidQueries, iQueryRowCount, "Ignoring invalid");
 		generateWarning(listDuplicatedQueries, iQueryRowCount, "Found duplicated");
+		generateWarning(listEmptyNames, iQueryRowCount, "Replacing empty name with query string for");
 
 		// Show the warning already immediately
 		generateWarnings();

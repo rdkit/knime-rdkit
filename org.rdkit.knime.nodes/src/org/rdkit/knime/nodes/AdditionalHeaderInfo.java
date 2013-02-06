@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +62,7 @@ import org.knime.chem.types.SmilesCell;
 import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.rdkit.knime.util.SettingsUtils;
 
 /**
  * Additional header information is a set of data that is attached to a 
@@ -233,6 +235,47 @@ public final class AdditionalHeaderInfo {
 	//
 	// Public Methods
 	//
+	
+	/**
+	 * Removes the additional header information that matches the type of
+	 * this object from the specified column specification. Additional
+	 * header information with a different type will not be touched.
+	 * 
+	 * @param spec Column specification from which we will remove the
+	 * 		additional header information.
+	 */
+	public DataColumnSpec removeFromColumnSpec(DataColumnSpec spec) {
+		DataColumnSpec specRet = spec;
+		
+		if (spec != null) {
+			AdditionalHeaderInfo headerInfo = new AdditionalHeaderInfo(spec);
+			
+			// Check, if the addition header information contained in the
+			// passed in spec has the same type as the current one
+			if (headerInfo.isAvailable() && SettingsUtils.equals(headerInfo.getType(), getType())) {
+				DataColumnProperties oldProps = spec.getProperties();
+				DataColumnSpecCreator creator = new DataColumnSpecCreator(spec);
+				Map<String, String> mapNewProps = new HashMap<String, String>();
+				
+				for (Enumeration<String> e = oldProps.properties(); e.hasMoreElements(); ) {
+					String strPropKey = e.nextElement();
+					
+					// Add an old property only back to the new properties, if it is
+					// not an additional value item
+					if (!HEADER_PROP_TYPE.equals(strPropKey) && 
+						!HEADER_PROP_VALUE.equals(strPropKey) && 
+						!HEADER_PROP_INITIAL_HEIGHT.equals(strPropKey)) {
+						mapNewProps.put(strPropKey, oldProps.getProperty(strPropKey));
+					}
+				}
+				
+				creator.setProperties(new DataColumnProperties(mapNewProps));
+				specRet = creator.createSpec();
+			}
+		}
+		
+		return specRet;
+	}
 		
 	/**
 	 * Writes the additional header information of this instance into the

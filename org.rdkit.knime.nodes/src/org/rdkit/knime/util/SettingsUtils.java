@@ -167,7 +167,7 @@ public class SettingsUtils {
 		}
 		
 		return bResult;
-	}			
+	}	
 	
     /**
      * Auto guesses based on the passed in table specification the name of a column based
@@ -575,6 +575,7 @@ public class SettingsUtils {
     	throws InvalidSettingsException {
     	
     	boolean bRet = true;
+    	String strColumnNameToCheck = (strNewColumnName == null ? null : strNewColumnName.trim());
     	
     	// Pre-checks
     	if (inSpec == null) {
@@ -582,7 +583,7 @@ public class SettingsUtils {
     	}
     	
     	// Check, if we have no setting yet
-     	if (strNewColumnName == null) {
+     	if (strColumnNameToCheck == null || strColumnNameToCheck.isEmpty()) {
     		if (strErrorIfNotSet != null) {
     			throw new InvalidSettingsException(strErrorIfNotSet);
     		}
@@ -594,11 +595,11 @@ public class SettingsUtils {
     				arrMoreColumnNames, arrExclColumnNames);
     		
 			// Column is not unique - throw an exception if requested
-    		if (listColumnNames.contains(strNewColumnName)) {
+    		if (listColumnNames.contains(strColumnNameToCheck)) {
     			bRet = false; 
         		if (strErrorIfNotUnique != null) {
                 	throw new InvalidSettingsException(strErrorIfNotUnique.replace(
-                			"%COLUMN_NAME%", strNewColumnName == null ? "null" : strNewColumnName));
+                			"%COLUMN_NAME%", strColumnNameToCheck == null ? "null" : strColumnNameToCheck));
         		}
     		}
         }

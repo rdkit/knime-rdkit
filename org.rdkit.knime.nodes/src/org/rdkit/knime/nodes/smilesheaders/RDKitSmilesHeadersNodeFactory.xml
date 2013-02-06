@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit SMILES Headers</name>
+    
+    <shortDescription>
+        Sets, changes and/or retrieves SMILES structures from RDKit table headers, which
+        can be made visible using the RDKit Interactive View.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	Sets, changes and/or retrieves SMILES structures from RDKit table headers, which
+        	can be made visible using the RDKit Interactive View. It takes a data table
+        	as first input and optionally a SMILES definition table as second input. Based on 
+        	the column names and SMILES of the second table it will manipulate the SMILES
+        	header values of the data table. If a column name in the data table matches 
+        	a column name contained in the second input table, its SMILES value will be set 
+        	to the SMILES value specified in the second input table. If the new value is empty or missing, the SMILES header 
+        	information will be removed from the data table. This node delivers the
+        	manipulated table as first output table without changing any data inside the table.
+        	As second output table it produces a table with names and SMILES of all columns
+        	that have SMILES values set in their headers. This is useful if SMILES values shall
+        	be manipulated (e.g. canonicalized) and fed back in later to update the headers.
+       	</intro>
+        <option name="Column with target column names">The input column of the second table that defines
+        	which data table column headers shall be changed.</option>
+        <option name="Column with new SMILES values">The new SMILES values to be set for
+        	the specified data table columns. An empty or missing cell will remove the SMILES header information.</option>
+        <option name="Complete reset of SMILES in all column headers">Flag this option to remove
+        	all existing SMILES values from all(!) header columns of the data table before (optionally)
+        	setting new SMILES values based on the second input table.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Data table">Table whose SMILES header values shall be set, changed and retrieved.</inPort>
+        <inPort index="1" name="Optional SMILES definition table">Defines column names and SMILES to be set or changed.</inPort>
+        <outPort index="0" name="Result data table">Same table as input data table, but with changed SMILES headers.</outPort>
+        <outPort index="1" name="Result SMILES definition table">Table with all SMILES headers in result data table.</outPort>
+    </ports>    
+    
+    <views>
+    	<view index="0" name="Interactive Table View">
+    		Displays the data in a table view. Has the capability to show chemical structures in the headers of the substructure count columns.
+    	</view>
+    </views>
+</knimeNode>

@@ -130,7 +130,7 @@ public class RDKit2MoleculeConverterNodeDialog extends DefaultNodeSettingsPane {
      * Creates the settings model for the destination format of the molecule.
      * The default is SDF.
      * 
-     * @return settings model for the destination format
+     * @return Settings model for the destination format.
      */
     static final SettingsModelEnumeration<DestinationFormat> createDestinationFormatModel() {
         return new SettingsModelEnumeration<DestinationFormat>(DestinationFormat.class,

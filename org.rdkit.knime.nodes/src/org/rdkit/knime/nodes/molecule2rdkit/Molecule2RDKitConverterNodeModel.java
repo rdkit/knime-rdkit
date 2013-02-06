@@ -48,7 +48,6 @@
 package org.rdkit.knime.nodes.molecule2rdkit;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.RDKit.RDKFuncs;
@@ -64,6 +63,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -78,6 +78,7 @@ import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
 import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.WarningConsolidator;
 
 /**
  * This class implements the node model of the "Molecule2RDKitConverter" node
@@ -203,6 +204,16 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
     /** Settings model for the option to split output tables to two (second contains bad rows).*/
     private final SettingsModelString m_modelSeparateFails =
 		registerSettings(Molecule2RDKitConverterNodeDialog.createSeparateRowsModel());
+    
+    /** Settings model for the option to do add error information column. */
+    private final SettingsModelBoolean m_modelGenerateErrorInformation =
+    	registerSettings(Molecule2RDKitConverterNodeDialog.
+    			createGenerateErrorInfoOptionModel(), true);
+    
+    /** Settings model for the option to do add error information column. */
+    private final SettingsModelString m_modelErrorInfoColumnName =
+    	registerSettings(Molecule2RDKitConverterNodeDialog.
+    			createErrorInfoColumnNameModel(m_modelGenerateErrorInformation), true);
 
     /** Settings model for the option to compute coordinates. */
     private final SettingsModelBoolean m_modelGenerateCoordinates =
@@ -294,7 +305,31 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
         		m_modelNewColumnName, 
         		"Output column has not been specified yet.",
         		"The name %COLUMN_NAME% of the new column exists already in the input.");
+        
+        // Handle error information column name, but only if option was enabled
+        if (m_modelGenerateErrorInformation.getBooleanValue()) {
+        	final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
+        		.equals(m_modelSeparateFails.getStringValue());
 
+        	// Autofill error info column name
+            SettingsUtils.autoGuessColumnName(inSpecs[0], 
+            		bSplitBadRowsToPort1 ? 
+            				null : new String[] { m_modelNewColumnName.getStringValue() },
+        			!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ? 
+        					null : new String[] { m_modelInputColumnName.getStringValue() },
+            			m_modelErrorInfoColumnName, strInputColumnName + " (RDKit Error Info)");
+        	
+            // Determine, if the error info column name has been set and if it is really unique
+            SettingsUtils.checkColumnNameUniqueness(inSpecs[0], 
+            		bSplitBadRowsToPort1 ? 
+            				null : new String[] { m_modelNewColumnName.getStringValue() },
+        			!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ? 
+        					null : new String[] { m_modelInputColumnName.getStringValue() },
+                    m_modelErrorInfoColumnName, 
+            		"Optional error information column name has not been specified yet.",
+            		"The name %COLUMN_NAME% of the new error information column exists already in the input.");
+        }
+        
         // Consolidate all warnings and make them available to the user
         generateWarnings();
 
@@ -339,13 +374,16 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
     protected DataTableSpec getOutputTableSpec(final int outPort, 
     		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
     	DataTableSpec spec = null;
+    	final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
+				.equals(m_modelSeparateFails.getStringValue());
+    	final boolean bIncludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
     	
     	switch (outPort) {
     		case 0:
     			// Check existence and proper column type
     			InputDataInfo[] arrInputDataInfos = createInputDataInfos(0, inSpecs[0]);
     			arrInputDataInfos[0].getColumnIndex();
-	            
+	                			
     			// Copy all specs from input table (except input column, if configured)
 	            ArrayList<DataColumnSpec> newColSpecs = new ArrayList<DataColumnSpec>();
 	            String inputColumnName = m_modelInputColumnName.getStringValue().trim();
@@ -356,15 +394,42 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	                }
 	            }
 	            
-	            // Append result column(s)
-	            newColSpecs.addAll(Arrays.asList(createOutputFactory(null).getColumnSpecs()));
-	            spec = new DataTableSpec(
+	            // Append result column
+	            newColSpecs.add(new DataColumnSpecCreator(
+	        			m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+	        			.createSpec());
+	        		
+        		// Add the optional error information column
+        		if (!bSplitBadRowsToPort1 && bIncludeErrorInfo) {
+        			newColSpecs.add(new DataColumnSpecCreator(
+        					m_modelErrorInfoColumnName.getStringValue().trim(), StringCell.TYPE)
+        					.createSpec());
+	        	}	            
+	            
+        		spec = new DataTableSpec("Output data", 
 	                    newColSpecs.toArray(new DataColumnSpec[newColSpecs.size()]));    	
 	            break;
 	            
     		case 1:
-    			// Second table has the same structure as input table
-    			spec = inSpecs[0];
+    			// Check, if second output table is enabled
+    			if (bSplitBadRowsToPort1) {
+    				if (bIncludeErrorInfo) {
+    	    			// Second table has the same structure as input table + error info
+    					spec = new DataTableSpec("Erroneous input data", inSpecs[0], 
+    							new DataTableSpec(new DataColumnSpecCreator(
+    									m_modelErrorInfoColumnName.getStringValue(), 
+    									StringCell.TYPE).createSpec()));
+    				}
+    				else {
+    	    			// Second table has the same structure as input table
+    	    			spec = inSpecs[0];
+    				}
+    			}
+    			
+    			// Otherwise disable it
+    			else {
+    				spec = new DataTableSpec();
+    			}
     			break;
         }
     	
@@ -388,13 +453,41 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
      */
 	protected AbstractRDKitCellFactory createOutputFactory(InputDataInfo[] arrInputDataInfos)
 		throws InvalidSettingsException {
+		final boolean bIncludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
+		
 		// Generate column specs for the output table columns produced by this factory
-		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-		arrOutputSpec[0] = new DataColumnSpecCreator(
-				m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
-				.createSpec();
-	    	
+		// Note: In this node the resulting cells are reorganized later in the 
+		//       processing function based on settings for splitting bad molecules
+		//       and for including error information. Hence this output table spec here
+		//       serves only informational purposes and is not always the same as concrete
+		//       output tables.
+		List<DataColumnSpec> listOutputSpecs = new ArrayList<DataColumnSpec>();
+		
+		// Add the always existing RDKit Molecule column
+		listOutputSpecs.add(new DataColumnSpecCreator(
+			m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+			.createSpec());
+		
+		// Add the optional error information column (is possibly filtered out later)
+		String strTempErrorInfoColumnName = m_modelErrorInfoColumnName.getStringValue().trim();
+		if (strTempErrorInfoColumnName.isEmpty()) {
+			strTempErrorInfoColumnName = "RDKit Error Info";
+		}
+		
+		listOutputSpecs.add(new DataColumnSpecCreator(
+			strTempErrorInfoColumnName, StringCell.TYPE)
+			.createSpec());
+		
+		// Generate output spec array
+		DataColumnSpec[] arrOutputSpec = listOutputSpecs.toArray(
+				new DataColumnSpec[listOutputSpecs.size()]);
+
+		// For performance reasons get reference to missing cell
+		final DataCell missingCell = DataType.getMissingCell();
+		
 		// Generate factory 
+        final boolean bSanitize = !m_modelQuickAndDirty.getBooleanValue();
+        
 		AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this, 
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 				getWarningConsolidator(), arrInputDataInfos, arrOutputSpec) {
@@ -406,16 +499,16 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
    		     * {@inheritDoc}
    		     */
    		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-                DataCell result = null;
+   		    	DataCell[] arrOutputCells = new DataCell[] { missingCell, missingCell };
                 ROMol mol = null;
                 String smiles = null;
-                boolean sanitize = !m_modelQuickAndDirty.getBooleanValue();
-                Exception excParsing = null;
+                Exception excCaught = null;
                 
+                // As first step try to parse the input molecule format
                 try {
                 	if (m_bIsSmiles) {                   
                         String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
-                        mol = markForCleanup(RWMol.MolFromSmiles(value, 0, sanitize), iUniqueWaveId);
+                        mol = markForCleanup(RWMol.MolFromSmiles(value, 0, bSanitize), iUniqueWaveId);
                         smiles = value;
                     } 
                 	else if (m_bIsSmarts) {                   
@@ -425,7 +518,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
                     } 
                     else {
                         String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-                        mol = markForCleanup(RWMol.MolFromMolBlock(value, sanitize), iUniqueWaveId);
+                        mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize), iUniqueWaveId);
                     }
                 }
                 catch (EmptyCellException excEmpty) {
@@ -435,51 +528,95 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
                 	throw excEmpty;
                 }
                 catch (Exception exc) {
-                	excParsing = exc;
+                	// Parsing failed and RDKit molecule is null 
+                	excCaught = exc;
                 }
 
-                if (mol == null) {
-                    StringBuilder error = new StringBuilder()
-                    	.append(excParsing != null ? excParsing.getClass().getSimpleName() : 
-                    		"Error parsing ").append(m_bIsSmiles ? "SMILES" : (m_bIsSmarts ? "SMARTS" : "SDF"));
-                    throw new RuntimeException(error.toString());
-                } 
-                else {
-                	if (m_bIsSmarts) {
-                		mol.updatePropertyCache(false);
-                	} 
-                	else if (!sanitize) {
-                    	RDKFuncs.cleanUp((RWMol)mol);
-                    	mol.updatePropertyCache(false);
-                    	RDKFuncs.symmetrizeSSSR(mol);
-                    	
-                    	if (m_modelAromatization.getBooleanValue()) {
-                    		RDKFuncs.Kekulize((RWMol)mol);
-                    		RDKFuncs.setAromaticity((RWMol)mol);
+                // If we got an RDKit molecule, parsing was successful, now massage it
+                if (mol != null) {
+                	try {
+                    	if (m_bIsSmarts) {
+                    		mol.updatePropertyCache(false);
+                    	} 
+                    	else if (!bSanitize) {
+                        	RDKFuncs.cleanUp((RWMol)mol);
+                        	mol.updatePropertyCache(false);
+                        	RDKFuncs.symmetrizeSSSR(mol);
+                        	
+                        	if (m_modelAromatization.getBooleanValue()) {
+                        		RDKFuncs.Kekulize((RWMol)mol);
+                        		RDKFuncs.setAromaticity((RWMol)mol);
+                        	}
+                        	
+                      		RDKFuncs.setConjugation(mol);
+                       		RDKFuncs.setHybridization(mol);
+                       		
+                        	if (m_modelStereoChem.getBooleanValue()) {
+                        		RDKFuncs.assignStereochemistry(mol, true);
+                        	}
+                        	
+                        	if(smiles == null){
+                        		smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+                        	}
+                    	}
+                            
+                    	if (m_modelGenerateCoordinates.getBooleanValue()) {
+                    	    if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
+                    	        mol.compute2DCoords();
+                    	    }
                     	}
                     	
-                  		RDKFuncs.setConjugation(mol);
-                   		RDKFuncs.setHybridization(mol);
-                   		
-                    	if (m_modelStereoChem.getBooleanValue()) {
-                    		RDKFuncs.assignStereochemistry(mol, true);
-                    	}
-                    	
-                    	if(smiles == null){
-                    		smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
-                    	}
+                    	arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
                 	}
-                        
-                	if (m_modelGenerateCoordinates.getBooleanValue()) {
-                	    if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
-                	        mol.compute2DCoords();
-                	    }
+                	catch (Exception exc) {
+                		excCaught = exc;
+                	}
+                }
+
+                // Do error handling depending on user settings
+                if (mol == null || excCaught != null) {
+                	// Find error message
+                	StringBuilder sbError = new StringBuilder(
+                		(m_bIsSmiles ? "SMILES" : (m_bIsSmarts ? "SMARTS" : "SDF")));
+                	
+                	// Specify error type
+                	if (mol == null) {
+                		sbError.append(" Parsing Error (");
+                	}
+                	else {
+                		sbError.append(" Process Error (");
                 	}
                 	
-                	result = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
+                	// Specify exception
+                	if (excCaught != null) {
+                		sbError.append(excCaught.getClass().getSimpleName());
+                		
+                		// Specify error message
+                		String strMessage = excCaught.getMessage();
+                		if (strMessage != null) {
+                			sbError.append(" (").append(strMessage).append(")");
+                		}
+                	}
+                	else {
+                		sbError.append("Details unknown");
+                	}
+                	
+                	sbError.append(")");
+                	
+                	// Generate error log cell
+                	String strError = sbError.toString();
+                	if (bIncludeErrorInfo) {
+                		arrOutputCells[1] = new StringCell(strError);
+                	}
+                	
+                	// Log message as warning
+            		String strMsg = "Failed to process data due to " + strError + 
+            			" - Generating empty result cells.";
+	            	LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", excCaught);
+	            	getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
                 }
                 
-                return new DataCell[] { result };	   				
+                return arrOutputCells;	   				
    		    }
    		};
    		
@@ -507,6 +644,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
         // Get settings and define data specific behavior
         final int iInputIndex = arrInputDataInfo[0][INPUT_COLUMN_MOL].getColumnIndex();
         final DataType type = inSpec.getColumnSpec(iInputIndex).getType();
+        final boolean bInludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
         m_bIsSmiles = type.isCompatible(SmilesValue.class);
         m_bIsSmarts = type.isCompatible(SmartsValue.class);
 
@@ -529,12 +667,48 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
         	 */
 			@Override
 			public void processResults(long rowIndex, DataRow row, DataCell[] arrResults) {      
-		        if (arrResults[0].isMissing() && bSplitBadRowsToPort1) {
-		            port1.addRowToTable(row);
+		        // Bad row found - result is missing
+				if (arrResults[0].isMissing()) {
+					// Move the row into the second table
+					if (bSplitBadRowsToPort1) {
+			        	if (bInludeErrorInfo) {
+			        		// Include only the error information cell
+				            port1.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
+				            		new DataCell[] { arrResults[1] }, -1));
+			        	}
+			        	else {
+			        		port1.addRowToTable(row);
+			        	}
+					}
+					// Move the row into the first table
+					else {
+			        	if (bInludeErrorInfo) {
+				        	port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, 
+				        		m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+			        	}
+			        	else {
+			        		// Include only the result cell
+			        		port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
+					            new DataCell[] { arrResults[0] }, 
+					            m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+			        	}
+					}
 		        } 
+				
+				// Good row found
 		        else {
-		        	port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, 
-		        		m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+		        	// Include also empty error information if we have only one output table
+		        	if (!bSplitBadRowsToPort1 && bInludeErrorInfo) {
+			        	port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, 
+			        		m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+		        	}
+		        	
+	        		// Include only the result cell, if we have two output tables or no error logging
+		        	else {
+		        		port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
+				            new DataCell[] { arrResults[0] }, 
+				            m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+		        	}
 		        }
 			}
 		};

@@ -93,9 +93,9 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
          				"Count unique matches only"));
         SettingsModelBoolean modelUseQueryNameColumnOption = createUseQueryNameColumnModel();
         super.addDialogComponent(new DialogComponentBoolean(
-        		modelUseQueryNameColumnOption, "Use names in the following column as query names"));
+        		modelUseQueryNameColumnOption, "Instead of the query molecule use names as result header titles"));
         super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createQueryNameColumnModel(modelUseQueryNameColumnOption), "Query names column: ", 1,
+                createQueryNameColumnModel(modelUseQueryNameColumnOption), "Column with names for header titles: ", 1,
                 StringValue.class));
 
     }

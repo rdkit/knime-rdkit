@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortType;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.AdditionalHeaderInfo;
 import org.rdkit.knime.nodes.TableViewSupport;
+import org.rdkit.knime.util.ChemUtils;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
 import org.rdkit.knime.util.WarningConsolidator;
@@ -124,6 +125,14 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 	 */
     private final SettingsModelBoolean m_modelCompleteResetOption =
             registerSettings(RDKitSmilesHeadersNodeDialog.createCompleteResetOptionModel());
+	
+	/** 
+	 * Settings model to be used to specify the option
+     * to use column titles of the Data Table instead of the 
+     * SMILES Definition Table.
+	 */
+    private final SettingsModelBoolean m_modelUseColumnTitlesAsMolecules =
+            registerSettings(RDKitSmilesHeadersNodeDialog.createUseColumnTitlesAsMoleculesOptionModel(), true);
     
     //
     // Constructor
@@ -226,6 +235,9 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 		boolean bCompleteReset = m_modelCompleteResetOption.getBooleanValue();
 		List<DataColumnSpec> listNewColumnSpecs = new ArrayList<DataColumnSpec>();
 		
+		boolean bHasSmilesDefinitionTable = hasSmilesDefinitionTable(SettingsUtils.getTableSpecs(inData));
+		boolean bUseColumnTitles = m_modelUseColumnTitlesAsMolecules.getBooleanValue();
+		
 		// Create an ordered(!) map with all existing column names and specs
 		int iColumnCount = oldTableSpec.getNumColumns();
 		LinkedHashMap<String, DataColumnSpec> mapColumns = 
@@ -245,8 +257,8 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 			mapColumns.put(colSpec.getName(), colSpec);
 		}
 		
-		// Manipulate SMILES values only, if we have a definition table connected
-		if (inData != null && inData.length >= 2 && inData[1] != null) {
+		// Manipulate SMILES values based on a SMILES Definition Table
+		if (bHasSmilesDefinitionTable) {
 			// Traverse the name/SMILES table and set or change existing column specs
 			for (DataRow row : inData[1]) {
 	
@@ -272,39 +284,27 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 					else {
 						// Get SMILES value
 						String strSmiles = arrInputDataInfo[1][INPUT_COLUMN_SMILES].getString(row);
-						AdditionalHeaderInfo oldHeaderInfo = new AdditionalHeaderInfo(oldColSpec);
-						AdditionalHeaderInfo newHeaderInfo = new AdditionalHeaderInfo(
-								ADD_HEADER_INFO_SMILES_TYPE, strSmiles, -1);
-						DataColumnSpec newColSpec = oldColSpec;
-						boolean bSmilesExistsAlready = oldHeaderInfo.isAvailable() && 
-							ADD_HEADER_INFO_SMILES_TYPE.equals(oldHeaderInfo.getType());
-							
-						// Remove any header SMILES value for empty SMILES
-						if (strSmiles == null || strSmiles.trim().isEmpty()) {
-							if (bSmilesExistsAlready) {
-								newColSpec = newHeaderInfo.removeFromColumnSpec(oldColSpec);
-							}
-						}
-	
-						// Otherwise set or replace the SMILES value
-						else {
-							// Check, if the target column had already a SMILES value and warn
-							if (bSmilesExistsAlready && 
-									!SettingsUtils.equals(oldHeaderInfo.getValue(),
-											newHeaderInfo.getValue())) {
-								warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), 
-									"Target column contained already a different SMILES value in the header - overwriting it.");
-							}
-	
-							// Set or replace additional header information
-							DataColumnSpecCreator creator = new DataColumnSpecCreator(oldColSpec);
-							newHeaderInfo.writeInColumnSpec(creator, oldColSpec.getProperties());
-							newColSpec = creator.createSpec();
-						}
-						
+						DataColumnSpec newColSpec = applySmilesProperty(strSmiles, oldColSpec, warnings);
+
 						// Overwrite the old column spec with the new one
 						mapColumns.put(strTargetColumn, newColSpec);
 					}
+				}
+			}
+		}
+		
+		// Manipulate SMILE values based on current column titles
+		else if (bUseColumnTitles) {
+			for (int i = 0; i < iColumnCount; i++) {
+				DataColumnSpec oldColSpec = oldTableSpec.getColumnSpec(i);
+				String strSmiles = oldColSpec.getName();
+								
+				// Try, if this is a SMILES value - Use it or forget it
+				if (ChemUtils.isSmiles(strSmiles)) {
+					DataColumnSpec newColSpec = applySmilesProperty(strSmiles, oldColSpec, warnings);
+
+					// Overwrite the old column spec with the new one
+					mapColumns.put(strSmiles, newColSpec);
 				}
 			}
 		}
@@ -372,6 +372,55 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 		}
 		
 		return mapContextOccurrences;
+	}
+	
+	//
+	// Private Methods
+	//
+	
+	/**
+	 * Applies the specified SMILES value to the passed in old column specification.
+	 * May generate warnings, if the column had already a different SMILES set before.
+	 * 
+	 * @param strSmiles The new SMILES value to be set. Must not be null.
+	 * @param oldColSpec Old column specification to be manipulated. Must not be null.
+	 * @param warnings Warning consolidator to take a warning. Must not be null.
+	 * 
+	 * @return Column specification with the SMILES values as header property.
+	 */
+	private DataColumnSpec applySmilesProperty(String strSmiles, DataColumnSpec oldColSpec, 
+			WarningConsolidator warnings) {
+		DataColumnSpec newColSpec = oldColSpec;
+		AdditionalHeaderInfo oldHeaderInfo = new AdditionalHeaderInfo(oldColSpec);
+		AdditionalHeaderInfo newHeaderInfo = new AdditionalHeaderInfo(
+				ADD_HEADER_INFO_SMILES_TYPE, strSmiles, -1);
+		boolean bSmilesExistsAlready = oldHeaderInfo.isAvailable() && 
+			ADD_HEADER_INFO_SMILES_TYPE.equals(oldHeaderInfo.getType());
+			
+		// Remove any header SMILES value for empty SMILES
+		if (strSmiles == null || strSmiles.trim().isEmpty()) {
+			if (bSmilesExistsAlready) {
+				newColSpec = newHeaderInfo.removeFromColumnSpec(oldColSpec);
+			}
+		}
+	
+		// Otherwise set or replace the SMILES value
+		else {
+			// Check, if the target column had already a SMILES value and warn
+			if (bSmilesExistsAlready && 
+					!SettingsUtils.equals(oldHeaderInfo.getValue(),
+							newHeaderInfo.getValue())) {
+				warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), 
+					"Target column contained already a different SMILES value in the header - overwriting it.");
+			}
+	
+			// Set or replace additional header information
+			DataColumnSpecCreator creator = new DataColumnSpecCreator(oldColSpec);
+			newHeaderInfo.writeInColumnSpec(creator, oldColSpec.getProperties());
+			newColSpec = creator.createSpec();
+		}
+	
+		return newColSpec;
 	}
 	
 	//

@@ -76,6 +76,9 @@ public class RDKitSmilesHeadersNodeDialog extends DefaultNodeSettingsPane {
 	/** The dialog component to show a hint label to the user, if no second table is connected. */
 	private DialogComponentLabel m_compHintLabel;
 	
+	/** The dialog component to set the option to use column titles as molecules. */
+	private DialogComponentBoolean m_compUseColumnTitles;
+	
 	/** The dialog component to defined the target column name. */
 	private DialogComponentColumnNameSelection m_compTargetColumn;
 	
@@ -93,8 +96,13 @@ public class RDKitSmilesHeadersNodeDialog extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
 	RDKitSmilesHeadersNodeDialog() {
+    	m_compUseColumnTitles = new DialogComponentBoolean(
+    			createUseColumnTitlesAsMoleculesOptionModel(), 
+    			"Use column titles of Data Table as SMILES property definitions");
+
     	m_compHintLabel = new DialogComponentLabel(
-    			"Connect a second table with column and SMILES definitions to set SMILES in column headers.");
+    			"Hint: Connect a SMILES Definition Table to define target columns and their SMILES values.");
+    	
     	m_compTargetColumn = new DialogComponentColumnNameSelection(
         		createTargetColumnColumnNameModel(), "Column with target column names: ", 1, false,
                 StringValue.class);
@@ -125,11 +133,12 @@ public class RDKitSmilesHeadersNodeDialog extends DefaultNodeSettingsPane {
 	    	}
         };
         
+        super.addDialogComponent(m_compUseColumnTitles);
         super.addDialogComponent(m_compHintLabel);
         super.addDialogComponent(m_compTargetColumn);
         super.addDialogComponent(m_compSmilesColumn);
         super.addDialogComponent(new DialogComponentBoolean(createCompleteResetOptionModel(), 
-        		"Complete reset of SMILES in all headers"));
+        		"Remove existing SMILES values in all headers first"));
     }
 
     //
@@ -146,6 +155,7 @@ public class RDKitSmilesHeadersNodeDialog extends DefaultNodeSettingsPane {
     	m_compTargetColumn.getComponentPanel().setVisible(bHasSmilesDefinitionTable);
     	m_compSmilesColumn.getComponentPanel().setVisible(bHasSmilesDefinitionTable);
     	m_compHintLabel.getComponentPanel().setVisible(!bHasSmilesDefinitionTable);
+    	m_compUseColumnTitles.getComponentPanel().setVisible(!bHasSmilesDefinitionTable);
     }
 
     //
@@ -168,6 +178,18 @@ public class RDKitSmilesHeadersNodeDialog extends DefaultNodeSettingsPane {
      */
     static final SettingsModelString createSmilesValueColumnNameModel() {
         return new SettingsModelString("smiles_column", null);
+    }
+
+    /**
+     * Creates the settings model to be used to specify the option
+     * to use column titles of the Data Table instead of the 
+     * SMILES Definition Table. This only takes effect if no 
+     * SMILES Definition Table is connected.
+     * 
+     * @return Settings model for result column name.
+     */
+    static final SettingsModelBoolean createUseColumnTitlesAsMoleculesOptionModel() {
+        return new SettingsModelBoolean("use_column_titles_as_smiles", true);
     }
 
     /**

@@ -14,8 +14,16 @@
         	It is possible to choose the unique number of times the query molecule is present in the input molecule.
         </intro>
         <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Input Query Column:">The name of the column in second table containing query molecules which will act as substructure for the input molecules</option>
+        <option name="Input Query Column">The name of the column in second table containing query molecules which will act as substructure for the input molecules</option>
         <option name="Count Unique Matches Only?">This option is selected if user requires unique matches of the query molecule in an input molecule.</option>
+    	<option name="Instead of the query molecule use names as result header titles">
+    		Select this option to allow the node to use names specified in the query table
+    		as column title for the resulting count columns. If disabled, it will use the
+    		SMILES or SMARTS value as title.
+    	</option>
+    	<option name="Column with names for header titles">
+    		If the last option is enabled the column with the query names must be selected here.
+    	</option>		
     </fullDescription>
     
     <ports>

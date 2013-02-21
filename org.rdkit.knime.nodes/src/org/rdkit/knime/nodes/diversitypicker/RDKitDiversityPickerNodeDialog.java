@@ -54,6 +54,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -92,7 +93,7 @@ public class RDKitDiversityPickerNodeDialog
      * @return Settings model for number to pick.
      */
     static final SettingsModelInteger createNumberToPickModel() {
-        return new SettingsModelInteger("num_picks", 10);
+        return new SettingsModelIntegerBounded("num_picks", 10, 1, Integer.MAX_VALUE);
     }
     
     /**

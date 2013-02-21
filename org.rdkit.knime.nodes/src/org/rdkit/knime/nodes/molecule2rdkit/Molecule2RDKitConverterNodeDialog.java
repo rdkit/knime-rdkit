@@ -265,12 +265,12 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
      * @param quickAndDirtyModel Model that determines, if the
      * StereoChemistry option is enabled or disabled.
      * 
-     * @return The Aromatization option model.
+     * @return The stereo chemistry option model.
      */
     static final SettingsModelBoolean createStereochemistryModel(
     		final SettingsModelBoolean quickAndDirtyModel) {
     	final SettingsModelBoolean result =
-    		new SettingsModelBoolean("do_stereochem", false);
+    		new SettingsModelBoolean("do_stereochem", true);
     	quickAndDirtyModel.addChangeListener(new ChangeListener() {
     		@Override
     		public void stateChanged(final ChangeEvent e) {

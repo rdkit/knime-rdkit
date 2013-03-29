@@ -57,8 +57,10 @@ import org.knime.chem.types.RxnValue;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
@@ -83,6 +85,9 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
     
 	/** Setting model component for the SMARTS reaction field. */
     private final DialogComponent m_compSmartsReactionField;
+
+	/** Setting model component for the uniquify products field. */
+    private final DialogComponent m_uniquifyProductsField;
     
     /** The input port index of the reaction table. */
     private final int m_iReactionTableIndex;
@@ -129,6 +134,9 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
         });
         super.addDialogComponent(m_compSmartsReactionField = new DialogComponentString(
         		createOptionalReactionSmartsPatternModel(), "Reaction SMARTS: ", false, 30));
+
+        super.addDialogComponent(m_uniquifyProductsField = new DialogComponentBoolean(
+        		createUniquifyProductsModel(), "Uniquify products?"));
         
     	addDialogComponentsAfterReactionSettings();
 
@@ -190,4 +198,13 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
     static final SettingsModelString createOptionalReactionSmartsPatternModel() {
         return new SettingsModelString("reactionSmarts", "");
     }
+    /**
+     * @return new settings model whether to also compute coordinates
+     */
+    static final SettingsModelBoolean createUniquifyProductsModel() {
+        return new SettingsModelBoolean("uniquifyProducts", false);
+    }
+
+ 
+
 }

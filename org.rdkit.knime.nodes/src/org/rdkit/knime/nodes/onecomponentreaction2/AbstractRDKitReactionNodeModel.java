@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.RDKit.ChemicalReaction;
+import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
@@ -68,6 +69,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -128,7 +130,10 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
     
     /** The input port index of the reaction table. */
     protected int m_iReactionTableIndex;
-
+ 
+    /** Should products be uniquified? */
+    private SettingsModelBoolean m_bUniquifyProducts = registerSettings(T.createUniquifyProductsModel(),true);
+ 
     //
     // Constructor
     //
@@ -305,20 +310,21 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
     	if (reaction != null && reactants != null) {  
     		assert(reactants.size() == indicesReactants.length);
     		
-	    	ROMol_Vect_Vect vvReactions = reaction.runReactants(reactants);
+	    	ROMol_Vect_Vect vvProducts = reaction.runReactants(reactants);
 	    	
 	        // If the reaction could be applied to the
 	        // reactants, we got a non-empty vector
-	        if (vvReactions != null && !vvReactions.isEmpty()) {
+	        if (vvProducts != null && !vvProducts.isEmpty()) {
 	           	final StringBuffer sbRowKey = new StringBuffer();
-	           	int iReactionCount = (int)vvReactions.size();
+	           	int iReactionCount = (int)vvProducts.size();
+        		List<String> productSmilesSeen=new ArrayList<String>();
 	        	
 	        	// Iterate through reactions 
 	            for (int i = 0; i < iReactionCount; i++) {
-	            	ROMol_Vect vProds = vvReactions.get(i);
+	            	ROMol_Vect vProds = vvProducts.get(i);
 	            	int iProdsCount = (int)vProds.size();
             		m_aiProductCounter.addAndGet(iProdsCount);
-	            	
+            		
 	            	// Iterate through reaction products
 	                for (int j = 0; j < iProdsCount; j++) {
 	                	ROMol prodMol = markForCleanup(vProds.get(j), uniqueWaveId);
@@ -326,7 +332,14 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
 	                    
 	                    try {
 	                        RDKFuncs.sanitizeMol(prod);
-	                        
+	                		if(m_bUniquifyProducts.getBooleanValue()){
+	                			String prodSmiles=RDKFuncs.MolToSmiles(prod,true);
+	                			if(productSmilesSeen.contains(prodSmiles)==true){
+	                				continue;
+	                			}
+	                			productSmilesSeen.add(prodSmiles);
+	                		}
+
 	                        sbRowKey.setLength(0);
 	                        List<DataCell> listCells = new ArrayList<DataCell>(2 + indicesReactants.length * 2);
 

@@ -85,9 +85,6 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
     
 	/** Setting model component for the SMARTS reaction field. */
     private final DialogComponent m_compSmartsReactionField;
-
-	/** Setting model component for the uniquify products field. */
-    private final DialogComponent m_uniquifyProductsField;
     
     /** The input port index of the reaction table. */
     private final int m_iReactionTableIndex;
@@ -135,8 +132,8 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
         super.addDialogComponent(m_compSmartsReactionField = new DialogComponentString(
         		createOptionalReactionSmartsPatternModel(), "Reaction SMARTS: ", false, 30));
 
-        super.addDialogComponent(m_uniquifyProductsField = new DialogComponentBoolean(
-        		createUniquifyProductsModel(), "Uniquify products?"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createUniquifyProductsModel(), "Uniquify products"));
         
     	addDialogComponentsAfterReactionSettings();
 

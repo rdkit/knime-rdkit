@@ -49,12 +49,12 @@
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.RDKit.ChemicalReaction;
-import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
@@ -77,10 +77,10 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.ChemUtils;
 import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
 import org.rdkit.knime.util.SafeGuardedResource;
 import org.rdkit.knime.util.SettingsUtils;
 import org.rdkit.knime.util.WarningConsolidator;
-import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
 
 /**
  * This abstract class provides base functionality for nodes that 
@@ -118,6 +118,9 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
     protected final SettingsModelString m_modelOptionalReactionSmartsPattern =
             registerSettings(T.createOptionalReactionSmartsPatternModel());
     
+    /** Should products be uniquified? */
+    protected SettingsModelBoolean m_modelUniquifyProducts = registerSettings(T.createUniquifyProductsModel(),true);
+    
     //
     // Internals
     //
@@ -130,9 +133,6 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
     
     /** The input port index of the reaction table. */
     protected int m_iReactionTableIndex;
- 
-    /** Should products be uniquified? */
-    private SettingsModelBoolean m_bUniquifyProducts = registerSettings(T.createUniquifyProductsModel(),true);
  
     //
     // Constructor
@@ -306,7 +306,8 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
     protected List<DataRow> processReactionResults(ChemicalReaction reaction, ROMol_Vect reactants, 
     		List<DataRow> listToAddTo, int uniqueWaveId, int... indicesReactants) {
     	List<DataRow> listNewRows =  (listToAddTo == null ? new ArrayList<DataRow>(20) : listToAddTo);
-
+    	boolean bUniquifyProducts = m_modelUniquifyProducts.getBooleanValue();
+    	
     	if (reaction != null && reactants != null) {  
     		assert(reactants.size() == indicesReactants.length);
     		
@@ -317,13 +318,12 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
 	        if (vvProducts != null && !vvProducts.isEmpty()) {
 	           	final StringBuffer sbRowKey = new StringBuffer();
 	           	int iReactionCount = (int)vvProducts.size();
-        		List<String> productSmilesSeen=new ArrayList<String>();
+	           	HashSet<String> setProductSmilesSeen = new HashSet<String>();
 	        	
 	        	// Iterate through reactions 
 	            for (int i = 0; i < iReactionCount; i++) {
 	            	ROMol_Vect vProds = vvProducts.get(i);
 	            	int iProdsCount = (int)vProds.size();
-            		m_aiProductCounter.addAndGet(iProdsCount);
             		
 	            	// Iterate through reaction products
 	                for (int j = 0; j < iProdsCount; j++) {
@@ -332,14 +332,18 @@ public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReac
 	                    
 	                    try {
 	                        RDKFuncs.sanitizeMol(prod);
-	                		if(m_bUniquifyProducts.getBooleanValue()){
-	                			String prodSmiles=RDKFuncs.MolToSmiles(prod,true);
-	                			if(productSmilesSeen.contains(prodSmiles)==true){
+	                        
+	                        // Optional check for product uniqueness
+	                		if (bUniquifyProducts) {
+	                			String prodSmiles = RDKFuncs.MolToSmiles(prod, true);
+	                			if (setProductSmilesSeen.contains(prodSmiles)) {
+	                				// We encountered the product before, now just skipping it
 	                				continue;
 	                			}
-	                			productSmilesSeen.add(prodSmiles);
+	                			setProductSmilesSeen.add(prodSmiles);
 	                		}
 
+	                		m_aiProductCounter.incrementAndGet();
 	                        sbRowKey.setLength(0);
 	                        List<DataCell> listCells = new ArrayList<DataCell>(2 + indicesReactants.length * 2);
 

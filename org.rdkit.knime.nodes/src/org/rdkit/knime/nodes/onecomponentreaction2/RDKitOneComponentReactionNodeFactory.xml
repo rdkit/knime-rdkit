@@ -25,10 +25,12 @@
             A reaction SMARTS describing the reaction.
             <br />
             For a description of the format, please see Chapter 2 of the
-            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>
-            .
+            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
         </option>
-
+        <option name="Uniquify products">
+        	Enable this option to filter out duplicates of products caused by symmetry in molecules.
+        	Only the first of multiple encountered products will show up in the result table.
+        </option>
     </fullDescription>
 
     <ports>

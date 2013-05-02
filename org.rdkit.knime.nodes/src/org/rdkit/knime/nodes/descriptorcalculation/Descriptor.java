@@ -51,6 +51,7 @@ package org.rdkit.knime.nodes.descriptorcalculation;
 import org.RDKit.Double_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
@@ -165,18 +166,17 @@ public enum Descriptor {
 			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumHBA(mol)) };
 		}
 	},
+	NumAmideBonds(IntCell.TYPE, "Calculates the number of amide bonds") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAmideBonds(mol)) };
+		}
+	},
 	
 	NumHeteroAtoms(IntCell.TYPE, "Number of hetero atoms") {
 		@Override
 		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
 			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumHeteroatoms(mol)) };
-		}
-	},
-	
-	NumRings(IntCell.TYPE, "Number of rings") {
-		@Override
-		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
-			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumRings(mol)) };
 		}
 	},
 	
@@ -193,6 +193,151 @@ public enum Descriptor {
 			return new IntCell[] { new IntCell((int)mol.getNumAtoms(false)) };
 		}
 	},
+	NumRings(IntCell.TYPE, "Number of rings") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumRings(mol)) };
+		}
+	},
+	NumAromaticRings(IntCell.TYPE, "Number of Aromatic rings") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAromaticRings(mol)) };
+		}
+	},
+	NumSaturatedRings(IntCell.TYPE, "Number of Saturated rings") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumSaturatedRings(mol)) };
+		}
+	},
+	NumAliphaticRings(IntCell.TYPE, "Number of Aliphatic (containing at least one non-aromatic bond) rings") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAliphaticRings(mol)) };
+		}
+	},
+	NumAromaticHeterocycles(IntCell.TYPE, "Number of Aromatic Heterocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAromaticHeterocycles(mol)) };
+		}
+	},
+	NumSaturatedHeterocycles(IntCell.TYPE, "Number of Saturated Heterocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumSaturatedHeterocycles(mol)) };
+		}
+	},
+	NumAliphaticHeterocycles(IntCell.TYPE, "Number of Aliphatic (containing at least one non-aromatic bond) Heterocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAliphaticHeterocycles(mol)) };
+		}
+	},
+	NumAromaticCarbocycles(IntCell.TYPE, "Number of Aromatic Carbocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAromaticCarbocycles(mol)) };
+		}
+	},
+	NumSaturatedCarbocycles(IntCell.TYPE, "Number of Saturated Carbocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumSaturatedCarbocycles(mol)) };
+		}
+	},
+	NumAliphaticCarbocycles(IntCell.TYPE, "Number of Aliphatic (containing at least one non-aromatic bond) Carbocycles") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new IntCell[] { new IntCell((int)RDKFuncs.calcNumAliphaticCarbocycles(mol)) };
+		}
+	},
+	FractionCSP3(DoubleCell.TYPE, "Calculates a the fraction of a molecule's carbons that are SP3 hybridized") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcFractionCSP3(mol)) };
+		}
+	},
+	Chi0v(DoubleCell.TYPE, "Calculates a the Chi0v value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi0v(mol)) };
+		}
+	},
+	Chi1v(DoubleCell.TYPE, "Calculates a the Chi1v value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi1v(mol)) };
+		}
+	},
+	Chi2v(DoubleCell.TYPE, "Calculates a the Chi2v value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi2v(mol)) };
+		}
+	},
+	Chi3v(DoubleCell.TYPE, "Calculates a the Chi3v value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi3v(mol)) };
+		}
+	},
+	Chi4v(DoubleCell.TYPE, "Calculates a the Chi4v value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi4v(mol)) };
+		}
+	},
+	Chi1n(DoubleCell.TYPE, "Calculates a the Chi1n value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi1n(mol)) };
+		}
+	},
+	Chi2n(DoubleCell.TYPE, "Calculates a the Chi2n value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi2n(mol)) };
+		}
+	},
+	Chi3n(DoubleCell.TYPE, "Calculates a the Chi3n value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi3n(mol)) };
+		}
+	},
+	Chi4n(DoubleCell.TYPE, "Calculates a the Chi4n value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcChi4n(mol)) };
+		}
+	},
+	HallKierAlpha(DoubleCell.TYPE, "Calculates a the Hall-Kier alpha value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcHallKierAlpha(mol)) };
+		}
+	},
+	kappa1(DoubleCell.TYPE, "Calculates a the kappa1 value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcKappa1(mol)) };
+		}
+	},
+	kappa2(DoubleCell.TYPE, "Calculates a the kappa2 value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcKappa2(mol)) };
+		}
+	},
+	kappa3(DoubleCell.TYPE, "Calculates a the kappa3 value") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return new DoubleCell[] { new DoubleCell(RDKFuncs.calcKappa3(mol)) };
+		}
+	},
+	
 	
 	slogp_VSA_1_12(DoubleCell.TYPE, 12, "Captures hydrophobic and hydrophilic effects either in the receptor or on the way to the receptor:\n" +
 			"SlogP_VSA1: (-inf < x < -0.40), SlogP_VSA2: (-0.40 <= x < -0.20), SlogP_VSA3: (-0.20 <= x < 0.00),\n" +
@@ -246,6 +391,19 @@ public enum Descriptor {
 			return convertToCellArray(RDKFuncs.calcPEOE_VSA(mol), warningConsolidator);
 		}
 	},
+	MQN(IntCell.TYPE, 42, "Calculates MQNs" ) {
+				
+		@Override
+		public String toString() {
+			return "MQN[1..42]";
+		}
+		
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			return convertToCellArray(RDKFuncs.calcMQNs(mol), warningConsolidator);
+		}
+	},	
+	
 	
 	FlowVariablePlaceHolder1(null, 0, "Use this as placeholder for " +
 			"descriptors that shall be controlled by flow variables. " +
@@ -518,4 +676,47 @@ public enum Descriptor {
     	
 		return arrCells;    	
     }
+    protected DataCell[] convertToCellArray(final UInt_Vect vecDouble, 
+    		final WarningConsolidator warningConsolidator) {
+    	int iColumns = getColumnCount();
+    	DataCell[] arrCells;
+    	
+    	if (vecDouble == null) {
+    		arrCells = AbstractRDKitCellFactory.createEmptyCells(iColumns);
+    	}
+    	else {
+    		try {
+		    	arrCells = new IntCell[iColumns];
+				int iLen = (int)vecDouble.size();
+		
+				// If the results are too big, truncate them and warn
+				if (iLen > iColumns) {
+					if (warningConsolidator != null) {
+						warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), 
+							new StringBuilder("RDKit calculated more descriptor columns than expected for descriptor '")
+								.append(toString()).append("': ").append(iLen).append(" instead of ").append(iColumns)
+								.append(" - Truncating them.").toString());
+					}
+					
+					iLen = iColumns;
+				}
+				
+				// Convert Double_Vect to DoubleCell array
+				for (int i = 0; i < iLen; i++) {
+					arrCells[i] = new IntCell((int)vecDouble.get(i));
+				}
+				
+				// Fill the rest with missing cells
+				for (int i = iLen; i < iColumns; i++) {
+					arrCells[i] = DataType.getMissingCell();
+				}
+    		}
+    		finally {
+    			vecDouble.delete();
+    		}
+    	}
+    	
+		return arrCells;    	
+    }
+    
 }

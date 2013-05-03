@@ -20,6 +20,7 @@
 		  <li>RDKit: Daylight-like topological fingerprint</li>
 		  <li>Avalon: Fingerprint from the Avalon toolkit (http://sourceforge.net/p/avalontoolkit/)</li>
 		  <li>Layered: An experimental substructure-matching fingerprint</li>
+		  <li>MACCS: RDKit implementation of the 166 public MACCS keys</li>
 		</ul>
 		</option>
 		<option name="New Column Name">Name of the fingerprint column in the output table.</option>

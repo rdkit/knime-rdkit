@@ -90,7 +90,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 
 	/** Defines supported fingerprint types. */
     public enum FingerprintType {
-        morgan, featmorgan, atompair, torsion, rdkit, avalon, layered;
+        morgan, featmorgan, atompair, torsion, rdkit, avalon, layered, maccs;
         
         /**
          * {@inheritDoc}
@@ -113,6 +113,8 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
         			return "Avalon";
         		case layered:
         			return "Layered";
+        		case maccs:
+        			return "MACCS";
         	}
         	
         	return super.toString();
@@ -295,8 +297,6 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	   		    	// Calculate the new cells
 	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
 
-                    // Transfer the bitset into a dense bit vector
-                    DenseBitVector bitVector = new DenseBitVector(m_modelNumBits.getIntValue());                   
                     ExplicitBitVect fingerprint = null;
 
                     // Calculate fingerprint
@@ -344,6 +344,13 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	                        		m_modelMaxPath.getIntValue(), m_modelNumBits.getIntValue()), iUniqueWaveId);
 	                		break;
 	                		
+	                	case maccs:
+							synchronized (LOCK) {
+								fingerprint = markForCleanup(RDKFuncs.MACCSFingerprintMol(mol),
+										iUniqueWaveId);
+							}
+	                        break;
+	                		
 	                	default:
 	                		String strMsg = "Fingerprint Type '" + m_modelFingerprintType.getValue() + 
 	                			"' cannot be handled by this node.";
@@ -353,7 +360,9 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
                     
                     // Transfer to bit vector
                     if (fingerprint != null) {
+                        // Transfer the bitset into a dense bit vector
                     	final long lBits = fingerprint.getNumBits();
+    	   		        DenseBitVector bitVector = new DenseBitVector(lBits);                   
                         for (long i = 0; i < lBits; i++) {
                             if (fingerprint.getBit(i)) {
                                 bitVector.set(i);

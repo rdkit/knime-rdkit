@@ -78,7 +78,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
             error = null;
             // pull in the deps of the library :
             if(System.getProperty("os.name").startsWith("Windows")){
-            	System.loadLibrary("boost_regex-vc100-mt-1_51");
+            	// System.loadLibrary("boost_regex-vc100-mt-1_51");
                 System.loadLibrary("boost_system-vc100-mt-1_51");
             }
             System.loadLibrary("GraphMolWrap");

@@ -148,7 +148,7 @@ public interface RDKitMolValue extends DataValue {
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    new RDKitMolValueRenderer(), new StringValueRenderer());
+                    new RDKitMolValueRenderer(), StringValueRenderer.INSTANCE);
         }
     }
 }

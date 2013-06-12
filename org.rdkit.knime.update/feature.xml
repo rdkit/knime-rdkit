@@ -24,4 +24,8 @@
          id="org.rdkit.knime.wizards.feature"
          version="0.0.0"/>
 
+   <includes
+         id="org.rdkit.knime.testing.feature"
+         version="0.0.0"/>
+
 </feature>

@@ -6,5 +6,6 @@ Bundle-Version: 2.1.0.qualifier
 Fragment-Host: org.rdkit.knime.nodes;bundle-version="2.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.knime.testing;bundle-version="[2.4.0,3.0.0)",
- org.knime.chem.base;bundle-version="[2.7.0,3.0.0)"
+ org.knime.chem.base;bundle-version="[2.7.0,3.0.0)",
+ jp.co.infocom.cheminfo.marvin;bundle-version="[2.6.3,3.0.0)"
 Bundle-ClassPath: rdkit-testing.jar

@@ -698,6 +698,7 @@ Public License instead of this License.  But first, please read
 
    <requires>
       <import plugin="org.rdkit.knime.nodes"/>
+      <import plugin="org.knime.chem.base"/>
    </requires>
 
    <plugin
@@ -706,7 +707,7 @@ Public License instead of this License.  But first, please read
          install-size="0"
          version="0.0.0"
          fragment="true"/>
-         
+
    <plugin
          id="org.knime.testing.headless"
          download-size="0"
@@ -721,4 +722,5 @@ Public License instead of this License.  But first, please read
          install-size="0"
          version="0.0.0"
          fragment="true"/>
+
 </feature>

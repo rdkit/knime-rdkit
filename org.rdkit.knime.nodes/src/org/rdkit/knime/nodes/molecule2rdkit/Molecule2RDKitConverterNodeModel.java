@@ -82,7 +82,7 @@ import org.rdkit.knime.util.WarningConsolidator;
 
 /**
  * This class implements the node model of the "Molecule2RDKitConverter" node
- * providing translations of a molecule column to an RDKit Molecule based on 
+ * providing translations of a molecule column to an RDKit Molecule based on
  * the open source RDKit library.
  * 
  * @author Greg Landrum
@@ -93,7 +93,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	//
 	// Enumeration
 	//
-	
+
 	/**
 	 * This enumeration defines how erroneous molecules, which cannot be converted
 	 * into RDKit Molecules, shall be handled.
@@ -102,630 +102,632 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	 */
 	public enum ParseErrorPolicy implements ButtonGroupEnumInterface {
 
-	    /** Policy to send rows with erroneous molecules to second output. */
-	    SPLIT_ROWS("Send error rows to second output", "The table at the second "
-	            + "port contains the input rows with problematic structures"),
-	            
-	    /** Policy to insert missing values for an erroneous molecules. */
-	    MISS_VAL("Insert missing values", "If the input structure can't be "
-	            + "translated, a missing value is inserted.");
+		/** Policy to send rows with erroneous molecules to second output. */
+		SPLIT_ROWS("Send error rows to second output", "The table at the second "
+				+ "port contains the input rows with problematic structures"),
 
-	    //
-	    // Members
-	    //
-	    
-	    /** Friendly name of the policy. Used in GUI as option text. */
-	    private final String m_name;
+				/** Policy to insert missing values for an erroneous molecules. */
+				MISS_VAL("Insert missing values", "If the input structure can't be "
+						+ "translated, a missing value is inserted.");
 
-	    /** Tooltip of the policy to be used in GUI as option tooltip. */
-	    private final String m_tooltip;
+		//
+		// Members
+		//
 
-	    //
-	    // Constructor
-	    //
-	    
-	    /**
-	     * Creates a new policy enumeration value.
-	     * 
-	     * @param name Friendly name of the policy. Used in GUI as option text.
-	     * @param tooltip Tooltip of the policy to be used in GUI as option tooltip.
-	     */
-	    ParseErrorPolicy(final String name, final String tooltip) {
-	        m_name = name;
-	        m_tooltip = tooltip;
-	    }
+		/** Friendly name of the policy. Used in GUI as option text. */
+		private final String m_name;
 
-	    //
-	    // Public Methods
-	    //
-	    
-	    /**
-	     * {@inheritDoc}
-	     */
-	    @Override
-	    public String getText() {
-	        return m_name;
-	    }
+		/** Tooltip of the policy to be used in GUI as option tooltip. */
+		private final String m_tooltip;
 
-	    /**
-	     * {@inheritDoc}
-	     */
-	    @Override
-	    public String getActionCommand() {
-	        return this.name();
-	    }
+		//
+		// Constructor
+		//
 
-	    /**
-	     * {@inheritDoc}
-	     */
-	    @Override
-	    public String getToolTip() {
-	        return m_tooltip;
-	    }
+		/**
+		 * Creates a new policy enumeration value.
+		 * 
+		 * @param name Friendly name of the policy. Used in GUI as option text.
+		 * @param tooltip Tooltip of the policy to be used in GUI as option tooltip.
+		 */
+		ParseErrorPolicy(final String name, final String tooltip) {
+			m_name = name;
+			m_tooltip = tooltip;
+		}
 
-	    /**
-	     * {@inheritDoc}
-	     */
-	    @Override
-	    public boolean isDefault() {
-	        return this.getActionCommand().equals(SPLIT_ROWS.getActionCommand());
-	    }
+		//
+		// Public Methods
+		//
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getText() {
+			return m_name;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getActionCommand() {
+			return this.name();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getToolTip() {
+			return m_tooltip;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public boolean isDefault() {
+			return this.getActionCommand().equals(SPLIT_ROWS.getActionCommand());
+		}
 	}
-	
-	
+
+
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(Molecule2RDKitConverterNodeModel.class);
-	
+
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
-	
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-        registerSettings(Molecule2RDKitConverterNodeDialog.createInputColumnNameModel(), "input_column", "first_column"); 
-    	// Accepts also old deprecated key
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
+	// Accepts also old deprecated key
 
-    /** Settings model for the column name of the new column to be added to the output table. */
-    private final SettingsModelString m_modelNewColumnName =
-		registerSettings(Molecule2RDKitConverterNodeDialog.createNewColumnNameModel());
+	/** Settings model for the column name of the new column to be added to the output table. */
+	private final SettingsModelString m_modelNewColumnName =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createNewColumnNameModel());
 
-    /** Settings model for the option to remove the source column from the output table. */
-    private final SettingsModelBoolean m_modelRemoveSourceColumns =
-		registerSettings(Molecule2RDKitConverterNodeDialog.createRemoveSourceColumnsOptionModel());
+	/** Settings model for the option to remove the source column from the output table. */
+	private final SettingsModelBoolean m_modelRemoveSourceColumns =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createRemoveSourceColumnsOptionModel());
 
-    /** Settings model for the option to split output tables to two (second contains bad rows).*/
-    private final SettingsModelString m_modelSeparateFails =
-		registerSettings(Molecule2RDKitConverterNodeDialog.createSeparateRowsModel());
-    
-    /** Settings model for the option to do add error information column. */
-    private final SettingsModelBoolean m_modelGenerateErrorInformation =
-    	registerSettings(Molecule2RDKitConverterNodeDialog.
-    			createGenerateErrorInfoOptionModel(), true);
-    
-    /** Settings model for the option to do add error information column. */
-    private final SettingsModelString m_modelErrorInfoColumnName =
-    	registerSettings(Molecule2RDKitConverterNodeDialog.
-    			createErrorInfoColumnNameModel(m_modelGenerateErrorInformation), true);
+	/** Settings model for the option to split output tables to two (second contains bad rows).*/
+	private final SettingsModelString m_modelSeparateFails =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createSeparateRowsModel());
 
-    /** Settings model for the option to compute coordinates. */
-    private final SettingsModelBoolean m_modelGenerateCoordinates =
-		registerSettings(Molecule2RDKitConverterNodeDialog.createGenerateCoordinatesModel(), true);
+	/** Settings model for the option to do add error information column. */
+	private final SettingsModelBoolean m_modelGenerateErrorInformation =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createGenerateErrorInfoOptionModel(), true);
 
-    /** Settings model for the option to force computation of coordinates. */
-    private final SettingsModelBoolean m_modelForceGenerateCoordinates =
-		registerSettings(Molecule2RDKitConverterNodeDialog.
-				createForceGenerateCoordinatesModel(m_modelGenerateCoordinates), true);
+	/** Settings model for the option to do add error information column. */
+	private final SettingsModelString m_modelErrorInfoColumnName =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createErrorInfoColumnNameModel(m_modelGenerateErrorInformation), true);
 
-    /** Settings model for the option to suppress sanitizing a molecule. */
-    private final SettingsModelBoolean m_modelQuickAndDirty =
-    	registerSettings(Molecule2RDKitConverterNodeDialog.
-    			createQuickAndDirtyModel(), true, "skip_sanitization", "skip_santization");
-    
-    /** Settings model for the option to do aromatization (depends on quick and dirty setting). */
-    private final SettingsModelBoolean m_modelAromatization =
-    	registerSettings(Molecule2RDKitConverterNodeDialog.
-    			createAromatizationModel(m_modelQuickAndDirty), true);
-    
-    /** Settings model for the option to do stereo chemistry (depends on quick and dirty setting). */
-    private final SettingsModelBoolean m_modelStereoChem =
-    	registerSettings(Molecule2RDKitConverterNodeDialog.
-    			createStereochemistryModel(m_modelQuickAndDirty), true);
-    
-    //
-    // Internals
-    //
-    
-    /** This variable is used during execution for performance reasons. */
-    private boolean m_bIsSmiles = false;
-    
-    /** This variable is used during execution for performance reasons. */
-    private boolean m_bIsSmarts = false;
-    
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with one data in- and two out-ports.
-     */
-    Molecule2RDKitConverterNodeModel() {
-        super(1, 2);
-    }
+	/** Settings model for the option to compute coordinates. */
+	private final SettingsModelBoolean m_modelGenerateCoordinates =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createGenerateCoordinatesModel(), true);
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
+	/** Settings model for the option to force computation of coordinates. */
+	private final SettingsModelBoolean m_modelForceGenerateCoordinates =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createForceGenerateCoordinatesModel(m_modelGenerateCoordinates), true);
 
-    	// Create list of acceptable input column types
-     	List<Class<? extends DataValue>> listValueClasses = 
-			new ArrayList<Class<? extends DataValue>>();
+	/** Settings model for the option to suppress sanitizing a molecule. */
+	private final SettingsModelBoolean m_modelQuickAndDirty =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createQuickAndDirtyModel(), true, "skip_sanitization", "skip_santization");
+
+	/** Settings model for the option to do aromatization (depends on quick and dirty setting). */
+	private final SettingsModelBoolean m_modelAromatization =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createAromatizationModel(m_modelQuickAndDirty), true);
+
+	/** Settings model for the option to do stereo chemistry (depends on quick and dirty setting). */
+	private final SettingsModelBoolean m_modelStereoChem =
+			registerSettings(Molecule2RDKitConverterNodeDialog.
+					createStereochemistryModel(m_modelQuickAndDirty), true);
+
+	//
+	// Internals
+	//
+
+	/** This variable is used during execution for performance reasons. */
+	private boolean m_bIsSmiles = false;
+
+	/** This variable is used during execution for performance reasons. */
+	private boolean m_bIsSmarts = false;
+
+	//
+	// Constructor
+	//
+
+	/**
+	 * Create new node model with one data in- and two out-ports.
+	 */
+	Molecule2RDKitConverterNodeModel() {
+		super(1, 2);
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
+
+		// Create list of acceptable input column types
+		final List<Class<? extends DataValue>> listValueClasses =
+				new ArrayList<Class<? extends DataValue>>();
 		listValueClasses.add(SmilesValue.class);
 		listValueClasses.add(SmartsValue.class);
 		listValueClasses.add(SdfValue.class);
-		
-        // Auto guess the input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, listValueClasses, 0, 
-        		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"Neither SMILES, SMARTS nor SDF compatible column in input table.", 
-        		getWarningConsolidator()); 
 
-        // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, listValueClasses,  
-        		"Input column has not been specified yet.",
-        		"SMILES, SMARTS or SDF compatible input column %COLUMN_NAME% does not exist. Has the input table changed?");
-        
-        // Auto guess the new column name and make it unique
-        String strInputColumnName = m_modelInputColumnName.getStringValue();
-        SettingsUtils.autoGuessColumnName(inSpecs[0], null, 
-        		(m_modelRemoveSourceColumns.getBooleanValue() ? 
-        			new String[] { strInputColumnName } : null),
-        		m_modelNewColumnName, strInputColumnName + " (RDKit Mol)");
+		// Auto guess the input column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, listValueClasses, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"Neither SMILES, SMARTS nor SDF compatible column in input table.",
+				getWarningConsolidator());
 
-        // Determine, if the new column name has been set and if it is really unique
-        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
-        		(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] { 
-        			m_modelInputColumnName.getStringValue() } : null),
-        		m_modelNewColumnName, 
-        		"Output column has not been specified yet.",
-        		"The name %COLUMN_NAME% of the new column exists already in the input.");
-        
-        // Handle error information column name, but only if option was enabled
-        if (m_modelGenerateErrorInformation.getBooleanValue()) {
-        	final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
-        		.equals(m_modelSeparateFails.getStringValue());
+		// Determines, if the input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, listValueClasses,
+				"Input column has not been specified yet.",
+				"SMILES, SMARTS or SDF compatible input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
-        	// Autofill error info column name
-            SettingsUtils.autoGuessColumnName(inSpecs[0], 
-            		bSplitBadRowsToPort1 ? 
-            				null : new String[] { m_modelNewColumnName.getStringValue() },
-        			!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ? 
-        					null : new String[] { m_modelInputColumnName.getStringValue() },
-            			m_modelErrorInfoColumnName, strInputColumnName + " (RDKit Error Info)");
-        	
-            // Determine, if the error info column name has been set and if it is really unique
-            SettingsUtils.checkColumnNameUniqueness(inSpecs[0], 
-            		bSplitBadRowsToPort1 ? 
-            				null : new String[] { m_modelNewColumnName.getStringValue() },
-        			!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ? 
-        					null : new String[] { m_modelInputColumnName.getStringValue() },
-                    m_modelErrorInfoColumnName, 
-            		"Optional error information column name has not been specified yet.",
-            		"The name %COLUMN_NAME% of the new error information column exists already in the input.");
-        }
-        
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+		// Auto guess the new column name and make it unique
+		final String strInputColumnName = m_modelInputColumnName.getStringValue();
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null,
+				(m_modelRemoveSourceColumns.getBooleanValue() ?
+						new String[] { strInputColumnName } : null),
+						m_modelNewColumnName, strInputColumnName + " (RDKit Mol)");
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+		// Determine, if the new column name has been set and if it is really unique
+		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
+				(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] {
+					m_modelInputColumnName.getStringValue() } : null),
+					m_modelNewColumnName,
+					"Output column has not been specified yet.",
+				"The name %COLUMN_NAME% of the new column exists already in the input.");
 
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
-    	InputDataInfo[] arrDataInfo = null;
-    	
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
-    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-    				SmilesValue.class, SmartsValue.class, SdfValue.class);
-    	}
-    	
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
- 
+		// Handle error information column name, but only if option was enabled
+		if (m_modelGenerateErrorInformation.getBooleanValue()) {
+			final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
+					.equals(m_modelSeparateFails.getStringValue());
 
-    /**
-     * Returns the output table specification of the specified out port. 
-     * 
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     * 
-     * @return The specification of all output tables.
-     * 
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with 
-     * 		given DataTableSpec elements.
-     */
-    protected DataTableSpec getOutputTableSpec(final int outPort, 
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
-    	final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
+			// Autofill error info column name
+			SettingsUtils.autoGuessColumnName(inSpecs[0],
+					bSplitBadRowsToPort1 ?
+							null : new String[] { m_modelNewColumnName.getStringValue() },
+							!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ?
+									null : new String[] { m_modelInputColumnName.getStringValue() },
+									m_modelErrorInfoColumnName, strInputColumnName + " (RDKit Error Info)");
+
+			// Determine, if the error info column name has been set and if it is really unique
+			SettingsUtils.checkColumnNameUniqueness(inSpecs[0],
+					bSplitBadRowsToPort1 ?
+							null : new String[] { m_modelNewColumnName.getStringValue() },
+							!bSplitBadRowsToPort1 && m_modelRemoveSourceColumns.getBooleanValue() ?
+									null : new String[] { m_modelInputColumnName.getStringValue() },
+									m_modelErrorInfoColumnName,
+									"Optional error information column name has not been specified yet.",
+					"The name %COLUMN_NAME% of the new error information column exists already in the input.");
+		}
+
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+					SmilesValue.class, SmartsValue.class, SdfValue.class);
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+
+	/**
+	 * Returns the output table specification of the specified out port.
+	 * 
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 * 
+	 * @return The specification of all output tables.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
+		final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
 				.equals(m_modelSeparateFails.getStringValue());
-    	final boolean bIncludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
-    	
-    	switch (outPort) {
-    		case 0:
-    			// Check existence and proper column type
-    			InputDataInfo[] arrInputDataInfos = createInputDataInfos(0, inSpecs[0]);
-    			arrInputDataInfos[0].getColumnIndex();
-	                			
-    			// Copy all specs from input table (except input column, if configured)
-	            ArrayList<DataColumnSpec> newColSpecs = new ArrayList<DataColumnSpec>();
-	            String inputColumnName = m_modelInputColumnName.getStringValue().trim();
-	            for (DataColumnSpec inCol : inSpecs[0]) {
-	                if (!m_modelRemoveSourceColumns.getBooleanValue() || 
-	                	!inCol.getName().equals(inputColumnName)) {
-	                	newColSpecs.add(inCol);
-	                }
-	            }
-	            
-	            // Append result column
-	            newColSpecs.add(new DataColumnSpecCreator(
-	        			m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
-	        			.createSpec());
-	        		
-        		// Add the optional error information column
-        		if (!bSplitBadRowsToPort1 && bIncludeErrorInfo) {
-        			newColSpecs.add(new DataColumnSpecCreator(
-        					m_modelErrorInfoColumnName.getStringValue().trim(), StringCell.TYPE)
-        					.createSpec());
-	        	}	            
-	            
-        		spec = new DataTableSpec("Output data", 
-	                    newColSpecs.toArray(new DataColumnSpec[newColSpecs.size()]));    	
-	            break;
-	            
-    		case 1:
-    			// Check, if second output table is enabled
-    			if (bSplitBadRowsToPort1) {
-    				if (bIncludeErrorInfo) {
-    	    			// Second table has the same structure as input table + error info
-    					spec = new DataTableSpec("Erroneous input data", inSpecs[0], 
-    							new DataTableSpec(new DataColumnSpecCreator(
-    									m_modelErrorInfoColumnName.getStringValue(), 
-    									StringCell.TYPE).createSpec()));
-    				}
-    				else {
-    	    			// Second table has the same structure as input table
-    	    			spec = inSpecs[0];
-    				}
-    			}
-    			
-    			// Otherwise disable it
-    			else {
-    				spec = new DataTableSpec();
-    			}
-    			break;
-        }
-    	
-    	return spec;
-    }    
-     
-    /**
-     * Creates an output factory to create cells based on the passed in
-     * input.
-     * 
-     * @param arrInputDataInfos Array of input data information that is relevant
-     * 		for processing.
-     * 
-     * @return The output factory to be used to calculate the values when 	
-     * 		the node executes.
-     * 
-     * @throws InvalidSettingsException Thrown, if the output factory could not be created
-     * 		due to invalid settings.
-     * 
-     * @see #createInputDataInfos(int, DataTableSpec)
-     */
-	protected AbstractRDKitCellFactory createOutputFactory(InputDataInfo[] arrInputDataInfos)
-		throws InvalidSettingsException {
 		final boolean bIncludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
-		
+
+		switch (outPort) {
+		case 0:
+			// Check existence and proper column type
+			final InputDataInfo[] arrInputDataInfos = createInputDataInfos(0, inSpecs[0]);
+			arrInputDataInfos[0].getColumnIndex();
+
+			// Copy all specs from input table (except input column, if configured)
+			final ArrayList<DataColumnSpec> newColSpecs = new ArrayList<DataColumnSpec>();
+			final String inputColumnName = m_modelInputColumnName.getStringValue().trim();
+			for (final DataColumnSpec inCol : inSpecs[0]) {
+				if (!m_modelRemoveSourceColumns.getBooleanValue() ||
+						!inCol.getName().equals(inputColumnName)) {
+					newColSpecs.add(inCol);
+				}
+			}
+
+			// Append result column
+			newColSpecs.add(new DataColumnSpecCreator(
+					m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+			.createSpec());
+
+			// Add the optional error information column
+			if (!bSplitBadRowsToPort1 && bIncludeErrorInfo) {
+				newColSpecs.add(new DataColumnSpecCreator(
+						m_modelErrorInfoColumnName.getStringValue().trim(), StringCell.TYPE)
+				.createSpec());
+			}
+
+			spec = new DataTableSpec("Output data",
+					newColSpecs.toArray(new DataColumnSpec[newColSpecs.size()]));
+			break;
+
+		case 1:
+			// Check, if second output table is enabled
+			if (bSplitBadRowsToPort1) {
+				if (bIncludeErrorInfo) {
+					// Second table has the same structure as input table + error info
+					spec = new DataTableSpec("Erroneous input data", inSpecs[0],
+							new DataTableSpec(new DataColumnSpecCreator(
+									m_modelErrorInfoColumnName.getStringValue(),
+									StringCell.TYPE).createSpec()));
+				}
+				else {
+					// Second table has the same structure as input table
+					spec = inSpecs[0];
+				}
+			}
+
+			// Otherwise disable it
+			else {
+				spec = new DataTableSpec();
+			}
+			break;
+		}
+
+		return spec;
+	}
+
+	/**
+	 * Creates an output factory to create cells based on the passed in
+	 * input.
+	 * 
+	 * @param arrInputDataInfos Array of input data information that is relevant
+	 * 		for processing.
+	 * 
+	 * @return The output factory to be used to calculate the values when
+	 * 		the node executes.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the output factory could not be created
+	 * 		due to invalid settings.
+	 * 
+	 * @see #createInputDataInfos(int, DataTableSpec)
+	 */
+	protected AbstractRDKitCellFactory createOutputFactory(final InputDataInfo[] arrInputDataInfos)
+			throws InvalidSettingsException {
+		final boolean bIncludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
+
 		// Generate column specs for the output table columns produced by this factory
-		// Note: In this node the resulting cells are reorganized later in the 
+		// Note: In this node the resulting cells are reorganized later in the
 		//       processing function based on settings for splitting bad molecules
 		//       and for including error information. Hence this output table spec here
 		//       serves only informational purposes and is not always the same as concrete
 		//       output tables.
-		List<DataColumnSpec> listOutputSpecs = new ArrayList<DataColumnSpec>();
-		
+		final List<DataColumnSpec> listOutputSpecs = new ArrayList<DataColumnSpec>();
+
 		// Add the always existing RDKit Molecule column
 		listOutputSpecs.add(new DataColumnSpecCreator(
-			m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
-			.createSpec());
-		
+				m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+		.createSpec());
+
 		// Add the optional error information column (is possibly filtered out later)
 		String strTempErrorInfoColumnName = m_modelErrorInfoColumnName.getStringValue().trim();
 		if (strTempErrorInfoColumnName.isEmpty()) {
 			strTempErrorInfoColumnName = "RDKit Error Info";
 		}
-		
+
 		listOutputSpecs.add(new DataColumnSpecCreator(
-			strTempErrorInfoColumnName, StringCell.TYPE)
-			.createSpec());
-		
+				strTempErrorInfoColumnName, StringCell.TYPE)
+		.createSpec());
+
 		// Generate output spec array
-		DataColumnSpec[] arrOutputSpec = listOutputSpecs.toArray(
+		final DataColumnSpec[] arrOutputSpec = listOutputSpecs.toArray(
 				new DataColumnSpec[listOutputSpecs.size()]);
 
 		// For performance reasons get reference to missing cell
 		final DataCell missingCell = DataType.getMissingCell();
-		
-		// Generate factory 
-        final boolean bSanitize = !m_modelQuickAndDirty.getBooleanValue();
-        
-		AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this, 
+
+		// Generate factory
+		final boolean bSanitize = !m_modelQuickAndDirty.getBooleanValue();
+
+		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 				getWarningConsolidator(), arrInputDataInfos, arrOutputSpec) {
-   			
-   			@Override
-   		    /**
-   		     * This method implements the calculation logic to generate the new cells based on 
-   		     * the input made available in the first (and second) parameter.
-   		     * {@inheritDoc}
-   		     */
-   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-   		    	DataCell[] arrOutputCells = new DataCell[] { missingCell, missingCell };
-                ROMol mol = null;
-                String smiles = null;
-                Exception excCaught = null;
-                
-                // As first step try to parse the input molecule format
-                try {
-                	if (m_bIsSmiles) {                   
-                        String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
-                        mol = markForCleanup(RWMol.MolFromSmiles(value, 0, bSanitize), iUniqueWaveId);
-                        smiles = value;
-                    } 
-                	else if (m_bIsSmarts) {                   
-                        String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmarts(row);
-                        mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), iUniqueWaveId);
-                        smiles = value;
-                    } 
-                    else {
-                        String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-                        mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize), iUniqueWaveId);
-                    }
-                }
-                catch (EmptyCellException excEmpty) {
-                	// If the cell is empty an exception is thrown by .getXXX(row), which is rethrown here
-                	// and caught in the factory. The factory will deliver empty cells due to the InputDataInfo setup,
-                	// see also in createInputDataInfos(...).
-                	throw excEmpty;
-                }
-                catch (Exception exc) {
-                	// Parsing failed and RDKit molecule is null 
-                	excCaught = exc;
-                }
 
-                // If we got an RDKit molecule, parsing was successful, now massage it
-                if (mol != null) {
-                	try {
-                    	if (m_bIsSmarts) {
-                    		mol.updatePropertyCache(false);
-                    	} 
-                    	else if (!bSanitize) {
-                        	RDKFuncs.cleanUp((RWMol)mol);
-                        	mol.updatePropertyCache(false);
-                        	RDKFuncs.symmetrizeSSSR(mol);
-                        	
-                        	if (m_modelAromatization.getBooleanValue()) {
-                        		RDKFuncs.Kekulize((RWMol)mol);
-                        		RDKFuncs.setAromaticity((RWMol)mol);
-                        	}
-                        	
-                      		RDKFuncs.setConjugation(mol);
-                       		RDKFuncs.setHybridization(mol);
-                       		
-                        	if (m_modelStereoChem.getBooleanValue()) {
-                        		RDKFuncs.assignStereochemistry(mol, true);
-                        	}
-                        	
-                        	if(smiles == null){
-                        		smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
-                        	}
-                    	}
-                            
-                    	if (m_modelGenerateCoordinates.getBooleanValue()) {
-                    	    if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
-                    	        mol.compute2DCoords();
-                    	    }
-                    	}
-                    	
-                    	arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
-                	}
-                	catch (Exception exc) {
-                		excCaught = exc;
-                	}
-                }
-
-                // Do error handling depending on user settings
-                if (mol == null || excCaught != null) {
-                	// Find error message
-                	StringBuilder sbError = new StringBuilder(
-                		(m_bIsSmiles ? "SMILES" : (m_bIsSmarts ? "SMARTS" : "SDF")));
-                	
-                	// Specify error type
-                	if (mol == null) {
-                		sbError.append(" Parsing Error (");
-                	}
-                	else {
-                		sbError.append(" Process Error (");
-                	}
-                	
-                	// Specify exception
-                	if (excCaught != null) {
-                		sbError.append(excCaught.getClass().getSimpleName());
-                		
-                		// Specify error message
-                		String strMessage = excCaught.getMessage();
-                		if (strMessage != null) {
-                			sbError.append(" (").append(strMessage).append(")");
-                		}
-                	}
-                	else {
-                		sbError.append("Details unknown");
-                	}
-                	
-                	sbError.append(")");
-                	
-                	// Generate error log cell
-                	String strError = sbError.toString();
-                	if (bIncludeErrorInfo) {
-                		arrOutputCells[1] = new StringCell(strError);
-                	}
-                	
-                	// Log message as warning
-            		String strMsg = "Failed to process data due to " + strError + 
-            			" - Generating empty result cells.";
-	            	LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", excCaught);
-	            	getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
-                }
-                
-                return arrOutputCells;	   				
-   		    }
-   		};
-   		
-   		// Enable or disable this factory to allow parallel processing 		
-   		factory.setAllowParallelProcessing(true);	   		
-    	
-    	return factory;
-    }
-	
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] processing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
-    		final ExecutionContext exec) throws Exception {
-        final DataTableSpec inSpec = inData[0].getDataTableSpec();
-        final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
-        
-        // Contains the rows with the result column
-        final BufferedDataContainer port0 = exec.createDataContainer(arrOutSpecs[0]);
-        
-        // Contains the input rows if result computation fails
-        final BufferedDataContainer port1 = exec.createDataContainer(arrOutSpecs[1]);
-        
-        // Get settings and define data specific behavior
-        final int iInputIndex = arrInputDataInfo[0][INPUT_COLUMN_MOL].getColumnIndex();
-        final DataType type = inSpec.getColumnSpec(iInputIndex).getType();
-        final boolean bInludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
-        m_bIsSmiles = type.isCompatible(SmilesValue.class);
-        m_bIsSmarts = type.isCompatible(SmartsValue.class);
-
-        final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
-        	.equals(m_modelSeparateFails.getStringValue());
-        final int iTotalRowCount = inData[0].getRowCount();
-        
-        // Setup main factory
-        final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
-        
-        final AbstractRDKitNodeModel.ResultProcessor resultProcessor = 
-        	new AbstractRDKitNodeModel.ResultProcessor() {
-			
-        	/**
-        	 * {@inheritDoc}
-        	 * This implementation determines, if the cell 0 in the results is missing.
-        	 * If it is missing and the setting tells to split the tables, 
-        	 * then the original input row is added to table 1. Otherwise the input row 
-        	 * gets merged with the cell 0 and is added to table 0.
-        	 */
 			@Override
-			public void processResults(long rowIndex, DataRow row, DataCell[] arrResults) {      
-		        // Bad row found - result is missing
+			/**
+			 * This method implements the calculation logic to generate the new cells based on
+			 * the input made available in the first (and second) parameter.
+			 * {@inheritDoc}
+			 */
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				final DataCell[] arrOutputCells = new DataCell[] { missingCell, missingCell };
+				ROMol mol = null;
+				String smiles = null;
+				Exception excCaught = null;
+
+				// As first step try to parse the input molecule format
+				try {
+					if (m_bIsSmiles) {
+						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
+						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, bSanitize), iUniqueWaveId);
+						smiles = value;
+					}
+					else if (m_bIsSmarts) {
+						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmarts(row);
+						mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), iUniqueWaveId);
+						smiles = value;
+					}
+					else {
+						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
+						mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize), iUniqueWaveId);
+					}
+				}
+				catch (final EmptyCellException excEmpty) {
+					// If the cell is empty an exception is thrown by .getXXX(row), which is rethrown here
+					// and caught in the factory. The factory will deliver empty cells due to the InputDataInfo setup,
+					// see also in createInputDataInfos(...).
+					throw excEmpty;
+				}
+				catch (final Exception exc) {
+					// Parsing failed and RDKit molecule is null
+					excCaught = exc;
+				}
+
+				// If we got an RDKit molecule, parsing was successful, now massage it
+				if (mol != null) {
+					try {
+						if (m_bIsSmarts) {
+							mol.updatePropertyCache(false);
+						}
+						else if (!bSanitize) {
+							RDKFuncs.cleanUp((RWMol)mol);
+							mol.updatePropertyCache(false);
+							RDKFuncs.symmetrizeSSSR(mol);
+
+							if (m_modelAromatization.getBooleanValue()) {
+								RDKFuncs.Kekulize((RWMol)mol);
+								RDKFuncs.setAromaticity((RWMol)mol);
+							}
+
+							RDKFuncs.setConjugation(mol);
+							RDKFuncs.setHybridization(mol);
+
+							if (m_modelStereoChem.getBooleanValue()) {
+								RDKFuncs.assignStereochemistry(mol, true);
+							}
+
+							if(smiles == null){
+								smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+							}
+						}
+
+						if (m_modelGenerateCoordinates.getBooleanValue()) {
+							if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
+								mol.compute2DCoords();
+							}
+						}
+
+						arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
+					}
+					catch (final Exception exc) {
+						excCaught = exc;
+					}
+				}
+
+				// Do error handling depending on user settings
+				if (mol == null || excCaught != null) {
+					// Find error message
+					final StringBuilder sbError = new StringBuilder(
+							(m_bIsSmiles ? "SMILES" : (m_bIsSmarts ? "SMARTS" : "SDF")));
+
+					// Specify error type
+					if (mol == null) {
+						sbError.append(" Parsing Error (");
+					}
+					else {
+						sbError.append(" Process Error (");
+					}
+
+					// Specify exception
+					if (excCaught != null) {
+						sbError.append(excCaught.getClass().getSimpleName());
+
+						// Specify error message
+						final String strMessage = excCaught.getMessage();
+						if (strMessage != null) {
+							sbError.append(" (").append(strMessage).append(")");
+						}
+					}
+					else {
+						sbError.append("Details unknown");
+					}
+
+					sbError.append(")");
+
+					// Generate error log cell
+					final String strError = sbError.toString();
+					if (bIncludeErrorInfo) {
+						arrOutputCells[1] = new StringCell(strError);
+					}
+
+					// Log message as warning
+					final String strMsg = "Failed to process data due to " + strError +
+							" - Generating empty result cells.";
+					LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", excCaught);
+					getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
+				}
+
+				return arrOutputCells;
+			}
+		};
+
+		// Enable or disable this factory to allow parallel processing
+		factory.setAllowParallelProcessing(true);
+
+		return factory;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
+		final DataTableSpec inSpec = inData[0].getDataTableSpec();
+		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
+
+		// Contains the rows with the result column
+		final BufferedDataContainer port0 = exec.createDataContainer(arrOutSpecs[0]);
+
+		// Contains the input rows if result computation fails
+		final BufferedDataContainer port1 = exec.createDataContainer(arrOutSpecs[1]);
+
+		// Get settings and define data specific behavior
+		final int iInputIndex = arrInputDataInfo[0][INPUT_COLUMN_MOL].getColumnIndex();
+		final DataType type = inSpec.getColumnSpec(iInputIndex).getType();
+		final boolean bInludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
+		m_bIsSmiles = type.isCompatible(SmilesValue.class);
+		m_bIsSmarts = type.isCompatible(SmartsValue.class);
+
+		final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
+				.equals(m_modelSeparateFails.getStringValue());
+		final int iTotalRowCount = inData[0].getRowCount();
+
+		// Setup main factory
+		final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
+
+		final AbstractRDKitNodeModel.ResultProcessor resultProcessor =
+				new AbstractRDKitNodeModel.ResultProcessor() {
+
+			/**
+			 * {@inheritDoc}
+			 * This implementation determines, if the cell 0 in the results is missing.
+			 * If it is missing and the setting tells to split the tables,
+			 * then the original input row is added to table 1. Otherwise the input row
+			 * gets merged with the cell 0 and is added to table 0.
+			 */
+			@Override
+			public void processResults(final long rowIndex, final DataRow row, final DataCell[] arrResults) {
+				// Bad row found - result is missing
 				if (arrResults[0].isMissing()) {
 					// Move the row into the second table
 					if (bSplitBadRowsToPort1) {
-			        	if (bInludeErrorInfo) {
-			        		// Include only the error information cell
-				            port1.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
-				            		new DataCell[] { arrResults[1] }, -1));
-			        	}
-			        	else {
-			        		port1.addRowToTable(row);
-			        	}
+						if (bInludeErrorInfo) {
+							// Include only the error information cell
+							port1.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+									new DataCell[] { arrResults[1] }, -1));
+						}
+						else {
+							port1.addRowToTable(row);
+						}
 					}
 					// Move the row into the first table
 					else {
-			        	if (bInludeErrorInfo) {
-				        	port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, 
-				        		m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
-			        	}
-			        	else {
-			        		// Include only the result cell
-			        		port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
-					            new DataCell[] { arrResults[0] }, 
-					            m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
-			        	}
+						if (bInludeErrorInfo) {
+							port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults,
+									m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+						}
+						else {
+							// Include only the result cell
+							port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+									new DataCell[] { arrResults[0] },
+									m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+						}
 					}
-		        } 
-				
+				}
+
 				// Good row found
-		        else {
-		        	// Include also empty error information if we have only one output table
-		        	if (!bSplitBadRowsToPort1 && bInludeErrorInfo) {
-			        	port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults, 
-			        		m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
-		        	}
-		        	
-	        		// Include only the result cell, if we have two output tables or no error logging
-		        	else {
-		        		port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, 
-				            new DataCell[] { arrResults[0] }, 
-				            m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
-		        	}
-		        }
+				else {
+					// Include also empty error information if we have only one output table
+					if (!bSplitBadRowsToPort1 && bInludeErrorInfo) {
+						port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row, arrResults,
+								m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+					}
+
+					// Include only the result cell, if we have two output tables or no error logging
+					else {
+						port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+								new DataCell[] { arrResults[0] },
+								m_modelRemoveSourceColumns.getBooleanValue() ? iInputIndex : -1));
+					}
+				}
 			}
 		};
-		
-        // Runs the multiple threads to do the work
-        try {
-        	new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount, 
-       			getWarningConsolidator(), exec).run(inData[0]);
-        } 
-        catch (Exception e) {
-            exec.checkCanceled();
-            throw e;
-        }
-        
-        port0.close();
-        port1.close();
-        
-        return new BufferedDataTable[] { port0.getTable(), port1.getTable() };
-    }	
+
+		// Runs the multiple threads to do the work
+		try {
+			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount,
+					getWarningConsolidator(), exec).run(inData[0]);
+		}
+		catch (final Exception e) {
+			exec.checkCanceled();
+			throw e;
+		}
+
+		port0.close();
+		port1.close();
+
+		return new BufferedDataTable[] { port0.getTable(), port1.getTable() };
+	}
 }

@@ -64,73 +64,73 @@ public class RDKitNodePlugin extends Plugin {
 	//
 	// Constants
 	//
-	
-    /** Make sure that this *always* matches the ID in plugin.xml. */
-    public static final String PLUGIN_ID = "org.knime.workshop.rdkit";
 
-    //
-    // Global Variables.
-    //
-    
-    /** The shared instance of the plugin. */
-    private static RDKitNodePlugin plugin;
+	/** Make sure that this *always* matches the ID in plugin.xml. */
+	public static final String PLUGIN_ID = "org.knime.workshop.rdkit";
 
-    //
-    // Constructor
-    // 
-    
-    /**
-     * The constructor.
-     */
-    public RDKitNodePlugin() {
-        super();
-        setDefault(this);
-    }
+	//
+	// Global Variables.
+	//
 
-    // 
-    // Public Methods
-    //
-    
-    /**
-     * This method is called upon plug-in activation.
-     *
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be started
-     */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-    }
+	/** The shared instance of the plugin. */
+	private static RDKitNodePlugin plugin;
 
-    /**
-     * This method is called when the plug-in is stopped.
-     *
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be stopped
-     */
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        super.stop(context);
-        plugin = null;
-    }
-
-    /**
-     * Returns the shared instance.
-     *
-     * @return Singleton instance of the Plugin
-     */
-    public static RDKitNodePlugin getDefault() {
-        return plugin;
-    }
+	//
+	// Constructor
+	//
 
 	/**
-	  * Set the static plugin variable to the instance of the plugin.
-	  * 
-	  * @param defaultPlugin the plugin instance to be set as default.
-	  */
-    private static synchronized void 
-    	setDefault(final RDKitNodePlugin defaultPlugin) {
-    	plugin = defaultPlugin;
-    }
-    
+	 * The constructor.
+	 */
+	public RDKitNodePlugin() {
+		super();
+		setDefault(this);
+	}
+
+	//
+	// Public Methods
+	//
+
+	/**
+	 * This method is called upon plug-in activation.
+	 *
+	 * @param context The OSGI bundle context
+	 * @throws Exception If this plugin could not be started
+	 */
+	@Override
+	public void start(final BundleContext context) throws Exception {
+		super.start(context);
+	}
+
+	/**
+	 * This method is called when the plug-in is stopped.
+	 *
+	 * @param context The OSGI bundle context
+	 * @throws Exception If this plugin could not be stopped
+	 */
+	@Override
+	public void stop(final BundleContext context) throws Exception {
+		super.stop(context);
+		plugin = null;
+	}
+
+	/**
+	 * Returns the shared instance.
+	 *
+	 * @return Singleton instance of the Plugin
+	 */
+	public static RDKitNodePlugin getDefault() {
+		return plugin;
+	}
+
+	/**
+	 * Set the static plugin variable to the instance of the plugin.
+	 * 
+	 * @param defaultPlugin the plugin instance to be set as default.
+	 */
+	private static synchronized void
+	setDefault(final RDKitNodePlugin defaultPlugin) {
+		plugin = defaultPlugin;
+	}
+
 }

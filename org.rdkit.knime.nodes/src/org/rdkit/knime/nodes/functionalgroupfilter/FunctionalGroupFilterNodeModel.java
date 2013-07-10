@@ -106,7 +106,7 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 
 	/** The resource name of the default definition file. */
 	public static final String DEFAULT_DEFINITION_FILE =
-		"/org/rdkit/knime/nodes/functionalgroupfilter/Functional_Group_Hierarchy.txt";
+			"/org/rdkit/knime/nodes/functionalgroupfilter/Functional_Group_Hierarchy.txt";
 
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
@@ -125,302 +125,302 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 	//
 
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-            registerSettings(FunctionalGroupFilterNodeDialog.createInputColumnNameModel(), "input_column", "colName");
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(FunctionalGroupFilterNodeDialog.createInputColumnNameModel(), "input_column", "colName");
 	// Accept also deprecated keys
 
 	/** Settings model for the file name of a custom functional group definition file. */
-    private final SettingsModelString m_modelInputFile =
-            registerSettings(FunctionalGroupFilterNodeDialog.createInputFileModel(), "filename", "fileUrl");
+	private final SettingsModelString m_modelInputFile =
+			registerSettings(FunctionalGroupFilterNodeDialog.createInputFileModel(), "filename", "fileUrl");
 	// Accept also deprecated keys
 
-    /** Settings model for the definition of functional group filter conditions. */
-    private final SettingsModelFunctionalGroupConditions m_modelFunctionGroupConditions =
-    		registerSettings(FunctionalGroupFilterNodeDialog.createFunctionalGroupConditionsModel(true), "conditions", "properties");
+	/** Settings model for the definition of functional group filter conditions. */
+	private final SettingsModelFunctionalGroupConditions m_modelFunctionGroupConditions =
+			registerSettings(FunctionalGroupFilterNodeDialog.createFunctionalGroupConditionsModel(true), "conditions", "properties");
 	// Accept also deprecated keys
 
 	/**
 	 * Settings model for the option to determine, if the pattern that failed to
 	 * match is getting recorded in a new column.
 	 */
-    private final SettingsModelBoolean m_modelRecordFailedPatternOption =
-            registerSettings(FunctionalGroupFilterNodeDialog.createRecordFailedPatternOptionModel());
+	private final SettingsModelBoolean m_modelRecordFailedPatternOption =
+			registerSettings(FunctionalGroupFilterNodeDialog.createRecordFailedPatternOptionModel());
 
-    /** Settings model for the column name of the new column to be added to the output table. */
-    private final SettingsModelString m_modelNewFailedPatternColumnName =
-		registerSettings(FunctionalGroupFilterNodeDialog.
-				createNewFailedPatternColumnNameModel(m_modelRecordFailedPatternOption), true);
+	/** Settings model for the column name of the new column to be added to the output table. */
+	private final SettingsModelString m_modelNewFailedPatternColumnName =
+			registerSettings(FunctionalGroupFilterNodeDialog.
+					createNewFailedPatternColumnNameModel(m_modelRecordFailedPatternOption), true);
 
-    //
-    // Internals
-    //
+	//
+	// Internals
+	//
 
-    /**
-     * Intermediate pre-processing result, which will be used in processing phase.
-     * The representation of the functional group definitions file content.
-     */
-    private FunctionalGroupDefinitions m_definitions;
+	/**
+	 * Intermediate pre-processing result, which will be used in processing phase.
+	 * The representation of the functional group definitions file content.
+	 */
+	private FunctionalGroupDefinitions m_definitions;
 
-    /**
-     * Intermediate pre-processing result, which will be used in processing phase.
-     * It contains all activated functional group conditions. The indices
-     * of this array match with {@link #m_arrMolSmarts}.
-     */
-    private FunctionalGroupCondition[] m_arrActivatedConditions;
+	/**
+	 * Intermediate pre-processing result, which will be used in processing phase.
+	 * It contains all activated functional group conditions. The indices
+	 * of this array match with {@link #m_arrMolSmarts}.
+	 */
+	private FunctionalGroupCondition[] m_arrActivatedConditions;
 
-    /**
-     * Intermediate pre-processing result, which will be used in processing phase.
-     * It contains all generated ROMol patterns as SafeGuarded resources. The indices
-     * of this array match with {@link #m_arrActivatedConditions}.
-     */
+	/**
+	 * Intermediate pre-processing result, which will be used in processing phase.
+	 * It contains all generated ROMol patterns as SafeGuarded resources. The indices
+	 * of this array match with {@link #m_arrActivatedConditions}.
+	 */
 	private SafeGuardedResource<ROMol>[] m_arrMolSmarts;
 
-    /**
-     * This map is used for communication between parallel execution threads that determine, if
-     * a molecule fulfills the matching criteria, and the code that performs the splitting.
-     * It contains only row keys of non matching rows and as value it records here the
-     * first non matching pattern. We will synchronize on that object to ensure that
-     * only one thread is accessing at a time.
-     */
-    private Map<RowKey, String> m_mapNonMatches = new HashMap<RowKey, String>(50);
+	/**
+	 * This map is used for communication between parallel execution threads that determine, if
+	 * a molecule fulfills the matching criteria, and the code that performs the splitting.
+	 * It contains only row keys of non matching rows and as value it records here the
+	 * first non matching pattern. We will synchronize on that object to ensure that
+	 * only one thread is accessing at a time.
+	 */
+	private final Map<RowKey, String> m_mapNonMatches = new HashMap<RowKey, String>(50);
 
-    //
-    // Constructor
-    //
+	//
+	// Constructor
+	//
 
-    /**
-     * Create new node model with one data in- and two out-ports.
-     */
-    FunctionalGroupFilterNodeModel() {
-     	super(1, 2);
-    }
+	/**
+	 * Create new node model with one data in- and two out-ports.
+	 */
+	FunctionalGroupFilterNodeModel() {
+		super(1, 2);
+	}
 
-    //
-    // Protected Methods
-    //
+	//
+	// Protected Methods
+	//
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
 
-        // Auto guess the input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
-        		"Auto guessing: Using column %COLUMN_NAME%.",
-        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator());
+		// Auto guess the input column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
 
-        // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
-        		"Input column has not been specified yet.",
-        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+		// Determines, if the input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
-        // Check if the functional group definitions can be read and update the conditions
-        if (m_modelInputFile.getStringValue() == null || m_modelInputFile.getStringValue().isEmpty()) {
-        	m_modelInputFile.setStringValue(DEFAULT_DEFINITION_ID);
-        }
-        FunctionalGroupDefinitions definitions = createDefinitionsFromFile(m_modelInputFile);
-       	m_modelFunctionGroupConditions.updateConditions(definitions);
-       	getWarningConsolidator().saveWarnings(definitions.getWarningConsolidator());
+		// Check if the functional group definitions can be read and update the conditions
+		if (m_modelInputFile.getStringValue() == null || m_modelInputFile.getStringValue().isEmpty()) {
+			m_modelInputFile.setStringValue(DEFAULT_DEFINITION_ID);
+		}
+		final FunctionalGroupDefinitions definitions = createDefinitionsFromFile(m_modelInputFile);
+		m_modelFunctionGroupConditions.updateConditions(definitions);
+		getWarningConsolidator().saveWarnings(definitions.getWarningConsolidator());
 
-        FunctionalGroupCondition[] arrConditions = m_modelFunctionGroupConditions.getConditions();
-        if (arrConditions == null || arrConditions.length == 0) {
-        	getWarningConsolidator().saveWarning("No filter conditions found.");
-        }
-        else {
-        	boolean bFoundActiveCondition = false;
+		final FunctionalGroupCondition[] arrConditions = m_modelFunctionGroupConditions.getConditions();
+		if (arrConditions == null || arrConditions.length == 0) {
+			getWarningConsolidator().saveWarning("No filter conditions found.");
+		}
+		else {
+			boolean bFoundActiveCondition = false;
 
-        	for (int i = 0; i < arrConditions.length; i++) {
-        		if (arrConditions[i].isActive()) {
-        			bFoundActiveCondition = true;
-        			break;
-        		}
-        	}
+			for (int i = 0; i < arrConditions.length; i++) {
+				if (arrConditions[i].isActive()) {
+					bFoundActiveCondition = true;
+					break;
+				}
+			}
 
-        	if (!bFoundActiveCondition) {
-            	getWarningConsolidator().saveWarning("No functional groups selected. No filter will be applied on molecules.");
-        	}
-        }
+			if (!bFoundActiveCondition) {
+				getWarningConsolidator().saveWarning("No functional groups selected. No filter will be applied on molecules.");
+			}
+		}
 
-        // Auto guess the new column name and make it unique
-        // We do this even if the option to record this is currently disabled
-        SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
-        		m_modelNewFailedPatternColumnName, "First Non-Matching Pattern");
+		// Auto guess the new column name and make it unique
+		// We do this even if the option to record this is currently disabled
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+				m_modelNewFailedPatternColumnName, "First Non-Matching Pattern");
 
-        // If the option to record the first failed pattern is selected, check
-        // configuration of the new column name
-        if (m_modelRecordFailedPatternOption.getBooleanValue()) {
-	        // Determine, if the new column name has been set and if it is really unique
-	        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
-	        			m_modelNewFailedPatternColumnName,
-	        		"Failed pattern column has not been specified yet.",
-	        		"The name %COLUMN_NAME% of the new column exists already in the input.");
-        }
+		// If the option to record the first failed pattern is selected, check
+		// configuration of the new column name
+		if (m_modelRecordFailedPatternOption.getBooleanValue()) {
+			// Determine, if the new column name has been set and if it is really unique
+			SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+					m_modelNewFailedPatternColumnName,
+					"Failed pattern column has not been specified yet.",
+					"The name %COLUMN_NAME% of the new column exists already in the input.");
+		}
 
-        // Consolidate all warnings and make them available to the user
-		Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
+		// Consolidate all warnings and make them available to the user
+		final Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
 		mapContextOccurrences.put(FunctionalGroupDefinitions.LINE_CONTEXT.getId(),
 				definitions.getReadFunctionalGroupLines());
-        generateWarnings(mapContextOccurrences);
+		generateWarnings(mapContextOccurrences);
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
 
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("unchecked")
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
-		throws InvalidSettingsException {
+			throws InvalidSettingsException {
 
-    	InputDataInfo[] arrDataInfo = null;
+		InputDataInfo[] arrDataInfo = null;
 
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
-    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-    				RDKitMolValue.class);
-    	}
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+					RDKitMolValue.class);
+		}
 
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
 
-    /**
-     * Returns the output table specification of the specified out port.
-     *
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     *
-     * @return The specification of all output tables.
-     *
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
-     * 		given DataTableSpec elements.
-     *
-     * @see #createOutputFactories(int)
-     */
-    @Override
-    protected DataTableSpec getOutputTableSpec(final int outPort,
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
+	/**
+	 * Returns the output table specification of the specified out port.
+	 *
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 *
+	 * @return The specification of all output tables.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 *
+	 * @see #createOutputFactories(int)
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
 
-    	switch (outPort) {
-    		case 0:
-    			spec = inSpecs[0];
-    			break;
-    		case 1:
-    			if (m_modelRecordFailedPatternOption.getBooleanValue()) {
-    	            spec = new DataTableSpec("Failed molecules",
-    	            		inSpecs[0], new DataTableSpec(new DataColumnSpecCreator(
-    	            				m_modelNewFailedPatternColumnName.getStringValue(),
-    	            				StringCell.TYPE).createSpec()));
-    			}
-    			else {
-    				spec = inSpecs[0];
-    			}
-	            break;
-        }
+		switch (outPort) {
+		case 0:
+			spec = inSpecs[0];
+			break;
+		case 1:
+			if (m_modelRecordFailedPatternOption.getBooleanValue()) {
+				spec = new DataTableSpec("Failed molecules",
+						inSpecs[0], new DataTableSpec(new DataColumnSpecCreator(
+								m_modelNewFailedPatternColumnName.getStringValue(),
+								StringCell.TYPE).createSpec()));
+			}
+			else {
+				spec = inSpecs[0];
+			}
+			break;
+		}
 
-    	return spec;
-    }
+		return spec;
+	}
 
-    /**
-     * Creates an output factory to create cells based on the passed in
-     * input.
-     *
-     * @param arrInputDataInfos Array of input data information that is relevant
-     * 		for processing.
-     *
-     * @see #createInputDataInfos(int, DataTableSpec)
-     */
+	/**
+	 * Creates an output factory to create cells based on the passed in
+	 * input.
+	 *
+	 * @param arrInputDataInfos Array of input data information that is relevant
+	 * 		for processing.
+	 *
+	 * @see #createInputDataInfos(int, DataTableSpec)
+	 */
 	protected AbstractRDKitCellFactory createOutputFactory(final InputDataInfo[] arrInputDataInfos)
-		throws InvalidSettingsException {
+			throws InvalidSettingsException {
 		// Generate column specs for the output table columns produced by this factory
-		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[0]; // We have no output columns
+		final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[0]; // We have no output columns
 
 		final boolean bAdd = m_modelRecordFailedPatternOption.getBooleanValue();
 		final int iCount = m_arrActivatedConditions.length;
 		final DataCell[] arrNoCells = new DataCell[0];
 
 		// Generate factory
-		AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
+		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 				getWarningConsolidator(), arrInputDataInfos, arrOutputSpec) {
 
-   			@Override
-   		    /**
-   		     * This method implements the calculation logic to generate the new cells based on
-   		     * the input made available in the first (and second) parameter.
-   		     * {@inheritDoc}
-   		     */
-   		    public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
-   		    	String strNonMatchPattern = null;
-   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+			@Override
+			/**
+			 * This method implements the calculation logic to generate the new cells based on
+			 * the input made available in the first (and second) parameter.
+			 * {@inheritDoc}
+			 */
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				String strNonMatchPattern = null;
+				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
-   		    	if (mol != null) {
-	   		    	for (int i = 0; i < iCount; i++) {
-	   		    		try {
-		   		    		// Find substructure matches
-		   		    		Match_Vect_Vect mvvMatches =
-		   		    			markForCleanup(mol.getSubstructMatches(m_arrMolSmarts[i].get()), iUniqueWaveId);
-		   		    		int iFoundMatches = 0;
-		   		    		if (mvvMatches != null) {
-			   		    		iFoundMatches = (int)mvvMatches.size();
-		   		    		}
+				if (mol != null) {
+					for (int i = 0; i < iCount; i++) {
+						try {
+							// Find substructure matches
+							final Match_Vect_Vect mvvMatches =
+									markForCleanup(mol.getSubstructMatches(m_arrMolSmarts[i].get()), iUniqueWaveId);
+							int iFoundMatches = 0;
+							if (mvvMatches != null) {
+								iFoundMatches = (int)mvvMatches.size();
+							}
 
-		   		    		// Check, if condition is NOT met
-		   		    		final Qualifier qualifier = m_arrActivatedConditions[i].getQualifier();
-		   		    		final int iCondCount = m_arrActivatedConditions[i].getCount();
-		   		    		if (!qualifier.test(iFoundMatches, iCondCount)) {
-		   		    			// Record first non-matching pattern
+							// Check, if condition is NOT met
+							final Qualifier qualifier = m_arrActivatedConditions[i].getQualifier();
+							final int iCondCount = m_arrActivatedConditions[i].getCount();
+							if (!qualifier.test(iFoundMatches, iCondCount)) {
+								// Record first non-matching pattern
 								if (bAdd) {
 									strNonMatchPattern = new StringBuffer(m_definitions.get(
-										m_arrActivatedConditions[i].getName()).getDisplayLabel())
-										.append(' ').append(qualifier.toString())
-										.append(' ').append(iCondCount).toString();
+											m_arrActivatedConditions[i].getName()).getDisplayLabel())
+									.append(' ').append(qualifier.toString())
+									.append(' ').append(iCondCount).toString();
 								}
 								// Record just a dummy to save time
 								else {
 									strNonMatchPattern = IGNORE_FAILED_PATTERN;
 								}
 								// Do not check the rest as we have failed anyway
-		   		    			break;
-		   		    		}
-	   		    		}
-	   		    		catch (Exception exc) {
-	   		    			LOGGER.debug("Failed to check condition " + m_arrActivatedConditions[i].toString(), exc);
-	   		    			strNonMatchPattern = ERROR;
-	   		    			break;
-	   		    		}
-	   		    	}
-   		    	}
-   		    	else {
-   		    		strNonMatchPattern = MISSING_INPUT;
-   		    	}
+								break;
+							}
+						}
+						catch (final Exception exc) {
+							LOGGER.debug("Failed to check condition " + m_arrActivatedConditions[i].toString(), exc);
+							strNonMatchPattern = ERROR;
+							break;
+						}
+					}
+				}
+				else {
+					strNonMatchPattern = MISSING_INPUT;
+				}
 
-   		    	if (strNonMatchPattern != null) {
-	   		    	synchronized (m_mapNonMatches) {
+				if (strNonMatchPattern != null) {
+					synchronized (m_mapNonMatches) {
 						m_mapNonMatches.put(row.getKey(), strNonMatchPattern);
 					}
-   		    	}
+				}
 
-   		        return arrNoCells;
-   			}
-   		};
+				return arrNoCells;
+			}
+		};
 
-   		// Enable or disable this factory to allow parallel processing
-   		factory.setAllowParallelProcessing(true);
+		// Enable or disable this factory to allow parallel processing
+		factory.setAllowParallelProcessing(true);
 
-    	return factory;
-    }
+		return factory;
+	}
 
 	/**
 	 * Returns the percentage of pre-processing activities from the total execution.
@@ -428,7 +428,7 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 	 * @return Percentage of pre-processing. Returns 0.2d.
 	 */
 	@Override
-    protected double getPreProcessingPercentage() {
+	protected double getPreProcessingPercentage() {
 		return 0.02d;
 	}
 
@@ -447,28 +447,28 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 	 * @throws Exception Thrown, if pre-processing fails.
 	 */
 	@Override
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-		final ExecutionContext exec) throws Exception {
-   		// Load the file and update the condition list
-   		m_definitions = createDefinitionsFromFile(m_modelInputFile);
-    	m_modelFunctionGroupConditions.updateConditions(m_definitions);
+			final ExecutionContext exec) throws Exception {
+		// Load the file and update the condition list
+		m_definitions = createDefinitionsFromFile(m_modelInputFile);
+		m_modelFunctionGroupConditions.updateConditions(m_definitions);
 
-    	// Create RDKit Molecules for all SMARTS for every single activated condition
-    	m_arrActivatedConditions = m_modelFunctionGroupConditions.getActivatedConditions();
-    	int iCount = m_arrActivatedConditions.length;
-    	m_arrMolSmarts = new SafeGuardedResource[iCount];
+		// Create RDKit Molecules for all SMARTS for every single activated condition
+		m_arrActivatedConditions = m_modelFunctionGroupConditions.getActivatedConditions();
+		final int iCount = m_arrActivatedConditions.length;
+		m_arrMolSmarts = new SafeGuardedResource[iCount];
 
-    	for (int i = 0; i < iCount; i++) {
+		for (int i = 0; i < iCount; i++) {
 			final String strSmartsPattern =
-				m_definitions.get(m_arrActivatedConditions[i].getName()).getSmarts();
+					m_definitions.get(m_arrActivatedConditions[i].getName()).getSmarts();
 			m_arrMolSmarts[i] = markForCleanup(
-				new SafeGuardedResource<ROMol>(!strSmartsPattern.contains("$")) {
-					@Override
-					protected ROMol createResource() {
-    	        		return markForCleanup(RWMol.MolFromSmarts(strSmartsPattern, 0, true));
-    	        	};
-				});
+					new SafeGuardedResource<ROMol>(!strSmartsPattern.contains("$")) {
+						@Override
+						protected ROMol createResource() {
+							return markForCleanup(RWMol.MolFromSmarts(strSmartsPattern, 0, true));
+						};
+					});
 			reportProgress(exec, i, iCount, null, "Evaluate activated functional groups");
 		}
 
@@ -476,49 +476,49 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 		exec.setProgress(1.0d);
 	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] processing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-    		final ExecutionContext exec) throws Exception {
-    	BufferedDataTable[] arrResultTables = null;
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
+		BufferedDataTable[] arrResultTables = null;
 
-    	final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
-        final DataCell missingCell = DataType.getMissingCell();
-        final DataCell errorCell = new StringCell("Processing Error");
-        final boolean bAdd = m_modelRecordFailedPatternOption.getBooleanValue();
+		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
+		final DataCell missingCell = DataType.getMissingCell();
+		final DataCell errorCell = new StringCell("Processing Error");
+		final boolean bAdd = m_modelRecordFailedPatternOption.getBooleanValue();
 
-        if (m_arrActivatedConditions == null || m_arrActivatedConditions.length == 0) {
-        	getWarningConsolidator().saveWarning(
-        			"No active filter conditions found. No filter was applied on molecules.");
-        	// Keep input table for port 0 and create an empty table for port 1
-        	final BufferedDataContainer emptyTable = exec.createDataContainer(arrOutSpecs[1]);
-        	emptyTable.close();
-        	arrResultTables = new BufferedDataTable[] { inData[0], emptyTable.getTable() };
-        }
-        else {
-	        // Contains the rows with the matching molecules
-	        final BufferedDataContainer tableMatch = exec.createDataContainer(arrOutSpecs[0]);
+		if (m_arrActivatedConditions == null || m_arrActivatedConditions.length == 0) {
+			getWarningConsolidator().saveWarning(
+					"No active filter conditions found. No filter was applied on molecules.");
+			// Keep input table for port 0 and create an empty table for port 1
+			final BufferedDataContainer emptyTable = exec.createDataContainer(arrOutSpecs[1]);
+			emptyTable.close();
+			arrResultTables = new BufferedDataTable[] { inData[0], emptyTable.getTable() };
+		}
+		else {
+			// Contains the rows with the matching molecules
+			final BufferedDataContainer tableMatch = exec.createDataContainer(arrOutSpecs[0]);
 
-	        // Contains the rows with non-matching molecules
-	        final BufferedDataContainer tableNoMatch = exec.createDataContainer(arrOutSpecs[1]);
+			// Contains the rows with non-matching molecules
+			final BufferedDataContainer tableNoMatch = exec.createDataContainer(arrOutSpecs[1]);
 
-	        // Reset the "communication medium" for multi-threading
-	        m_mapNonMatches.clear();
+			// Reset the "communication medium" for multi-threading
+			m_mapNonMatches.clear();
 
-	        // Setup main factory
-	        final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
-	        final AbstractRDKitNodeModel.ResultProcessor resultProcessor =
-	        	new AbstractRDKitNodeModel.ResultProcessor() {
+			// Setup main factory
+			final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
+			final AbstractRDKitNodeModel.ResultProcessor resultProcessor =
+					new AbstractRDKitNodeModel.ResultProcessor() {
 
-	        	/**
-	        	 * {@inheritDoc}
-	        	 * This implementation determines, if the cell 0 in the results is missing.
-	        	 * If it is missing and the setting tells to split the tables,
-	        	 * then the original input row is added to table 1. Otherwise the input row
-	        	 * gets merged with the cell 0 and is added to table 0.
-	        	 */
+				/**
+				 * {@inheritDoc}
+				 * This implementation determines, if the cell 0 in the results is missing.
+				 * If it is missing and the setting tells to split the tables,
+				 * then the original input row is added to table 1. Otherwise the input row
+				 * gets merged with the cell 0 and is added to table 0.
+				 */
 				@Override
 				public void processResults(final long rowIndex, final DataRow row, final DataCell[] arrResults) {
 					String strNonMatchingPattern = null;
@@ -528,61 +528,61 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 					}
 
 					// Add the row to the matching table
-			        if (strNonMatchingPattern == null) {
-			        	tableMatch.addRowToTable(row);
-			        }
-			        else {
-			        	// We really care about references in the following comparisons
-			        	DataCell newCell = null;
+					if (strNonMatchingPattern == null) {
+						tableMatch.addRowToTable(row);
+					}
+					else {
+						// We really care about references in the following comparisons
+						DataCell newCell = null;
 
-			        	// Check, if we had an empty input cell
-			        	if (MISSING_INPUT.equals(strNonMatchingPattern)) {
-			        		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-			        				"Encountered an empty input cell, which will be counted as no match.");
-			        		newCell = missingCell;
-			        	}
+						// Check, if we had an empty input cell
+						if (MISSING_INPUT.equals(strNonMatchingPattern)) {
+							getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+									"Encountered an empty input cell, which will be counted as no match.");
+							newCell = missingCell;
+						}
 
-			        	// Check, if a processing error occurred
-			        	else if (strNonMatchingPattern == ERROR) {
-			        		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-	        					"Encountered an input molecule, which caused an error.");
-			        		newCell = errorCell;
-			        	}
+						// Check, if a processing error occurred
+						else if (strNonMatchingPattern == ERROR) {
+							getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+									"Encountered an input molecule, which caused an error.");
+							newCell = errorCell;
+						}
 
-			        	// Everything is fine, just record the non-matching pattern
-			        	else if (bAdd) {
-			        		newCell = new StringCell(strNonMatchingPattern);
-			        	}
+						// Everything is fine, just record the non-matching pattern
+						else if (bAdd) {
+							newCell = new StringCell(strNonMatchingPattern);
+						}
 
-			        	// Add the row to the non-matching table
-			        	if (bAdd) {
-			        		tableNoMatch.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
-				        			new DataCell[] { newCell }, -1));
-			        	}
-			        	else {
-			        		tableNoMatch.addRowToTable(row);
-			        	}
-			        }
+						// Add the row to the non-matching table
+						if (bAdd) {
+							tableNoMatch.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+									new DataCell[] { newCell }, -1));
+						}
+						else {
+							tableNoMatch.addRowToTable(row);
+						}
+					}
 				}
 			};
 
-	        // Runs the multiple threads to do the work
-	        try {
-	        	new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].getRowCount(),
-	       			getWarningConsolidator(), exec).run(inData[0]);
-	        }
-	        catch (Exception e) {
-	            exec.checkCanceled();
-	            throw e;
-	        }
+			// Runs the multiple threads to do the work
+			try {
+				new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].getRowCount(),
+						getWarningConsolidator(), exec).run(inData[0]);
+			}
+			catch (final Exception e) {
+				exec.checkCanceled();
+				throw e;
+			}
 
 			tableMatch.close();
-	        tableNoMatch.close();
+			tableNoMatch.close();
 
-	        arrResultTables = new BufferedDataTable[] { tableMatch.getTable(), tableNoMatch.getTable() };
-	    }
-        return arrResultTables;
-    }
+			arrResultTables = new BufferedDataTable[] { tableMatch.getTable(), tableNoMatch.getTable() };
+		}
+		return arrResultTables;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -597,9 +597,9 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 		m_definitions = null;
 	}
 
-    //
-    // Static Public Methods
-    //
+	//
+	// Static Public Methods
+	//
 	/**
 	 * Determines where to read the functional group definition file from and
 	 * opens up an input stream to it.
@@ -614,30 +614,30 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 		InputStream in = null;
 		String strErrorMsgStart = null;
 
-	   	// Check first, if there is a custom file name specified
-   		if (FunctionalGroupFilterNodeModel.hasCustomDefinitionFile(modelInputFile)) {
-    		File file = FileUtils.convertToFile(modelInputFile.getStringValue(), true, false);
-    		strErrorMsgStart = "The custom definition file '" +
-    			file.getAbsolutePath() + "' ";
-    		try {
-    			in = new FileInputStream(file);
-    		}
-    		catch (FileNotFoundException exc) {
-    			throw new InvalidSettingsException(strErrorMsgStart + "could not be found.", exc);
-    		}
-   		}
+		// Check first, if there is a custom file name specified
+		if (FunctionalGroupFilterNodeModel.hasCustomDefinitionFile(modelInputFile)) {
+			final File file = FileUtils.convertToFile(modelInputFile.getStringValue(), true, false);
+			strErrorMsgStart = "The custom definition file '" +
+					file.getAbsolutePath() + "' ";
+			try {
+				in = new FileInputStream(file);
+			}
+			catch (final FileNotFoundException exc) {
+				throw new InvalidSettingsException(strErrorMsgStart + "could not be found.", exc);
+			}
+		}
 
-   		// Or use the default definition file
-   		else {
-   			strErrorMsgStart = "The default definition file resource '" +
-   				DEFAULT_DEFINITION_FILE + "' ";
+		// Or use the default definition file
+		else {
+			strErrorMsgStart = "The default definition file resource '" +
+					DEFAULT_DEFINITION_FILE + "' ";
 			in = FunctionalGroupDefinitions.class.getClassLoader().getResourceAsStream(DEFAULT_DEFINITION_FILE);
 			if (in == null) {
-    			throw new InvalidSettingsException(strErrorMsgStart + "could not be found.");
+				throw new InvalidSettingsException(strErrorMsgStart + "could not be found.");
 			}
-  		}
+		}
 
-   		return in;
+		return in;
 	}
 
 	/**
@@ -653,19 +653,19 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 	public static FunctionalGroupDefinitions createDefinitionsFromFile(
 			final SettingsModelString modelInputFile) throws InvalidSettingsException {
 		// Load the functional group definitions file
-		InputStream in = getDefinitionFileInputStream(modelInputFile);
+		final InputStream in = getDefinitionFileInputStream(modelInputFile);
 
-   		// Load the file and return the result
-   		FunctionalGroupDefinitions definitions = null;
-   		try {
-   			definitions = new FunctionalGroupDefinitions(in); // Closes the input stream
-        }
-        catch (IOException exc) {
-        	throw new InvalidSettingsException(
-        			"The functional group definitions could not be read successfully.", exc);
-        }
+		// Load the file and return the result
+		FunctionalGroupDefinitions definitions = null;
+		try {
+			definitions = new FunctionalGroupDefinitions(in); // Closes the input stream
+		}
+		catch (final IOException exc) {
+			throw new InvalidSettingsException(
+					"The functional group definitions could not be read successfully.", exc);
+		}
 
-        return definitions;
+		return definitions;
 	}
 
 	/**

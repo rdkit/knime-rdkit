@@ -65,80 +65,81 @@ import org.rdkit.knime.types.RDKitMolValue;
  * @author Greg Landrum
  */
 public class RDKitTwoComponentReactionNodeDialogPane
-        extends DefaultNodeSettingsPane {
+extends DefaultNodeSettingsPane {
 
-    /**
-     * Create a new dialog pane with some default components.
-     */
-    RDKitTwoComponentReactionNodeDialogPane() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createReactant1ColumnModel(), "Reactants 1 RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createReactant2ColumnModel(), "Reactants 2 RDKit Mol column: ", 1,
-                RDKitMolValue.class));
-        SettingsModelString smartsModel = createSmartsModel();
-        SettingsModelString fileModel = createFileModel();
-        SettingsModelBoolean fileEnableModel =
-            createFileEnableModel(fileModel, smartsModel);
-        super.addDialogComponent(new DialogComponentString(
-                smartsModel, "Reaction SMARTS: "));
-        super.addDialogComponent(new DialogComponentBoolean(fileEnableModel,
-                "Use Reaction from RXN file: "));
-        super.addDialogComponent(new DialogComponentFileChooser(
-                fileModel, "rdkit_twocomp_reaction", ".rxn"));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createBooleanModel(), "Do Matrix Expansion"));
-    }
+	/**
+	 * Create a new dialog pane with some default components.
+	 */
+	@SuppressWarnings("unchecked")
+	RDKitTwoComponentReactionNodeDialogPane() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createReactant1ColumnModel(), "Reactants 1 RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createReactant2ColumnModel(), "Reactants 2 RDKit Mol column: ", 1,
+				RDKitMolValue.class));
+		final SettingsModelString smartsModel = createSmartsModel();
+		final SettingsModelString fileModel = createFileModel();
+		final SettingsModelBoolean fileEnableModel =
+				createFileEnableModel(fileModel, smartsModel);
+		super.addDialogComponent(new DialogComponentString(
+				smartsModel, "Reaction SMARTS: "));
+		super.addDialogComponent(new DialogComponentBoolean(fileEnableModel,
+				"Use Reaction from RXN file: "));
+		super.addDialogComponent(new DialogComponentFileChooser(
+				fileModel, "rdkit_twocomp_reaction", ".rxn"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createBooleanModel(), "Do Matrix Expansion"));
+	}
 
-    /**
-     * @return settings model for first column selection
-     */
-    static final SettingsModelString createReactant1ColumnModel() {
-        return new SettingsModelString("reactant1_column", null);
-    }
+	/**
+	 * @return settings model for first column selection
+	 */
+	static final SettingsModelString createReactant1ColumnModel() {
+		return new SettingsModelString("reactant1_column", null);
+	}
 
-    /**
-     * @return settings model for second column selection
-     */
-    static final SettingsModelString createReactant2ColumnModel() {
-        return new SettingsModelString("reactant2_column", null);
-    }
+	/**
+	 * @return settings model for second column selection
+	 */
+	static final SettingsModelString createReactant2ColumnModel() {
+		return new SettingsModelString("reactant2_column", null);
+	}
 
-    /**
-     * @return settings model for the new appended column name
-     */
-    static final SettingsModelString createSmartsModel() {
-        return new SettingsModelString("rxnsmarts_value", "");
-    }
+	/**
+	 * @return settings model for the new appended column name
+	 */
+	static final SettingsModelString createSmartsModel() {
+		return new SettingsModelString("rxnsmarts_value", "");
+	}
 
-    static final SettingsModelBoolean createFileEnableModel(
-            final SettingsModelString fileModel,
-            final SettingsModelString smartsModel) {
-        boolean def = false;
-        final SettingsModelBoolean result =
-            new SettingsModelBoolean("use_rxn_file_input", def);
-        fileModel.setEnabled(def);
-        smartsModel.setEnabled(!def);
-        result.addChangeListener(new ChangeListener() {
+	static final SettingsModelBoolean createFileEnableModel(
+			final SettingsModelString fileModel,
+			final SettingsModelString smartsModel) {
+		final boolean def = false;
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("use_rxn_file_input", def);
+		fileModel.setEnabled(def);
+		smartsModel.setEnabled(!def);
+		result.addChangeListener(new ChangeListener() {
 
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                boolean isChecked = result.getBooleanValue();
-                fileModel.setEnabled(isChecked);
-                smartsModel.setEnabled(!isChecked);
-            }
-        });
-        return result;
-    }
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				final boolean isChecked = result.getBooleanValue();
+				fileModel.setEnabled(isChecked);
+				smartsModel.setEnabled(!isChecked);
+			}
+		});
+		return result;
+	}
 
-    static final SettingsModelString createFileModel() {
-        return new SettingsModelString("file_input", "");
-    }
-    /**
-     * @return settings model for check box whether to remove source columns
-     */
-    static final SettingsModelBoolean createBooleanModel() {
-        return new SettingsModelBoolean("do_matrix", false);
-    }
+	static final SettingsModelString createFileModel() {
+		return new SettingsModelString("file_input", "");
+	}
+	/**
+	 * @return settings model for check box whether to remove source columns
+	 */
+	static final SettingsModelBoolean createBooleanModel() {
+		return new SettingsModelBoolean("do_matrix", false);
+	}
 }

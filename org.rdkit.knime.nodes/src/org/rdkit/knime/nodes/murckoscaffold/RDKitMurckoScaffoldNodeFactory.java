@@ -58,60 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Manuel Schwarze
  */
 public class RDKitMurckoScaffoldNodeFactory extends
-        NodeFactory<RDKitMurckoScaffoldNodeModel> {
+NodeFactory<RDKitMurckoScaffoldNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitMurckoScaffoldNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitMurckoScaffoldNodeDialog();
+	}
 
-    /**
-     * Creates a model for the RDKitMurckoScaffold functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitMurckoScaffoldNodeModel createNodeModel() {
-        return new RDKitMurckoScaffoldNodeModel();
-    }
+	/**
+	 * Creates a model for the RDKitMurckoScaffold functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitMurckoScaffoldNodeModel createNodeModel() {
+		return new RDKitMurckoScaffoldNodeModel();
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitMurckoScaffoldNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitMurckoScaffoldNodeModel nodeModel) {
-        return null;
-    }
+	 */
+	@Override
+	public NodeView<RDKitMurckoScaffoldNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitMurckoScaffoldNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node does possess a dialog for configuration.
-     * 
+	/**
+	 * This node does possess a dialog for configuration.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 
 }

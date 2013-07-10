@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Dillip K Mohanty
  * @author Manuel Schwarze
  */
-public class DescriptorCalculationNodeFactory 
-        extends NodeFactory<DescriptorCalculationNodeModel> {
+public class DescriptorCalculationNodeFactory extends NodeFactory<DescriptorCalculationNodeModel> {
 
-    /**
-     * Creates a model for the RDKitDescriptorCalculation functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public DescriptorCalculationNodeModel createNodeModel() {
-        return new DescriptorCalculationNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitDescriptorCalculation functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public DescriptorCalculationNodeModel createNodeModel() {
+		return new DescriptorCalculationNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<DescriptorCalculationNodeModel> createNodeView(
-            final int viewIndex,
-            final DescriptorCalculationNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<DescriptorCalculationNodeModel> createNodeView(
+			final int viewIndex,
+			final DescriptorCalculationNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DescriptorCalculationNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new DescriptorCalculationNodeDialog();
+	}
 }
 

@@ -59,12 +59,12 @@ import org.knime.core.node.NodeView;
  * @author Dillip K Mohanty
  */
 public class FingerprintWriterNodeFactory extends
-		NodeFactory<FingerprintWriterNodeModel> {
+NodeFactory<FingerprintWriterNodeModel> {
 
 	//
 	// Public Methods
 	//
-	
+
 	/**
 	 * {@inheritDoc}
 	 */

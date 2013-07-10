@@ -57,61 +57,60 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class Molecule2RDKitConverterNodeFactory extends
-        NodeFactory<Molecule2RDKitConverterNodeModel> {
+public class Molecule2RDKitConverterNodeFactory extends NodeFactory<Molecule2RDKitConverterNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new Molecule2RDKitConverterNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new Molecule2RDKitConverterNodeDialog();
+	}
 
-    /**
-     * Creates a model for the Molecule2RDKitConverter functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public Molecule2RDKitConverterNodeModel createNodeModel() {
-        return new Molecule2RDKitConverterNodeModel();
-    }
+	/**
+	 * Creates a model for the Molecule2RDKitConverter functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public Molecule2RDKitConverterNodeModel createNodeModel() {
+		return new Molecule2RDKitConverterNodeModel();
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<Molecule2RDKitConverterNodeModel> createNodeView(
-            final int viewIndex,
-            final Molecule2RDKitConverterNodeModel nodeModel) {
-        return null;
-    }
+	 */
+	@Override
+	public NodeView<Molecule2RDKitConverterNodeModel> createNodeView(
+			final int viewIndex,
+			final Molecule2RDKitConverterNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node does possess a dialog for configuration.
-     * 
+	/**
+	 * This node does possess a dialog for configuration.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 
 }

@@ -62,7 +62,9 @@ import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
 import org.knime.base.data.xml.SvgValueRenderer;
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -73,152 +75,219 @@ import org.w3c.dom.svg.SVGDocument;
  * @author Manuel Schwarze, Novartis
  */
 public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
-        implements SvgProvider {
-	
-	// 
+implements SvgProvider {
+
+	//
 	// Constants
 	//
-	
-    /** Serial number. */
+
+	/** Serial number. */
 	private static final long serialVersionUID = 8956038655901963406L;
 
 	/** The font used for drawing empty cells. */
-    private static final Font MISSING_CELL_FONT = new Font("Helvetica", Font.PLAIN, 12);
+	private static final Font MISSING_CELL_FONT = new Font("Helvetica", Font.PLAIN, 12);
 
-    /** The font used for drawing error messages. */
-    private static final Font NO_SVG_FONT = new Font("Helvetica", Font.ITALIC, 12);
+	/** The font used for drawing error messages. */
+	private static final Font NO_SVG_FONT = new Font("Helvetica", Font.ITALIC, 12);
 
-    /** The font used for drawing Smiles in error conditions, if available. */
-    private static final Font SMILES_FONT = new Font("Helvetica", Font.PLAIN, 12);
+	/** The font used for drawing Smiles in error conditions, if available. */
+	private static final Font SMILES_FONT = new Font("Helvetica", Font.PLAIN, 12);
 
-    //
-    // Members
-    //
-    
-    /** Flag to tell the painting method that the cell is a missing cell. */
-    private boolean m_bIsMissingCell;
-    
-    /** Smiles value of the currently painted cell. Only used in error conditions. */
-    private String m_strSmiles;
-    
-    /** The SVG structure to paint, if it could be determined properly. */
-    private SVGDocument m_svgDocument;
+	//
+	// Members
+	//
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setValue(final Object value) {
-    	// Reset values important for painting
-    	m_svgDocument = null;
-    	m_strSmiles = null;
-    	m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
-    	
-        if (value instanceof RDKitMolValue) { 
-        	// Try to render the cell
-	        RDKitMolValue molCell = (RDKitMolValue)value;
-            m_strSmiles = molCell.getSmilesValue();
-	        ROMol mol = null;
-	        Thread t = Thread.currentThread();
-	        ClassLoader contextClassLoader = t.getContextClassLoader();
-	        t.setContextClassLoader(getClass().getClassLoader());
-	        
-	        try {
-	        	mol = molCell.readMoleculeValue();
-		        String svg = mol.ToSVG(8,50);
-		
-		        String parserClass = XMLResourceDescriptor.getXMLParserClassName();
-		        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
-		
-		        /*
-		         * The document factory loads the XML parser
-		         * (org.apache.xerces.parsers.SAXParser), using the thread's context
-		         * class loader. In KNIME desktop (and batch) this is correctly set, in
-		         * the KNIME server the thread is some TCP-socket-listener-thread, which
-		         * fails to load the parser class (class loading happens in
-		         * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
-		         * follow the call)
-		         */
-	            m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
-	            // remove xml:space='preserved' attribute because it causes atom
-	            // labels to be printed off their places
-	            m_svgDocument.getRootElement().removeAttributeNS(
-	                    "http://www.w3.org/XML/1998/namespace", "space");
-	        } 
-	        catch (Exception ex) {
-	        	// If conversion fails we set a null value, which will show up as error messgae
-	            m_svgDocument = null;
-	        	// Logging something here may swam the log files - not desired.
-	        } 
-	        finally {
-	       		t.setContextClassLoader(contextClassLoader);
-	        	if (mol != null) {
-	        		mol.delete();
-	        	}
-	        }
-        }
-    }
+	/** Flag to tell the painting method that the cell is a missing cell. */
+	private boolean m_bIsMissingCell;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "2D depiction";
-    }
+	/** Smiles value of the currently painted cell. Only used in error conditions. */
+	private String m_strSmiles;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(90, 90);
-    }
+	/** An error string. Only used in error conditions. */
+	private String m_strError;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void paintComponent(final Graphics g) {
-        super.paintComponent(g);
-        
-        // Case 1: A missing cell
-        if (m_bIsMissingCell) {
-            g.setFont(MISSING_CELL_FONT);
-            g.drawString("?", 2, 12);
-        }
-        
-        // Case 2: A SVG structure is available
-        else if (m_svgDocument != null) {
-        	try {
-        		SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
-        	}
-        	catch (Exception excPainting) {
-                g.setFont(NO_SVG_FONT);
-                g.drawString("Painting failed for", 2, 14);
-                g.setFont(SMILES_FONT);
-                g.drawString(m_strSmiles, 2, 28);
-        	}
-        }      
-        
-        // Case 3: An error occurred in the RDKit
-        else {
-            g.setFont(NO_SVG_FONT);
-            g.setColor(Color.red);
-            g.drawString("2D depiction failed" + (m_strSmiles == null ? "" : " for"), 2, 14);
-            if (m_strSmiles != null) {
-                g.setFont(SMILES_FONT);
-            	g.drawString(m_strSmiles, 2, 28);
-            }
-            g.setColor(Color.black);            
-        }
-    }
+	/** The SVG structure to paint, if it could be determined properly. */
+	private SVGDocument m_svgDocument;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SVGDocument getSvg() {
-        return m_svgDocument;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void setValue(final Object value) {
+		// Reset values important for painting
+		m_svgDocument = null;
+		m_strSmiles = null;
+		m_strError = null;
+		m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
+
+		RDKitMolValue molCell = null;
+
+		// We have an old plain RDKit Mol Value
+		if (value instanceof RDKitMolValue) {
+			molCell = (RDKitMolValue)value;
+		}
+
+		// We have a wrapped RDKit Mol Value (or an error)
+		else if (value instanceof AdapterValue) {
+			final AdapterValue adapter = (AdapterValue)value;
+
+			if (adapter.getAdapterError(RDKitMolValue.class) != null) {
+				m_bIsMissingCell = true;
+				m_strError = adapter.getAdapterError(RDKitMolValue.class).getError();
+			}
+			else {
+				molCell = adapter.getAdapter(RDKitMolValue.class);
+			}
+		}
+
+		// We just have a missing cell (which might be caused by some error)
+		else {
+			m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
+			if (value instanceof MissingCell) {
+				m_strError = ((MissingCell)value).getError();
+			}
+		}
+
+		if (molCell != null) {
+			// Try to render the cell
+			m_strSmiles = molCell.getSmilesValue();
+			ROMol mol = null;
+			final Thread t = Thread.currentThread();
+			final ClassLoader contextClassLoader = t.getContextClassLoader();
+			t.setContextClassLoader(getClass().getClassLoader());
+
+			try {
+				mol = molCell.readMoleculeValue();
+				final String svg = mol.ToSVG(8,50);
+
+				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
+				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
+
+				/*
+				 * The document factory loads the XML parser
+				 * (org.apache.xerces.parsers.SAXParser), using the thread's context
+				 * class loader. In KNIME desktop (and batch) this is correctly set, in
+				 * the KNIME server the thread is some TCP-socket-listener-thread, which
+				 * fails to load the parser class (class loading happens in
+				 * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
+				 * follow the call)
+				 */
+				m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
+				// remove xml:space='preserved' attribute because it causes atom
+				// labels to be printed off their places
+				m_svgDocument.getRootElement().removeAttributeNS(
+						"http://www.w3.org/XML/1998/namespace", "space");
+			}
+			catch (final Exception ex) {
+				// If conversion fails we set a null value, which will show up as error messgae
+				m_svgDocument = null;
+				// Logging something here may swam the log files - not desired.
+			}
+			finally {
+				t.setContextClassLoader(contextClassLoader);
+				if (mol != null) {
+					mol.delete();
+				}
+			}
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getDescription() {
+		return "RDKit 2D depiction";
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Dimension getPreferredSize() {
+		return new Dimension(90, 90);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void paintComponent(final Graphics g) {
+		super.paintComponent(g);
+
+		// Set default color
+		g.setColor(Color.black);
+
+		// Case 1: A missing cell
+		if (m_bIsMissingCell || m_strError != null) {
+			g.setFont(MISSING_CELL_FONT);
+			if (m_strError != null) {
+				g.setColor(Color.red);
+				drawString(g, m_strError, 2, 12);
+			}
+			else {
+				drawString(g, "?", 2, 12);
+			}
+		}
+
+		// Case 2: A SVG structure is available
+		else if (m_svgDocument != null) {
+			try {
+				SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
+			}
+			catch (final Exception excPainting) {
+				g.setFont(NO_SVG_FONT);
+				drawString(g, "Painting failed for", 2, 14);
+				g.setFont(SMILES_FONT);
+				drawString(g, m_strSmiles, 2, 28);
+			}
+		}
+
+		// Case 3: An error occurred in the RDKit
+		else {
+			g.setFont(NO_SVG_FONT);
+			g.setColor(Color.red);
+			drawString(g, "2D depiction failed" + (m_strSmiles == null ? "" : " for"), 2, 14);
+			if (m_strSmiles != null) {
+				g.setFont(SMILES_FONT);
+				drawString(g, m_strSmiles, 2, 28);
+			}
+			g.setColor(Color.black);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SVGDocument getSvg() {
+		return m_svgDocument;
+	}
+
+	//
+	// Private Methods
+	//
+
+	/**
+	 * Draws a multiline string to the specified graphics context at the position (x;y).
+	 * 
+	 * @param g Graphics context. Can be null to do nothing.
+	 * @param str String to be drawn. Can be null to do nothing.
+	 * @param x X position.
+	 * @param y Y position.
+	 */
+	private void drawString(final Graphics g, final String str, final int x, final int y) {
+		if (g != null && str != null) {
+			int iFontHeight = g.getFontMetrics().getHeight() - 2;
+			if (iFontHeight < 1) {
+				iFontHeight = 1;
+			}
+			int iOffset = 0;
+			final String[] arrLines = str.split("\n");
+			for (final String strLine : arrLines) {
+				g.drawString(strLine, x, y + iOffset);
+				iOffset += iFontHeight;
+			}
+		}
+	}
 }

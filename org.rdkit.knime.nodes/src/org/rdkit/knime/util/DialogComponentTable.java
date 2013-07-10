@@ -56,6 +56,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -75,50 +76,50 @@ public class DialogComponentTable extends DialogComponent {
 	//
 	// Members
 	//
-	
+
 	/** The table model for convenience. Same as settings model. */
 	private final TableModel m_tableModel;
 
-    /** The label shown at the top side of the table. */
-    private final JLabel m_label;
-	
-    /** The table GUI component. */
+	/** The label shown at the top side of the table. */
+	private final JLabel m_label;
+
+	/** The table GUI component. */
 	private final JTable m_table;
-	
+
 	/** The table's scroll pane component. */
 	private final JScrollPane m_scrollPane;
-	
-	// 
+
+	//
 	// Constructor
 	//
-	
+
 	/**
-    * Constructor that puts label and combobox into panel. It expects the user
-     * to make a selection, thus, at least one item in the list of selectable
-     * items is required. When the settings are applied, the model stores one of
-     * the enumerations of the provided list.
-     *
-     * @param model The model that stores the values for this component. This 
-     * 		model is required to implement also the {@link TableModel} interface.
-     * @param label Label for dialog on top of the table.
-     * 
-     * @throws AssertionError Thrown, if the passed in model does not implement
-     * 		the  {@link TableModel} interface.
-     */
-	public DialogComponentTable(SettingsModel model, String label) {
+	 * Constructor that puts label and combobox into panel. It expects the user
+	 * to make a selection, thus, at least one item in the list of selectable
+	 * items is required. When the settings are applied, the model stores one of
+	 * the enumerations of the provided list.
+	 *
+	 * @param model The model that stores the values for this component. This
+	 * 		model is required to implement also the {@link TableModel} interface.
+	 * @param label Label for dialog on top of the table.
+	 * 
+	 * @throws AssertionError Thrown, if the passed in model does not implement
+	 * 		the  {@link TableModel} interface.
+	 */
+	public DialogComponentTable(final SettingsModel model, final String label) {
 		super(model);
-		
+
 		assert(model instanceof TableModel);
-		
+
 		m_tableModel = (TableModel)model;
 
 		m_table = new JTable(m_tableModel) {
-			
+
 			/** Serial number. */
 			private static final long serialVersionUID = -8101292468407244517L;
 
 			/**
-			 * This method protects this table from being used in 
+			 * This method protects this table from being used in
 			 * the wrong way.
 			 */
 			@Override
@@ -127,50 +128,50 @@ public class DialogComponentTable extends DialogComponent {
 					throw new IllegalArgumentException("It is not allowed to change the " +
 							"model of this table once it is set.");
 				}
-				
+
 				super.setModel(dataModel);
 			}
-			
-		    /**
-		     * Asks the settings model for a tooltip
-		     * {@inheritDoc}
-		     * @see javax.swing.JTable#getToolTipText(java.awt.event.MouseEvent)
-		     */
-		    @Override
-		    public String getToolTipText(final MouseEvent event) {
-		        final Point mousePoint = event.getPoint();
-		        final int rowIndex = rowAtPoint(mousePoint);
-		        final int viewColIndex = columnAtPoint(mousePoint);
-		        final int colIndex = convertColumnIndexToModel(viewColIndex);
-		        String strTooltip = getToolTipTextForCell(rowIndex, colIndex);
 
-		        if (strTooltip == null) {
-		        	strTooltip = super.getToolTipText(event);
+			/**
+			 * Asks the settings model for a tooltip
+			 * {@inheritDoc}
+			 * @see javax.swing.JTable#getToolTipText(java.awt.event.MouseEvent)
+			 */
+			@Override
+			public String getToolTipText(final MouseEvent event) {
+				final Point mousePoint = event.getPoint();
+				final int rowIndex = rowAtPoint(mousePoint);
+				final int viewColIndex = columnAtPoint(mousePoint);
+				final int colIndex = convertColumnIndexToModel(viewColIndex);
+				String strTooltip = getToolTipTextForCell(rowIndex, colIndex);
+
+				if (strTooltip == null) {
+					strTooltip = super.getToolTipText(event);
 				}
-		        
-		    	return strTooltip;
-		    }
+
+				return strTooltip;
+			}
 		};
-		
-		m_scrollPane = new JScrollPane(m_table, 
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		
-        JPanel panel = getComponentPanel();
-        panel.setLayout(new GridBagLayout());
-        
-        int iRow = 0;
-        
-        if (label != null) {
-            m_label = new JLabel(label);
-			LayoutUtils.constrain(panel, m_label, 0, iRow++, LayoutUtils.REMAINDER, 1, 
-					LayoutUtils.HORIZONTAL, LayoutUtils.NORTHEAST, 1.0d, 0.0d, 0, 0, 10, 0);    	
-        }
-        else {
-        	m_label = null;
-        }
-        
-		LayoutUtils.constrain(panel, m_scrollPane, 0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
+
+		m_scrollPane = new JScrollPane(m_table,
+				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+		final JPanel panel = getComponentPanel();
+		panel.setLayout(new GridBagLayout());
+
+		int iRow = 0;
+
+		if (label != null) {
+			m_label = new JLabel(label);
+			LayoutUtils.constrain(panel, m_label, 0, iRow++, LayoutUtils.REMAINDER, 1,
+					LayoutUtils.HORIZONTAL, LayoutUtils.NORTHEAST, 1.0d, 0.0d, 0, 0, 10, 0);
+		}
+		else {
+			m_label = null;
+		}
+
+		LayoutUtils.constrain(panel, m_scrollPane, 0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
 				LayoutUtils.BOTH, LayoutUtils.CENTER, 1.0d, 1.0d, 0, 0, 0, 0);
 	}
 
@@ -183,21 +184,21 @@ public class DialogComponentTable extends DialogComponent {
 	 * hovers. By default this method returns null, which will lead to the default
 	 * tooltip that is set for the entire table.
 	 * 
-	 * @param iRow Model based row index of cell. 
+	 * @param iRow Model based row index of cell.
 	 * @param iCol Model based column index of cell.
 	 */
-	public String getToolTipTextForCell(int iRow, int iCol) {
+	public String getToolTipTextForCell(final int iRow, final int iCol) {
 		return null;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setToolTipText(String text) {
+	public void setToolTipText(final String text) {
 		m_table.setToolTipText(text);
-	}	
-	
+	}
+
 	/**
 	 * Returns the table model of this component, which is at the same
 	 * time also the settings model and would be also returned with
@@ -208,7 +209,7 @@ public class DialogComponentTable extends DialogComponent {
 	public TableModel getTableModel() {
 		return m_tableModel;
 	}
-	
+
 	/**
 	 * Returns the table GUI component for further customization.
 	 * 
@@ -217,9 +218,9 @@ public class DialogComponentTable extends DialogComponent {
 	public JTable getTable() {
 		return m_table;
 	}
-	
+
 	/**
-	 * Returns the scroll pane GUI component of the table 
+	 * Returns the scroll pane GUI component of the table
 	 * for further customization.
 	 * 
 	 * @return Scroll pane of the table of this component. Never null.
@@ -227,7 +228,7 @@ public class DialogComponentTable extends DialogComponent {
 	public JScrollPane getScrollPane() {
 		return m_scrollPane;
 	}
-	
+
 	/**
 	 * Convenience method to get a table column for the specified index.
 	 * 
@@ -235,12 +236,12 @@ public class DialogComponentTable extends DialogComponent {
 	 * 
 	 * @return The table column or null, if index is invalid.
 	 */
-	public TableColumn getColumn(int index) {
-		TableColumnModel columnModel = m_table.getColumnModel();
-		int iColCount = columnModel.getColumnCount();
+	public TableColumn getColumn(final int index) {
+		final TableColumnModel columnModel = m_table.getColumnModel();
+		final int iColCount = columnModel.getColumnCount();
 		return (index >= 0 && index < iColCount ? columnModel.getColumn(index) : null);
 	}
-	
+
 	/**
 	 * Convenience method to set widths for the columns
 	 * of this table. The order of the provided values will
@@ -250,17 +251,17 @@ public class DialogComponentTable extends DialogComponent {
 	 * @param iColumnWidths Widths of columns. Values
 	 * 		that should not be changed can be set to -1.
 	 */
-	public void setColumnWidths(int... iColumnWidths) {
-		TableColumnModel columnModel = m_table.getColumnModel();
-		int iColCount = columnModel.getColumnCount();
-		
+	public void setColumnWidths(final int... iColumnWidths) {
+		final TableColumnModel columnModel = m_table.getColumnModel();
+		final int iColCount = columnModel.getColumnCount();
+
 		for (int i = 0; i < iColumnWidths.length && i < iColCount; i++) {
 			if (iColumnWidths[i] >= 0) {
 				columnModel.getColumn(i).setWidth(iColumnWidths[i]);
 			}
 		}
 	}
-	
+
 	/**
 	 * Convenience method to set minimum widths for the columns
 	 * of this table. The order of the provided values will
@@ -270,17 +271,17 @@ public class DialogComponentTable extends DialogComponent {
 	 * @param iMinColumnWidths Minimum widths of columns. Values
 	 * 		that should not be changed can be set to -1.
 	 */
-	public void setMinColumnWidths(int... iMinColumnWidths) {
-		TableColumnModel columnModel = m_table.getColumnModel();
-		int iColCount = columnModel.getColumnCount();
-		
+	public void setMinColumnWidths(final int... iMinColumnWidths) {
+		final TableColumnModel columnModel = m_table.getColumnModel();
+		final int iColCount = columnModel.getColumnCount();
+
 		for (int i = 0; i < iMinColumnWidths.length && i < iColCount; i++) {
 			if (iMinColumnWidths[i] >= 0) {
 				columnModel.getColumn(i).setWidth(iMinColumnWidths[i]);
 			}
 		}
 	}
-	
+
 	/**
 	 * Convenience method to set maximal widths for the columns
 	 * of this table. The order of the provided values will
@@ -290,21 +291,21 @@ public class DialogComponentTable extends DialogComponent {
 	 * @param iMaxColumnWidths Maximal widths of columns. Values
 	 * 		that should not be changed can be set to -1.
 	 */
-	public void setMaxColumnWidths(int... iMaxColumnWidths) {
-		TableColumnModel columnModel = m_table.getColumnModel();
-		int iColCount = columnModel.getColumnCount();
-		
+	public void setMaxColumnWidths(final int... iMaxColumnWidths) {
+		final TableColumnModel columnModel = m_table.getColumnModel();
+		final int iColCount = columnModel.getColumnCount();
+
 		for (int i = 0; i < iMaxColumnWidths.length && i < iColCount; i++) {
 			if (iMaxColumnWidths[i] >= 0) {
 				columnModel.getColumn(i).setMaxWidth(iMaxColumnWidths[i]);
 			}
 		}
 	}
-	
+
 	//
 	// Protected Methods
 	//
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -312,13 +313,13 @@ public class DialogComponentTable extends DialogComponent {
 	protected void updateComponent() {
 		// Force a reload from model data into the table view
 		m_table.tableChanged(new TableModelEvent(getTableModel()));
-		
-        // Update the enable status
-        setEnabledComponents(getModel().isEnabled());
+
+		// Update the enable status
+		setEnabledComponents(getModel().isEnabled());
 	}
 
 	/**
-	 * Does not do anything in this implementation, because the table model 
+	 * Does not do anything in this implementation, because the table model
 	 * and the table component are directly connected.
 	 */
 	@Override
@@ -331,7 +332,7 @@ public class DialogComponentTable extends DialogComponent {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void checkConfigurabilityBeforeLoad(PortObjectSpec[] specs)
+	protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
 			throws NotConfigurableException {
 		// This works always.
 	}
@@ -340,11 +341,11 @@ public class DialogComponentTable extends DialogComponent {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void setEnabledComponents(boolean enabled) {
+	protected void setEnabledComponents(final boolean enabled) {
 		if (m_label != null) {
 			m_label.setEnabled(enabled);
 		}
-		
+
 		m_table.setEnabled(enabled);
 		m_scrollPane.setEnabled(enabled);
 	}

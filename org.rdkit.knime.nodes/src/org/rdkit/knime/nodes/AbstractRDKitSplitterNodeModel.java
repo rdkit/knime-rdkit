@@ -58,31 +58,30 @@ import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SplitCondition;
 
 /**
- * This class adds functionality common to a Splitter node. This is a node that 
+ * This class adds functionality common to a Splitter node. This is a node that
  * is splitting an input table into one or multiple output tables and/or filters
  * out rows completely based on certain criteria. It does not perform any
  * further calculations or additions of rows in this basic implementation.
  * For more complex splitting operations derive a class directly from
  * {@link AbstractRDKitNodeModel}.
- *  
+ * 
  * @author Manuel Schwarze
  * 
  * @see AbstractRDKitNodeModel
  */
-public abstract class AbstractRDKitSplitterNodeModel extends AbstractRDKitNodeModel
-	implements SplitCondition {
+public abstract class AbstractRDKitSplitterNodeModel extends AbstractRDKitNodeModel implements SplitCondition {
 
 	//
 	// Constructors
 	//
-	
+
 	/**
 	 * Creates a new node model with the specified number of input and output ports.
 	 * 
 	 * @param nrInDataPorts Number of input ports. Must be 0 .. n.
 	 * @param nrOutDataPorts Number of output ports. Must be 0 .. m.
 	 */
-	public AbstractRDKitSplitterNodeModel(int nrInDataPorts, int nrOutDataPorts) {
+	public AbstractRDKitSplitterNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
 		super(nrInDataPorts, nrOutDataPorts);
 	}
 
@@ -92,8 +91,8 @@ public abstract class AbstractRDKitSplitterNodeModel extends AbstractRDKitNodeMo
 	 * @param inPortTypes Input port definitions. Must not be null.
 	 * @param outPortTypes  Output port definitions. Must not be null.
 	 */
-	public AbstractRDKitSplitterNodeModel(PortType[] inPortTypes,
-			PortType[] outPortTypes) {
+	public AbstractRDKitSplitterNodeModel(final PortType[] inPortTypes,
+			final PortType[] outPortTypes) {
 		super(inPortTypes, outPortTypes);
 	}
 
@@ -101,41 +100,44 @@ public abstract class AbstractRDKitSplitterNodeModel extends AbstractRDKitNodeMo
 	// Protected Methods
 	//
 
-    /**
-     * {@inheritDoc}
-     * This implementation just returns the same specification as the input table at port 0
-     * for all specified output ports.
-     */
-    protected DataTableSpec getOutputTableSpec(final int outPort, 
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	return inSpecs[0];
-    }
-        
-    /**
-     * {@inheritDoc}
-     * This method implements the generic splitting of rows of input table at port 0.
-     */
-    @Override
-    protected BufferedDataTable[] processing(BufferedDataTable[] inData,
-    		InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
-    		throws Exception {
-    	return createSplitTables(0, inData[0], arrInputDataInfo[0], exec, 
-    			"- Splitting", this);
-    }
-	
-	/** 
-	 * {@inheritDoc} 
+	/**
+	 * {@inheritDoc}
+	 * This implementation just returns the same specification as the input table at port 0
+	 * for all specified output ports.
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		return inSpecs[0];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This method implements the generic splitting of rows of input table at port 0.
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
+					throws Exception {
+		return createSplitTables(0, inData[0], arrInputDataInfo[0], exec,
+				"- Splitting", this);
+	}
+
+	/**
+	 * {@inheritDoc}
 	 * This implementation returns by default the number of out ports.
 	 * 
 	 * @see #getNrOutPorts()
 	 */
+	@Override
 	public int getTargetTableCount() {
 		return getNrOutPorts();
 	}
 
-	/** 
-	 * {@inheritDoc} 
+	/**
+	 * {@inheritDoc}
 	 */
-    public abstract int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo, 
-    		int iUniqueWaveId) throws InputDataInfo.EmptyCellException;
+	@Override
+	public abstract int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo,
+			int iUniqueWaveId) throws InputDataInfo.EmptyCellException;
 }

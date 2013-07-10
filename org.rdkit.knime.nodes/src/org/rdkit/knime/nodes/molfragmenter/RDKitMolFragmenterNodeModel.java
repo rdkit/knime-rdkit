@@ -83,7 +83,7 @@ import org.rdkit.knime.util.SettingsUtils;
 
 /**
  * This class implements the node model of the "RDKitMolFragmenter" node
- * providing fragment calculations for RDKit Molecules based on 
+ * providing fragment calculations for RDKit Molecules based on
  * the open source RDKit library.
  *
  * @author Greg Landrum
@@ -94,214 +94,216 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitMolFragmenterNodeModel.class);
-		
+
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
-	
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-        registerSettings(RDKitMolFragmenterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
-		// Accepts also old deprecated key
-    
-    /** Settings model for the minimal path length. */
-    private final SettingsModelIntegerBounded m_modelMinPath =
-    	registerSettings(RDKitMolFragmenterNodeDialog.createMinPathModel());
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(RDKitMolFragmenterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
+	// Accepts also old deprecated key
 
-    /** Settings model for the maximal path length. */
-    private final SettingsModelIntegerBounded m_modelMaxPath =
-    	registerSettings(RDKitMolFragmenterNodeDialog.createMaxPathModel());
-    
-    //
-    // Internals
-    //
-   
-    /** Stores the indices of the fragments that have been found so far. */
-    private List<Int_Vect> m_listFragsSeen = new ArrayList<Int_Vect>();
-    
-    /** Stores the molecules of the fragments that have been found so far. */
-    private List<ROMol> m_listFragsMol = new ArrayList<ROMol>();
+	/** Settings model for the minimal path length. */
+	private final SettingsModelIntegerBounded m_modelMinPath =
+			registerSettings(RDKitMolFragmenterNodeDialog.createMinPathModel());
 
-    /** Stores the smiles of the fragments that have been found so far. */
-    private List<String> m_listSmiles = new ArrayList<String>();
+	/** Settings model for the maximal path length. */
+	private final SettingsModelIntegerBounded m_modelMaxPath =
+			registerSettings(RDKitMolFragmenterNodeDialog.createMaxPathModel());
 
-    /** Stores the occurrence count of a fragment that has been found. */
-    private List<Integer> m_listFragCounts = new ArrayList<Integer>();
-    
-    //
-    // Constructors
-    //
-    
-    /**
-     * Create new node model with one data in- and two out-ports.
-     */
-    RDKitMolFragmenterNodeModel() {
-        super(1, 2);
-    }
+	//
+	// Internals
+	//
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
-    	
-        // Auto guess the input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
-        		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+	/** Stores the indices of the fragments that have been found so far. */
+	private final List<Int_Vect> m_listFragsSeen = new ArrayList<Int_Vect>();
 
-        // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
-        		"Input column has not been specified yet.",
-        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+	/** Stores the molecules of the fragments that have been found so far. */
+	private final List<ROMol> m_listFragsMol = new ArrayList<ROMol>();
 
-        // Check constraint between min and max path length
-        if(m_modelMinPath.getIntValue() > m_modelMaxPath.getIntValue() ){
-        	throw new InvalidSettingsException("Minimum path length is larger than maximum path length.");
-        }
+	/** Stores the smiles of the fragments that have been found so far. */
+	private final List<String> m_listSmiles = new ArrayList<String>();
 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+	/** Stores the occurrence count of a fragment that has been found. */
+	private final List<Integer> m_listFragCounts = new ArrayList<Integer>();
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+	//
+	// Constructors
+	//
 
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
-    	InputDataInfo[] arrDataInfo = null;
-    	
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName, 
-    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-    				RDKitMolValue.class);
-    	}
-    	
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
+	/**
+	 * Create new node model with one data in- and two out-ports.
+	 */
+	RDKitMolFragmenterNodeModel() {
+		super(1, 2);
+	}
 
-    /**
-     * Returns the output table specification of the specified out port. 
-     * 
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     * 
-     * @return The specification of all output tables.
-     * 
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with 
-     * 		given DataTableSpec elements.
-     * 
-     * @see #createOutputFactories(int)
-     */
-    protected DataTableSpec getOutputTableSpec(final int outPort, 
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
-    	List<DataColumnSpec> listSpecs;
-    	
-    	switch (outPort) {
-    	
-    		// Fragment Table
-    		case 0:    			
-    			// Define output table
-    	        listSpecs = new ArrayList<DataColumnSpec>();
-    	        listSpecs.add(new DataColumnSpecCreator("Fragment Index", IntCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Fragment", RDKitMolCellFactory.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Fragment SMILES", StringCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Fragment Size", IntCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Count", IntCell.TYPE).createSpec());
+	//
+	// Protected Methods
+	//
 
-    	        spec = new DataTableSpec("output 1", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
-    	        break;   	        
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
 
-    	    // Mol Table
-    		case 1:
-    			// Define output table through rearranger and factory
-    			ColumnRearranger rearranger = createColumnRearranger(outPort, inSpecs[0]);
-    			spec = new DataTableSpec("output 2", rearranger.createSpec(), new DataTableSpec());
-    			break;
-        }
-    	
-    	return spec;
-    }  
-    
-    /**
-     * {@inheritDoc}
-     * This implementation delivers an output factory that is responsible for building
-     * the second table (port 1).
-     */
-    @Override
-    protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
-    		throws InvalidSettingsException {
-    	AbstractRDKitCellFactory factory = null;
-    	
-    	switch (outPort) {
-    		case 1:
-	    	// Generate column specs for the output table columns produced by this factory
-			DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+		// Auto guess the input column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
+
+		// Determines, if the input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+
+		// Check constraint between min and max path length
+		if(m_modelMinPath.getIntValue() > m_modelMaxPath.getIntValue() ){
+			throw new InvalidSettingsException("Minimum path length is larger than maximum path length.");
+		}
+
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+					RDKitMolValue.class);
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+	/**
+	 * Returns the output table specification of the specified out port.
+	 * 
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 * 
+	 * @return The specification of all output tables.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 * 
+	 * @see #createOutputFactories(int)
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
+		List<DataColumnSpec> listSpecs;
+
+		switch (outPort) {
+
+		// Fragment Table
+		case 0:
+			// Define output table
+			listSpecs = new ArrayList<DataColumnSpec>();
+			listSpecs.add(new DataColumnSpecCreator("Fragment Index", IntCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Fragment", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Fragment SMILES", StringCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Fragment Size", IntCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Count", IntCell.TYPE).createSpec());
+
+			spec = new DataTableSpec("output 1", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
+			break;
+
+			// Mol Table
+		case 1:
+			// Define output table through rearranger and factory
+			final ColumnRearranger rearranger = createColumnRearranger(outPort, inSpecs[0]);
+			spec = new DataTableSpec("output 2", rearranger.createSpec(), new DataTableSpec());
+			break;
+		}
+
+		return spec;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation delivers an output factory that is responsible for building
+	 * the second table (port 1).
+	 */
+	@Override
+	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+		AbstractRDKitCellFactory factory = null;
+
+		switch (outPort) {
+		case 1:
+			// Generate column specs for the output table columns produced by this factory
+			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator("Fragment indices", ListCell.getCollectionType(IntCell.TYPE)).createSpec();
-		    	
+
 			// Get settings
 			final int iMinPathLength = m_modelMinPath.getIntValue();
 			final int iMaxPathLength = m_modelMaxPath.getIntValue();
-			
-			// Generate factory 
-			factory = new AbstractRDKitCellFactory(this, 
+
+			// Generate factory
+			factory = new AbstractRDKitCellFactory(this,
 					AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 					getWarningConsolidator(), null, arrOutputSpec) {
-				
-	   		    /**
-	   		     * {@inheritDoc}
-	   		     * This method implements the calculation logic to generate the new cells based on 
-	   		     * the input made available in the first (and second) parameter.
-	   		     */
-	   			@Override
-	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-	                ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					List<IntCell> fragsHere = new ArrayList<IntCell>();
-	
+
+				/**
+				 * {@inheritDoc}
+				 * This method implements the calculation logic to generate the new cells based on
+				 * the input made available in the first (and second) parameter.
+				 */
+				@Override
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final List<IntCell> fragsHere = new ArrayList<IntCell>();
+
 					// Only for non-missing cells we do the calculations
 					if (mol != null) {
-						
+
 						// Decompose the molecule
-						Int_Int_Vect_List_Map pathMap = RDKFuncs.findAllSubgraphsOfLengthsMtoN(
+						final Int_Int_Vect_List_Map pathMap = RDKFuncs.findAllSubgraphsOfLengthsMtoN(
 								mol, iMinPathLength, iMaxPathLength);
-						
+
 						for (int length = iMinPathLength; length <= iMaxPathLength; length++) {
-							
-							Int_Vect_List paths = pathMap.get(length);
-							List<Int_Vect> lCache = new ArrayList<Int_Vect>();
-							
+
+							final Int_Vect_List paths = pathMap.get(length);
+							final List<Int_Vect> lCache = new ArrayList<Int_Vect>();
+
 							for (int i = 0; i < paths.size(); ++i) {
-								Int_Vect ats = paths.get(i);
+								final Int_Vect ats = paths.get(i);
 								int idx;
-								
+
 								// If we've seen this fragment in this molecule already,
 								// go ahead and punt on it
-								Int_Vect discrims = RDKFuncs.calcPathDiscriminators(mol, ats);
+								final Int_Vect discrims = RDKFuncs.calcPathDiscriminators(mol, ats);
 								idx = -1;
 								// .indexOf() doesn't use the correct .equals() method
 								// with my SWIG classes, so we have to hack this:
@@ -311,16 +313,16 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 										break;
 									}
 								}
-								
+
 								if (idx >= 0) {
 									continue;
 								}
 								else {
 									lCache.add(discrims);
 								}
-								
+
 								idx = -1;
-								
+
 								// Check, if we have seen this fragment already
 								for (int iidx = 0; iidx < m_listFragsSeen.size(); iidx++) {
 									if (m_listFragsSeen.get(iidx).equals(discrims)) {
@@ -328,7 +330,7 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 										break;
 									}
 								}
-								
+
 								// Fragment found - just increase the counter
 								if (idx >= 0) {
 									m_listFragCounts.set(idx,
@@ -339,112 +341,112 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 									idx = m_listFragsSeen.size();
 									m_listFragsSeen.add(discrims);
 									// Don't use the uniqueWaveId for cleanup as we need this mol until the very end of processing
-									ROMol frag = markForCleanup(RDKFuncs.pathToSubmol(mol, ats));
+									final ROMol frag = markForCleanup(RDKFuncs.pathToSubmol(mol, ats));
 									m_listFragsMol.add(frag);
-									String smiles = RDKFuncs.MolToSmiles(frag);
+									final String smiles = RDKFuncs.MolToSmiles(frag);
 									m_listSmiles.add(smiles);
 									m_listFragCounts.add(1);
 								}
-								
+
 								fragsHere.add(new IntCell(idx + 1));
 							}
 						}
-	                }
-	                
-	                return new DataCell[] { CollectionCellFactory.createListCell(fragsHere) };	   				
-	   		    }
-	   		};
-	   		
-	   		// Enable or disable this factory to allow parallel processing 		
-	   		factory.setAllowParallelProcessing(false); // Strictly forbidden for this algorithm	   		
+					}
 
-	   		break;
-    	}
-    	
-    	return factory != null ? new AbstractRDKitCellFactory[] { factory } : null;
-    }
+					return new DataCell[] { CollectionCellFactory.createListCell(fragsHere) };
+				}
+			};
 
-    /**
-     * {@inheritDoc}
-     * This implementation lets the factory find fragments within the molecules and makes
-     * intermediate results available in member variables, which will be further processed
-     * in the {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}
-     * method. Also, it generates the second output table.
-     */
-    @Override
-    protected BufferedDataTable[] processing(BufferedDataTable[] inData,
-    		InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
-    		throws Exception {
-        // Clean all old intermediate results in case there are still any
-    	m_listFragsSeen.clear();
-        m_listFragsMol.clear();
-        m_listSmiles.clear();
-        m_listFragCounts.clear();
-        
-    	// Setup the factory and the rearranger to do the work
-        ColumnRearranger rearranger = createColumnRearranger(1, inData[0].getDataTableSpec());
-		
+			// Enable or disable this factory to allow parallel processing
+			factory.setAllowParallelProcessing(false); // Strictly forbidden for this algorithm
+
+			break;
+		}
+
+		return factory != null ? new AbstractRDKitCellFactory[] { factory } : null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation lets the factory find fragments within the molecules and makes
+	 * intermediate results available in member variables, which will be further processed
+	 * in the {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}
+	 * method. Also, it generates the second output table.
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
+					throws Exception {
+		// Clean all old intermediate results in case there are still any
+		m_listFragsSeen.clear();
+		m_listFragsMol.clear();
+		m_listSmiles.clear();
+		m_listFragCounts.clear();
+
+		// Setup the factory and the rearranger to do the work
+		final ColumnRearranger rearranger = createColumnRearranger(1, inData[0].getDataTableSpec());
+
 		// Creates the mol table and generates intermediate results
-    	return new BufferedDataTable[] { null, exec.createColumnRearrangeTable(inData[0], rearranger, exec) };
-    }
-	    
+		return new BufferedDataTable[] { null, exec.createColumnRearrangeTable(inData[0], rearranger, exec) };
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * This implementation creates based on the intermediate results from the core processing
 	 * the main fragment output table.
 	 */
 	@Override
-	protected BufferedDataTable[] postProcessing(BufferedDataTable[] inData,
-			InputDataInfo[][] arrInputDataInfo,
-			BufferedDataTable[] processingResult, ExecutionContext exec)
-			throws Exception {
-		
+	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo,
+			final BufferedDataTable[] processingResult, final ExecutionContext exec)
+					throws Exception {
+
 		BufferedDataTable tableResult = null;
-		BufferedDataContainer newTableData = exec
+		final BufferedDataContainer newTableData = exec
 				.createDataContainer(getOutputTableSpec(0,
 						getInputTableSpecs(inData)));
-		
+
 		final int iTotalCount = m_listFragsSeen.size();
 		final int iColumnNumber = newTableData.getTableSpec().getNumColumns();
-		
+
 		// For each found fragment add a row
 		for (int i = 0; i < iTotalCount; i++) {
 			final ROMol molFragment = m_listFragsMol.get(i);
-			
+
 			// Create the row
-			DataCell[] cells = new DataCell[iColumnNumber];
+			final DataCell[] cells = new DataCell[iColumnNumber];
 			cells[0] = new IntCell(i + 1);
 			cells[1] = RDKitMolCellFactory.createRDKitMolCell(molFragment, m_listSmiles.get(i));
 			cells[2] = new StringCell(m_listSmiles.get(i));
 			cells[3] = new IntCell((int)molFragment.getNumBonds());
 			cells[4] = new IntCell(m_listFragCounts.get(i));
-			DataRow row = new DefaultRow("frag_" + (i + 1), cells);
+			final DataRow row = new DefaultRow("frag_" + (i + 1), cells);
 			newTableData.addRowToTable(row);
-			
+
 			// Report progress and check for cancellation
 			exec.setProgress((double)i / iTotalCount, "Added fragment row " + i + "/" + iTotalCount
-							+ " (\"" + row.getKey() + "\")");
+					+ " (\"" + row.getKey() + "\")");
 			exec.checkCanceled();
 		}
-		
+
 		newTableData.close();
 		tableResult = newTableData.getTable();
-		
+
 		return new BufferedDataTable[] { tableResult, processingResult[1] };
-	} 
-	
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	protected void cleanupIntermediateResults() {
-        // Clean all old intermediate results to free memory - they are never null
-    	m_listFragsSeen.clear();
-        m_listFragsMol.clear();
-        m_listSmiles.clear();
-        m_listFragCounts.clear();
-	}	 	
-    
+		// Clean all old intermediate results to free memory - they are never null
+		m_listFragsSeen.clear();
+		m_listFragsMol.clear();
+		m_listSmiles.clear();
+		m_listFragCounts.clear();
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * Returns 0.05 (5%).
@@ -452,5 +454,5 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 	@Override
 	protected double getPostProcessingPercentage() {
 		return 0.05d;
-	}	
+	}
 }

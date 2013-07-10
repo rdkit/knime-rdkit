@@ -56,74 +56,72 @@ import org.rdkit.knime.nodes.RDKitInteractiveView;
 /**
  * <code>NodeFactory</code> for the RDKit based "RDKitInteractiveTable" Node.
  * 
- *
  * @author Manuel Schwarze
  */
-public class RDKitInteractiveTableNodeFactory 
-        extends NodeFactory<RDKitInteractiveTableNodeModel> {
+public class RDKitInteractiveTableNodeFactory extends NodeFactory<RDKitInteractiveTableNodeModel> {
 
-    /**
-     * Creates a model for the RDKitInteractiveTable functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitInteractiveTableNodeModel createNodeModel() {
-        return new RDKitInteractiveTableNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitInteractiveTable functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitInteractiveTableNodeModel createNodeModel() {
+		return new RDKitInteractiveTableNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitInteractiveTableNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitInteractiveTableNodeModel nodeModel) {
-    	NodeView<RDKitInteractiveTableNodeModel> retView = null;
-    	
-    	switch (viewIndex) {
-    		case 0:
-    			retView = new RDKitInteractiveView<RDKitInteractiveTableNodeModel>(nodeModel, false, 0);
-    			break;
-    		default:
-    			throw new IllegalArgumentException("Invalid view index.");
-    	}
-    	
-        return retView;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitInteractiveTableNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitInteractiveTableNodeModel nodeModel) {
+		NodeView<RDKitInteractiveTableNodeModel> retView = null;
+
+		switch (viewIndex) {
+		case 0:
+			retView = new RDKitInteractiveView<RDKitInteractiveTableNodeModel>(nodeModel, false, 0);
+			break;
+		default:
+			throw new IllegalArgumentException("Invalid view index.");
+		}
+
+		return retView;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 1;
+	}
 
-    /**
-     * This node possesses no configuration dialog.
-     * 
+	/**
+	 * This node possesses no configuration dialog.
+	 * 
 	 * @return Always false.
-     */
-    @Override
-    public boolean hasDialog() {
-        return false;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return false;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return null;
+	}
 }
 

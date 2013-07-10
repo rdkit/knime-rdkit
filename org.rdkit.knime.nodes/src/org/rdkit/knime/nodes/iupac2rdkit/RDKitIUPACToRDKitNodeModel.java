@@ -77,232 +77,234 @@ import uk.ac.cam.ch.wwmm.opsin.NameToStructureException;
  * This class implements the node model of the RDKitIUPACToRDKit node
  * providing calculations based on the open source RDKit library.
  * 
- * @author Manuel Schwarze 
+ * @author Manuel Schwarze
  */
 public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitIUPACToRDKitNodeModel.class);
-	
-	
+
+
 	/** Input data info index for IUPAC name. */
 	protected static final int INPUT_COLUMN_IUPAC = 0;
-	
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-            registerSettings(RDKitIUPACToRDKitNodeDialog.createInputColumnNameModel());
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(RDKitIUPACToRDKitNodeDialog.createInputColumnNameModel());
 
-    /** Settings model for the column name of the new column to be added to the output table. */
-    private final SettingsModelString m_modelNewColumnName =
-    		registerSettings(RDKitIUPACToRDKitNodeDialog.createNewColumnNameModel());
-    
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with one data in- and one out-port.
-     */
-    RDKitIUPACToRDKitNodeModel() {
-        super(1, 2);
-    }
+	/** Settings model for the column name of the new column to be added to the output table. */
+	private final SettingsModelString m_modelNewColumnName =
+			registerSettings(RDKitIUPACToRDKitNodeDialog.createNewColumnNameModel());
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
-    	
-    	WarningConsolidator warningConsolidator = getWarningConsolidator();
-    	
-        // Auto guess the input column name based on type and name, if it was not set yet
-    	if (m_modelInputColumnName.getStringValue() == null) {
-            int iCountOfIUPACColumns = 0;
-            
-            for (DataColumnSpec colSpec : inSpecs[0]) {
-            	if (colSpec.getType().isCompatible(StringValue.class) &&
-            		colSpec.getName().toUpperCase().indexOf("IUPAC") >= 0) {
-            		iCountOfIUPACColumns++;
-            		if (iCountOfIUPACColumns == 1) {
-            			m_modelInputColumnName.setStringValue(colSpec.getName());
-	                }
-            	}
-            }
-            
-            if (iCountOfIUPACColumns > 1) {
-            	warningConsolidator.saveWarning("Auto guessing: Using column " +
-            			m_modelInputColumnName.getStringValue() + ".");
-            }
-    	}
-    	
-        // Auto guess the input column if still not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, StringValue.class, 0, 
-        		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No String compatible column in input table that can be used as IUPAC name.", 
-        		warningConsolidator); 
+	//
+	// Constructor
+	//
 
-        // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, StringValue.class,  
-        		"Input column has not been specified yet.",
-        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
-        
-        // Auto guess the new column name and make it unique
-        String strInputColumnName = m_modelInputColumnName.getStringValue();
-        SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
-        		m_modelNewColumnName, strInputColumnName + " (RDKit Mol)");
+	/**
+	 * Create new node model with one data in- and one out-port.
+	 */
+	RDKitIUPACToRDKitNodeModel() {
+		super(1, 2);
+	}
 
-        // Determine, if the new column name has been set and if it is really unique
-        SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
-        		m_modelNewColumnName, 
-        		"Output column has not been specified yet.",
-        		"The name %COLUMN_NAME% of the new column exists already in the input.");
+	//
+	// Protected Methods
+	//
 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+		final WarningConsolidator warningConsolidator = getWarningConsolidator();
 
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
-    	InputDataInfo[] arrDataInfo = null;
-    	
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_IUPAC] = new InputDataInfo(inSpec, m_modelInputColumnName, 
-    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-    				StringValue.class);
-    	}
-    	
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
- 
-    /**
-     * {@inheritDoc}
-     */
-	protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
+		// Auto guess the input column name based on type and name, if it was not set yet
+		if (m_modelInputColumnName.getStringValue() == null) {
+			int iCountOfIUPACColumns = 0;
+
+			for (final DataColumnSpec colSpec : inSpecs[0]) {
+				if (colSpec.getType().isCompatible(StringValue.class) &&
+						colSpec.getName().toUpperCase().indexOf("IUPAC") >= 0) {
+					iCountOfIUPACColumns++;
+					if (iCountOfIUPACColumns == 1) {
+						m_modelInputColumnName.setStringValue(colSpec.getName());
+					}
+				}
+			}
+
+			if (iCountOfIUPACColumns > 1) {
+				warningConsolidator.saveWarning("Auto guessing: Using column " +
+						m_modelInputColumnName.getStringValue() + ".");
+			}
+		}
+
+		// Auto guess the input column if still not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, StringValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No String compatible column in input table that can be used as IUPAC name.",
+				warningConsolidator);
+
+		// Determines, if the input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, StringValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+
+		// Auto guess the new column name and make it unique
+		final String strInputColumnName = m_modelInputColumnName.getStringValue();
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+				m_modelNewColumnName, strInputColumnName + " (RDKit Mol)");
+
+		// Determine, if the new column name has been set and if it is really unique
+		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+				m_modelNewColumnName,
+				"Output column has not been specified yet.",
+				"The name %COLUMN_NAME% of the new column exists already in the input.");
+
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_IUPAC] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+					StringValue.class);
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
-    	
-    	// Specify output of table 1
-    	if (outPort == 0) {
-    		// Allocate space for all factories (usually we have only one)
-    		arrOutputFactories = new AbstractRDKitCellFactory[1]; 
 
-    		// Factory 1:
-    		// ==========
-    		// Generate column specs for the output table columns produced by this factory
-    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-    		arrOutputSpec[0] = new DataColumnSpecCreator(
-    				m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
-    				.createSpec();
-    
-    		// Create instance of OPSIN library
-    		NameToStructure uipacConverterTemp = null;
-    		
-    		try {
-    			uipacConverterTemp = NameToStructure.getInstance();
-    		}
-    		catch (NameToStructureException excInit) {
-    			throw new InvalidSettingsException(
-    					"Unable to initialize OPSIN library needed for IUPAC name conversions.", excInit);
-    		}
+		// Specify output of table 1
+		if (outPort == 0) {
+			// Allocate space for all factories (usually we have only one)
+			arrOutputFactories = new AbstractRDKitCellFactory[1];
 
-    		final NameToStructure uipacConverter = uipacConverterTemp;
-    		
-    		// Generate factory 
-    		arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-           		getWarningConsolidator(), null, arrOutputSpec) {
-	   			
-	   			@Override
-	   		    /**
-	   		     * This method implements the calculation logic to generate the new cells based on 
-	   		     * the input made available in the first (and second) parameter.
-	   		     * {@inheritDoc}
-	   		     */
-	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-	   		    	DataCell outputCell = null;
-	   		    	
-	   		    	// Calculate the new cells
-	   		    	String strIupacName = arrInputDataInfo[INPUT_COLUMN_IUPAC].getString(row);    
-	   		    	
-	   		    	// Converts the IUPAC name to SMILES
-	   		    	String strSmiles = uipacConverter.parseToSmiles(strIupacName);
-	   		    	
-	   		    	// Check for validity and convert further to RDKit Molecule
-	   		    	String strErrorMsg = null;
-	   		    	Exception excError = null;
-	   		    	
-	   		    	if (strSmiles != null) {
-	   		    		// Create the RDKit Molecule with default settings
-	   		    		try {
-	   		    			RWMol mol = markForCleanup(RWMol.MolFromSmiles(strSmiles), iUniqueWaveId);
-		   		    		
-	   		    			try {
-			   		    		// Note: The SMILES that we include is the one delivered from OPSIN.
-		                        //       It is not canonicalized.
-	   		    				outputCell = RDKitMolCellFactory.createRDKitMolCell(mol, strSmiles);
-	   		    			}
-		   		    		catch (Exception exc) {
-			   		    		strErrorMsg = exc.getClass().getSimpleName() + 
-			   		    				" when creating RDKit Mol Cell.";
-			   		    		excError = exc;
-		   		    		}
-	   		    		}
-	   		    		catch (Exception exc) {
-		   		    		strErrorMsg = exc.getClass().getSimpleName() + 
-		   		    			" when creating RDKit Molecule from SMILES.";
-		   		    		excError = exc;
-	   		    		}
-	   		    	}
-	   		    	else {
-	   		    		strErrorMsg = "IUPAC name parsing error.";
-	   		    	}
-	   		    	
-	   		    	if (strErrorMsg != null) {
-	   		    		outputCell = DataType.getMissingCell();
-	   		    		String strMsg = "Failed to process data due to " + strErrorMsg;
-	   		    		LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", excError);
-	   		    		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
-	   		    	}
-	   		    	
-	   		        return new DataCell[] { outputCell };
-	   		    }
-	   		};
-	   		
-	   		// Enable or disable this factory to allow parallel processing 		
-	   		arrOutputFactories[0].setAllowParallelProcessing(true);	   		
-    	}
-    	
-    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
-    }
-	
+			// Factory 1:
+			// ==========
+			// Generate column specs for the output table columns produced by this factory
+			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+			arrOutputSpec[0] = new DataColumnSpecCreator(
+					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+			.createSpec();
+
+			// Create instance of OPSIN library
+			NameToStructure uipacConverterTemp = null;
+
+			try {
+				uipacConverterTemp = NameToStructure.getInstance();
+			}
+			catch (final NameToStructureException excInit) {
+				throw new InvalidSettingsException(
+						"Unable to initialize OPSIN library needed for IUPAC name conversions.", excInit);
+			}
+
+			final NameToStructure uipacConverter = uipacConverterTemp;
+
+			// Generate factory
+			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+					getWarningConsolidator(), null, arrOutputSpec) {
+
+				@Override
+				/**
+				 * This method implements the calculation logic to generate the new cells based on
+				 * the input made available in the first (and second) parameter.
+				 * {@inheritDoc}
+				 */
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+					DataCell outputCell = null;
+
+					// Calculate the new cells
+					final String strIupacName = arrInputDataInfo[INPUT_COLUMN_IUPAC].getString(row);
+
+					// Converts the IUPAC name to SMILES
+					final String strSmiles = uipacConverter.parseToSmiles(strIupacName);
+
+					// Check for validity and convert further to RDKit Molecule
+					String strErrorMsg = null;
+					Exception excError = null;
+
+					if (strSmiles != null) {
+						// Create the RDKit Molecule with default settings
+						try {
+							final RWMol mol = markForCleanup(RWMol.MolFromSmiles(strSmiles), iUniqueWaveId);
+
+							try {
+								// Note: The SMILES that we include is the one delivered from OPSIN.
+								//       It is not canonicalized.
+								outputCell = RDKitMolCellFactory.createRDKitMolCell(mol, strSmiles);
+							}
+							catch (final Exception exc) {
+								strErrorMsg = exc.getClass().getSimpleName() +
+										" when creating RDKit Mol Cell.";
+								excError = exc;
+							}
+						}
+						catch (final Exception exc) {
+							strErrorMsg = exc.getClass().getSimpleName() +
+									" when creating RDKit Molecule from SMILES.";
+							excError = exc;
+						}
+					}
+					else {
+						strErrorMsg = "IUPAC name parsing error.";
+					}
+
+					if (strErrorMsg != null) {
+						outputCell = DataType.getMissingCell();
+						final String strMsg = "Failed to process data due to " + strErrorMsg;
+						LOGGER.debug(strMsg + " (Row '" + row.getKey() + "')", excError);
+						getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), strMsg);
+					}
+
+					return new DataCell[] { outputCell };
+				}
+			};
+
+			// Enable or disable this factory to allow parallel processing
+			arrOutputFactories[0].setAllowParallelProcessing(true);
+		}
+
+		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+	}
+
 	/**
 	 * Returns 10% as post processing progress part.
 	 * 
@@ -312,56 +314,56 @@ public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel
 	protected double getPostProcessingPercentage() {
 		return 0.1d;
 	}
-	
+
 	/**
 	 * Post processing of conversion results. The are split into two tables here
 	 * based on successful and unsuccessful conversions.
 	 */
 	@Override
-	protected BufferedDataTable[] postProcessing(BufferedDataTable[] inData,
-			InputDataInfo[][] arrInputDataInfo,
-			BufferedDataTable[] processingResult, ExecutionContext exec)
-			throws Exception {
-		final String strNewColumnName = m_modelNewColumnName.getStringValue();		
-			
+	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo,
+			final BufferedDataTable[] processingResult, final ExecutionContext exec)
+					throws Exception {
+		final String strNewColumnName = m_modelNewColumnName.getStringValue();
+
 		// Split calculated table to move empty cells into a second table
-		ExecutionContext execSplit = exec.createSubExecutionContext(0.8d);
-		BufferedDataTable[] arrSplitTables = 
-			createSplitTables(0, processingResult[0], arrInputDataInfo[0], execSplit, null, 
-				new SplitMissingCell(processingResult[0].getDataTableSpec().
-						findColumnIndex(strNewColumnName)));
-		
+		final ExecutionContext execSplit = exec.createSubExecutionContext(0.8d);
+		final BufferedDataTable[] arrSplitTables =
+				createSplitTables(0, processingResult[0], arrInputDataInfo[0], execSplit, null,
+						new SplitMissingCell(processingResult[0].getDataTableSpec().
+								findColumnIndex(strNewColumnName)));
+
 		// Check for total failure
 		if (arrSplitTables[0].getRowCount() == 0 &&
-			arrSplitTables[1].getRowCount() > 0) {
+				arrSplitTables[1].getRowCount() > 0) {
 			throw new Exception("Failed to process UIPAC names for all rows. Please check, if the correct column was selected.");
 		}
-		
+
 		// Remove new (but empty) column from conversion failures table
-		ExecutionContext execRearrange = exec.createSubExecutionContext(0.2d);
-		ColumnRearranger rearranger = new ColumnRearranger(arrSplitTables[1].getDataTableSpec());
+		final ExecutionContext execRearrange = exec.createSubExecutionContext(0.2d);
+		final ColumnRearranger rearranger = new ColumnRearranger(arrSplitTables[1].getDataTableSpec());
 		rearranger.remove(strNewColumnName);
-		BufferedDataTable tableFailures = 
-			exec.createColumnRearrangeTable(arrSplitTables[1], rearranger, execRearrange);
-		
+		final BufferedDataTable tableFailures =
+				exec.createColumnRearrangeTable(arrSplitTables[1], rearranger, execRearrange);
+
 		return new BufferedDataTable[] { arrSplitTables[0], tableFailures };
 	}
-	
+
 	@Override
-	protected DataTableSpec getOutputTableSpec(int outPort,
-			DataTableSpec[] inSpecs) throws InvalidSettingsException {
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
 		DataTableSpec spec = null;
-		
+
 		// Successful conversions - Structure driven by calculator node type
 		if (outPort == 0) {
 			spec = super.getOutputTableSpec(outPort, inSpecs);
 		}
-		
+
 		// Failed conversions - Same table structure as input table
 		else if (outPort == 1){
 			spec = inSpecs[0];
 		}
-		
+
 		return spec;
 	}
 }

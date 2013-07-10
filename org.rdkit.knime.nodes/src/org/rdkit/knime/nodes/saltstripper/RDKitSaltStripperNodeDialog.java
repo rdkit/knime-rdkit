@@ -65,20 +65,20 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButton;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.FileUtils;
 
 /**
  * <code>NodeDialog</code> for the "RDKitSaltStripper" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Dillip K Mohanty
@@ -89,7 +89,7 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitSaltStripperNodeDialog.class);
@@ -110,166 +110,166 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table and
-     * an optional salt column (if a second table is connected to the node).
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table and
+	 * an optional salt column (if a second table is connected to the node).
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitSaltStripperNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentString(
-                createNewColumnNameModel(), "New column name: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createRemoveSourceColumnsOptionModel(), "Remove source column"));
-        super.addDialogComponent(m_compLabelNoSaltTable = new DialogComponentLabel(
-        		"<html><font color='red'>There is no salt table connected.</font>" +
-        		"<br>Using predefined salts.</html>"));
-        super.addDialogComponent(m_compButtonShowPredefinedSalts = new DialogComponentButton(
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentString(
+				createNewColumnNameModel(), "New column name: "));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveSourceColumnsOptionModel(), "Remove source column"));
+		super.addDialogComponent(m_compLabelNoSaltTable = new DialogComponentLabel(
+				"<html><font color='red'>There is no salt table connected.</font>" +
+				"<br>Using predefined salts.</html>"));
+		super.addDialogComponent(m_compButtonShowPredefinedSalts = new DialogComponentButton(
 				"Show Predefined Salts..."));
-    	super.addDialogComponent(m_compSaltColumnName = new DialogComponentColumnNameSelection(
-    			createOptionalSaltColumnNameModel(), "Salt definition column: ", 1,
-    			RDKitMolValue.class) {
-        	
-        	/**
-        	 * Hides or shows the optional components depending on
-        	 * the existence of a second input table.
-        	 */
-        	@Override
-        	protected void checkConfigurabilityBeforeLoad(
-        			PortObjectSpec[] specs)
-        			throws NotConfigurableException {
-        		
-        		boolean bHasReactionTable = 
-        			RDKitSaltStripperNodeModel.hasSaltInputTable(specs);
-        		
-        		// Only check correctness of second input table if it is there
-        		if (bHasReactionTable) {
-        			super.checkConfigurabilityBeforeLoad(specs);
-        		}
-        
-        		// Always show or hide proper components
-        		updateVisibilityOfOptionalComponents(bHasReactionTable);
-        	}
-        });    
-    	
-    	// Configure the button to show dialog with salt definitions to the user
-    	m_compButtonShowPredefinedSalts.addActionListener(new ActionListener() {
-			
-    		/**
-    		 * Opens the salt definition dialog.
-    		 */
+		super.addDialogComponent(m_compSaltColumnName = new DialogComponentColumnNameSelection(
+				createOptionalSaltColumnNameModel(), "Salt definition column: ", 1,
+				RDKitMolValue.class) {
+
+			/**
+			 * Hides or shows the optional components depending on
+			 * the existence of a second input table.
+			 */
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			protected void checkConfigurabilityBeforeLoad(
+					final PortObjectSpec[] specs)
+							throws NotConfigurableException {
+
+				final boolean bHasReactionTable =
+						RDKitSaltStripperNodeModel.hasSaltInputTable(specs);
+
+				// Only check correctness of second input table if it is there
+				if (bHasReactionTable) {
+					super.checkConfigurabilityBeforeLoad(specs);
+				}
+
+				// Always show or hide proper components
+				updateVisibilityOfOptionalComponents(bHasReactionTable);
+			}
+		});
+
+		// Configure the button to show dialog with salt definitions to the user
+		m_compButtonShowPredefinedSalts.addActionListener(new ActionListener() {
+
+			/**
+			 * Opens the salt definition dialog.
+			 */
+			@Override
+			public void actionPerformed(final ActionEvent e) {
 				showSaltDefinitionDialog();
 			}
 		});
 
-        // Although we are not using any GridBagLayout constraints, setting this 
-        // layout manager makes it look nicer (surprisingly)
-        Component comp = getTab("Options");
-        if (comp instanceof JPanel) {
-        	((JPanel)comp).setLayout(new GridBagLayout());
-        }    	
-    }
-    
-    //
-    // Protected Methods
-    //
+		// Although we are not using any GridBagLayout constraints, setting this
+		// layout manager makes it look nicer (surprisingly)
+		final Component comp = getTab("Options");
+		if (comp instanceof JPanel) {
+			((JPanel)comp).setLayout(new GridBagLayout());
+		}
+	}
 
-    /**
-     * Show or hides salt based settings based on the input method for
-     * the salt (default internal salt table or connected salt table).
-     * 
-     * @param bHasSecondTable
-     */
-    protected void updateVisibilityOfOptionalComponents(boolean bHasSecondTable) {
-    	m_compSaltColumnName.getComponentPanel().setVisible(bHasSecondTable);
-    	m_compLabelNoSaltTable.getComponentPanel().setVisible(!bHasSecondTable);
-    	m_compButtonShowPredefinedSalts.getComponentPanel().setVisible(!bHasSecondTable);
-    }
-    
-    /**
-     * Creates and shows the salt definitions.
-     */
-    protected void showSaltDefinitionDialog() {
-    	String strSaltDefinitions = "Unable to access resource " + 
-    		RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE;
-    	
-    	try {
-    		strSaltDefinitions = FileUtils.getContentFromResource(
-    				this, RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE);
-    	}
-    	catch (IOException exc) {
-    		LOGGER.warn("Unable to access resource " + 
-    				RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE, exc);
-    	}
-    	
-    	JOptionPane.showOptionDialog(m_compButtonShowPredefinedSalts.getComponentPanel(), 
-    			createSaltDefinitionComponent(strSaltDefinitions), "Predefined Salt Definitions", 
-    			JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, 
-    			new Object[] { "Close" }, "Close");
-    }
-    
-    /**
-     * Creates a scrollable text area, which is disabled for editing. It
-     * contains the passed in salt definitions.
-     * 
-     * @param strSaltDefinitions Salt definitions. Must not be null.
-     * 
-     * @return Component with salts.
-     */
-    protected Component createSaltDefinitionComponent(String strSaltDefinitions) {
-    	JTextArea ta = new JTextArea(strSaltDefinitions, 25, 90);
-    	ta.setEditable(false);
-    	return new JScrollPane(ta);
-    }
+	//
+	// Protected Methods
+	//
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	/**
+	 * Show or hides salt based settings based on the input method for
+	 * the salt (default internal salt table or connected salt table).
+	 * 
+	 * @param bHasSecondTable
+	 */
+	protected void updateVisibilityOfOptionalComponents(final boolean bHasSecondTable) {
+		m_compSaltColumnName.getComponentPanel().setVisible(bHasSecondTable);
+		m_compLabelNoSaltTable.getComponentPanel().setVisible(!bHasSecondTable);
+		m_compButtonShowPredefinedSalts.getComponentPanel().setVisible(!bHasSecondTable);
+	}
 
-    /**
-     * Creates the settings model for the name of the salt column 
-     * (if a second input table is used).
-     * 
-     * @return Settings model for the name of the reaction column.
-     */
-    static final SettingsModelString createOptionalSaltColumnNameModel() {
-        return new SettingsModelString("salt_input", null);
-    }
+	/**
+	 * Creates and shows the salt definitions.
+	 */
+	protected void showSaltDefinitionDialog() {
+		String strSaltDefinitions = "Unable to access resource " +
+				RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE;
+
+		try {
+			strSaltDefinitions = FileUtils.getContentFromResource(
+					this, RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE);
+		}
+		catch (final IOException exc) {
+			LOGGER.warn("Unable to access resource " +
+					RDKitSaltStripperNodeModel.SALT_DEFINITION_FILE, exc);
+		}
+
+		JOptionPane.showOptionDialog(m_compButtonShowPredefinedSalts.getComponentPanel(),
+				createSaltDefinitionComponent(strSaltDefinitions), "Predefined Salt Definitions",
+				JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+				new Object[] { "Close" }, "Close");
+	}
+
+	/**
+	 * Creates a scrollable text area, which is disabled for editing. It
+	 * contains the passed in salt definitions.
+	 * 
+	 * @param strSaltDefinitions Salt definitions. Must not be null.
+	 * 
+	 * @return Component with salts.
+	 */
+	protected Component createSaltDefinitionComponent(final String strSaltDefinitions) {
+		final JTextArea ta = new JTextArea(strSaltDefinitions, 25, 90);
+		ta.setEditable(false);
+		return new JScrollPane(ta);
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model for the name of the salt column
+	 * (if a second input table is used).
+	 * 
+	 * @return Settings model for the name of the reaction column.
+	 */
+	static final SettingsModelString createOptionalSaltColumnNameModel() {
+		return new SettingsModelString("salt_input", null);
+	}
 
 
-    /**
-     * Creates the settings model to be used to specify the new column name.
-     * 
-     * @return Settings model for result column name.
-     */
-    static final SettingsModelString createNewColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * the source column shall be removed from the result table.
-     * The default is false.
-     * 
-     * @return Settings model for check box whether to remove source columns.
-     */
-    static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
-        return new SettingsModelBoolean("remove_source_columns", false);
-    }
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * the source column shall be removed from the result table.
+	 * The default is false.
+	 * 
+	 * @return Settings model for check box whether to remove source columns.
+	 */
+	static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
+		return new SettingsModelBoolean("remove_source_columns", false);
+	}
 }

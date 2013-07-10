@@ -148,7 +148,7 @@ public interface RDKitMolValue extends DataValue {
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    new RDKitMolValueRenderer(), StringValueRenderer.INSTANCE);
+                    new RDKitMolValueRenderer(), StringValueRenderer.INSTANCE); // TODO: Change for KNIME 2.8. Pending: use new StringValueRenderer()
         }
     }
 }

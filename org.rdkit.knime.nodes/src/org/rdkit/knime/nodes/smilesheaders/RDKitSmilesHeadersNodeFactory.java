@@ -58,61 +58,60 @@ import org.rdkit.knime.nodes.RDKitInteractiveView;
  * 
  * @author Manuel Schwarze
  */
-public class RDKitSmilesHeadersNodeFactory 
-        extends NodeFactory<RDKitSmilesHeadersNodeModel> {
+public class RDKitSmilesHeadersNodeFactory extends NodeFactory<RDKitSmilesHeadersNodeModel> {
 
-    /**
-     * Creates a model for the RDKitSmilesHeaders functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitSmilesHeadersNodeModel createNodeModel() {
-        return new RDKitSmilesHeadersNodeModel();
-    }
-    
-    /**
-     * This node has an RDKit Interactive View attached.
-     * 
+	/**
+	 * Creates a model for the RDKitSmilesHeaders functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitSmilesHeadersNodeModel createNodeModel() {
+		return new RDKitSmilesHeadersNodeModel();
+	}
+
+	/**
+	 * This node has an RDKit Interactive View attached.
+	 * 
 	 * @return RDKit Interactive View.
-     */
-    @Override
-    public NodeView<RDKitSmilesHeadersNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitSmilesHeadersNodeModel nodeModel) {
-        return new RDKitInteractiveView<RDKitSmilesHeadersNodeModel>(nodeModel, false, 0);
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitSmilesHeadersNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitSmilesHeadersNodeModel nodeModel) {
+		return new RDKitInteractiveView<RDKitSmilesHeadersNodeModel>(nodeModel, false, 0);
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 1;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitSmilesHeadersNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitSmilesHeadersNodeDialog();
+	}
 }
 

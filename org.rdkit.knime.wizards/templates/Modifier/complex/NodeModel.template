@@ -156,8 +156,8 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
         // Auto guess the input column if not set - fails if no compatible column found
         SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
         		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+        		"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+        			"node to convert SMARTS.", getWarningConsolidator()); 
 
         // Determines, if the input column exists - fails if it does not
         SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  

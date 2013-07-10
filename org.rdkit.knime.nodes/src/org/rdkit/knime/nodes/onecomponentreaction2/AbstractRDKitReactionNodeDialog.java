@@ -58,17 +58,17 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitOneComponentReaction" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Greg Landrum
@@ -82,126 +82,126 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 
 	/** Setting model component for the reaction column selector. */
 	private final DialogComponent m_compReactionColumnName;
-    
+
 	/** Setting model component for the SMARTS reaction field. */
-    private final DialogComponent m_compSmartsReactionField;
-    
-    /** The input port index of the reaction table. */
-    private final int m_iReactionTableIndex;
-    
+	private final DialogComponent m_compSmartsReactionField;
+
+	/** The input port index of the reaction table. */
+	private final int m_iReactionTableIndex;
+
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
-	public AbstractRDKitReactionNodeDialog(int iReactionTableIndex) {
-    	m_iReactionTableIndex = iReactionTableIndex;
-    	
-    	addDialogComponentsBeforeReactionSettings();
-        
-    	super.addDialogComponent(m_compReactionColumnName = new DialogComponentColumnNameSelection(
-        		createOptionalReactionColumnNameModel(), "RDKit Rxn column: ", m_iReactionTableIndex,
-                RxnValue.class) {
-        	
-        	/**
-        	 * Hides or shows the optional components depending on
-        	 * the existence of a second input table.
-        	 */
-        	@Override
-        	protected void checkConfigurabilityBeforeLoad(
-        			PortObjectSpec[] specs)
-        			throws NotConfigurableException {
-        		
-        		boolean bHasReactionTable = 
-        			AbstractRDKitReactionNodeModel.hasReactionInputTable(specs, m_iReactionTableIndex);
-        		
-        		// Only check correctness of second input table if it is there
-        		if (bHasReactionTable) {
-        			super.checkConfigurabilityBeforeLoad(specs);
-        		}
-        
-        		// Always show or hide proper components
-        		updateVisibilityOfOptionalComponents(bHasReactionTable);
-        	}
-        });
-        super.addDialogComponent(m_compSmartsReactionField = new DialogComponentString(
-        		createOptionalReactionSmartsPatternModel(), "Reaction SMARTS: ", false, 30));
 
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createUniquifyProductsModel(), "Uniquify products"));
-        
-    	addDialogComponentsAfterReactionSettings();
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
+	public AbstractRDKitReactionNodeDialog(final int iReactionTableIndex) {
+		m_iReactionTableIndex = iReactionTableIndex;
 
-        // Although we are not using any GridBagLayout constraints, setting this 
-        // layout manager makes it look nicer (surprisingly)
-        Component comp = getTab("Options");
-        if (comp instanceof JPanel) {
-        	((JPanel)comp).setLayout(new GridBagLayout());
-        }
-    }
-    
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * This method adds all dialog components, which shall appear before the
-     * reaction based settings.
-     */
-    protected abstract void addDialogComponentsBeforeReactionSettings();
+		addDialogComponentsBeforeReactionSettings();
 
-    /**
-     * This method adds all dialog components, which shall appear after the
-     * reaction based settings.
-     */
-    protected abstract void addDialogComponentsAfterReactionSettings();
+		super.addDialogComponent(m_compReactionColumnName = new DialogComponentColumnNameSelection(
+				createOptionalReactionColumnNameModel(), "RDKit Rxn column: ", m_iReactionTableIndex,
+				RxnValue.class) {
 
-    /**
-     * Show or hides reaction based settings based on the input method for
-     * the reaction (SMARTS text field or table).
-     * 
-     * @param bHasSecondTable
-     */
-    protected void updateVisibilityOfOptionalComponents(boolean bHasSecondTable) {
-    	m_compReactionColumnName.getComponentPanel().setVisible(bHasSecondTable);
-    	m_compSmartsReactionField.getComponentPanel().setVisible(!bHasSecondTable);
-    }
+			/**
+			 * Hides or shows the optional components depending on
+			 * the existence of a second input table.
+			 */
+			@Override
+			protected void checkConfigurabilityBeforeLoad(
+					final PortObjectSpec[] specs)
+							throws NotConfigurableException {
 
-    //
-    // Static Methods
-    //
+				final boolean bHasReactionTable =
+						AbstractRDKitReactionNodeModel.hasReactionInputTable(specs, m_iReactionTableIndex);
 
-    /**
-     * Creates the settings model for the name of the reaction column 
-     * (if a second input table is used).
-     * 
-     * @return Settings model for the name of the reaction column.
-     */
-    static final SettingsModelString createOptionalReactionColumnNameModel() {
-        return new SettingsModelString("rxnColumn", null);
-    }
+				// Only check correctness of second input table if it is there
+				if (bHasReactionTable) {
+					super.checkConfigurabilityBeforeLoad(specs);
+				}
 
-    /**
-     * Creates the settings model for the reaction smarts pattern 
-     * (if no second input table is used).
-     * 
-     * @return Settings model for the reaction smarts pattern.
-     */
-    static final SettingsModelString createOptionalReactionSmartsPatternModel() {
-        return new SettingsModelString("reactionSmarts", "");
-    }
-    /**
-     * @return new settings model whether to also compute coordinates
-     */
-    static final SettingsModelBoolean createUniquifyProductsModel() {
-        return new SettingsModelBoolean("uniquifyProducts", false);
-    }
+				// Always show or hide proper components
+				updateVisibilityOfOptionalComponents(bHasReactionTable);
+			}
+		});
+		super.addDialogComponent(m_compSmartsReactionField = new DialogComponentString(
+				createOptionalReactionSmartsPatternModel(), "Reaction SMARTS: ", false, 30));
 
- 
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUniquifyProductsModel(), "Uniquify products"));
+
+		addDialogComponentsAfterReactionSettings();
+
+		// Although we are not using any GridBagLayout constraints, setting this
+		// layout manager makes it look nicer (surprisingly)
+		final Component comp = getTab("Options");
+		if (comp instanceof JPanel) {
+			((JPanel)comp).setLayout(new GridBagLayout());
+		}
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * This method adds all dialog components, which shall appear before the
+	 * reaction based settings.
+	 */
+	protected abstract void addDialogComponentsBeforeReactionSettings();
+
+	/**
+	 * This method adds all dialog components, which shall appear after the
+	 * reaction based settings.
+	 */
+	protected abstract void addDialogComponentsAfterReactionSettings();
+
+	/**
+	 * Show or hides reaction based settings based on the input method for
+	 * the reaction (SMARTS text field or table).
+	 * 
+	 * @param bHasSecondTable
+	 */
+	protected void updateVisibilityOfOptionalComponents(final boolean bHasSecondTable) {
+		m_compReactionColumnName.getComponentPanel().setVisible(bHasSecondTable);
+		m_compSmartsReactionField.getComponentPanel().setVisible(!bHasSecondTable);
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model for the name of the reaction column
+	 * (if a second input table is used).
+	 * 
+	 * @return Settings model for the name of the reaction column.
+	 */
+	static final SettingsModelString createOptionalReactionColumnNameModel() {
+		return new SettingsModelString("rxnColumn", null);
+	}
+
+	/**
+	 * Creates the settings model for the reaction smarts pattern
+	 * (if no second input table is used).
+	 * 
+	 * @return Settings model for the reaction smarts pattern.
+	 */
+	static final SettingsModelString createOptionalReactionSmartsPatternModel() {
+		return new SettingsModelString("reactionSmarts", "");
+	}
+	/**
+	 * @return new settings model whether to also compute coordinates
+	 */
+	static final SettingsModelBoolean createUniquifyProductsModel() {
+		return new SettingsModelBoolean("uniquifyProducts", false);
+	}
+
+
 
 }

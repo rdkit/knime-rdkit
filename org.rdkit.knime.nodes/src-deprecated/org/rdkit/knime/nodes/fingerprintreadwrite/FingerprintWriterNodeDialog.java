@@ -95,7 +95,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	//
 	// Constants
 	//
-	
+
 	/** The LOGGER instance. */
 	private static final NodeLogger LOGGER = NodeLogger
 			.getLogger(FingerprintWriterNodeDialog.class);
@@ -108,19 +108,19 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	 */
 	@SuppressWarnings("deprecation")
 	public static final Class<?>[] IGNORE_STRING_COMPATIBILITY_FOR_DATATYPES = new Class<?>[] {
-			org.rdkit.knime.types.RDKitMolCell.class, RDKitMolCell2.class,
-			SmilesCell.class, SmilesValue.class, SdfCell.class, SdfValue.class // Only
-																				// add
-																				// classes
-																				// that
-																				// are
-																				// extending
-																				// DataCell!
+		org.rdkit.knime.types.RDKitMolCell.class, RDKitMolCell2.class,
+		SmilesCell.class, SmilesValue.class, SdfCell.class, SdfValue.class // Only
+		// add
+		// classes
+		// that
+		// are
+		// extending
+		// DataCell!
 	};
 
 	private static final ColumnFilter ID_COLUMN_FILTER = new ColumnFilter() {
 		@Override
-		public boolean includeColumn(DataColumnSpec colSpec) {
+		public boolean includeColumn(final DataColumnSpec colSpec) {
 			boolean bRet = false;
 
 			if (colSpec != null) {
@@ -146,7 +146,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	//
 	// Members
 	//
-	
+
 	/** textfield to enter file name. */
 	private final FilesHistoryPanel m_textBox;
 
@@ -162,11 +162,11 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	/** Write Row Id checkbox. */
 	private final JCheckBox m_rowHeaderChecker;
 
-	
+
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Constructor to create a new fingerprint writer configuration dialog pane.
 	 */
@@ -188,7 +188,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 		optionsPanel.setBorder(BorderFactory.createTitledBorder(
 				BorderFactory.createEtchedBorder(), "Writer options:"));
 
-		ActionListener al = new ActionListener() {
+		final ActionListener al = new ActionListener() {
 			/** {@inheritDoc} */
 			@Override
 			public void actionPerformed(final ActionEvent e) {
@@ -204,7 +204,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 				new FlowLayout(FlowLayout.LEFT));
 		rowHeaderPanel.add(Box.createHorizontalGlue());
 		rowHeaderPanel.add(m_rowHeaderChecker);
-		JLabel IdLabel = new JLabel("                Id column:");
+		final JLabel IdLabel = new JLabel("                Id column:");
 		rowHeaderPanel.add(IdLabel);
 		rowHeaderPanel.add(Box.createHorizontalGlue());
 		rowHeaderPanel.add(m_IdSelector);
@@ -225,8 +225,8 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 		columnPanel.setBorder(BorderFactory.createTitledBorder(
 				BorderFactory.createEtchedBorder(), "Column selection:"));
 
-		JPanel fpsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JLabel fpsLabel = new JLabel("Fingerprint column :");
+		final JPanel fpsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		final JLabel fpsLabel = new JLabel("Fingerprint column :");
 		fpsPanel.add(fpsLabel);
 		fpsPanel.add(Box.createHorizontalGlue());
 		fpsPanel.add(m_fingerprintSelector);
@@ -248,7 +248,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	//
 	// Private Methods
 	//
-	
+
 	/** Checks whether or not the "id column" dropbox should be enabled. */
 	private void checkCheckerState() {
 		if (!m_rowHeaderChecker.isSelected()) {
@@ -262,7 +262,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	//
 	// Protected Methods
 	//
-	
+
 	/**
 	 * Method used for load configuration settings. {@inheritDoc}
 	 */
@@ -273,15 +273,15 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 			throw new NotConfigurableException(
 					"Unable to configure, no fingerprint column in input table.");
 		}
-		String fileName = settings.getString(
+		final String fileName = settings.getString(
 				FingerprintWriterNodeModel.CFG_TARGET_FILE, null);
-		String column = settings.getString(
+		final String column = settings.getString(
 				FingerprintWriterNodeModel.CFG_FPS_COLUMN, "");
-		String id = settings.getString(
+		final String id = settings.getString(
 				FingerprintWriterNodeModel.CFG_ID_COLUMN, "");
-		boolean overwriteOK = settings.getBoolean(
+		final boolean overwriteOK = settings.getBoolean(
 				FingerprintWriterNodeModel.CFG_OVERWRITE_OK, false);
-		boolean writeRowid = settings.getBoolean(
+		final boolean writeRowid = settings.getBoolean(
 				FingerprintWriterNodeModel.CFG_WRITE_ROWID, false);
 		m_textBox.updateHistory();
 		m_textBox.setSelectedFile(fileName);
@@ -298,32 +298,32 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	@Override
 	protected void saveSettingsTo(final NodeSettingsWO settings)
 			throws InvalidSettingsException {
-		String fileName = m_textBox.getSelectedFile();
+		final String fileName = m_textBox.getSelectedFile();
 		if (!fileName.equals("")) {
-			File file = FilesHistoryPanel.getFile(fileName);
+			final File file = FilesHistoryPanel.getFile(fileName);
 			settings.addString(FingerprintWriterNodeModel.CFG_TARGET_FILE,
 					file.getAbsolutePath());
 		}
-		String colName = m_fingerprintSelector.getSelectedColumn();
+		final String colName = m_fingerprintSelector.getSelectedColumn();
 		settings.addString(FingerprintWriterNodeModel.CFG_FPS_COLUMN, colName);
 
-		String id = m_IdSelector.getSelectedColumn();
+		final String id = m_IdSelector.getSelectedColumn();
 		settings.addString(FingerprintWriterNodeModel.CFG_ID_COLUMN, id);
 
-		boolean overwriteOK = m_overwriteOKChecker.isSelected();
+		final boolean overwriteOK = m_overwriteOKChecker.isSelected();
 		settings.addBoolean(FingerprintWriterNodeModel.CFG_OVERWRITE_OK,
 				overwriteOK);
 
-		boolean writeRowid = m_rowHeaderChecker.isSelected();
+		final boolean writeRowid = m_rowHeaderChecker.isSelected();
 		settings.addBoolean(FingerprintWriterNodeModel.CFG_WRITE_ROWID,
 				writeRowid);
 	}
 
-	
+
 	//
 	// Public Methods
 	//
-	
+
 	/**
 	 * Determines, if the passed in data type is one of the types we need to
 	 * ignore.
@@ -343,7 +343,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 		boolean bFound = false;
 
 		if (dataType != null) {
-			for (Class<?> dataCellClass : IGNORE_STRING_COMPATIBILITY_FOR_DATATYPES) {
+			for (final Class<?> dataCellClass : IGNORE_STRING_COMPATIBILITY_FOR_DATATYPES) {
 				try {
 					if (dataType
 							.equals(DataType
@@ -351,7 +351,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 						bFound = true;
 						break;
 					}
-				} catch (ClassCastException exc) {
+				} catch (final ClassCastException exc) {
 					LOGGER.warn("An non-DataCell class has been found in FingerprintWriterNodeDialog.IGNORE_STRING_COMPATIBILITY_FOR_DATATYPES list.");
 				}
 			}

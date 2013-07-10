@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitDiversityPickerNodeFactory extends
-        NodeFactory<RDKitDiversityPickerNodeModel> {
+public class RDKitDiversityPickerNodeFactory extends NodeFactory<RDKitDiversityPickerNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitDiversityPickerNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitDiversityPickerNodeDialog();
+	}
 
-    /**
-     * Creates a model for the RDKitDiversityPicker functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitDiversityPickerNodeModel createNodeModel() {
-        return new RDKitDiversityPickerNodeModel();
-    }
+	/**
+	 * Creates a model for the RDKitDiversityPicker functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitDiversityPickerNodeModel createNodeModel() {
+		return new RDKitDiversityPickerNodeModel();
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitDiversityPickerNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitDiversityPickerNodeModel nodeModel) {
-        return null;
-    }
+	 */
+	@Override
+	public NodeView<RDKitDiversityPickerNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitDiversityPickerNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node does possess a dialog for configuration.
-     * 
+	/**
+	 * This node does possess a dialog for configuration.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 
 }

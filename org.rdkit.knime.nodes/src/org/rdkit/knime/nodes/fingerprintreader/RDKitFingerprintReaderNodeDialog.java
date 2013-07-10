@@ -64,7 +64,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * <code>NodeDialog</code> for the "RDKitFingerprintReader" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
@@ -74,47 +74,47 @@ public class RDKitFingerprintReaderNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with components to configure an input file and
-     * the option to use IDs from the fingerprint file as row IDs.
-     */
+
+	/**
+	 * Create a new dialog pane with components to configure an input file and
+	 * the option to use IDs from the fingerprint file as row IDs.
+	 */
 	RDKitFingerprintReaderNodeDialog() {
-        super.addDialogComponent(new DialogComponentFileChooser(
-        		createInputFileModel(), "FpsReaderHistory", 
-        		JFileChooser.OPEN_DIALOG, ".fps|.fps.gz"));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createUseIdsFromFileAsRowIdsModel(), 
-        		"Use IDs from file as row IDs (Requires unique IDs!)"));
+		super.addDialogComponent(new DialogComponentFileChooser(
+				createInputFileModel(), "FpsReaderHistory",
+				JFileChooser.OPEN_DIALOG, ".fps|.fps.gz"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseIdsFromFileAsRowIdsModel(),
+				"Use IDs from file as row IDs (Requires unique IDs!)"));
 
-        // Although we are not using any GridBagLayout constraints, setting this 
-        // layout manager makes it look nicer (surprisingly)
-        Component comp = getTab("Options");
-        if (comp instanceof JPanel) {
-        	((JPanel)comp).setLayout(new GridBagLayout());
-        }    	
-    }
+		// Although we are not using any GridBagLayout constraints, setting this
+		// layout manager makes it look nicer (surprisingly)
+		final Component comp = getTab("Options");
+		if (comp instanceof JPanel) {
+			((JPanel)comp).setLayout(new GridBagLayout());
+		}
+	}
 
-    //
-    // Static Methods
-    //
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used for the input file selection.
-     * 
-     * @return Settings model for input file selection.
-     */
-    static final SettingsModelString createInputFileModel() {
-        return new SettingsModelString("filename", "");
-    }
+	/**
+	 * Creates the settings model to be used for the input file selection.
+	 * 
+	 * @return Settings model for input file selection.
+	 */
+	static final SettingsModelString createInputFileModel() {
+		return new SettingsModelString("filename", "");
+	}
 
-    /**
-     * Creates the settings model to be used for the option to
-     * use IDs read from the fingerprint file as row IDs.
-     * 
-     * @return Settings model for using file IDs as row IDs.
-     */
-    static final SettingsModelBoolean createUseIdsFromFileAsRowIdsModel() {
-        return new SettingsModelBoolean("useFileIdsAsRowIds", false);
-    }
+	/**
+	 * Creates the settings model to be used for the option to
+	 * use IDs read from the fingerprint file as row IDs.
+	 * 
+	 * @return Settings model for using file IDs as row IDs.
+	 */
+	static final SettingsModelBoolean createUseIdsFromFileAsRowIdsModel() {
+		return new SettingsModelBoolean("useFileIdsAsRowIds", false);
+	}
 }

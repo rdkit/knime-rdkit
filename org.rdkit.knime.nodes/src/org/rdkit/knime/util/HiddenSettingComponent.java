@@ -63,61 +63,61 @@ import org.knime.core.node.port.PortObjectSpec;
 public final class HiddenSettingComponent extends DialogComponent {
 
 	//
-    // Constructors
-    //
-    
-    /**
-     * Constructor that makes the setting known to the super class, 
-     * which will take care of loading and saving it.
-     *
-     * @param settingsModel The model that stores the value for this component.
-     */
-    public HiddenSettingComponent(final SettingsModel settingsModel) {
-        super(settingsModel);
-    }
-    
-    //
-    // Protected Methods
-    //
+	// Constructors
+	//
 
-    /**
-     * Does not do anything.
-     */
+	/**
+	 * Constructor that makes the setting known to the super class,
+	 * which will take care of loading and saving it.
+	 *
+	 * @param settingsModel The model that stores the value for this component.
+	 */
+	public HiddenSettingComponent(final SettingsModel settingsModel) {
+		super(settingsModel);
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * Does not do anything.
+	 */
 	@Override
 	protected void updateComponent() {
 		// Empty by purpose
 	}
 
-    /**
-     * Does not do anything.
-     */
+	/**
+	 * Does not do anything.
+	 */
 	@Override
 	protected void validateSettingsBeforeSave() throws InvalidSettingsException {
 		// Empty by purpose
 	}
 
-    /**
-     * Does not do anything.
-     */
+	/**
+	 * Does not do anything.
+	 */
 	@Override
-	protected void checkConfigurabilityBeforeLoad(PortObjectSpec[] specs)
+	protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
 			throws NotConfigurableException {
 		// Empty by purpose
 	}
 
-    /**
-     * Does not do anything.
-     */
+	/**
+	 * Does not do anything.
+	 */
 	@Override
-	protected void setEnabledComponents(boolean enabled) {
+	protected void setEnabledComponents(final boolean enabled) {
 		// Empty by purpose
 	}
 
-    /**
-     * Does not do anything.
-     */
+	/**
+	 * Does not do anything.
+	 */
 	@Override
-	public void setToolTipText(String text) {
+	public void setToolTipText(final String text) {
 		// Empty by purpose
 	}
 }

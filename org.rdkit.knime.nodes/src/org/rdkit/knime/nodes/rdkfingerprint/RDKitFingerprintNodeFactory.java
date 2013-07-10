@@ -58,48 +58,47 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitFingerprintNodeFactory extends
-        NodeFactory<RDKitFingerprintNodeModel> {
+public class RDKitFingerprintNodeFactory extends NodeFactory<RDKitFingerprintNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitFingerprintNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitFingerprintNodeDialog();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RDKitFingerprintNodeModel createNodeModel() {
-        return new RDKitFingerprintNodeModel();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public RDKitFingerprintNodeModel createNodeModel() {
+		return new RDKitFingerprintNodeModel();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<RDKitFingerprintNodeModel> createNodeView(
-            final int viewIndex, final RDKitFingerprintNodeModel nodeModel) {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<RDKitFingerprintNodeModel> createNodeView(
+			final int viewIndex, final RDKitFingerprintNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 
 }

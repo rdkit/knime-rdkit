@@ -69,7 +69,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitSubstruc
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Creates the node model for a molecule substructure filter based on a RDKit Mol query column.
 	 */
@@ -77,45 +77,45 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitSubstruc
 	public RDKitMoleculeSubstructFilterNodeModel() {
 		super(RDKitMolValue.class);
 	}
-	
+
 	//
 	// Protected Methods
 	//
-	
+
 	/**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Perform all checks except for the query column
-    	super.configure(inSpecs);
- 
-    	// Auto guess the input mol column if not set - f    	
-        // Auto guess the query mol column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class, 
-        		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match         		
-        		"Auto guessing: Using column %COLUMN_NAME% as query molecule column.", 
-        		"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Perform all checks except for the query column
+		super.configure(inSpecs);
 
-        // Determines, if the query mol column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,  
-        		"Query molecule column has not been specified yet.",
-        		"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
+		// Auto guess the input mol column if not set - f
+		// Auto guess the query mol column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+				(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
+				"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
+				"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+		// Determines, if the query mol column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+				"Query molecule column has not been specified yet.",
+				"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }	
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
 
 	/**
 	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
 	 * the row-by-row processing starts. All necessary pre-calculations can be done here. Results of the method
 	 * should be made available through member variables, which get picked up by the other methods like
-	 * process(InputDataInfo[], DataRow) in the factory or 
+	 * process(InputDataInfo[], DataRow) in the factory or
 	 * {@link #postProcessing(BufferedDataTable[], BufferedDataTable[], ExecutionContext)} in the model.
 	 * 
 	 * @param inData The input tables of the node.
@@ -125,19 +125,20 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitSubstruc
 	 * 
 	 * @throws Exception Thrown, if pre-processing fails.
 	 */
-	protected void preProcessing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
-		final ExecutionContext exec) throws Exception {
+	@Override
+	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
 
 		int i = 0;
-		int iRowCount = inData[1].getRowCount();
-		ROMol[] arrPatterns = new ROMol[iRowCount];
+		final int iRowCount = inData[1].getRowCount();
+		final ROMol[] arrPatterns = new ROMol[iRowCount];
 		int iTotalPatternAtomsCount = 0;
 		int iTotalEmptyPatternCells = 0;
-		
+
 		exec.setMessage("Evaluate query molecules");
-		
+
 		// Get all query molecules (empty cells will result in null values according to our empty cell policy
-		for (DataRow row : inData[1]) {
+		for (final DataRow row : inData[1]) {
 			arrPatterns[i] = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
 			if (arrPatterns[i] == null) {
 				iTotalEmptyPatternCells++;
@@ -145,17 +146,17 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitSubstruc
 			else {
 				iTotalPatternAtomsCount += arrPatterns[i].getNumAtoms();
 			}
-			
+
 			if (i % 20 == 0) {
 				reportProgress(exec, i, iRowCount, row, "Evaluate query molecules");
 			}
 
 			i++;
 		}
-		
+
 		setPreprocessingResults(arrPatterns, iTotalEmptyPatternCells, iTotalPatternAtomsCount);
-		
+
 		// Does not do anything by default
 		exec.setProgress(1.0d);
-	}			 
+	}
 }

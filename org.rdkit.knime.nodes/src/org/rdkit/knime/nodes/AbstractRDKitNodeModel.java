@@ -66,11 +66,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
@@ -79,6 +82,7 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -163,64 +167,64 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	//
 
 	/** List to register setting models. It's important to initialize this first. */
-    private List<SettingsModel> m_listRegisteredSettings = new ArrayList<SettingsModel>();
+	private final List<SettingsModel> m_listRegisteredSettings = new ArrayList<SettingsModel>();
 
-    /**
-     * Map with information about deprecated setting keys. SettingsModel => Array of all keys. The
-     * first element in this array must be the currently used key, all following elements are considered
-     * deprecated keys, which will still be understood.
-     */
-    private Map<SettingsModel, String[]> m_mapDeprecatedSettingKeys = new HashMap<SettingsModel, String[]>();
+	/**
+	 * Map with information about deprecated setting keys. SettingsModel => Array of all keys. The
+	 * first element in this array must be the currently used key, all following elements are considered
+	 * deprecated keys, which will still be understood.
+	 */
+	private final Map<SettingsModel, String[]> m_mapDeprecatedSettingKeys = new HashMap<SettingsModel, String[]>();
 
-    /**
-     * Map with information about setting keys. SettingsModel => Boolean. If set to true
-     * for a SettingsModel we declare here that this setting was added later than version 1.0 and
-     * that there might be old nodes that don't have the setting. InvalidSettingsExceptions will
-     * be ignored for such a setting.
-     */
-    private Map<SettingsModel, Boolean> m_mapIgnoreNonExistingSettingKeys = new HashMap<SettingsModel, Boolean>();
+	/**
+	 * Map with information about setting keys. SettingsModel => Boolean. If set to true
+	 * for a SettingsModel we declare here that this setting was added later than version 1.0 and
+	 * that there might be old nodes that don't have the setting. InvalidSettingsExceptions will
+	 * be ignored for such a setting.
+	 */
+	private final Map<SettingsModel, Boolean> m_mapIgnoreNonExistingSettingKeys = new HashMap<SettingsModel, Boolean>();
 
 	/** List to register RDKit objects for cleanup. It's important to initialize this first. */
-    private RDKitCleanupTracker m_rdkitCleanupTracker = new RDKitCleanupTracker();
+	private final RDKitCleanupTracker m_rdkitCleanupTracker = new RDKitCleanupTracker();
 
-    /** Tracks warnings during execution and consolidates them. */
-    private WarningConsolidator m_warnings;
+	/** Tracks warnings during execution and consolidates them. */
+	private WarningConsolidator m_warnings;
 
-    /**
-     * This is an internally used very small table that just keeps track of generated / conserved
-     * content models used for RDKit table views. It is only used, if the node model implements
-     * the TableViewSupport interface.
-     */
-    private BufferedDataTable m_tableContentTableSpecs;
+	/**
+	 * This is an internally used very small table that just keeps track of generated / conserved
+	 * content models used for RDKit table views. It is only used, if the node model implements
+	 * the TableViewSupport interface.
+	 */
+	private BufferedDataTable m_tableContentTableSpecs;
 
-    /**
-     * This array contains table content models of input tables, if the node model implements
-     * the TableViewSupport interface. A content model is a wrapper around a BufferedDataTable to work with
-     * interactive view data structures.
-     */
-    private TableContentModel[] m_arrInContModel;
+	/**
+	 * This array contains table content models of input tables, if the node model implements
+	 * the TableViewSupport interface. A content model is a wrapper around a BufferedDataTable to work with
+	 * interactive view data structures.
+	 */
+	private TableContentModel[] m_arrInContModel;
 
-    /**
-     * This array contains table content models of input tables, if the node model implements
-     * the TableViewSupport interface. A content model is a wrapper around a BufferedDataTable to work with
-     * interactive view data structures.
-     */
-    private TableContentModel[] m_arrOutContModel;
-    
-    /** 
-     * Stores an exception that occurred when executing the node. This information is used
-     * when finishExecution is called to determine how to treat RDKit objects when cleaning up.
-     */
-    private Throwable m_excEncountered; 
-    
-    /**
-     * Timestamp when execution started.
-     */
-    private long m_lExecutionStartTs;
+	/**
+	 * This array contains table content models of input tables, if the node model implements
+	 * the TableViewSupport interface. A content model is a wrapper around a BufferedDataTable to work with
+	 * interactive view data structures.
+	 */
+	private TableContentModel[] m_arrOutContModel;
 
-    //
-    // Constructors
-    //
+	/**
+	 * Stores an exception that occurred when executing the node. This information is used
+	 * when finishExecution is called to determine how to treat RDKit objects when cleaning up.
+	 */
+	private Throwable m_excEncountered;
+
+	/**
+	 * Timestamp when execution started.
+	 */
+	private long m_lExecutionStartTs;
+
+	//
+	// Constructors
+	//
 
 	/**
 	 * Creates a new node model with the specified number of input and output ports.
@@ -255,138 +259,143 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @return Unique wave id.
 	 */
+	@Override
 	public int createUniqueCleanupWaveId() {
 		return g_nextUniqueWaveId.getAndIncrement();
 	}
 
-    /**
-     * Registers an RDKit based object, which must have a delete() method implemented
-     * for freeing up resources later. The cleanup will happen for all registered
-     * objects when the method {@link #cleanupMarkedObjects()} is called.
-     * Note: If the same rdkitObject was already registered for a wave
-     * it would be cleaned up multiple times, which may have negative side effects and may
-     * even cause errors. Hence, always mark an object only once for cleanup, or - if
-     * required in certain situations - call {@link #markForCleanup(Object, boolean)}
-     * and set the last parameter to true to remove the object from the formerly registered wave.
-     *
-     * @param <T> Any class that implements a delete() method to be called to free up resources.
-     * @param rdkitObject An RDKit related object that should free resources when not
-     * 		used anymore. Can be null.
-     *
-     * @return The same object that was passed in. Null, if null was passed in.
-     *
-     * @see #cleanupMarkedObjects(int)
-     */
-    public <T extends Object> T markForCleanup(final T rdkitObject) {
-    	return markForCleanup(rdkitObject, 0, false);
-    }
+	/**
+	 * Registers an RDKit based object, which must have a delete() method implemented
+	 * for freeing up resources later. The cleanup will happen for all registered
+	 * objects when the method {@link #cleanupMarkedObjects()} is called.
+	 * Note: If the same rdkitObject was already registered for a wave
+	 * it would be cleaned up multiple times, which may have negative side effects and may
+	 * even cause errors. Hence, always mark an object only once for cleanup, or - if
+	 * required in certain situations - call {@link #markForCleanup(Object, boolean)}
+	 * and set the last parameter to true to remove the object from the formerly registered wave.
+	 *
+	 * @param <T> Any class that implements a delete() method to be called to free up resources.
+	 * @param rdkitObject An RDKit related object that should free resources when not
+	 * 		used anymore. Can be null.
+	 *
+	 * @return The same object that was passed in. Null, if null was passed in.
+	 *
+	 * @see #cleanupMarkedObjects(int)
+	 */
+	@Override
+	public <T extends Object> T markForCleanup(final T rdkitObject) {
+		return markForCleanup(rdkitObject, 0, false);
+	}
 
-    /**
-     * Registers an RDKit based object, which must have a delete() method implemented
-     * for freeing up resources later. The cleanup will happen for all registered
-     * objects when the method {@link #cleanupMarkedObjects()} is called.
-     * Note: If the last parameter is set to true and the same rdkitObject
-     * was already registered for another wave
-     * it will be removed from the former wave list and will exist only in the wave
-     * specified here. This can be useful for instance, if an object is first marked as
-     * part of a wave and later on it is determined that it needs to live longer (e.g.
-     * without a wave). In this case the first time this method would be called with a wave id,
-     * the second time without wave id (which would internally be wave = 0).
-     *
-     * @param <T> Any class that implements a delete() method to be called to free up resources.
-     * @param rdkitObject An RDKit related object that should free resources when not
-     * 		used anymore. Can be null.
-     * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
-     * 		id, and remove it from that former wave. Usually this should be set to false for
-     * 		performance reasons.
-     *
-     * @return The same object that was passed in. Null, if null was passed in.
-     *
-     * @see #cleanupMarkedObjects(int)
-     */
-    public <T extends Object> T markForCleanup(final T rdkitObject, final boolean bRemoveFromOtherWave) {
-    	return markForCleanup(rdkitObject, 0, bRemoveFromOtherWave);
-    }
+	/**
+	 * Registers an RDKit based object, which must have a delete() method implemented
+	 * for freeing up resources later. The cleanup will happen for all registered
+	 * objects when the method {@link #cleanupMarkedObjects()} is called.
+	 * Note: If the last parameter is set to true and the same rdkitObject
+	 * was already registered for another wave
+	 * it will be removed from the former wave list and will exist only in the wave
+	 * specified here. This can be useful for instance, if an object is first marked as
+	 * part of a wave and later on it is determined that it needs to live longer (e.g.
+	 * without a wave). In this case the first time this method would be called with a wave id,
+	 * the second time without wave id (which would internally be wave = 0).
+	 *
+	 * @param <T> Any class that implements a delete() method to be called to free up resources.
+	 * @param rdkitObject An RDKit related object that should free resources when not
+	 * 		used anymore. Can be null.
+	 * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
+	 * 		id, and remove it from that former wave. Usually this should be set to false for
+	 * 		performance reasons.
+	 *
+	 * @return The same object that was passed in. Null, if null was passed in.
+	 *
+	 * @see #cleanupMarkedObjects(int)
+	 */
+	public <T extends Object> T markForCleanup(final T rdkitObject, final boolean bRemoveFromOtherWave) {
+		return markForCleanup(rdkitObject, 0, bRemoveFromOtherWave);
+	}
 
-    /**
-     * Registers an RDKit based object that is used within a certain block (wave). $
-     * This object must have a delete() method implemented for freeing up resources later.
-     * The cleanup will happen for all registered objects when the method
-     * {@link #cleanupMarkedObjects(int)} is called with the same wave.
-     * Note: If the same rdkitObject was already registered for another wave (or no wave)
-     * it would be cleaned up multiple times, which may have negative side effects and may
-     * even cause errors. Hence, always mark an object only once for cleanup, or - if
-     * required in certain situations - call {@link #markForCleanup(Object, int, boolean)}
-     * and set the last parameter to true to remove the object from the formerly registered wave.
-     *
-     * @param <T> Any class that implements a delete() method to be called to free up resources.
-     * @param rdkitObject An RDKit related object that should free resources when not
-     * 		used anymore. Can be null.
-     * @param wave A number that identifies objects registered for a certain "wave".
-     *
-     * @return The same object that was passed in. Null, if null was passed in.
-     */
-    public <T extends Object> T markForCleanup(final T rdkitObject, final int wave) {
-    	return markForCleanup(rdkitObject, wave, false);
-    }
+	/**
+	 * Registers an RDKit based object that is used within a certain block (wave). $
+	 * This object must have a delete() method implemented for freeing up resources later.
+	 * The cleanup will happen for all registered objects when the method
+	 * {@link #cleanupMarkedObjects(int)} is called with the same wave.
+	 * Note: If the same rdkitObject was already registered for another wave (or no wave)
+	 * it would be cleaned up multiple times, which may have negative side effects and may
+	 * even cause errors. Hence, always mark an object only once for cleanup, or - if
+	 * required in certain situations - call {@link #markForCleanup(Object, int, boolean)}
+	 * and set the last parameter to true to remove the object from the formerly registered wave.
+	 *
+	 * @param <T> Any class that implements a delete() method to be called to free up resources.
+	 * @param rdkitObject An RDKit related object that should free resources when not
+	 * 		used anymore. Can be null.
+	 * @param wave A number that identifies objects registered for a certain "wave".
+	 *
+	 * @return The same object that was passed in. Null, if null was passed in.
+	 */
+	@Override
+	public <T extends Object> T markForCleanup(final T rdkitObject, final int wave) {
+		return markForCleanup(rdkitObject, wave, false);
+	}
 
-    /**
-     * Registers an RDKit based object that is used within a certain block (wave). $
-     * This object must have a delete() method implemented for freeing up resources later.
-     * The cleanup will happen for all registered objects when the method
-     * {@link #cleanupMarkedObjects(int)} is called with the same wave.
-     * Note: If the last parameter is set to true and the same rdkitObject
-     * was already registered for another wave (or no wave)
-     * it will be removed from the former wave list and will exist only in the wave
-     * specified here. This can be useful for instance, if an object is first marked as
-     * part of a wave and later on it is determined that it needs to live longer (e.g.
-     * without a wave). In this case the first time this method would be called with a wave id,
-     * the second time without wave id (which would internally be wave = 0).
-     *
-     * @param <T> Any class that implements a delete() method to be called to free up resources.
-     * @param rdkitObject An RDKit related object that should free resources when not
-     * 		used anymore. Can be null.
-     * @param wave A number that identifies objects registered for a certain "wave".
-     * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
-     * 		id, and remove it from that former wave. Usually this should be set to false for
-     * 		performance reasons.
-     *
-     * @return The same object that was passed in. Null, if null was passed in.
-     */
-    public <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
-    	return m_rdkitCleanupTracker.markForCleanup(rdkitObject, wave, bRemoveFromOtherWave);
-    }
+	/**
+	 * Registers an RDKit based object that is used within a certain block (wave). $
+	 * This object must have a delete() method implemented for freeing up resources later.
+	 * The cleanup will happen for all registered objects when the method
+	 * {@link #cleanupMarkedObjects(int)} is called with the same wave.
+	 * Note: If the last parameter is set to true and the same rdkitObject
+	 * was already registered for another wave (or no wave)
+	 * it will be removed from the former wave list and will exist only in the wave
+	 * specified here. This can be useful for instance, if an object is first marked as
+	 * part of a wave and later on it is determined that it needs to live longer (e.g.
+	 * without a wave). In this case the first time this method would be called with a wave id,
+	 * the second time without wave id (which would internally be wave = 0).
+	 *
+	 * @param <T> Any class that implements a delete() method to be called to free up resources.
+	 * @param rdkitObject An RDKit related object that should free resources when not
+	 * 		used anymore. Can be null.
+	 * @param wave A number that identifies objects registered for a certain "wave".
+	 * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
+	 * 		id, and remove it from that former wave. Usually this should be set to false for
+	 * 		performance reasons.
+	 *
+	 * @return The same object that was passed in. Null, if null was passed in.
+	 */
+	public <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
+		return m_rdkitCleanupTracker.markForCleanup(rdkitObject, wave, bRemoveFromOtherWave);
+	}
 
-    /**
-     * Frees resources for all objects that have been registered prior to this last
-     * call using the method {@link #cleanupMarkedObjects()}.
-     */
-    public void cleanupMarkedObjects() {
-    	m_rdkitCleanupTracker.cleanupMarkedObjects();
-    }
+	/**
+	 * Frees resources for all objects that have been registered prior to this last
+	 * call using the method {@link #cleanupMarkedObjects()}.
+	 */
+	@Override
+	public void cleanupMarkedObjects() {
+		m_rdkitCleanupTracker.cleanupMarkedObjects();
+	}
 
-    /**
-     * Frees resources for all objects that have been registered prior to this last
-     * call for a certain wave using the method {@link #cleanupMarkedObjects(int)}.
-     *
-     * @param wave A number that identifies objects registered for a certain "wave".
-     */
-    public void cleanupMarkedObjects(final int wave) {
-    	m_rdkitCleanupTracker.cleanupMarkedObjects(wave);
-    }
+	/**
+	 * Frees resources for all objects that have been registered prior to this last
+	 * call for a certain wave using the method {@link #cleanupMarkedObjects(int)}.
+	 *
+	 * @param wave A number that identifies objects registered for a certain "wave".
+	 */
+	@Override
+	public void cleanupMarkedObjects(final int wave) {
+		m_rdkitCleanupTracker.cleanupMarkedObjects(wave);
+	}
 
-    /**
-     * Removes all resources for all objects that have been registered prior to this last
-     * call using the method {@link #cleanupMarkedObjects()}, but delayes the cleanup
-     * process. It basically moves the objects of interest into quarantine.
-     */
-    public void quarantineAndCleanupMarkedObjects() {
-    	m_rdkitCleanupTracker.quarantineAndCleanupMarkedObjects();
-    }
+	/**
+	 * Removes all resources for all objects that have been registered prior to this last
+	 * call using the method {@link #cleanupMarkedObjects()}, but delayes the cleanup
+	 * process. It basically moves the objects of interest into quarantine.
+	 */
+	public void quarantineAndCleanupMarkedObjects() {
+		m_rdkitCleanupTracker.quarantineAndCleanupMarkedObjects();
+	}
 
-    // The following methods are pre-requisites for the interactive view implementation
-    // that is capable of showing additional header information (e.g. structures)
-    // for the data table.
+	// The following methods are pre-requisites for the interactive view implementation
+	// that is capable of showing additional header information (e.g. structures)
+	// for the data table.
 
 	/**
 	 * Returns the list of indices of input tables, which shall be used in
@@ -425,8 +434,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 	/**
 	 * Returns the content model of table data to be used in a view.
-     * In this implementation a table content model has only be
-     * created if the node model declares to implement TableViewSupport.
+	 * In this implementation a table content model has only be
+	 * created if the node model declares to implement TableViewSupport.
 	 *
 	 * @param bIsInputTable Set to true, if the passed in index is from an input table.
 	 * 		Set to false, if the passed in index is from an output table.
@@ -436,13 +445,13 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @see #getInputTablesToConserve()
 	 * @see #getOutputTablesToConserve()
-     */
+	 */
 	public TableContentModel getContentModel(final boolean bIsInputTable, final int iIndex) {
 		TableContentModel contentModel = null;
 
 		if (this instanceof TableViewSupport) {
-			TableContentModel[] arrTarget =
-				(bIsInputTable ? m_arrInContModel : m_arrOutContModel);
+			final TableContentModel[] arrTarget =
+					(bIsInputTable ? m_arrInContModel : m_arrOutContModel);
 
 			if (arrTarget != null && iIndex >= 0 && iIndex < arrTarget.length) {
 				contentModel = arrTarget[iIndex];
@@ -452,62 +461,62 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		return contentModel;
 	}
 
-    /**
-     * In this implementation a table content model is only
-     * created if the node model declares to implement TableViewSupport).
-     * This method returns only an array of buffered data tables, if
-     * this interface is implemented (declared). It takes them in the order
-     * of declared indices, first input, then output table indices.
-     *
-     * @return Array of BDTs which are held and used internally.
-     *
-     * @see #getInputTablesToConserve()
-     * @see #getOutputTablesToConserve()
-     */
-    public BufferedDataTable[] getInternalTables() {
-    	BufferedDataTable[] arrRet = null;
+	/**
+	 * In this implementation a table content model is only
+	 * created if the node model declares to implement TableViewSupport).
+	 * This method returns only an array of buffered data tables, if
+	 * this interface is implemented (declared). It takes them in the order
+	 * of declared indices, first input, then output table indices.
+	 *
+	 * @return Array of BDTs which are held and used internally.
+	 *
+	 * @see #getInputTablesToConserve()
+	 * @see #getOutputTablesToConserve()
+	 */
+	public BufferedDataTable[] getInternalTables() {
+		BufferedDataTable[] arrRet = null;
 		int iConserved = 0;
 
 		if (this instanceof TableViewSupport) {
-			int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
-			int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
+			final int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
+			final int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
 			arrRet = new BufferedDataTable[arrIn.length + arrOut.length + 1];
 
 			// Conserve spec table (always first table in internal table array, if any)
 			arrRet[iConserved++] = m_tableContentTableSpecs;
 
 			// Conserve input tables
-        	for (int i = 0; i < arrIn.length; i++) {
-        		DataTable dataTable = m_arrInContModel[i].getDataTable();
-        		if (dataTable instanceof BufferedDataTable) {
-			        arrRet[iConserved++] = (BufferedDataTable)dataTable;
-			    }
+			for (int i = 0; i < arrIn.length; i++) {
+				final DataTable dataTable = m_arrInContModel[i].getDataTable();
+				if (dataTable instanceof BufferedDataTable) {
+					arrRet[iConserved++] = (BufferedDataTable)dataTable;
+				}
 			}
 
 			// Conserve output tables
-        	for (int i = 0; i < arrOut.length; i++) {
-        		DataTable dataTable = m_arrOutContModel[i].getDataTable();
-        		if (dataTable instanceof BufferedDataTable) {
-			        arrRet[iConserved++] = (BufferedDataTable)dataTable;
-			    }
+			for (int i = 0; i < arrOut.length; i++) {
+				final DataTable dataTable = m_arrOutContModel[i].getDataTable();
+				if (dataTable instanceof BufferedDataTable) {
+					arrRet[iConserved++] = (BufferedDataTable)dataTable;
+				}
 			}
-        };
+		};
 
-        // We return the tables only, if everything worked as expected
+		// We return the tables only, if everything worked as expected
 		return (iConserved > 1 && iConserved == arrRet.length ? arrRet : null);
-    }
+	}
 
-    /**
-     * Allows the WorkflowManager to set information about new BDTs, for
-     * instance after load.
-     * In this implementation table content models are only filled with data
-     * if the node model declares to implement TableViewSupport.
-     * This method does not do anything unless this interface is implemented
-     * (declared).
-     *
-     * @param arrTables The array of new internal tables
-     */
-    public void setInternalTables(final BufferedDataTable[] arrTables) {
+	/**
+	 * Allows the WorkflowManager to set information about new BDTs, for
+	 * instance after load.
+	 * In this implementation table content models are only filled with data
+	 * if the node model declares to implement TableViewSupport.
+	 * This method does not do anything unless this interface is implemented
+	 * (declared).
+	 *
+	 * @param arrTables The array of new internal tables
+	 */
+	public void setInternalTables(final BufferedDataTable[] arrTables) {
 		if (this instanceof TableViewSupport) {
 
 			// No table data received - Reset existing content models
@@ -517,23 +526,23 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 			// Process received table data after checking their correctness
 			else if (precheckReceivedInternalTables(arrTables)) {
-				int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
-				int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
+				final int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
+				final int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
 
 				int iCount = 1; // Jump over 0. element, which is our internal spec table
 
 				// Restore input tables
-	        	for (int i = 0; i < arrIn.length; i++) {
-	        		m_arrInContModel[i].setDataTable(arrTables[iCount++]);
-	        		HiLiteHandler inProp = getInHiLiteHandler(arrIn[i]);
-	        		m_arrInContModel[i].setHiLiteHandler(inProp);
+				for (int i = 0; i < arrIn.length; i++) {
+					m_arrInContModel[i].setDataTable(arrTables[iCount++]);
+					final HiLiteHandler inProp = getInHiLiteHandler(arrIn[i]);
+					m_arrInContModel[i].setHiLiteHandler(inProp);
 				}
 
 				// Restore output tables
-	        	for (int i = 0; i < arrOut.length; i++) {
-	        		m_arrOutContModel[i].setDataTable(arrTables[iCount++]);
-	        		HiLiteHandler outProp = getOutHiLiteHandler(arrOut[i]);
-	        		m_arrOutContModel[i].setHiLiteHandler(outProp);
+				for (int i = 0; i < arrOut.length; i++) {
+					m_arrOutContModel[i].setDataTable(arrTables[iCount++]);
+					final HiLiteHandler outProp = getOutHiLiteHandler(arrOut[i]);
+					m_arrOutContModel[i].setHiLiteHandler(outProp);
 				}
 			}
 
@@ -543,43 +552,43 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				LOGGER.error("Conserved tables for RDKit Table Views are out of sync with the current node version, please rerun the node.");
 			}
 		}
-    }
+	}
 
 	//
 	// Protected Methods
 	//
 
-    /**
-     * Determines, if received internal tables conform with what this node can handle.
-     *
-     * @param arrTables Tables that have been sent to the method setInternalTables().
-     * 		Can be null.
-     *
-     * @return True, if table at position 0, which is an internal spec table, is conform
-     * 		with the results that the methods  {@link #getInputTablesToConserve()} and
-     * 		{@link #getOutputTablesToConserve()} return. False otherwise.
-     */
-    protected boolean precheckReceivedInternalTables(final BufferedDataTable[] arrTables) {
-    	boolean bPrecheckOk = false;
+	/**
+	 * Determines, if received internal tables conform with what this node can handle.
+	 *
+	 * @param arrTables Tables that have been sent to the method setInternalTables().
+	 * 		Can be null.
+	 *
+	 * @return True, if table at position 0, which is an internal spec table, is conform
+	 * 		with the results that the methods  {@link #getInputTablesToConserve()} and
+	 * 		{@link #getOutputTablesToConserve()} return. False otherwise.
+	 */
+	protected boolean precheckReceivedInternalTables(final BufferedDataTable[] arrTables) {
+		boolean bPrecheckOk = false;
 
-		int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
-		int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
+		final int[] arrIn = m_arrInContModel != null ? getInputTablesToConserve() : new int[0];
+		final int[] arrOut = m_arrOutContModel != null ? getOutputTablesToConserve() : new int[0];
 
 		// Check number of passed in tables
 		if (arrTables != null && 1 + arrIn.length + arrOut.length == arrTables.length && arrTables.length > 1) {
 			// Do a deeper check reading from the internal spec table and comparing, if
 			// what was stored is still what we can handle (basically, if input and output
 			// tables are still the same)
-			BufferedDataTable tableContentTableSpecs = arrTables[0];
+			final BufferedDataTable tableContentTableSpecs = arrTables[0];
 			CloseableRowIterator specIterator = null;
 
 			try {
-				int iColIndex = tableContentTableSpecs.getDataTableSpec().findColumnIndex(PORT_TYPE_COLUMN_NAME);
+				final int iColIndex = tableContentTableSpecs.getDataTableSpec().findColumnIndex(PORT_TYPE_COLUMN_NAME);
 				specIterator = tableContentTableSpecs.iterator();
 
 				// Check input tables
 				for (int i = 0; i < arrIn.length; i++) {
-					String strTableType = ((StringValue)(specIterator.next().getCell(iColIndex))).getStringValue();
+					final String strTableType = ((StringValue)(specIterator.next().getCell(iColIndex))).getStringValue();
 					if (!INPUT_TABLE_ID.equals(strTableType)) {
 						throw new RuntimeException("Unexpected input table found.");
 					}
@@ -587,7 +596,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 				// Check output tables
 				for (int i = 0; i < arrOut.length; i++) {
-					String strTableType = ((StringValue)(specIterator.next().getCell(iColIndex))).getStringValue();
+					final String strTableType = ((StringValue)(specIterator.next().getCell(iColIndex))).getStringValue();
 					if (!OUTPUT_TABLE_ID.equals(strTableType)) {
 						throw new RuntimeException("Unexpected input table found.");
 					}
@@ -599,7 +608,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 				bPrecheckOk = true;
 			}
-			catch (Exception exc) {
+			catch (final Exception exc) {
 				bPrecheckOk = false;
 				LOGGER.debug("Reading internal tables failed: " + exc.getMessage());
 			}
@@ -611,13 +620,13 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		}
 
 		return bPrecheckOk;
-    }
+	}
 
-    /**
-     * Resets all internally used content table models which are used normally
-     * in Table Views.
-     */
-    protected void resetContentTableModels() {
+	/**
+	 * Resets all internally used content table models which are used normally
+	 * in Table Views.
+	 */
+	protected void resetContentTableModels() {
 		if (m_arrInContModel != null) {
 			for (int i = 0; i < m_arrInContModel.length; i++) {
 				m_arrInContModel[i].setDataTable(null);
@@ -630,21 +639,21 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				m_arrOutContModel[i].setHiLiteHandler(null);
 			}
 		}
-    }
+	}
 
-    /**
-     * This method gets called in the very beginning from the constructors to setup
-     * structures for internal content table model storage. These structures are
-     * used for RDKit table views. This method executes only, if the node model
-     * implements TableViewSupport.
-     *
-     * @param inPorts Number of in ports.
-     * @param iOutPorts Number of out ports.
-     */
-    protected void initializeContentTableModels(final int inPorts, final int iOutPorts) {
+	/**
+	 * This method gets called in the very beginning from the constructors to setup
+	 * structures for internal content table model storage. These structures are
+	 * used for RDKit table views. This method executes only, if the node model
+	 * implements TableViewSupport.
+	 *
+	 * @param inPorts Number of in ports.
+	 * @param iOutPorts Number of out ports.
+	 */
+	protected void initializeContentTableModels(final int inPorts, final int iOutPorts) {
 		if (this instanceof TableViewSupport) {
 			// Create array for input table content models
-			int[] arrIn = getInputTablesToConserve();
+			final int[] arrIn = getInputTablesToConserve();
 			m_arrInContModel = new TableContentModel[arrIn == null ? 0 : arrIn.length];
 
 			// All models have empty content in the beginning
@@ -654,7 +663,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			}
 
 			// Create array for input table content models
-			int[] arrOut = getOutputTablesToConserve();
+			final int[] arrOut = getOutputTablesToConserve();
 			m_arrOutContModel = new TableContentModel[arrOut == null ? 0 : arrOut.length];
 
 			// All models have empty content in the beginning
@@ -667,14 +676,14 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			m_arrInContModel = null;
 			m_arrOutContModel = null;
 		}
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     * This method does usually not do anything in this implementation unless the node model
-     * implements the interface BufferedDataContainer (which is extended by the interface
-     * InteractiveTableSupport). In this case it resets the internally held table content model.
-     */
+	/**
+	 * {@inheritDoc}
+	 * This method does usually not do anything in this implementation unless the node model
+	 * implements the interface BufferedDataContainer (which is extended by the interface
+	 * InteractiveTableSupport). In this case it resets the internally held table content model.
+	 */
 	@Override
 	protected void reset() {
 		if (this instanceof BufferedDataTableHolder) {
@@ -682,107 +691,293 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			for (int i = 0; i < m_arrInContModel.length; i++) {
 				m_arrInContModel[i].setDataTable(null);
 				m_arrInContModel[i].setHiLiteHandler(null);
-		        assert (!m_arrInContModel[i].hasData());
+				assert (!m_arrInContModel[i].hasData());
 			}
 
 			// Reset output models to have empty content and no hiliting handler attached
 			for (int i = 0; i < m_arrOutContModel.length; i++) {
 				m_arrOutContModel[i].setDataTable(null);
 				m_arrOutContModel[i].setHiLiteHandler(null);
-		        assert (!m_arrOutContModel[i].hasData());
+				assert (!m_arrOutContModel[i].hasData());
 			}
 		}
 	}
 
-    /**
-     * Should be called before the own implementation starts its work.
-     * This clears all warnings from the warning consolidator and checks the
-     * error state of the native RDKit library.
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warning and error tracker
-    	getWarningConsolidator().clear();
+	/**
+	 * Should be called before the own implementation starts its work.
+	 * This clears all warnings from the warning consolidator and checks the
+	 * error state of the native RDKit library.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warning and error tracker
+		getWarningConsolidator().clear();
 
-    	// Check whether native RDKit library has been loaded successfully
-        RDKitTypesPluginActivator.checkErrorState();
+		// Check whether native RDKit library has been loaded successfully
+		RDKitTypesPluginActivator.checkErrorState();
 
-        return new DataTableSpec[getNrOutPorts()];
-    }
+		return new DataTableSpec[getNrOutPorts()];
+	}
 
-    /**
-     * In this implementation this method acts as director of calling
-     * {@link #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)},
-     * {@link #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)} and
-     * {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}.
-     * Derived classes need to implement at least the processing() method. It also
-     * takes responsible of directing the warning generation as well as the clean up of
-     * RDKit based resources. Do not override this method. Rather override one listed
-     * under the "@see" section.
-     *
-     * {@inheritDoc}
-     *
-     * @see #createInputDataInfos(int, DataTableSpec)
-     * @see #getPreProcessingPercentage()
-     * @see #getPostProcessingPercentage()
-     * @see #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
-     * @see #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
-     * @see #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)
-     * @see #createWarningContextOccurrencesMap(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[])
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-    	m_lExecutionStartTs = System.currentTimeMillis();
-    	BufferedDataTable[] arrResultTables = null;
-    	m_excEncountered = null;
+	/**
+	 * In this implementation this method acts as director of calling
+	 * {@link #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)},
+	 * {@link #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)} and
+	 * {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}.
+	 * Derived classes need to implement at least the processing() method. It also
+	 * takes responsible of directing the warning generation as well as the clean up of
+	 * RDKit based resources. Do not override this method. Rather override one listed
+	 * under the "@see" section.
+	 *
+	 * {@inheritDoc}
+	 *
+	 * @see #createInputDataInfos(int, DataTableSpec)
+	 * @see #getPreProcessingPercentage()
+	 * @see #getPostProcessingPercentage()
+	 * @see #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
+	 * @see #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
+	 * @see #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)
+	 * @see #createWarningContextOccurrencesMap(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[])
+	 */
+	@Override
+	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+			final ExecutionContext exec) throws Exception {
+		m_lExecutionStartTs = System.currentTimeMillis();
+		BufferedDataTable[] arrConvertedTables = null;
+		BufferedDataTable[] arrResultTables = null;
+		m_excEncountered = null;
 
-    	try {
-    		// We use a nested try / catch block here as a trick to know about the
-    		// exception in the finally block
-    		try {
-		    	// Reset warning and error tracker
-		    	getWarningConsolidator().clear();
+		try {
+			// We use a nested try / catch block here as a trick to know about the
+			// exception in the finally block
+			try {
+				// Reset warning and error tracker
+				getWarningConsolidator().clear();
 
-		        // Get settings and input information, e.g. index information
-		        final InputDataInfo[][] arrInputDataInfo = createInputDataInfos(getInputTableSpecs(inData));
+				// Determine progress weights
+				final double dPercConv = 0.05d;
+				final double dPercPre = correctPercentage(getPreProcessingPercentage());
+				final double dPercPost = correctPercentage(getPostProcessingPercentage());
+				final double dPercCore = correctPercentage(1.0d - dPercConv - dPercPre - dPercPost);
 
-		        // Determine progress weights
-		        double dPercPre = correctPercentage(getPreProcessingPercentage());
-		        double dPercPost = correctPercentage(getPostProcessingPercentage());
-		        double dPercCore = correctPercentage(1.0d - dPercPre - dPercPost);
+				// Get settings and input information, e.g. index information
+				InputDataInfo[][] arrInputDataInfo = createInputDataInfos(getInputTableSpecs(inData));
 
-		    	// Pre-processing
-		        preProcessing(inData, arrInputDataInfo, exec.createSubExecutionContext(dPercPre));
+				// Conversion of input data to adapter cells if required and recreate input data info afterwards
+				arrConvertedTables = convertInputTables(inData, arrInputDataInfo, exec.createSubExecutionContext(dPercConv));
+				arrInputDataInfo = createInputDataInfos(getInputTableSpecs(arrConvertedTables));
 
-		        // Core-processing
-		        arrResultTables = processing(inData, arrInputDataInfo, exec.createSubExecutionContext(dPercCore));
+				// Pre-processing
+				preProcessing(arrConvertedTables, arrInputDataInfo, exec.createSubExecutionContext(dPercPre));
 
-		        // Post-processing
-		        arrResultTables = postProcessing(inData, arrInputDataInfo, arrResultTables,
-		        		exec.createSubExecutionContext(dPercPost));
+				// Core-processing
+				arrResultTables = processing(arrConvertedTables, arrInputDataInfo, exec.createSubExecutionContext(dPercCore));
 
-		        // Show a warning, if errors were encountered
-		        generateWarnings(createWarningContextOccurrencesMap(inData, arrInputDataInfo, arrResultTables));
-    		}
-    		catch (Throwable exc) {
-    			m_excEncountered = exc;
-    		}
-    	}
-    	finally {
-    		finishExecution();
-    	}
+				// Post-processing
+				arrResultTables = postProcessing(arrConvertedTables, arrInputDataInfo, arrResultTables,
+						exec.createSubExecutionContext(dPercPost));
 
-    	// Prepares conservation of certain tables
-    	// if the derived node implements the TableViewSupport interface.
-    	if (this instanceof TableViewSupport) {
-    		conserveTables(exec, inData, arrResultTables);
-    	}
+				// Show a warning, if errors were encountered
+				generateWarnings(createWarningContextOccurrencesMap(arrConvertedTables, arrInputDataInfo, arrResultTables));
+			}
+			catch (final Throwable exc) {
+				m_excEncountered = exc;
+			}
+		}
+		finally {
+			finishExecution();
+		}
 
-        return arrResultTables;
-    }
+		// Prepares conservation of certain tables
+		// if the derived node implements the TableViewSupport interface.
+		if (this instanceof TableViewSupport) {
+			conserveTables(exec, inData, arrResultTables);
+		}
+
+		return arrResultTables;
+	}
+
+	/**
+	 * This method gets called from the method {@link #getOutputTableSpecs(DataTableSpec[])}, which is
+	 * usually called at the end of the {@link #configure(DataTableSpec[])} method. It converts adaptable
+	 * column types into appropriate Adapter Cells and delivers new table specs tables that should be used
+	 * for further processing in the methods {@link #getOutputTableSpec(int, DataTableSpec[])}
+	 * as if they were the original input table specs. The only changes are column types.
+	 *
+	 * @param inSpec The input table specs of the node. Can be null.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 *
+	 * @return Original table specs, if no conversion is necessary. Converted input table specs, if conversion took place.
+	 * 		They have exactly the same structure as the original input table specs, only
+	 * 		input columns that had values compatible with an Adapter Converter are changed, e.g. a SMILES
+	 * 		cell would be an RDKit Adapter Cell now.
+	 */
+	protected DataTableSpec[] convertInputTables(final DataTableSpec[] inSpec, final InputDataInfo[][] arrInputDataInfo) {
+		DataTableSpec[] arrConvertedSpecs = null;
+
+		if (inSpec != null) {
+			arrConvertedSpecs = new DataTableSpec[inSpec.length];
+
+			// Setup conversions
+			for (int i = 0; i < inSpec.length; i++) {
+				arrConvertedSpecs[i] = inSpec[i];
+
+				// Conversion makes only sense, if we have an input table and input columns defined
+				if (inSpec[i] != null && arrInputDataInfo != null && arrInputDataInfo.length > 0 &&
+						arrInputDataInfo[i] != null && arrInputDataInfo[i].length > 0) {
+
+					// Check, if an input column is compatible with an acceptable class that needs conversion
+					final List<InputDataInfo> listConversionColumns = new ArrayList<InputDataInfo>(5);
+
+					for (final InputDataInfo inputInfo : arrInputDataInfo[i]) {
+						if (inputInfo != null && inputInfo.needsConversion()) {
+							listConversionColumns.add(inputInfo);
+						}
+					}
+
+					// Setup a column rearranger and get new table spec, but only if changes are necessary
+					if (!listConversionColumns.isEmpty()) {
+						final ColumnRearranger rearranger = new ColumnRearranger(inSpec[i]);
+						for (final InputDataInfo inputDataInfo : listConversionColumns) {
+							final DataCellTypeConverter converter = inputDataInfo.getConverter();
+							rearranger.ensureColumnIsConverted(converter, inputDataInfo.getColumnIndex());
+						}
+						arrConvertedSpecs[i] = rearranger.createSpec();
+					}
+				}
+			}
+		}
+
+		return arrConvertedSpecs;
+	}
+
+	/**
+	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
+	 * the pre-processing starts. It converts adaptable column types into appropriate Adapter Cells and delivers
+	 * tables that should be used for further processing as if they were the original input tables. The only
+	 * changes are column types.
+	 *
+	 * @param inData The input tables of the node. Can be null.
+	 * @param arrInputDataInfo Information about all columns of the input tables.
+	 * @param exec The execution context, which was derived as sub-execution context based on 5%. Track the progress from 0..1.
+	 *
+	 * @return Original tables, if no conversion is necessary. Converted input tables, if conversion took place.
+	 * 		They have exactly the same structure as the original input table, only
+	 * 		input columns that had values compatible with an Adapter Converter are changed, e.g. a SMILES
+	 * 		cell would be an RDKit Adapter Cell now.
+	 *
+	 * @throws Exception Thrown, if conversion fails.
+	 */
+	protected BufferedDataTable[] convertInputTables(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
+		BufferedDataTable[] arrConvertedTables = null;
+		final WarningConsolidator warnings = getWarningConsolidator();
+
+		if (inData != null) {
+			arrConvertedTables = new BufferedDataTable[inData.length];
+
+			// Setup conversions
+			final Map<Integer, ColumnRearranger> mapColumnRearrangers = new HashMap<Integer, ColumnRearranger>();
+			for (int iTableIndex = 0; iTableIndex < inData.length; iTableIndex++) {
+				arrConvertedTables[iTableIndex] = inData[iTableIndex];
+
+				// Conversion makes only sense, if we have an input table and input columns defined
+				if (inData[iTableIndex] != null && arrInputDataInfo != null && arrInputDataInfo.length > 0 &&
+						arrInputDataInfo[iTableIndex] != null && arrInputDataInfo[iTableIndex].length > 0) {
+
+					// Check, if an input column is compatible with an acceptable class that needs conversion
+					final List<InputDataInfo> listConversionColumns = new ArrayList<InputDataInfo>(5);
+
+					for (final InputDataInfo inputInfo : arrInputDataInfo[iTableIndex]) {
+						if (inputInfo != null && inputInfo.needsConversion()) {
+							listConversionColumns.add(inputInfo);
+						}
+					}
+
+					// Setup a column rearranger and run it for the input table, but only if changes are necessary
+					if (!listConversionColumns.isEmpty()) {
+						final int[] arrColumnIndex = new int[listConversionColumns.size()];
+						final DataTableSpec tableSpec = inData[iTableIndex].getDataTableSpec();
+						final ColumnRearranger rearranger = new ColumnRearranger(tableSpec);
+						int iCount = 0;
+						for (final InputDataInfo inputDataInfo : listConversionColumns) {
+							final DataCellTypeConverter converter = inputDataInfo.getConverter();
+							final int iColumnIndex = inputDataInfo.getColumnIndex();
+							arrColumnIndex[iCount++] = iColumnIndex;
+							rearranger.ensureColumnIsConverted(converter, iColumnIndex);
+						}
+
+						// Part 1 of workaround for a bug in ColumnRearranger - without adding new cells we get an
+						// error from internal hashmap: Illegal initial capacity: -2147483648
+						// Additionally, we use this factory to check the success of the auto conversion
+						// and to generate warnings in case that conversion failed.
+						rearranger.append(new AbstractCellFactory(true, new DataColumnSpecCreator(
+								SettingsUtils.makeColumnNameUnique("EmptyCells", tableSpec, null), IntCell.TYPE).createSpec()) {
+							private final DataCell[] EMPTY_CELLS = new DataCell[] { DataType.getMissingCell() };
+							@Override
+							public DataCell[] getCells(final DataRow row) {
+								if (row != null) {
+									for (int i = 0; i < arrColumnIndex.length; i++) {
+										final DataCell cellConverted = row.getCell(arrColumnIndex[i]);
+										if (cellConverted instanceof MissingCell) {
+											final String strError = ((MissingCell)cellConverted).getError();
+											if (strError != null) {
+												warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+														"Auto conversion in column '" +
+																listConversionColumns.get(i).getColumnSpec().getName() +
+																"' failed: " + createShortError(strError) +
+														" - Using empty cell.");
+											}
+										}
+									}
+								}
+
+								return EMPTY_CELLS;
+							}
+
+							private String createShortError(final String strError) {
+								String strRet = (strError == null || strError.trim().isEmpty() ? "Unknown error." : strError);
+								int iIndex = strRet.indexOf("\n");
+								if (iIndex >= 0) {
+									strRet = strRet.substring(0, iIndex);
+									iIndex = strRet.lastIndexOf(" for");
+									if (iIndex >= 0) {
+										strRet = strRet.substring(0, iIndex);
+									}
+								}
+
+								return strRet;
+							}
+						});
+
+						mapColumnRearrangers.put(iTableIndex, rearranger);
+					}
+				}
+			}
+
+			final int iCount = mapColumnRearrangers.size();
+			for (int i = 0; i < iCount; i++) {
+				exec.setMessage("Converting input tables for processing (" + i + " of " + iCount + ") ...");
+				final ColumnRearranger rearranger = mapColumnRearrangers.get(i);
+				if (rearranger != null) {
+					arrConvertedTables[i] = exec.createColumnRearrangeTable(inData[i],
+							rearranger, exec.createSubProgress(1.0d / iCount / 2.0d));
+
+					// Part 2 of workaround from above: We need to remove the last column again
+					final DataTableSpec tableSpec = arrConvertedTables[i].getDataTableSpec();
+					final ColumnRearranger rearrangerWorkaround = new ColumnRearranger(tableSpec);
+					rearrangerWorkaround.remove(tableSpec.getNumColumns() - 1);
+					arrConvertedTables[i] = exec.createColumnRearrangeTable(arrConvertedTables[i],
+							rearrangerWorkaround, exec.createSubProgress(1.0d / iCount / 2.0d));
+				}
+			}
+		}
+
+		exec.setProgress(1.0d);
+		return arrConvertedTables;
+	}
 
 	/**
 	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
@@ -800,7 +995,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @throws Exception Thrown, if pre-processing fails.
 	 */
 	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-		final ExecutionContext exec) throws Exception {
+			final ExecutionContext exec) throws Exception {
 		// Does not do anything be default
 		exec.setProgress(1.0d);
 	}
@@ -824,7 +1019,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @throws Exception Thrown, if post-processing fails.
 	 */
 	protected abstract BufferedDataTable[] processing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
-		final ExecutionContext exec) throws Exception;
+			final ExecutionContext exec) throws Exception;
 
 	/**
 	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, after
@@ -844,7 +1039,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @throws Exception Thrown, if post-processing fails.
 	 */
 	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-		final BufferedDataTable[] processingResult, final ExecutionContext exec) throws Exception {
+			final BufferedDataTable[] processingResult, final ExecutionContext exec) throws Exception {
 		// Does not do anything be default
 		exec.setProgress(1.0d);
 		return processingResult;
@@ -864,7 +1059,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	protected void cleanupIntermediateResults() {
 		// Does not do anything be default.
 	}
-	
+
 	/**
 	 * Called at the end of node execution. All overall cleanup code is placed here.
 	 * Nodes which override this method must call super to avoid memory leaks.
@@ -872,17 +1067,17 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	protected void finishExecution() throws Exception {
 		// Free all RDKit resources - but carefully consider different scenarios
 		try {
-    		// 1. Everything went well - no exception was thrown. Everything should be ready for cleanup
-    		if (m_excEncountered == null) {
-    			cleanupMarkedObjects();
-    		}
+			// 1. Everything went well - no exception was thrown. Everything should be ready for cleanup
+			if (m_excEncountered == null) {
+				cleanupMarkedObjects();
+			}
 			// 2. Something went wrong, maybe the user canceled - if we have executed the node using
-    		//    multiple threads, some of them could be still using RDKit Objects
-    		else {
-    			quarantineAndCleanupMarkedObjects();
-    		}
+			//    multiple threads, some of them could be still using RDKit Objects
+			else {
+				quarantineAndCleanupMarkedObjects();
+			}
 		}
-		catch (Exception excCleanup) {
+		catch (final Exception excCleanup) {
 			LOGGER.warn("Cleanup of RDKit objects failed. " + excCleanup.getMessage());
 			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
 		}
@@ -891,28 +1086,28 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		try {
 			cleanupIntermediateResults();
 		}
-		catch (Exception excCleanup) {
+		catch (final Exception excCleanup) {
 			LOGGER.warn("Cleanup of intermediate execution results failed. " + excCleanup.getMessage());
 			LOGGER.debug("Cleanup up failure stacktrace", excCleanup);
 		}
 
-        long lEnd = System.currentTimeMillis();
-        LOGGER.info("Execution of " + getClass().getSimpleName() + " took " + (lEnd - m_lExecutionStartTs) + "ms.");
+		final long lEnd = System.currentTimeMillis();
+		LOGGER.info("Execution of " + getClass().getSimpleName() + " took " + (lEnd - m_lExecutionStartTs) + "ms.");
 
-        if (m_excEncountered != null) {
-        	if (m_excEncountered instanceof Exception) {
-        		// E.g. CanceledExecutionException
-        		throw (Exception)m_excEncountered;
-            }
-            else if (m_excEncountered instanceof Error){
-            	// E.g. OutOfMemoryException
-            	throw (Error)m_excEncountered;
-            }
-            else {
-            	// Normally, you should not extend directly Throwable, so this case should not really happen
-            	throw new RuntimeException(m_excEncountered);
-            }
-        }
+		if (m_excEncountered != null) {
+			if (m_excEncountered instanceof Exception) {
+				// E.g. CanceledExecutionException
+				throw (Exception)m_excEncountered;
+			}
+			else if (m_excEncountered instanceof Error){
+				// E.g. OutOfMemoryException
+				throw (Error)m_excEncountered;
+			}
+			else {
+				// Normally, you should not extend directly Throwable, so this case should not really happen
+				throw new RuntimeException(m_excEncountered);
+			}
+		}
 	}
 
 	/**
@@ -976,623 +1171,624 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @see #getWarningConsolidator()
 	 */
 	protected Map<String, Integer> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
-		final InputDataInfo[][] arrInputDataInfo, final BufferedDataTable[] resultData) {
+			final InputDataInfo[][] arrInputDataInfo, final BufferedDataTable[] resultData) {
 
-		Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
+		final Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
 		mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[0].getRowCount());
 
 		return mapContextOccurrences;
 	}
 
 	/**
-     * {@inheritDoc}
-     * This method does not do anything in this implementation.
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // Nothing to load
-    }
+	 * {@inheritDoc}
+	 * This method does not do anything in this implementation.
+	 */
+	@Override
+	protected void loadInternals(final File nodeInternDir,
+			final ExecutionMonitor exec) throws IOException,
+			CanceledExecutionException {
+		// Nothing to load
+	}
 
-    /**
-     * {@inheritDoc}
-     * This method does not do anything in this implementation.
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // Nothing to save
-    }
+	/**
+	 * {@inheritDoc}
+	 * This method does not do anything in this implementation.
+	 */
+	@Override
+	protected void saveInternals(final File nodeInternDir,
+			final ExecutionMonitor exec) throws IOException,
+			CanceledExecutionException {
+		// Nothing to save
+	}
 
-    /**
-     * {@inheritDoc}
-     * This implementation loads all setting models, which have been
-     * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
-     * It is capable of handling deprecated setting keys as well as new setting keys
-     * that were not always present in node instances. How a setting is handled
-     * depends on how it was registered.
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-    	for (SettingsModel setting : m_listRegisteredSettings) {
-        	boolean bIgnoreNonExistingSetting = (m_mapIgnoreNonExistingSettingKeys.containsKey(setting) && m_mapIgnoreNonExistingSettingKeys.get(setting) == true);
-    		String nodeName = SettingsUtils.getNodeName(settings);
-        	String[] arrDeprecatedKeys = m_mapDeprecatedSettingKeys.get(setting);
+	/**
+	 * {@inheritDoc}
+	 * This implementation loads all setting models, which have been
+	 * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
+	 * It is capable of handling deprecated setting keys as well as new setting keys
+	 * that were not always present in node instances. How a setting is handled
+	 * depends on how it was registered.
+	 */
+	@Override
+	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		for (final SettingsModel setting : m_listRegisteredSettings) {
+			final boolean bIgnoreNonExistingSetting = (m_mapIgnoreNonExistingSettingKeys.containsKey(setting) && m_mapIgnoreNonExistingSettingKeys.get(setting) == true);
+			final String nodeName = SettingsUtils.getNodeName(settings);
+			final String[] arrDeprecatedKeys = m_mapDeprecatedSettingKeys.get(setting);
 
-    		if (arrDeprecatedKeys != null && arrDeprecatedKeys.length > 1) {
-    			try {
-        			setting.loadSettingsFrom(settings);
-    			}
-    			catch (InvalidSettingsException excOrig) {
-    				LOGGER.debug("Caught invalid setting for " + setting.toString() + " - Trying deprecated keys instead ...");
-    				String newKey = arrDeprecatedKeys[0];
-    				int iErrorCounter = 0;
+			if (arrDeprecatedKeys != null && arrDeprecatedKeys.length > 1) {
+				try {
+					setting.loadSettingsFrom(settings);
+				}
+				catch (final InvalidSettingsException excOrig) {
+					LOGGER.debug("Caught invalid setting for " + setting.toString() + " - Trying deprecated keys instead ...");
+					final String newKey = arrDeprecatedKeys[0];
+					int iErrorCounter = 0;
 
-    				// Try deprecated keys
-    				for (int i = 1; i < arrDeprecatedKeys.length; i++) {
-    					String deprKey = arrDeprecatedKeys[i];
+					// Try deprecated keys
+					for (int i = 1; i < arrDeprecatedKeys.length; i++) {
+						final String deprKey = arrDeprecatedKeys[i];
 
-        				try {
-	    					if (settings.containsKey(deprKey)) {
-	    						ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
-	    						settings.saveToXML(out);
-	    						String strSettingsContent = out.toString();
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<config key=\"" + deprKey + "\"", "<config key=\"" + newKey + "\"");
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<entry key=\"" + deprKey + "\"", "<entry key=\"" + newKey + "\"");
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<config key=\"" + deprKey + "_Internals\"", "<config key=\"" + newKey + "_Internals\"");
-	    						NodeSettingsRO deprSettings = NodeSettings.loadFromXML(
-	    								new ByteArrayInputStream(strSettingsContent.getBytes()));
-	    						setting.loadSettingsFrom(deprSettings);
-	    						break;
-	    					}
-	    				}
-	    				catch (InvalidSettingsException excDepr) {
-	    					iErrorCounter++;
-	    				}
-	    				catch (Exception exc) {
-	        				LOGGER.debug("Another exception occurred when using deprecated key '" + deprKey + "'.", exc);
-	    					iErrorCounter++;
-	    				}
-    				}
+						try {
+							if (settings.containsKey(deprKey)) {
+								final ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+								settings.saveToXML(out);
+								String strSettingsContent = out.toString();
+								strSettingsContent = strSettingsContent.replace(
+										"<config key=\"" + deprKey + "\"", "<config key=\"" + newKey + "\"");
+								strSettingsContent = strSettingsContent.replace(
+										"<entry key=\"" + deprKey + "\"", "<entry key=\"" + newKey + "\"");
+								strSettingsContent = strSettingsContent.replace(
+										"<config key=\"" + deprKey + "_Internals\"", "<config key=\"" + newKey + "_Internals\"");
+								final NodeSettingsRO deprSettings = NodeSettings.loadFromXML(
+										new ByteArrayInputStream(strSettingsContent.getBytes()));
+								setting.loadSettingsFrom(deprSettings);
+								break;
+							}
+						}
+						catch (final InvalidSettingsException excDepr) {
+							iErrorCounter++;
+						}
+						catch (final Exception exc) {
+							LOGGER.debug("Another exception occurred when using deprecated key '" + deprKey + "'.", exc);
+							iErrorCounter++;
+						}
+					}
 
-    				if (iErrorCounter == arrDeprecatedKeys.length - 1) {
-        				LOGGER.debug("Deprecated keys did not work either. - Giving up.");
+					if (iErrorCounter == arrDeprecatedKeys.length - 1) {
+						LOGGER.debug("Deprecated keys did not work either. - Giving up.");
 
-        				if (bIgnoreNonExistingSetting) {
-        					LOGGER.warn("The new setting '" + newKey + "' was not known when the node" +
-    							(nodeName == null ? "" : " '" + nodeName + "'") + " was saved. " +
-    							"Please save the workflow again to include it for the future.");
-        				}
-        				else {
-        					throw excOrig;
-        				}
-    				}
-    			}
-    		}
-    		else {
-    			try {
-    				setting.loadSettingsFrom(settings);
-    			}
-    			catch (InvalidSettingsException excOrig) {
-    				if (bIgnoreNonExistingSetting) {
-    					LOGGER.debug("A new setting was not known when the node" +
-    							(nodeName == null ? "" : " '" + nodeName + "'") + " was saved.");
-    				}
-    				else {
-    					throw excOrig;
-    				}
-    			}
-    		}
-    	}
-    }
+						if (bIgnoreNonExistingSetting) {
+							LOGGER.warn("The new setting '" + newKey + "' was not known when the node" +
+									(nodeName == null ? "" : " '" + nodeName + "'") + " was saved. " +
+									"Please save the workflow again to include it for the future.");
+						}
+						else {
+							throw excOrig;
+						}
+					}
+				}
+			}
+			else {
+				try {
+					setting.loadSettingsFrom(settings);
+				}
+				catch (final InvalidSettingsException excOrig) {
+					if (bIgnoreNonExistingSetting) {
+						LOGGER.debug("A new setting was not known when the node" +
+								(nodeName == null ? "" : " '" + nodeName + "'") + " was saved.");
+					}
+					else {
+						throw excOrig;
+					}
+				}
+			}
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     * This implementation saves all setting models, which have been
-     * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-    	for (SettingsModel setting : m_listRegisteredSettings) {
-    		setting.saveSettingsTo(settings);
-    	}
-    }
+	/**
+	 * {@inheritDoc}
+	 * This implementation saves all setting models, which have been
+	 * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
+	 */
+	@Override
+	protected void saveSettingsTo(final NodeSettingsWO settings) {
+		for (final SettingsModel setting : m_listRegisteredSettings) {
+			setting.saveSettingsTo(settings);
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     * This implementation validates all setting models, which have been
-     * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
-     * It is capable of handling deprecated setting keys as well as new setting keys
-     * that were not always present in node instances. How a setting is handled
-     * depends on how it was registered.
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-    	for (SettingsModel setting : m_listRegisteredSettings) {
-        	boolean bIgnoreNonExistingSetting = (m_mapIgnoreNonExistingSettingKeys.containsKey(setting) &&
-        			m_mapIgnoreNonExistingSettingKeys.get(setting) == true);
-    		String[] arrDeprecatedKeys = m_mapDeprecatedSettingKeys.get(setting);
+	/**
+	 * {@inheritDoc}
+	 * This implementation validates all setting models, which have been
+	 * registered before with the method {@link #registerSettings(SettingsModel, String...)}.
+	 * It is capable of handling deprecated setting keys as well as new setting keys
+	 * that were not always present in node instances. How a setting is handled
+	 * depends on how it was registered.
+	 */
+	@Override
+	protected void validateSettings(final NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		for (final SettingsModel setting : m_listRegisteredSettings) {
+			final boolean bIgnoreNonExistingSetting = (m_mapIgnoreNonExistingSettingKeys.containsKey(setting) &&
+					m_mapIgnoreNonExistingSettingKeys.get(setting) == true);
+			final String[] arrDeprecatedKeys = m_mapDeprecatedSettingKeys.get(setting);
 
-    		if (arrDeprecatedKeys != null && arrDeprecatedKeys.length > 0) {
-    			try {
-        			setting.validateSettings(settings);
-    			}
-    			catch (InvalidSettingsException excOrig) {
-    				LOGGER.debug("Caught invalid setting for " + setting.toString() + " - Trying deprecated keys instead ...");
-    				String newKey = arrDeprecatedKeys[0];
-    				int iErrorCounter = 0;
+			if (arrDeprecatedKeys != null && arrDeprecatedKeys.length > 0) {
+				try {
+					setting.validateSettings(settings);
+				}
+				catch (final InvalidSettingsException excOrig) {
+					LOGGER.debug("Caught invalid setting for " + setting.toString() + " - Trying deprecated keys instead ...");
+					final String newKey = arrDeprecatedKeys[0];
+					int iErrorCounter = 0;
 
-    				// Try deprecated keys
-    				for (int i = 1; i < arrDeprecatedKeys.length; i++) {
-    					String deprKey = arrDeprecatedKeys[i];
+					// Try deprecated keys
+					for (int i = 1; i < arrDeprecatedKeys.length; i++) {
+						final String deprKey = arrDeprecatedKeys[i];
 
-        				try {
-	    					if (settings.containsKey(deprKey)) {
-	    						ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
-	    						settings.saveToXML(out);
-	    						String strSettingsContent = out.toString();
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<config key=\"" + deprKey + "\"", "<config key=\"" + newKey + "\"");
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<entry key=\"" + deprKey + "\"", "<entry key=\"" + newKey + "\"");
-	    						strSettingsContent = strSettingsContent.replace(
-	    								"<config key=\"" + deprKey + "_Internals\"", "<config key=\"" + newKey + "_Internals\"");
-	    						NodeSettingsRO deprSettings = NodeSettings.loadFromXML(
-	    								new ByteArrayInputStream(strSettingsContent.getBytes()));
-	    						setting.validateSettings(deprSettings);
-	    						break;
-	    					}
-	    				}
-	    				catch (InvalidSettingsException excDepr) {
-	    					iErrorCounter++;
-	    				}
-	    				catch (Exception exc) {
-	        				LOGGER.debug("Another exception occurred when using deprecated key '" + deprKey + "'.", exc);
-	    					iErrorCounter++;
-	    				}
-    				}
+						try {
+							if (settings.containsKey(deprKey)) {
+								final ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+								settings.saveToXML(out);
+								String strSettingsContent = out.toString();
+								strSettingsContent = strSettingsContent.replace(
+										"<config key=\"" + deprKey + "\"", "<config key=\"" + newKey + "\"");
+								strSettingsContent = strSettingsContent.replace(
+										"<entry key=\"" + deprKey + "\"", "<entry key=\"" + newKey + "\"");
+								strSettingsContent = strSettingsContent.replace(
+										"<config key=\"" + deprKey + "_Internals\"", "<config key=\"" + newKey + "_Internals\"");
+								final NodeSettingsRO deprSettings = NodeSettings.loadFromXML(
+										new ByteArrayInputStream(strSettingsContent.getBytes()));
+								setting.validateSettings(deprSettings);
+								break;
+							}
+						}
+						catch (final InvalidSettingsException excDepr) {
+							iErrorCounter++;
+						}
+						catch (final Exception exc) {
+							LOGGER.debug("Another exception occurred when using deprecated key '" + deprKey + "'.", exc);
+							iErrorCounter++;
+						}
+					}
 
-    				if (iErrorCounter == arrDeprecatedKeys.length - 1) {
-        				LOGGER.debug("Deprecated keys did not work either. - Giving up.");
+					if (iErrorCounter == arrDeprecatedKeys.length - 1) {
+						LOGGER.debug("Deprecated keys did not work either. - Giving up.");
 
-        				if (!bIgnoreNonExistingSetting) {
-        					throw excOrig;
-        				}
-    				}
-    			}
-    		}
-    		else {
-    			try {
-    				setting.validateSettings(settings);
-    			}
-    			catch (InvalidSettingsException excOrig) {
-    				if (!bIgnoreNonExistingSetting) {
-    					throw excOrig;
-    				}
-    			}
-    		}
-    	}
-    }
+						if (!bIgnoreNonExistingSetting) {
+							throw excOrig;
+						}
+					}
+				}
+			}
+			else {
+				try {
+					setting.validateSettings(settings);
+				}
+				catch (final InvalidSettingsException excOrig) {
+					if (!bIgnoreNonExistingSetting) {
+						throw excOrig;
+					}
+				}
+			}
+		}
+	}
 
-    /**
-     * Creates a filtered table based on the specified filter condition.
-     *
-     * @param inPort The input port of the data in focus. This will be passed on to the splitter.
-     * @param inData Input table to be filtered. Can be null. In that case null will be returned.
-     * @param arrInputDataInfo Input data information about all important input columns of
-     * 		the table at the input port. This will be passed on to the splitter.
-     * @param exec Execution context to check for cancellation and to report progress. Must not be null.
-     * @param strProgressMessage Message to append to the standard progress message. Can be null.
-     * @param filter Filter condition. Can be null. In that case the input table will be returned as is.
-     *
-     * @return The filtered table or the input table.
-     *
-     * @throws CanceledExecutionException Thrown, if the user cancelled the node execution.
-     */
-    protected BufferedDataTable createFilteredTable(final int inPort, final BufferedDataTable inData,
-    		final InputDataInfo[] arrInputDataInfo, final ExecutionContext exec,
-    		final String strProgressMessage, final FilterCondition filter) throws CanceledExecutionException {
+	/**
+	 * Creates a filtered table based on the specified filter condition.
+	 *
+	 * @param inPort The input port of the data in focus. This will be passed on to the splitter.
+	 * @param inData Input table to be filtered. Can be null. In that case null will be returned.
+	 * @param arrInputDataInfo Input data information about all important input columns of
+	 * 		the table at the input port. This will be passed on to the splitter.
+	 * @param exec Execution context to check for cancellation and to report progress. Must not be null.
+	 * @param strProgressMessage Message to append to the standard progress message. Can be null.
+	 * @param filter Filter condition. Can be null. In that case the input table will be returned as is.
+	 *
+	 * @return The filtered table or the input table.
+	 *
+	 * @throws CanceledExecutionException Thrown, if the user cancelled the node execution.
+	 */
+	protected BufferedDataTable createFilteredTable(final int inPort, final BufferedDataTable inData,
+			final InputDataInfo[] arrInputDataInfo, final ExecutionContext exec,
+			final String strProgressMessage, final FilterCondition filter) throws CanceledExecutionException {
 
-    	BufferedDataTable resultTable = inData; // Default
+		BufferedDataTable resultTable = inData; // Default
 
-    	if (filter != null) {
-	    	final int iRowCount = inData.getRowCount();
-	        int iRowIndex = 0;
-	        RowIterator it = inData.iterator();
+		if (filter != null) {
+			final int iRowCount = inData.getRowCount();
+			int iRowIndex = 0;
+			final RowIterator it = inData.iterator();
 
-	        BufferedDataContainer resultTableData = exec.createDataContainer(inData.getDataTableSpec());
+			final BufferedDataContainer resultTableData = exec.createDataContainer(inData.getDataTableSpec());
 
-	        // Filter the rows
-	        while (it.hasNext()) {
-	            DataRow row = it.next();
-	        	final int iUniqueWaveId = createUniqueCleanupWaveId();
+			// Filter the rows
+			while (it.hasNext()) {
+				final DataRow row = it.next();
+				final int iUniqueWaveId = createUniqueCleanupWaveId();
 
-	            try {
-		            if (filter.include(0, iRowIndex, row, arrInputDataInfo, iUniqueWaveId)) {
-		            	resultTableData.addRowToTable(row);
-		            }
-	            }
-	        	catch (InputDataInfo.EmptyCellException exc) {
-	                LOGGER.warn(exc.getMessage());
-	                if (exc.stopsNodeExecution()) {
-	            		throw new RuntimeException("Creation of new data failed: " +
-	            				exc.getMessage() != null ? exc.getMessage() : "Unknown error");
-	                }
-	                else {
-	                    getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-	                    		"Encountered empty input cell.");
-	                    // In this case the row will be dumped (target table = -1)
-	        		}
-	        	}
-	        	finally {
-	        		cleanupMarkedObjects(iUniqueWaveId);
-	        	}
+				try {
+					if (filter.include(0, iRowIndex, row, arrInputDataInfo, iUniqueWaveId)) {
+						resultTableData.addRowToTable(row);
+					}
+				}
+				catch (final InputDataInfo.EmptyCellException exc) {
+					LOGGER.warn(exc.getMessage());
+					if (exc.stopsNodeExecution()) {
+						throw new RuntimeException("Creation of new data failed: " +
+								exc.getMessage() != null ? exc.getMessage() : "Unknown error");
+					}
+					else {
+						getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+								"Encountered empty input cell.");
+						// In this case the row will be dumped (target table = -1)
+					}
+				}
+				finally {
+					cleanupMarkedObjects(iUniqueWaveId);
+				}
 
-	        	// Every 20 iterations report progress and check for cancel
-	        	if (iRowIndex % 20 == 0) {
-	        		AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, strProgressMessage);
-	        	}
+				// Every 20 iterations report progress and check for cancel
+				if (iRowIndex % 20 == 0) {
+					AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, strProgressMessage);
+				}
 
-	            iRowIndex++;
-	        }
+				iRowIndex++;
+			}
 
-	        // Create table
-	        resultTableData.close();
-	        resultTable = resultTableData.getTable();
-    	}
+			// Create table
+			resultTableData.close();
+			resultTable = resultTableData.getTable();
+		}
 
-    	exec.setProgress(1.0d);
+		exec.setProgress(1.0d);
 
-        return resultTable;
-    }
+		return resultTable;
+	}
 
-    /**
-     * Creates a filtered table based on the specified filter condition.
-     *
-     * @param inPort The input port of the data in focus. This will be passed on to the splitter.
-     * @param inData Input table to be filtered. Can be null. In that case null will be returned.
-     * @param arrInputDataInfo Input data information about all important input columns of
-     * 		the table at the input port. This will be passed on to the splitter.
-     * @param exec Execution context to check for cancellation and to report progress. Must not be null.
-     * @param strProgressMessage Message to append to the standard progress message. Can be null.
-     * @param splitter Split condition. Must not be null.
-     *
-     * @return The filtered table or null.
-     *
-     * @throws CanceledExecutionException Thrown, if the user cancelled the node execution.
-     */
-    protected BufferedDataTable[] createSplitTables(final int inPort, final BufferedDataTable inData,
-    		final InputDataInfo[] arrInputDataInfo, final ExecutionContext exec,
-    		final String strProgressMessage, final SplitCondition splitter) throws CanceledExecutionException {
-    	// Pre-check
-    	if (splitter == null) {
-    		throw new IllegalArgumentException("Split condition must not be null.");
-    	}
+	/**
+	 * Creates a filtered table based on the specified filter condition.
+	 *
+	 * @param inPort The input port of the data in focus. This will be passed on to the splitter.
+	 * @param inData Input table to be filtered. Can be null. In that case null will be returned.
+	 * @param arrInputDataInfo Input data information about all important input columns of
+	 * 		the table at the input port. This will be passed on to the splitter.
+	 * @param exec Execution context to check for cancellation and to report progress. Must not be null.
+	 * @param strProgressMessage Message to append to the standard progress message. Can be null.
+	 * @param splitter Split condition. Must not be null.
+	 *
+	 * @return The filtered table or null.
+	 *
+	 * @throws CanceledExecutionException Thrown, if the user cancelled the node execution.
+	 */
+	protected BufferedDataTable[] createSplitTables(final int inPort, final BufferedDataTable inData,
+			final InputDataInfo[] arrInputDataInfo, final ExecutionContext exec,
+			final String strProgressMessage, final SplitCondition splitter) throws CanceledExecutionException {
+		// Pre-check
+		if (splitter == null) {
+			throw new IllegalArgumentException("Split condition must not be null.");
+		}
 
-    	BufferedDataTable arrResultTable[] = null;
+		BufferedDataTable arrResultTable[] = null;
 
-    	final int iTargetTableCount = splitter.getTargetTableCount();
-        BufferedDataContainer arrPort[] = new BufferedDataContainer[iTargetTableCount];
-        for (int iPort = 0; iPort < iTargetTableCount; iPort++)
-        {
-        	arrPort[iPort] = exec.createDataContainer(inData.getDataTableSpec());
-        }
+		final int iTargetTableCount = splitter.getTargetTableCount();
+		final BufferedDataContainer arrPort[] = new BufferedDataContainer[iTargetTableCount];
+		for (int iPort = 0; iPort < iTargetTableCount; iPort++)
+		{
+			arrPort[iPort] = exec.createDataContainer(inData.getDataTableSpec());
+		}
 
-    	final int iRowCount = inData.getRowCount();
-        int iRowIndex = 0;
-        RowIterator it = inData.iterator();
+		final int iRowCount = inData.getRowCount();
+		int iRowIndex = 0;
+		final RowIterator it = inData.iterator();
 
-        // Filter the rows
-        while (it.hasNext()) {
-            DataRow row = it.next();
-            int iTargetTable = -1;
-        	final int iUniqueWaveId = createUniqueCleanupWaveId();
+		// Filter the rows
+		while (it.hasNext()) {
+			final DataRow row = it.next();
+			int iTargetTable = -1;
+			final int iUniqueWaveId = createUniqueCleanupWaveId();
 
-            try {
-	            iTargetTable = splitter.determineTargetTable(0, iRowIndex, row,
-	            		arrInputDataInfo, iUniqueWaveId);
-            }
-        	catch (InputDataInfo.EmptyCellException exc) {
-                LOGGER.warn(exc.getMessage());
-                if (exc.stopsNodeExecution()) {
-            		throw new RuntimeException("Creation of new data failed: " +
-            				exc.getMessage() != null ? exc.getMessage() : "Unknown error");
-                }
-                else {
-                    getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-                    		"Encountered empty input cell.");
-                    // In this case the row will be dumped (target table = -1)
-        		}
-        	}
-        	finally {
-        		cleanupMarkedObjects(iUniqueWaveId);
-        	}
+			try {
+				iTargetTable = splitter.determineTargetTable(0, iRowIndex, row,
+						arrInputDataInfo, iUniqueWaveId);
+			}
+			catch (final InputDataInfo.EmptyCellException exc) {
+				LOGGER.warn(exc.getMessage());
+				if (exc.stopsNodeExecution()) {
+					throw new RuntimeException("Creation of new data failed: " +
+							exc.getMessage() != null ? exc.getMessage() : "Unknown error");
+				}
+				else {
+					getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+							"Encountered empty input cell.");
+					// In this case the row will be dumped (target table = -1)
+				}
+			}
+			finally {
+				cleanupMarkedObjects(iUniqueWaveId);
+			}
 
-        	if (iTargetTable >= 0) {
-            	arrPort[iTargetTable].addRowToTable(row);
-            }
+			if (iTargetTable >= 0) {
+				arrPort[iTargetTable].addRowToTable(row);
+			}
 
-        	// Every 20 iterations report progress and check for cancel
-        	if (iRowIndex % 20 == 0) {
-        		AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, " - Splitting");
-        	}
+			// Every 20 iterations report progress and check for cancel
+			if (iRowIndex % 20 == 0) {
+				AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, " - Splitting");
+			}
 
-            iRowIndex++;
-        }
+			iRowIndex++;
+		}
 
-        exec.setProgress(1.0d, "Finished Splitting");
+		exec.setProgress(1.0d, "Finished Splitting");
 
-        arrResultTable = new BufferedDataTable[iTargetTableCount];
-        for (int iPort = 0; iPort < iTargetTableCount; iPort++)
-        {
-        	arrPort[iPort].close();
-        	arrResultTable[iPort] = arrPort[iPort].getTable();
-        }
+		arrResultTable = new BufferedDataTable[iTargetTableCount];
+		for (int iPort = 0; iPort < iTargetTableCount; iPort++)
+		{
+			arrPort[iPort].close();
+			arrResultTable[iPort] = arrPort[iPort].getTable();
+		}
 
-        return arrResultTable;
-    }
+		return arrResultTable;
+	}
 
-    /**
-     * Call this method for every created KNIME SettingsModel. These settings will be handled
-     * automatically in the methods {@link #loadValidatedSettingsFrom(NodeSettingsRO)},
-     * {@link #validateSettings(NodeSettingsRO)} and {@link #saveSettingsTo(NodeSettingsWO)}.
-     *
-     * @param <T> The parameter class needs to be derived from SettingsModel.
-     * @param settings Settings to be registered for auto-handling. Can be null to do nothing.
-     * @param deprecatedSettingKeys List of setting keys that were used in the past. When loading the setting model
-     * 		fails, we will try to reload the model with the old keys, which are tried in the submitted
-     * 		order, if there is more than one old key. Important: If a list is specified, the first
-     * 		element must be the current key, all other elements will be treated as deprecated. Can be null.
-     *
-     * @return The same settings that have been passed in. Null, if null was passed in.
-     *
-     * @throws IllegalArgumentException Thrown, if a list of deprecated keys is provided, but
-     * 		has only one element. Note, that the first element of such a list must be the
-     * 		current key.
-     *
-     * @see #registerSettings(SettingsModel, boolean, String...)
-     */
-    protected <T extends SettingsModel> T registerSettings(final T settings, final String... deprecatedSettingKeys) {
-    	return registerSettings(settings, false, deprecatedSettingKeys);
-    }
+	/**
+	 * Call this method for every created KNIME SettingsModel. These settings will be handled
+	 * automatically in the methods {@link #loadValidatedSettingsFrom(NodeSettingsRO)},
+	 * {@link #validateSettings(NodeSettingsRO)} and {@link #saveSettingsTo(NodeSettingsWO)}.
+	 *
+	 * @param <T> The parameter class needs to be derived from SettingsModel.
+	 * @param settings Settings to be registered for auto-handling. Can be null to do nothing.
+	 * @param deprecatedSettingKeys List of setting keys that were used in the past. When loading the setting model
+	 * 		fails, we will try to reload the model with the old keys, which are tried in the submitted
+	 * 		order, if there is more than one old key. Important: If a list is specified, the first
+	 * 		element must be the current key, all other elements will be treated as deprecated. Can be null.
+	 *
+	 * @return The same settings that have been passed in. Null, if null was passed in.
+	 *
+	 * @throws IllegalArgumentException Thrown, if a list of deprecated keys is provided, but
+	 * 		has only one element. Note, that the first element of such a list must be the
+	 * 		current key.
+	 *
+	 * @see #registerSettings(SettingsModel, boolean, String...)
+	 */
+	protected <T extends SettingsModel> T registerSettings(final T settings, final String... deprecatedSettingKeys) {
+		return registerSettings(settings, false, deprecatedSettingKeys);
+	}
 
-    /**
-     * Call this method for every created KNIME SettingsModel. These settings will be handled
-     * automatically in the methods {@link #loadValidatedSettingsFrom(NodeSettingsRO)},
-     * {@link #validateSettings(NodeSettingsRO)} and {@link #saveSettingsTo(NodeSettingsWO)}.
-     *
-     * @param <T> The parameter class needs to be derived from SettingsModel.
-     * @param settings Settings to be registered for auto-handling. Can be null to do nothing.
-     * @param bIgnoreNonExistence Set to true, if this is a setting, which was not always available. The system
-     * 		will ignore any InvalidSettingsExceptions for when loading this setting. Default is false.
-     * @param deprecatedSettingKeys List of setting keys that were used in the past. When loading the setting model
-     * 		fails, we will try to reload the model with the old keys, which are tried in the submitted
-     * 		order, if there is more than one old key. Important: If a list is specified, the first
-     * 		element must be the current key, all other elements will be treated as deprecated. Can be null.
-     *
-     * @return The same settings that have been passed in. Null, if null was passed in.
-     *
-     * @throws IllegalArgumentException Thrown, if a list of deprecated keys is provided, but
-     * 		has only one element. Note, that the first element of such a list must be the
-     * 		current key.
-     *
-     * @see #registerSettings(SettingsModel, String...)
-     */
-    protected <T extends SettingsModel> T registerSettings(final T settings, final boolean bIgnoreNonExistence, final String... deprecatedSettingKeys) {
-    	if (deprecatedSettingKeys != null && deprecatedSettingKeys.length == 1) {
-    		throw new IllegalArgumentException("The list of deprecated keys must contain as first element the " +
-    				"current key. The following elements can be acceptable deprecated keys.");
-    	}
+	/**
+	 * Call this method for every created KNIME SettingsModel. These settings will be handled
+	 * automatically in the methods {@link #loadValidatedSettingsFrom(NodeSettingsRO)},
+	 * {@link #validateSettings(NodeSettingsRO)} and {@link #saveSettingsTo(NodeSettingsWO)}.
+	 *
+	 * @param <T> The parameter class needs to be derived from SettingsModel.
+	 * @param settings Settings to be registered for auto-handling. Can be null to do nothing.
+	 * @param bIgnoreNonExistence Set to true, if this is a setting, which was not always available. The system
+	 * 		will ignore any InvalidSettingsExceptions for when loading this setting. Default is false.
+	 * @param deprecatedSettingKeys List of setting keys that were used in the past. When loading the setting model
+	 * 		fails, we will try to reload the model with the old keys, which are tried in the submitted
+	 * 		order, if there is more than one old key. Important: If a list is specified, the first
+	 * 		element must be the current key, all other elements will be treated as deprecated. Can be null.
+	 *
+	 * @return The same settings that have been passed in. Null, if null was passed in.
+	 *
+	 * @throws IllegalArgumentException Thrown, if a list of deprecated keys is provided, but
+	 * 		has only one element. Note, that the first element of such a list must be the
+	 * 		current key.
+	 *
+	 * @see #registerSettings(SettingsModel, String...)
+	 */
+	protected <T extends SettingsModel> T registerSettings(final T settings, final boolean bIgnoreNonExistence, final String... deprecatedSettingKeys) {
+		if (deprecatedSettingKeys != null && deprecatedSettingKeys.length == 1) {
+			throw new IllegalArgumentException("The list of deprecated keys must contain as first element the " +
+					"current key. The following elements can be acceptable deprecated keys.");
+		}
 
-    	if (settings != null && !m_listRegisteredSettings.contains(settings)) {
-    		m_listRegisteredSettings.add(settings);
-    		if (deprecatedSettingKeys != null && deprecatedSettingKeys.length > 0) {
-    			m_mapDeprecatedSettingKeys.put(settings, deprecatedSettingKeys);
-    		}
-    		if (bIgnoreNonExistence) {
-    			m_mapIgnoreNonExistingSettingKeys.put(settings, bIgnoreNonExistence);
-    		}
-    	}
+		if (settings != null && !m_listRegisteredSettings.contains(settings)) {
+			m_listRegisteredSettings.add(settings);
+			if (deprecatedSettingKeys != null && deprecatedSettingKeys.length > 0) {
+				m_mapDeprecatedSettingKeys.put(settings, deprecatedSettingKeys);
+			}
+			if (bIgnoreNonExistence) {
+				m_mapIgnoreNonExistingSettingKeys.put(settings, bIgnoreNonExistence);
+			}
+		}
 
-    	return settings;
-    }
+		return settings;
+	}
 
-    /**
-     * Returns the warning consolidator that was created initially with the call
-     * {@link #createWarningConsolidator()}. Use this object to track warnings
-     * and to consolidate them before showing them to the user.
-     *
-     * @return The instance of the warning consolidator that is used in this node.
-     */
-    protected synchronized WarningConsolidator getWarningConsolidator() {
-    	if (m_warnings == null) {
-    		m_warnings = createWarningConsolidator();
-    	}
+	/**
+	 * Returns the warning consolidator that was created initially with the call
+	 * {@link #createWarningConsolidator()}. Use this object to track warnings
+	 * and to consolidate them before showing them to the user.
+	 *
+	 * @return The instance of the warning consolidator that is used in this node.
+	 */
+	protected synchronized WarningConsolidator getWarningConsolidator() {
+		if (m_warnings == null) {
+			m_warnings = createWarningConsolidator();
+		}
 
-    	return m_warnings;
-    }
+		return m_warnings;
+	}
 
-    /**
-     * Returns a list of all table specifications from the passed in tables.
-     *
-     * @param inData Array of tables with data.
-     *
-     * @return The specifications of the tables.
-     */
-    protected DataTableSpec[] getInputTableSpecs(final BufferedDataTable[] inData) {
-    	DataTableSpec[] arrSpecs = null;
+	/**
+	 * Returns a list of all table specifications from the passed in tables.
+	 *
+	 * @param inData Array of tables with data.
+	 *
+	 * @return The specifications of the tables.
+	 */
+	protected DataTableSpec[] getInputTableSpecs(final BufferedDataTable[] inData) {
+		DataTableSpec[] arrSpecs = null;
 
-    	if (inData != null) {
-    		arrSpecs = new DataTableSpec[inData.length];
-    		for (int i = 0; i < inData.length; i++) {
-    			arrSpecs[i] = (inData[i] == null ? null : inData[i].getDataTableSpec());
-    		}
-    	}
+		if (inData != null) {
+			arrSpecs = new DataTableSpec[inData.length];
+			for (int i = 0; i < inData.length; i++) {
+				arrSpecs[i] = (inData[i] == null ? null : inData[i].getDataTableSpec());
+			}
+		}
 
-    	return arrSpecs;
-    }
+		return arrSpecs;
+	}
 
-    /**
-     * Returns the list of all output table specifications by calling
-     * for all out ports {@link #getOutputTableSpec(int, DataTableSpec[])} and
-     * concatenating the result to an array.
-     *
-     * @param inSpecs All input table specifications. Can be null.
-     *
-     * @return The specifications of all output tables.
-     *
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
-     * 		given DataTableSpec elements.
-     */
-    protected DataTableSpec[] getOutputTableSpecs(final DataTableSpec[] inSpecs)
-    	throws InvalidSettingsException {
-    	DataTableSpec[] arrSpecs = new DataTableSpec[getNrOutPorts()];
-    	for (int i = 0; i < arrSpecs.length; i++) {
-    		arrSpecs[i] = getOutputTableSpec(i, inSpecs);
-    	}
-    	return arrSpecs;
-    }
+	/**
+	 * Returns the list of all output table specifications by calling
+	 * for all out ports {@link #getOutputTableSpec(int, DataTableSpec[])} and
+	 * concatenating the result to an array.
+	 *
+	 * @param inSpecs All input table specifications. Can be null.
+	 *
+	 * @return The specifications of all output tables.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 */
+	protected DataTableSpec[] getOutputTableSpecs(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		final DataTableSpec[] arrConvertedSpecs = convertInputTables(inSpecs, createInputDataInfos(inSpecs));
+		final DataTableSpec[] arrSpecs = new DataTableSpec[getNrOutPorts()];
+		for (int i = 0; i < arrSpecs.length; i++) {
+			arrSpecs[i] = getOutputTableSpec(i, arrConvertedSpecs);
+		}
+		return arrSpecs;
+	}
 
-    /**
-     * Returns the list of all output table specifications by calling
-     * for all out ports {@link #getOutputTableSpec(int, DataTableSpec[])} and
-     * concatenating the result to an array.
-     *
-     * @param inData Concrete input data coming from the execute() method of the node model.
-     * 		Can be null.
-     *
-     * @return The specifications of all output tables. Can be null.
-     *
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
-     * 		given DataTableSpec elements.
-     */
-    protected DataTableSpec[] getOutputTableSpecs(final DataTable[] inData)
-    	throws InvalidSettingsException {
-    	DataTableSpec[] arrInSpecs = SettingsUtils.getTableSpecs(inData);
-    	DataTableSpec[] arrOutSpecs = new DataTableSpec[getNrOutPorts()];
-    	for (int i = 0; i < arrOutSpecs.length; i++) {
-    		arrOutSpecs[i] = getOutputTableSpec(i, arrInSpecs);
-    	}
-    	return arrOutSpecs;
-    }
+	/**
+	 * Returns the list of all output table specifications by calling
+	 * for all out ports {@link #getOutputTableSpec(int, DataTableSpec[])} and
+	 * concatenating the result to an array.
+	 *
+	 * @param inData Concrete input data coming from the execute() method of the node model.
+	 * 		Can be null.
+	 *
+	 * @return The specifications of all output tables. Can be null.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 */
+	protected DataTableSpec[] getOutputTableSpecs(final DataTable[] inData)
+			throws InvalidSettingsException {
+		final DataTableSpec[] arrInSpecs = SettingsUtils.getTableSpecs(inData);
+		final DataTableSpec[] arrOutSpecs = new DataTableSpec[getNrOutPorts()];
+		for (int i = 0; i < arrOutSpecs.length; i++) {
+			arrOutSpecs[i] = getOutputTableSpec(i, arrInSpecs);
+		}
+		return arrOutSpecs;
+	}
 
-    /**
-     * Returns the output table specification of the specified out port. The implementation
-     * depends highly on the output generation strategy. If a ColumnRearranger
-     * is used to re-use the input table an output table specification will be
-     * based on that ColumnRearranger object. If a new table is created for
-     * an output port, it could generate a table specification directly derived from the
-     * an output factory.
-     *
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications. Can be null.
-     *
-     * @return The specification of all output tables.
-     *
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
-     * 		given DataTableSpec elements.
-     */
-    protected abstract DataTableSpec getOutputTableSpec(final int outPort,
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException;
+	/**
+	 * Returns the output table specification of the specified out port. The implementation
+	 * depends highly on the output generation strategy. If a ColumnRearranger
+	 * is used to re-use the input table an output table specification will be
+	 * based on that ColumnRearranger object. If a new table is created for
+	 * an output port, it could generate a table specification directly derived from the
+	 * an output factory.
+	 *
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications. Can be null.
+	 *
+	 * @return The specification of all output tables.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 */
+	protected abstract DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException;
 
 
-    /**
-     * Creates a new warning consolidator with the desired warning contexts.
-     * This implementation contains only the row context. Override this method to
-     * use a consolidator that supports more contexts, e.g. for tables, batches, etc.
-     *
-     * @return Warning consolidator used in {@link #configure(DataTableSpec[])} and
-     * 		{@link #execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}.
-     * 		Must not be null.
-     */
-    protected WarningConsolidator createWarningConsolidator() {
-    	return new WarningConsolidator(WarningConsolidator.ROW_CONTEXT);
-    }
+	/**
+	 * Creates a new warning consolidator with the desired warning contexts.
+	 * This implementation contains only the row context. Override this method to
+	 * use a consolidator that supports more contexts, e.g. for tables, batches, etc.
+	 *
+	 * @return Warning consolidator used in {@link #configure(DataTableSpec[])} and
+	 * 		{@link #execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}.
+	 * 		Must not be null.
+	 */
+	protected WarningConsolidator createWarningConsolidator() {
+		return new WarningConsolidator(WarningConsolidator.ROW_CONTEXT);
+	}
 
-    /**
-     * The default implementation of this method consolidates all saved warning messages
-     * and sets them as one warning message for the node. It will not show, how many
-     * contexts (e.g. rows) have been processed. You may call {@link #generateWarnings(Map)}
-     * specifying the number of executed objects in each registered context (e.g. how
-     * many rows the input table had).
-     */
-    protected void generateWarnings() {
-    	generateWarnings(null);
-    }
+	/**
+	 * The default implementation of this method consolidates all saved warning messages
+	 * and sets them as one warning message for the node. It will not show, how many
+	 * contexts (e.g. rows) have been processed. You may call {@link #generateWarnings(Map)}
+	 * specifying the number of executed objects in each registered context (e.g. how
+	 * many rows the input table had).
+	 */
+	protected void generateWarnings() {
+		generateWarnings(null);
+	}
 
-    /**
-     * The default implementation of this method consolidates all saved warning messages
-     * and sets them as one warning message for the node. Based on the passed in map
-     * it will show, how many contexts (e.g. rows) have been processed for each context-based
-     * warning, e.g. "Empty rows encountered [4 of 10 rows]". In this example the 10 comes
-     * from the passed in map. The 4 comes from 4 calls of the same warning during execution.
-     * You may call {@link #generateWarnings()} if total number of rows or other contexts are
-     * not available.
-     *
+	/**
+	 * The default implementation of this method consolidates all saved warning messages
+	 * and sets them as one warning message for the node. Based on the passed in map
+	 * it will show, how many contexts (e.g. rows) have been processed for each context-based
+	 * warning, e.g. "Empty rows encountered [4 of 10 rows]". In this example the 10 comes
+	 * from the passed in map. The 4 comes from 4 calls of the same warning during execution.
+	 * You may call {@link #generateWarnings()} if total number of rows or other contexts are
+	 * not available.
+	 *
 	 * @param mapContextOccurrences Maps context ids to number of occurrences (e.g. number of rows).
 	 * 		Can be null.
-     */
-    protected void generateWarnings(final Map<String, Integer> mapContextOccurrences) {
-    	setWarningMessage(getWarningConsolidator().getWarnings(mapContextOccurrences));
-    }
+	 */
+	protected void generateWarnings(final Map<String, Integer> mapContextOccurrences) {
+		setWarningMessage(getWarningConsolidator().getWarnings(mapContextOccurrences));
+	}
 
-    /**
-     * This method generates InputDataInfo objects for all tables specified in
-     * the parameter. It will call {@link #createInputDataInfos(int, DataTableSpec)}
-     * for each of them to get InputDataInfo objects for all of them.
-     * To find the proper column, the concrete node implementation needs to
-     * use the setting models.
-     *
-     * @param inSpecs All table specifications of the input ports of the node. Should not be null.
-     *
-     * @return An array of info objects for all columns used as input for the passed table.
-     * 		Should not return null. If no input columns are used from the passed table,
-     * 		it should return an empty array.
-     *
-     * @throws InvalidSettingsException Thrown, if the current settings or the spec of the
-     * 		input table will make it impossible to process the data.
-     */
-    protected InputDataInfo[][] createInputDataInfos(final DataTableSpec[] inSpecs)
-    	throws InvalidSettingsException {
+	/**
+	 * This method generates InputDataInfo objects for all tables specified in
+	 * the parameter. It will call {@link #createInputDataInfos(int, DataTableSpec)}
+	 * for each of them to get InputDataInfo objects for all of them.
+	 * To find the proper column, the concrete node implementation needs to
+	 * use the setting models.
+	 *
+	 * @param inSpecs All table specifications of the input ports of the node. Should not be null.
+	 *
+	 * @return An array of info objects for all columns used as input for the passed table.
+	 * 		Should not return null. If no input columns are used from the passed table,
+	 * 		it should return an empty array.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the current settings or the spec of the
+	 * 		input table will make it impossible to process the data.
+	 */
+	protected InputDataInfo[][] createInputDataInfos(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
 
-    	if (inSpecs == null) {
-    		throw new InvalidSettingsException("There is no input table available yet.");
-    	}
+		if (inSpecs == null) {
+			throw new InvalidSettingsException("There is no input table available yet.");
+		}
 
-    	InputDataInfo[][] arrDataInfos = new InputDataInfo[inSpecs.length][];
+		final InputDataInfo[][] arrDataInfos = new InputDataInfo[inSpecs.length][];
 
-    	for (int i = 0; i < inSpecs.length; i++) {
-    		arrDataInfos[i] = createInputDataInfos(i, inSpecs[i]);
-    	}
+		for (int i = 0; i < inSpecs.length; i++) {
+			arrDataInfos[i] = createInputDataInfos(i, inSpecs[i]);
+		}
 
-    	return arrDataInfos;
-    }
+		return arrDataInfos;
+	}
 
-    /**
-     * This method needs to be implemented by a concrete node to generate InputDataInfo
-     * objects for each input column for all input tables. To find the proper column,
-     * the concrete node implementation must pass in the appropriate setting model
-     * of the column name into the constructor of the InputDataInfo class.
-     *
-     * @param inPort The port number of the input table to create input data objects for.
-     * @param inSpec The table specification of the input table. Can be null.
-     *
-     * @return An array of info objects for all columns used as input for the passed table.
-     * 		Should not return null. If no input columns are used from the passed table,
-     * 		it should return an empty array.
-     *
-     * @throws InvalidSettingsException Thrown, if the current settings or the spec of the
-     * 		input table will make it impossible to process the data.
-     */
+	/**
+	 * This method needs to be implemented by a concrete node to generate InputDataInfo
+	 * objects for each input column for all input tables. To find the proper column,
+	 * the concrete node implementation must pass in the appropriate setting model
+	 * of the column name into the constructor of the InputDataInfo class.
+	 *
+	 * @param inPort The port number of the input table to create input data objects for.
+	 * @param inSpec The table specification of the input table. Can be null.
+	 *
+	 * @return An array of info objects for all columns used as input for the passed table.
+	 * 		Should not return null. If no input columns are used from the passed table,
+	 * 		it should return an empty array.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the current settings or the spec of the
+	 * 		input table will make it impossible to process the data.
+	 */
 	protected abstract InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException;
+			throws InvalidSettingsException;
 
 	/**
 	 * Called at the end of execution, if the node implements the TableViewSupport
@@ -1616,112 +1812,112 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @see #execute(BufferedDataTable[], ExecutionContext)
 	 */
 	protected void conserveTables(final ExecutionContext exec, final BufferedDataTable[] arrInData, final BufferedDataTable[] arrResultData) {
-        if (this instanceof TableViewSupport) {
-			int[] arrIn = getInputTablesToConserve();
-	        int[] arrOut = getOutputTablesToConserve();
-	        int iCount = 0;
+		if (this instanceof TableViewSupport) {
+			final int[] arrIn = getInputTablesToConserve();
+			final int[] arrOut = getOutputTablesToConserve();
+			int iCount = 0;
 
-	        // Build little spec table to remember what input and what ouput tables are
-	        BufferedDataContainer tableInternalDataSpec = exec.createDataContainer(new DataTableSpec(
-	        		new DataColumnSpecCreator(PORT_TYPE_COLUMN_NAME, StringCell.TYPE).createSpec()));
+			// Build little spec table to remember what input and what ouput tables are
+			final BufferedDataContainer tableInternalDataSpec = exec.createDataContainer(new DataTableSpec(
+					new DataColumnSpecCreator(PORT_TYPE_COLUMN_NAME, StringCell.TYPE).createSpec()));
 
-	        // Conserve input tables
-	        if (m_arrInContModel != null && arrIn != null && m_arrInContModel.length == arrIn.length) {
-		        for (int i = 0; i < arrIn.length; i++, iCount++) {
-		        	m_arrInContModel[i].setDataTable(arrInData[arrIn[i]]);
-		        	m_arrInContModel[i].setHiLiteHandler(getInHiLiteHandler(arrIn[i]));
-		        	tableInternalDataSpec.addRowToTable(new DefaultRow("" + iCount, INPUT_TABLE_ID));
-		        }
-	        }
+			// Conserve input tables
+			if (m_arrInContModel != null && arrIn != null && m_arrInContModel.length == arrIn.length) {
+				for (int i = 0; i < arrIn.length; i++, iCount++) {
+					m_arrInContModel[i].setDataTable(arrInData[arrIn[i]]);
+					m_arrInContModel[i].setHiLiteHandler(getInHiLiteHandler(arrIn[i]));
+					tableInternalDataSpec.addRowToTable(new DefaultRow("" + iCount, INPUT_TABLE_ID));
+				}
+			}
 
-	        // Conserve output tables
-	        if (m_arrOutContModel != null && arrOut != null && m_arrOutContModel.length == arrOut.length) {
-		        for (int i = 0; i < arrOut.length; i++, iCount++) {
-		        	m_arrOutContModel[i].setDataTable(arrResultData[arrOut[i]]);
-		        	m_arrOutContModel[i].setHiLiteHandler(getOutHiLiteHandler(arrOut[i]));
-		        	tableInternalDataSpec.addRowToTable(new DefaultRow("" + iCount, OUTPUT_TABLE_ID));
-		        }
-	        }
+			// Conserve output tables
+			if (m_arrOutContModel != null && arrOut != null && m_arrOutContModel.length == arrOut.length) {
+				for (int i = 0; i < arrOut.length; i++, iCount++) {
+					m_arrOutContModel[i].setDataTable(arrResultData[arrOut[i]]);
+					m_arrOutContModel[i].setHiLiteHandler(getOutHiLiteHandler(arrOut[i]));
+					tableInternalDataSpec.addRowToTable(new DefaultRow("" + iCount, OUTPUT_TABLE_ID));
+				}
+			}
 
-	        tableInternalDataSpec.close();
-	        m_tableContentTableSpecs = tableInternalDataSpec.getTable();
-        }
+			tableInternalDataSpec.close();
+			m_tableContentTableSpecs = tableInternalDataSpec.getTable();
+		}
 	}
 
 	//
 	// Public Static Methods
 	//
 
-    /**
-     * Checks, if the user canceled execution and reports the progress in a
-     * standard form.
-     *
-     * @param exec Execution context to use for checks and reporting. Can be null
-     * 		to do nothing.
-     * @param rowIndex Index of currently processed row.
-     * @param iTotalRowCount Total number of rows to be processed.
-     * @param row Currently processed row to get row key from. Can be null to
-     * 		suppress this information.
-     * @param textToAppend Additional text(s) to append directly at the end. Optional.
-     *
-     * @throws CanceledExecutionException Thrown, if the user canceled execution.
-     */
-    public static void reportProgress(final ExecutionContext exec, final int rowIndex, final int iTotalRowCount,
-    		final DataRow row, final String... textToAppend) throws CanceledExecutionException {
-    	if (exec != null) {
-		    exec.checkCanceled();
+	/**
+	 * Checks, if the user canceled execution and reports the progress in a
+	 * standard form.
+	 *
+	 * @param exec Execution context to use for checks and reporting. Can be null
+	 * 		to do nothing.
+	 * @param rowIndex Index of currently processed row.
+	 * @param iTotalRowCount Total number of rows to be processed.
+	 * @param row Currently processed row to get row key from. Can be null to
+	 * 		suppress this information.
+	 * @param textToAppend Additional text(s) to append directly at the end. Optional.
+	 *
+	 * @throws CanceledExecutionException Thrown, if the user canceled execution.
+	 */
+	public static void reportProgress(final ExecutionContext exec, final int rowIndex, final int iTotalRowCount,
+			final DataRow row, final String... textToAppend) throws CanceledExecutionException {
+		if (exec != null) {
+			exec.checkCanceled();
 
-		    StringBuilder m = new StringBuilder("Processed row ")
+			final StringBuilder m = new StringBuilder("Processed row ")
 			.append(rowIndex).append('/').append(iTotalRowCount);
 
-		    if (row != null) {
-		    	m.append(" (\"").append(row.getKey()).append("\")");
-		    }
+			if (row != null) {
+				m.append(" (\"").append(row.getKey()).append("\")");
+			}
 
-		    if (textToAppend != null) {
-		    	for (String text : textToAppend) {
-		    		m.append(text);
-		    	}
-		    }
+			if (textToAppend != null) {
+				for (final String text : textToAppend) {
+					m.append(text);
+				}
+			}
 
-		    exec.setProgress(rowIndex / (double)iTotalRowCount, m.toString());
-    	}
-    }
+			exec.setProgress(rowIndex / (double)iTotalRowCount, m.toString());
+		}
+	}
 
-    /**
-     * Monitors the specified thread and waits until it ends or until the user canceled
-     * the current execution as monitored by the passed in ExecutionContext.
-     * Cancellation will be checked every x milliseconds as specified in the third
-     * parameter. If the last parameter is set to true, the progress will be
-     * reported based on a mathematical function with limes of 1.0d. This function
-     * is not time dependent, but depends on number of executions, hence it
-     * is influenced by the value iCheckIntervalInMillis.
-     *
-     * @param thread A working thread that will be monitored and joined.
-     * @param exec Execution context to check for cancellation and to report (pseudo) progress.
-     * @param iCheckIntervalInMillis Interval to check for cancellation and to update
-     * 		progress if desired. In milliseconds.
-     * @param bShowPseudoProgress Set to true to update the progress value with a pseudo
-     * 		progress value.
-     * @param bStopWorkingThreadAfterCancellation Set to true to call stop() for the
-     * 		working thread if the user canceled the node execution. This can be dangerous
-     * 		if the thread is sharing objects. It may lead to a Java VM crash and is
-     * 		not really recommended to do. Use with care.
-     *
-     * @throws CanceledExecutionException Thrown, if the user canceled.
-     * @throws InterruptedException Thrown, if the current monitoring thread got interrupted
-     * 		while waiting for joining the working thread.
-     */
-    @SuppressWarnings("deprecation")
+	/**
+	 * Monitors the specified thread and waits until it ends or until the user canceled
+	 * the current execution as monitored by the passed in ExecutionContext.
+	 * Cancellation will be checked every x milliseconds as specified in the third
+	 * parameter. If the last parameter is set to true, the progress will be
+	 * reported based on a mathematical function with limes of 1.0d. This function
+	 * is not time dependent, but depends on number of executions, hence it
+	 * is influenced by the value iCheckIntervalInMillis.
+	 *
+	 * @param thread A working thread that will be monitored and joined.
+	 * @param exec Execution context to check for cancellation and to report (pseudo) progress.
+	 * @param iCheckIntervalInMillis Interval to check for cancellation and to update
+	 * 		progress if desired. In milliseconds.
+	 * @param bShowPseudoProgress Set to true to update the progress value with a pseudo
+	 * 		progress value.
+	 * @param bStopWorkingThreadAfterCancellation Set to true to call stop() for the
+	 * 		working thread if the user canceled the node execution. This can be dangerous
+	 * 		if the thread is sharing objects. It may lead to a Java VM crash and is
+	 * 		not really recommended to do. Use with care.
+	 *
+	 * @throws CanceledExecutionException Thrown, if the user canceled.
+	 * @throws InterruptedException Thrown, if the current monitoring thread got interrupted
+	 * 		while waiting for joining the working thread.
+	 */
+	@SuppressWarnings("deprecation")
 	public void monitorWorkingThreadExecution(final Thread thread, final ExecutionContext exec,
-    		final int iCheckIntervalInMillis, final boolean bShowPseudoProgress,
-    		final boolean bStopWorkingThreadAfterCancellation)
-    	throws CanceledExecutionException {
+			final int iCheckIntervalInMillis, final boolean bShowPseudoProgress,
+			final boolean bStopWorkingThreadAfterCancellation)
+					throws CanceledExecutionException {
 
-    	// Pre-check
-    	if (thread == null) {
-    		throw new IllegalArgumentException("Thread to be monitored must not be null.");
-    	}
+		// Pre-check
+		if (thread == null) {
+			throw new IllegalArgumentException("Thread to be monitored must not be null.");
+		}
 
 		// Wait for calculation thread to finish and check for cancellation
 		int iCounter = 0;
@@ -1729,7 +1925,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			try {
 				thread.join(iCheckIntervalInMillis);
 			}
-			catch (InterruptedException excInterrupted) {
+			catch (final InterruptedException excInterrupted) {
 				// This gets thrown when the user cancels - we will check right afterwards
 				// which will result in a CanceledExecutionException
 			}
@@ -1743,7 +1939,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					exec.setProgress(1.0d - (10d / (10d + iCounter++)));
 				}
 			}
-			catch (CanceledExecutionException exc) {
+			catch (final CanceledExecutionException exc) {
 				exec.setProgress("Cancellation in progress - Please wait ...");
 
 				// Although it's not nice try to kill the working thread, because it may
@@ -1754,7 +1950,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 						thread.stop();
 						LOGGER.debug("Successfully stopped.");
 					}
-					catch (SecurityException excAccessDenied) {
+					catch (final SecurityException excAccessDenied) {
 						LOGGER.warn("Calculation thread could not been stopped. It will run out by itself.");
 					}
 				}
@@ -1765,40 +1961,40 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				throw exc;
 			}
 		}
-    }
+	}
 
 
 	//
 	// Static Classes
 	//
 
-    /**
-     * This class provides a mechanism to update the node execution progress
-     * automatically every x milliseconds using a mathematical function with
-     * a limes of 1.0d.
-     *
-     * @author Manuel Schwarze
-     */
-    static public class PseudoProgressUpdater {
+	/**
+	 * This class provides a mechanism to update the node execution progress
+	 * automatically every x milliseconds using a mathematical function with
+	 * a limes of 1.0d.
+	 *
+	 * @author Manuel Schwarze
+	 */
+	static public class PseudoProgressUpdater {
 
-    	//
-    	// Members
-    	//
+		//
+		// Members
+		//
 
-    	/** Timer that provides the scheduling for the progress update. */
-    	private Timer m_progressUpdater;
+		/** Timer that provides the scheduling for the progress update. */
+		private final Timer m_progressUpdater;
 
-    	//
-    	// Constructor
-    	//
+		//
+		// Constructor
+		//
 
-    	/**
-    	 * Creates a pseudo progress updater, which increases progress in the specified
-    	 * execution context every x milliseconds.
-    	 */
-    	public PseudoProgressUpdater(final ExecutionContext exec, final long updateDelayInMillis) {
-    		m_progressUpdater = new Timer(true);
-    		m_progressUpdater.schedule(new TimerTask() {
+		/**
+		 * Creates a pseudo progress updater, which increases progress in the specified
+		 * execution context every x milliseconds.
+		 */
+		public PseudoProgressUpdater(final ExecutionContext exec, final long updateDelayInMillis) {
+			m_progressUpdater = new Timer(true);
+			m_progressUpdater.schedule(new TimerTask() {
 				int m_iCounter = 0;
 
 				@Override
@@ -1808,21 +2004,21 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					try {
 						exec.checkCanceled();
 					}
-					catch (CanceledExecutionException exc) {
+					catch (final CanceledExecutionException exc) {
 						exec.setProgress("Cancellation in progress - Please wait ...");
 						cancel(); // Cancels progress update
 					}
 				}
 			}, 0, updateDelayInMillis); // Increase progress until we reach almost 100%
-    	}
+		}
 
-    	/**
-    	 * Stops updating the progress update.
-    	 */
-    	public void cancel() {
-    		m_progressUpdater.cancel();
-    	}
-    }
+		/**
+		 * Stops updating the progress update.
+		 */
+		public void cancel() {
+			m_progressUpdater.cancel();
+		}
+	}
 
 	/**
 	 * This interface implements the logic to process a result set and is passed into
@@ -1991,7 +2187,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			if (arrFactory == null || arrFactory.length == 0) {
 				throw new IllegalArgumentException("Factory array must neither be null nor empty.");
 			}
-			for (AbstractRDKitCellFactory factory : arrFactory) {
+			for (final AbstractRDKitCellFactory factory : arrFactory) {
 				if (factory == null) {
 					throw new IllegalArgumentException("Factory must not be null.");
 				}
@@ -2016,8 +2212,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			int iCellCount = 0;
 			RowFailurePolicy rowFailurePolicy = RowFailurePolicy.DeliverEmptyValues;
 
-			for (AbstractRDKitCellFactory factory : m_arrFactory) {
-				DataColumnSpec[] arrColSpecs = factory.getColumnSpecs();
+			for (final AbstractRDKitCellFactory factory : m_arrFactory) {
+				final DataColumnSpec[] arrColSpecs = factory.getColumnSpecs();
 				if (arrColSpecs == null) {
 					throw new IllegalArgumentException("Column specifications in factory must not be null.");
 				}
@@ -2050,23 +2246,26 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * @return Column rearranger that will pick up its results from the parallel processor.
 		 *
 		 * @see AbstractCellFactory#setParallelProcessing(boolean)
+		 * 
+		 * @deprecated This method is not used anymore and will be removed in the future.
 		 */
+		@Deprecated
 		public ColumnRearranger createColumnRearranger(final DataTableSpec inSpec,
 				final AbstractRDKitCellFactory[] arrFactories,
 				final BlockingQueue<DataCell[]> blockingQueue,
 				final ExecutionContext exec) {
 
 			// Create all columns specs
-			List<DataColumnSpec> listSpecs = new ArrayList<DataColumnSpec>();
-	        for (AbstractRDKitCellFactory factory : arrFactories) {
-	        	listSpecs.addAll(Arrays.asList(factory.getColumnSpecs()));
-	        }
+			final List<DataColumnSpec> listSpecs = new ArrayList<DataColumnSpec>();
+			for (final AbstractRDKitCellFactory factory : arrFactories) {
+				listSpecs.addAll(Arrays.asList(factory.getColumnSpecs()));
+			}
 
-	        final DataColumnSpec[] arrColumnSpecs = listSpecs.toArray(new DataColumnSpec[listSpecs.size()]);
+			final DataColumnSpec[] arrColumnSpecs = listSpecs.toArray(new DataColumnSpec[listSpecs.size()]);
 
 			// Create column rearranger
-	        ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        	rearranger.append(new CellFactory() {
+			final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
+			rearranger.append(new CellFactory() {
 
 				@Override
 				public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
@@ -2089,12 +2288,12 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 							try {
 								exec.checkCanceled();
 							}
-							catch (CanceledExecutionException excCancelled) {
+							catch (final CanceledExecutionException excCancelled) {
 								throw new RuntimeException("User cancelled execution.", excCancelled);
 							}
 						}
 					}
-					catch (InterruptedException e) {
+					catch (final InterruptedException e) {
 						throw new RuntimeException("Result processing failed.", e);
 					}
 
@@ -2102,7 +2301,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				}
 			});
 
-	        return rearranger;
+			return rearranger;
 		}
 
 		/**
@@ -2113,28 +2312,28 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * @param row Input row from an input table.
 		 * @param index Index of the row. Not used in this implementation.
 		 */
-	    @Override
-	    public DataCell[] compute(final DataRow row, final long index) {
-	    	DataCell[] arrTotalResults;
+		@Override
+		public DataCell[] compute(final DataRow row, final long index) {
+			DataCell[] arrTotalResults;
 
-	    	// For performance reasons we check for single vs. multi factories here
-	    	if (m_bMultiFactory) {
-		    	arrTotalResults = new DataCell[m_iCellCount];
+			// For performance reasons we check for single vs. multi factories here
+			if (m_bMultiFactory) {
+				arrTotalResults = new DataCell[m_iCellCount];
 
-		    	int iOffset = 0;
+				int iOffset = 0;
 
-		    	for (AbstractRDKitCellFactory factory : m_arrFactory) {
-		    		DataCell[] arrResults = factory.getCells(row);
-		    		System.arraycopy(arrResults, 0, arrTotalResults, iOffset, arrResults.length);
-		    		iOffset += arrResults.length;
-		    	}
-	    	}
-	    	else {
-	    		arrTotalResults =  m_arrFactory[0].getCells(row);
-	    	}
+				for (final AbstractRDKitCellFactory factory : m_arrFactory) {
+					final DataCell[] arrResults = factory.getCells(row);
+					System.arraycopy(arrResults, 0, arrTotalResults, iOffset, arrResults.length);
+					iOffset += arrResults.length;
+				}
+			}
+			else {
+				arrTotalResults =  m_arrFactory[0].getCells(row);
+			}
 
-	    	return arrTotalResults;
-	    }
+			return arrTotalResults;
+		}
 
 		/**
 		 * Processes the finished calculated results from one of the threads of the parallel
@@ -2144,56 +2343,56 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 *
 		 * @param task The computation task from the MultiThreadWorker. Must not be null.
 		 */
-	    @Override
-	    public void processFinished(final ComputationTask task) {
-	    	// Pre-check
-	    	if (task == null) {
-	    		throw new IllegalArgumentException("Computation task must not be null.");
-	    	}
+		@Override
+		public void processFinished(final ComputationTask task) {
+			// Pre-check
+			if (task == null) {
+				throw new IllegalArgumentException("Computation task must not be null.");
+			}
 
-	        long rowIndex = task.getIndex();
-	        DataRow row = task.getInput();
-	        DataCell[] arrCells = null;
+			final long rowIndex = task.getIndex();
+			final DataRow row = task.getInput();
+			DataCell[] arrCells = null;
 
-	        // Pick up results
-	        try {
-	            arrCells = task.get();
-	        }
-	        catch (Exception e) {
-	    		String strMessage = "Exception while getting result";
+			// Pick up results
+			try {
+				arrCells = task.get();
+			}
+			catch (final Exception e) {
+				String strMessage = "Exception while getting result";
 
-	    		// Use empty cells
-	    		if (m_consolidatedRowFailurePolicy == RowFailurePolicy.DeliverEmptyValues) {
-	    			strMessage += " - Assigning missing cells.";
-	        		m_warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-	        				strMessage);
-	        		AbstractRDKitNodeModel.LOGGER.warn(strMessage, e);
-	                arrCells = AbstractRDKitCellFactory.createEmptyCells(1);
-	        	}
-	    		// Or fail
-	        	else {
-	        		strMessage += " - Giving up.";
-	        		AbstractRDKitNodeModel.LOGGER.error(strMessage, e);
-	                throw new RuntimeException(strMessage, e);
-	        	}
-	        }
+				// Use empty cells
+				if (m_consolidatedRowFailurePolicy == RowFailurePolicy.DeliverEmptyValues) {
+					strMessage += " - Assigning missing cells.";
+					m_warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+							strMessage);
+					AbstractRDKitNodeModel.LOGGER.warn(strMessage, e);
+					arrCells = AbstractRDKitCellFactory.createEmptyCells(1);
+				}
+				// Or fail
+				else {
+					strMessage += " - Giving up.";
+					AbstractRDKitNodeModel.LOGGER.error(strMessage, e);
+					throw new RuntimeException(strMessage, e);
+				}
+			}
 
-	        // Check, if user pressed cancel (however, we will finish the method nevertheless)
-	        // Update the progress only every 20 rows
-	        if (rowIndex % 20 == 0) {
-		        try {
-			        AbstractRDKitNodeModel.reportProgress(m_exec, (int)rowIndex,
-			        	m_iTotalRowCount, row,
-			        	new StringBuilder(" [").append(getActiveCount()).append(" active, ")
-		            	.append(getFinishedTaskCount()).append(" pending]").toString());
-		        }
-		        catch (CanceledExecutionException e) {
-		            cancel(true);
-		        }
-	        }
+			// Check, if user pressed cancel (however, we will finish the method nevertheless)
+			// Update the progress only every 20 rows
+			if (rowIndex % 20 == 0) {
+				try {
+					AbstractRDKitNodeModel.reportProgress(m_exec, (int)rowIndex,
+							m_iTotalRowCount, row,
+							new StringBuilder(" [").append(getActiveCount()).append(" active, ")
+							.append(getFinishedTaskCount()).append(" pending]").toString());
+				}
+				catch (final CanceledExecutionException e) {
+					cancel(true);
+				}
+			}
 
-	        m_resultProcessor.processResults(rowIndex, row, arrCells);
-	    };
+			m_resultProcessor.processResults(rowIndex, row, arrCells);
+		};
 	}
 
 	/**
@@ -2258,135 +2457,135 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		// Public Methods
 		//
 
-	    /**
-	     * Registers an RDKit based object that is used within a certain block (wave). $
-	     * This object must have a delete() method implemented for freeing up resources later.
-	     * The cleanup will happen for all registered objects when the method
-	     * {@link #cleanupMarkedObjects(int)} is called with the same wave.
-	     * Note: If the last parameter is set to true and the same rdkitObject
-	     * was already registered for another wave (or no wave)
-	     * it will be removed from the former wave list and will exist only in the wave
-	     * specified here. This can be useful for instance, if an object is first marked as
-	     * part of a wave and later on it is determined that it needs to live longer (e.g.
-	     * without a wave). In this case the first time this method would be called with a wave id,
-	     * the second time without wave id (which would internally be wave = 0).
-	     *
-	     * @param <T> Any class that implements a delete() method to be called to free up resources.
-	     * @param rdkitObject An RDKit related object that should free resources when not
-	     * 		used anymore. Can be null.
-	     * @param wave A number that identifies objects registered for a certain "wave".
-	     * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
-	     * 		id, and remove it from that former wave. Usually this should be set to false for
-	     * 		performance reasons.
-	     *
-	     * @return The same object that was passed in. Null, if null was passed in.
-	     */
-	    public synchronized <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
-	    	if (rdkitObject != null)  {
+		/**
+		 * Registers an RDKit based object that is used within a certain block (wave). $
+		 * This object must have a delete() method implemented for freeing up resources later.
+		 * The cleanup will happen for all registered objects when the method
+		 * {@link #cleanupMarkedObjects(int)} is called with the same wave.
+		 * Note: If the last parameter is set to true and the same rdkitObject
+		 * was already registered for another wave (or no wave)
+		 * it will be removed from the former wave list and will exist only in the wave
+		 * specified here. This can be useful for instance, if an object is first marked as
+		 * part of a wave and later on it is determined that it needs to live longer (e.g.
+		 * without a wave). In this case the first time this method would be called with a wave id,
+		 * the second time without wave id (which would internally be wave = 0).
+		 *
+		 * @param <T> Any class that implements a delete() method to be called to free up resources.
+		 * @param rdkitObject An RDKit related object that should free resources when not
+		 * 		used anymore. Can be null.
+		 * @param wave A number that identifies objects registered for a certain "wave".
+		 * @param bRemoveFromOtherWave Checks, if the object was registered before with another wave
+		 * 		id, and remove it from that former wave. Usually this should be set to false for
+		 * 		performance reasons.
+		 *
+		 * @return The same object that was passed in. Null, if null was passed in.
+		 */
+		public synchronized <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
+			if (rdkitObject != null)  {
 
-	    		// Remove object from any other list, if desired (cost performance!)
-	    		if (bRemoveFromOtherWave) {
+				// Remove object from any other list, if desired (cost performance!)
+				if (bRemoveFromOtherWave) {
 
-	    			// Loop through all waves to find the rdkitObject - we create a copy here, because
-	    	    	// we may remove empty wave lists which may blow up out iterator
-	    			for (int waveExisting : new HashSet<Integer>(keySet())) {
-	    				final List<Object> list = get(waveExisting);
-	    				if (list.remove(rdkitObject) && list.isEmpty()) {
-	    					remove(waveExisting);
-	    				}
-	    			}
-	    		}
+					// Loop through all waves to find the rdkitObject - we create a copy here, because
+					// we may remove empty wave lists which may blow up out iterator
+					for (final int waveExisting : new HashSet<Integer>(keySet())) {
+						final List<Object> list = get(waveExisting);
+						if (list.remove(rdkitObject) && list.isEmpty()) {
+							remove(waveExisting);
+						}
+					}
+				}
 
-	    		// Get the list of the target wave
-	    		List<Object> list = get(wave);
+				// Get the list of the target wave
+				List<Object> list = get(wave);
 
-	    		// Create a wave list, if not found yet
-	    		if (list == null) {
-	    			list = new ArrayList<Object>();
-	    			put(wave, list);
-	    		}
+				// Create a wave list, if not found yet
+				if (list == null) {
+					list = new ArrayList<Object>();
+					put(wave, list);
+				}
 
-	    		// Add the object only once
-	    		if (!list.contains(rdkitObject)) {
-	    			list.add(rdkitObject);
-	    		}
-	    	}
+				// Add the object only once
+				if (!list.contains(rdkitObject)) {
+					list.add(rdkitObject);
+				}
+			}
 
-	    	return rdkitObject;
-	    }
+			return rdkitObject;
+		}
 
-	    /**
-	     * Frees resources for all objects that have been registered prior to this last
-	     * call using the method {@link #cleanupMarkedObjects()}.
-	     */
-	    public synchronized void cleanupMarkedObjects() {
-	    	// Loop through all waves for cleanup - we create a copy here, because
-	    	// the cleanupMarkedObjects method will remove items from our map
-			for (int wave : new HashSet<Integer>(keySet())) {
+		/**
+		 * Frees resources for all objects that have been registered prior to this last
+		 * call using the method {@link #cleanupMarkedObjects()}.
+		 */
+		public synchronized void cleanupMarkedObjects() {
+			// Loop through all waves for cleanup - we create a copy here, because
+			// the cleanupMarkedObjects method will remove items from our map
+			for (final int wave : new HashSet<Integer>(keySet())) {
 				cleanupMarkedObjects(wave);
 			}
-	    }
+		}
 
-	    /**
-	     * Frees resources for all objects that have been registered prior to this last
-	     * call for a certain wave using the method {@link #cleanupMarkedObjects(int)}.
-	     *
-	     * @param wave A number that identifies objects registered for a certain "wave".
-	     */
-	    public synchronized void cleanupMarkedObjects(final int wave) {
+		/**
+		 * Frees resources for all objects that have been registered prior to this last
+		 * call for a certain wave using the method {@link #cleanupMarkedObjects(int)}.
+		 *
+		 * @param wave A number that identifies objects registered for a certain "wave".
+		 */
+		public synchronized void cleanupMarkedObjects(final int wave) {
 			// Find the right wave list, if not found yet
-			List<Object> list = get(wave);
+			final List<Object> list = get(wave);
 
 			// If wave list was found, free all objects in it
 			if (list != null) {
-				for (Object objForCleanup : list) {
-		    		Class<?> clazz = null;
+				for (final Object objForCleanup : list) {
+					Class<?> clazz = null;
 
 					try {
 						clazz = objForCleanup.getClass();
 						final Method method = clazz.getMethod("delete");
 						method.invoke(objForCleanup);
 					}
-					catch (NoSuchMethodException excNoSuchMethod) {
+					catch (final NoSuchMethodException excNoSuchMethod) {
 						LOGGER.error("An object had been registered for cleanup (delete() call), " +
 								"which does not provide a delete() method." +
 								(clazz == null ? "" : " It's of class " + clazz.getName() + "."),
 								excNoSuchMethod.getCause());
 					}
-					catch (SecurityException excSecurity) {
+					catch (final SecurityException excSecurity) {
 						LOGGER.error("An object had been registered for cleanup (delete() call), " +
 								"which is not accessible for security reasons." +
 								(clazz == null ? "" : " It's of class " + clazz.getName() + "."),
 								excSecurity.getCause());
 					}
-					catch (Exception exc) {
+					catch (final Exception exc) {
 						LOGGER.error("Cleaning up a registered object (via delete() call) failed." +
 								(clazz == null ? "" : " It's of class " + clazz.getName() + "."),
 								exc.getCause());
 					}
-		    	}
+				}
 
-		    	list.clear();
-		    	remove(wave);
+				list.clear();
+				remove(wave);
 			}
-	    }
+		}
 
-	    /**
-	     * Removes all resources for all objects that have been registered prior to this last
-	     * call using the method {@link #cleanupMarkedObjects()}, but delays the cleanup
-	     * process. It basically moves the objects of interest into quarantine.
-	     */
-	    public synchronized void quarantineAndCleanupMarkedObjects() {
-	    	final RDKitCleanupTracker quarantineRDKitObjects = new RDKitCleanupTracker(this);
-	    	clear();
+		/**
+		 * Removes all resources for all objects that have been registered prior to this last
+		 * call using the method {@link #cleanupMarkedObjects()}, but delays the cleanup
+		 * process. It basically moves the objects of interest into quarantine.
+		 */
+		public synchronized void quarantineAndCleanupMarkedObjects() {
+			final RDKitCleanupTracker quarantineRDKitObjects = new RDKitCleanupTracker(this);
+			clear();
 
-	    	if (!quarantineRDKitObjects.isEmpty()) {
-		    	// Create the future cleanup task
-		    	TimerTask futureCleanupTask = new TimerTask() {
+			if (!quarantineRDKitObjects.isEmpty()) {
+				// Create the future cleanup task
+				final TimerTask futureCleanupTask = new TimerTask() {
 
-		    		/**
-		    		 * Cleans up all marked objects, which are put into quarantine for now.
-		    		 */
+					/**
+					 * Cleans up all marked objects, which are put into quarantine for now.
+					 */
 					@Override
 					public void run() {
 						quarantineRDKitObjects.cleanupMarkedObjects();
@@ -2394,10 +2593,10 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				};
 
 				// Schedule the cleanup task for later
-				Timer timer = new Timer("Quarantine RDKit Object Cleanup", false);
+				final Timer timer = new Timer("Quarantine RDKit Object Cleanup", false);
 				timer.schedule(futureCleanupTask, RDKIT_OBJECT_CLEANUP_DELAY_FOR_QUARANTINE);
-	    	}
-	    }
+			}
+		}
 	}
 }
 

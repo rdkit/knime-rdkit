@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  *
  * @author Manuel Schwarze
  */
-public class RDKitHighlightingAtomsNodeFactory 
-        extends NodeFactory<RDKitHighlightingAtomsNodeModel> {
+public class RDKitHighlightingAtomsNodeFactory extends NodeFactory<RDKitHighlightingAtomsNodeModel> {
 
-    /**
-     * Creates a model for the RDKitHighlightingAtoms functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitHighlightingAtomsNodeModel createNodeModel() {
-        return new RDKitHighlightingAtomsNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitHighlightingAtoms functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitHighlightingAtomsNodeModel createNodeModel() {
+		return new RDKitHighlightingAtomsNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitHighlightingAtomsNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitHighlightingAtomsNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitHighlightingAtomsNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitHighlightingAtomsNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitHighlightingAtomsNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitHighlightingAtomsNodeDialog();
+	}
 }
 

@@ -58,60 +58,59 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitMolFragmenterNodeFactory extends
-        NodeFactory<RDKitMolFragmenterNodeModel> {
+public class RDKitMolFragmenterNodeFactory extends NodeFactory<RDKitMolFragmenterNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitMolFragmenterNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitMolFragmenterNodeDialog();
+	}
 
-    /**
-     * Creates a model for the RDKitMolFragmenter functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitMolFragmenterNodeModel createNodeModel() {
-        return new RDKitMolFragmenterNodeModel();
-    }
+	/**
+	 * Creates a model for the RDKitMolFragmenter functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitMolFragmenterNodeModel createNodeModel() {
+		return new RDKitMolFragmenterNodeModel();
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitMolFragmenterNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitMolFragmenterNodeModel nodeModel) {
-        return null;
-    }
+	 */
+	@Override
+	public NodeView<RDKitMolFragmenterNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitMolFragmenterNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node does possess a dialog for configuration.
-     * 
+	/**
+	 * This node does possess a dialog for configuration.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 }

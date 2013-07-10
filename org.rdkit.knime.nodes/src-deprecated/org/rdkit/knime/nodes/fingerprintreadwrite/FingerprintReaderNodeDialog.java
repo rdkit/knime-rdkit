@@ -55,55 +55,55 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This is the dialog for the Fingerprint reader node. The user is provided the 
- * options to specify the input file name, whether or not the ids read from the file 
- * should be set as row ids. 
+ * This is the dialog for the Fingerprint reader node. The user is provided the
+ * options to specify the input file name, whether or not the ids read from the file
+ * should be set as row ids.
  * 
  * @author Sudip Ghosh
  */
 public class FingerprintReaderNodeDialog extends DefaultNodeSettingsPane {
-	
+
 	//
 	// Members
 	//
-	
+
 	/**
 	 * Instance for filename setting model.
 	 */
 	private final SettingsModelString m_filename =
-        new SettingsModelString("filename", "");
+			new SettingsModelString("filename", "");
 
 	/**
 	 * Instance for SetID setting model.
 	 */
 	private final SettingsModelBoolean m_setID =
-	        new SettingsModelBoolean("setID", false);
-	
+			new SettingsModelBoolean("setID", false);
+
 	/**
 	 * Instance for filename component.
 	 */
 	private final DialogComponentFileChooser m_chooser =
-	        new DialogComponentFileChooser(m_filename, "FpsReaderHistory",
-	                ".fps|.fps.gz");
-	
+			new DialogComponentFileChooser(m_filename, "FpsReaderHistory",
+					".fps|.fps.gz");
+
 	/**
 	 * Instance for Set row ID checkbox component .
 	 */
 	private final DialogComponentBoolean m_gid =
-	        new DialogComponentBoolean(m_setID, "Set Row Ids (Require unique Ids)");
-	
+			new DialogComponentBoolean(m_setID, "Set Row Ids (Require unique Ids)");
+
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Creates a new dialog for the FPS reader node.
 	 */
 	public FingerprintReaderNodeDialog() {
-	    addDialogComponent(m_chooser);
-	    addDialogComponent(m_gid);
+		addDialogComponent(m_chooser);
+		addDialogComponent(m_gid);
 	}
 
-	
+
 }
 

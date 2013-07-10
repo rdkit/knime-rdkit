@@ -59,64 +59,63 @@ import org.rdkit.knime.nodes.RDKitInteractiveView;
  * @author Swarnaprava Singh
  * @author Manuel Schwarze
  */
-public class SubstructureCounterNodeFactory 
-        extends NodeFactory<SubstructureCounterNodeModel> {
+public class SubstructureCounterNodeFactory extends NodeFactory<SubstructureCounterNodeModel> {
 
-    /**
-     * Creates a model for the RDKitSubstructureCounter functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public SubstructureCounterNodeModel createNodeModel() {
-        return new SubstructureCounterNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitSubstructureCounter functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public SubstructureCounterNodeModel createNodeModel() {
+		return new SubstructureCounterNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<SubstructureCounterNodeModel> createNodeView(
-            final int viewIndex,
-            final SubstructureCounterNodeModel nodeModel) {
-        if (viewIndex != 0) {
-            throw new IllegalArgumentException();
-        }
-        return new RDKitInteractiveView<SubstructureCounterNodeModel>(nodeModel, false, 0);
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<SubstructureCounterNodeModel> createNodeView(
+			final int viewIndex,
+			final SubstructureCounterNodeModel nodeModel) {
+		if (viewIndex != 0) {
+			throw new IllegalArgumentException();
+		}
+		return new RDKitInteractiveView<SubstructureCounterNodeModel>(nodeModel, false, 0);
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 1;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new SubstructureCounterNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new SubstructureCounterNodeDialog();
+	}
 }
 

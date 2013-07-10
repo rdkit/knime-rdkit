@@ -77,172 +77,173 @@ import org.rdkit.knime.util.SettingsUtils;
  * @author Manuel Schwarze
  */
 public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeModel {
-	
+
 	//
 	// Constants
 	//
 
-    /** Input data info index for fingerprint value. */
+	/** Input data info index for fingerprint value. */
 	protected static final int INPUT_COLUMN_FINGERPRINT = 0;
-	
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-        registerSettings(RDKitDiversityPickerNodeDialog.createInputColumnNameModel(), "input_column", "first_column"); 
-    	// Accepts also old deprecated key
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(RDKitDiversityPickerNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
+	// Accepts also old deprecated key
 
-    /** Settings model for the value of the number to pick. */
-    private final SettingsModelInteger m_modelNumberToPick =
-    	registerSettings(RDKitDiversityPickerNodeDialog.createNumberToPickModel());
+	/** Settings model for the value of the number to pick. */
+	private final SettingsModelInteger m_modelNumberToPick =
+			registerSettings(RDKitDiversityPickerNodeDialog.createNumberToPickModel());
 
-    /** Settings model for the value of the random seed. */
-    private final SettingsModelInteger m_randomSeed =
-    	registerSettings(RDKitDiversityPickerNodeDialog.createRandomSeedModel(), true);
+	/** Settings model for the value of the random seed. */
+	private final SettingsModelInteger m_randomSeed =
+			registerSettings(RDKitDiversityPickerNodeDialog.createRandomSeedModel(), true);
 
-    /** Pre-processing result to tell what columns to keep. */
-    private transient ExplicitBitVect m_ebvRowsToKeep;
+	/** Pre-processing result to tell what columns to keep. */
+	private transient ExplicitBitVect m_ebvRowsToKeep;
 
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with one data in- and one outport.
-     */
-    RDKitDiversityPickerNodeModel() {
-        super(1, 1);
-    }
+	//
+	// Constructor
+	//
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
-    	
-        // Auto guess the input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, BitVectorValue.class, 0, 
-        		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No fingerprints (Bit Vector compatible column) in input table.", getWarningConsolidator()); 
+	/**
+	 * Create new node model with one data in- and one outport.
+	 */
+	RDKitDiversityPickerNodeModel() {
+		super(1, 1);
+	}
 
-        // Determines, if the input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, BitVectorValue.class,  
-        		"Input column has not been specified yet.",
-        		"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+	//
+	// Protected Methods
+	//
 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+		// Auto guess the input column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, BitVectorValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No fingerprints (Bit Vector compatible column) in input table.", getWarningConsolidator());
 
-    /**
-     * {@inheritDoc}
-     * This implementation generates input data info object for the input column
-     * and connects it with the information coming from the appropriate setting model.
-     */
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
-    	InputDataInfo[] arrDataInfo = null;
-    	
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_FINGERPRINT] = new InputDataInfo(inSpec, m_modelInputColumnName, 
-    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-    				BitVectorValue.class);
-    	}	
-    	
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }    
-    
-    /**
-     * {@inheritDoc}
-     * This implementation returns 0.8 (80%).
-     */
-    @Override
-    protected double getPreProcessingPercentage() {
-    	return 0.80d;
-    }
+		// Determines, if the input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, BitVectorValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
-    /**
-     * {@inheritDoc}
-     * This implementation calculates what rows to keep.
-     */
-    @Override
-    protected void preProcessing(BufferedDataTable[] inData,
-    		InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
-    		throws Exception {
-    	// Reset old intermediate values
-    	m_ebvRowsToKeep = null;
-        
-    	// Create sub execution contexts for pre-processing steps
-    	final ExecutionContext subExecReadingFingerprints = exec.createSubExecutionContext(0.33d);
-    	final ExecutionContext subExecCheckDiversity = exec.createSubExecutionContext(0.33d);
-    	final ExecutionContext subExecProcessingDiversity = exec.createSubExecutionContext(0.34d);
-        
-    	// 1. Get all fingerprints in a form that we can process further
-    	final int iRowCount = inData[0].getRowCount();
-        final List<Integer> listIndicesUsed = new ArrayList<Integer>();
-        final EBV_Vect vFingerprints = markForCleanup(new EBV_Vect());
-    	
-        int iRowIndex = 0;
-        RowIterator it = inData[0].iterator();
-        while (it.hasNext()) {
-            DataRow row = it.next();
-        	ExplicitBitVect expBitVector = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_FINGERPRINT].getExplicitBitVector(row));
-        	if (expBitVector != null) {
-                listIndicesUsed.add(iRowIndex);
-        		vFingerprints.add(expBitVector);
-        	}
-        	
-        	// Every 20 iterations report progress and check for cancel
-        	if (iRowIndex % 20 == 0) {
-        		AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, iRowIndex, iRowCount, row, " - Reading fingerprints");
-        	}
-        	
-        	iRowIndex++;        	
-        }
-        subExecReadingFingerprints.setProgress(1.0d);
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
 
-        // Check, if parameters of user make sense based on the found fingerprints
-        if (listIndicesUsed.size() < m_modelNumberToPick.getIntValue()) {
-        	throw new InvalidSettingsException("Number of diverse points requested ("+ m_modelNumberToPick.getIntValue()
-        			+ ") exceeds number of valid fingerprints (" + listIndicesUsed.size() + ")");
-        }
-        
-        // 2. Doing diversity pick from fingerprints
-        subExecCheckDiversity.setProgress(0.25d, "Doing diversity pick");
-        Int_Vect intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints, 
-        		m_modelNumberToPick.getIntValue(), m_randomSeed.getIntValue()));
-        subExecCheckDiversity.setProgress(1.0d);
-        subExecCheckDiversity.checkCanceled(); 
-        
-        // 3. Store, what rows to keep - FIX: there has to be a better way to do this
-        m_ebvRowsToKeep = markForCleanup(new ExplicitBitVect(iRowCount));
-        int iDiversityCount = (int)intVector.size();
-        for(int i = 0; i < iDiversityCount; i++) {
-        	m_ebvRowsToKeep.setBit(listIndicesUsed.get(intVector.get(i)));
-        	// Every 20 iterations report progress and check for cancel
-        	if (i % 20 == 0) {
-        		AbstractRDKitNodeModel.reportProgress(subExecProcessingDiversity, i, iDiversityCount, 
-        				null, " - Processing diversity results");
-        	}
-        }
-    }
-    
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation generates input data info object for the input column
+	 * and connects it with the information coming from the appropriate setting model.
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_FINGERPRINT] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+					BitVectorValue.class);
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation returns 0.8 (80%).
+	 */
+	@Override
+	protected double getPreProcessingPercentage() {
+		return 0.80d;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation calculates what rows to keep.
+	 */
+	@Override
+	protected void preProcessing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
+					throws Exception {
+		// Reset old intermediate values
+		m_ebvRowsToKeep = null;
+
+		// Create sub execution contexts for pre-processing steps
+		final ExecutionContext subExecReadingFingerprints = exec.createSubExecutionContext(0.33d);
+		final ExecutionContext subExecCheckDiversity = exec.createSubExecutionContext(0.33d);
+		final ExecutionContext subExecProcessingDiversity = exec.createSubExecutionContext(0.34d);
+
+		// 1. Get all fingerprints in a form that we can process further
+		final int iRowCount = inData[0].getRowCount();
+		final List<Integer> listIndicesUsed = new ArrayList<Integer>();
+		final EBV_Vect vFingerprints = markForCleanup(new EBV_Vect());
+
+		int iRowIndex = 0;
+		final RowIterator it = inData[0].iterator();
+		while (it.hasNext()) {
+			final DataRow row = it.next();
+			final ExplicitBitVect expBitVector = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_FINGERPRINT].getExplicitBitVector(row));
+			if (expBitVector != null) {
+				listIndicesUsed.add(iRowIndex);
+				vFingerprints.add(expBitVector);
+			}
+
+			// Every 20 iterations report progress and check for cancel
+			if (iRowIndex % 20 == 0) {
+				AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, iRowIndex, iRowCount, row, " - Reading fingerprints");
+			}
+
+			iRowIndex++;
+		}
+		subExecReadingFingerprints.setProgress(1.0d);
+
+		// Check, if parameters of user make sense based on the found fingerprints
+		if (listIndicesUsed.size() < m_modelNumberToPick.getIntValue()) {
+			throw new InvalidSettingsException("Number of diverse points requested ("+ m_modelNumberToPick.getIntValue()
+					+ ") exceeds number of valid fingerprints (" + listIndicesUsed.size() + ")");
+		}
+
+		// 2. Doing diversity pick from fingerprints
+		subExecCheckDiversity.setProgress(0.25d, "Doing diversity pick");
+		final Int_Vect intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
+				m_modelNumberToPick.getIntValue(), m_randomSeed.getIntValue()));
+		subExecCheckDiversity.setProgress(1.0d);
+		subExecCheckDiversity.checkCanceled();
+
+		// 3. Store, what rows to keep - FIX: there has to be a better way to do this
+		m_ebvRowsToKeep = markForCleanup(new ExplicitBitVect(iRowCount));
+		final int iDiversityCount = (int)intVector.size();
+		for(int i = 0; i < iDiversityCount; i++) {
+			m_ebvRowsToKeep.setBit(listIndicesUsed.get(intVector.get(i)));
+			// Every 20 iterations report progress and check for cancel
+			if (i % 20 == 0) {
+				AbstractRDKitNodeModel.reportProgress(subExecProcessingDiversity, i, iDiversityCount,
+						null, " - Processing diversity results");
+			}
+		}
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -250,23 +251,23 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 	protected void cleanupIntermediateResults() {
 		m_ebvRowsToKeep = null;
 	}
-    
-    /**
-     * {@inheritDoc}
-     * This implementation filters out all rows, which are not contained in the rowsToKeep member variable, which
-     * was calculated during the pre-processing phase.
 
-     * @param arrInputDataInfo Input data information about all columns of the table at the input port. Not used 
-     * 		in this implementation.
-     * @param iUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
-     * 		objects will be cleaned up automatically at the end of this call. If this is not wanted,
-     * 		the objects should either not be marked for cleanup or they should be marked without an id, 
-     * 		which would lead to a cleanup at the end of the entire execution process. Not used in this implementation.
-     * 
-     * @return 0 to keep the row, or -1 if row shall be filtered out completely.
-     */
-    @Override
-    public int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo, int iUniqueWaveId) {
-    	return (m_ebvRowsToKeep.getBit(iRowIndex) ? 0 : -1);
-    }
+	/**
+	 * {@inheritDoc}
+	 * This implementation filters out all rows, which are not contained in the rowsToKeep member variable, which
+	 * was calculated during the pre-processing phase.
+
+	 * @param arrInputDataInfo Input data information about all columns of the table at the input port. Not used
+	 * 		in this implementation.
+	 * @param iUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
+	 * 		objects will be cleaned up automatically at the end of this call. If this is not wanted,
+	 * 		the objects should either not be marked for cleanup or they should be marked without an id,
+	 * 		which would lead to a cleanup at the end of the entire execution process. Not used in this implementation.
+	 * 
+	 * @return 0 to keep the row, or -1 if row shall be filtered out completely.
+	 */
+	@Override
+	public int determineTargetTable(final int iInPort, final int iRowIndex, final DataRow row, final InputDataInfo[] arrInputDataInfo, final int iUniqueWaveId) {
+		return (m_ebvRowsToKeep.getBit(iRowIndex) ? 0 : -1);
+	}
 }

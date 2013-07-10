@@ -85,8 +85,7 @@ import org.rdkit.knime.util.SettingsUtils;
  * @author Swarnaprava Singh
  * @author Manuel Schwarze
  */
-public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeModel
-	implements TableViewSupport {
+public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeModel implements TableViewSupport {
 
 	//
 	// Constants
@@ -110,25 +109,25 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	//
 
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-    	registerSettings(SubstructureCounterNodeDialog.createInputColumnNameModel(), "input_column", "inputMolCol");
-    // Accept also deprecated keys
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(SubstructureCounterNodeDialog.createInputColumnNameModel(), "input_column", "inputMolCol");
+	// Accept also deprecated keys
 
 	/** Settings model for the column name of the query molecule column. */
 	private final SettingsModelString m_modelQueryColumnName =
-		registerSettings(SubstructureCounterNodeDialog.createQueryInputModel());
+			registerSettings(SubstructureCounterNodeDialog.createQueryInputModel());
 
 	/** Settings model for the option to count unique matches only. */
 	private final SettingsModelBoolean m_modelUniqueMatchesOnly =
-		registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
+			registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
 
 	/** Settings model for the option to use a query name column. */
 	private final SettingsModelBoolean m_modelUseQueryNameColumn =
-		registerSettings(SubstructureCounterNodeDialog.createUseQueryNameColumnModel(), true);
+			registerSettings(SubstructureCounterNodeDialog.createUseQueryNameColumnModel(), true);
 
 	/** Settings model for the column name of the query name column. */
 	private final SettingsModelString m_modelQueryNameColumn =
-		registerSettings(SubstructureCounterNodeDialog.createQueryNameColumnModel(m_modelUseQueryNameColumn), true);
+			registerSettings(SubstructureCounterNodeDialog.createQueryNameColumnModel(m_modelUseQueryNameColumn), true);
 
 	//
 	// Intermediate Results
@@ -140,237 +139,237 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Column names. Result of pre-processing. */
 	private String[] m_arrResultColumnNames;
 
-	/** 
-	 * SMILES or SMARTS strings of query molecules read from second input table. 
-	 * Result of pre-processing. 
+	/**
+	 * SMILES or SMARTS strings of query molecules read from second input table.
+	 * Result of pre-processing.
 	 */
 	private String[] m_arrQueriesAsSmiles;
 
 	/** ROMol objects of query molecules read from second input table. Result of pre-processing. */
 	private ROMol[] m_arrQueriesAsRDKitMols;
 
-    //
-    // Constructor
-    //
+	//
+	// Constructor
+	//
 
-    /**
-     * Create new node model with one data in- and one out-port.
-     */
-    SubstructureCounterNodeModel() {
-        super(2, 1);
-    }
+	/**
+	 * Create new node model with one data in- and one out-port.
+	 */
+	SubstructureCounterNodeModel() {
+		super(2, 1);
+	}
 
-    //
-    // Protected Methods
-    //
+	//
+	// Protected Methods
+	//
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
-
-        // Auto guess the input mol column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
-        		"Auto guessing: Using column %COLUMN_NAME% as Mol input column.",
-        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator());
-
-        // Determines, if the mol input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
-        		"Input column has not been specified yet.",
-        		"Input column %COLUMN_NAME% does not exist. Has the first input table changed?");
-
-        // Auto guess the query mol column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
-        		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
-        		"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
-        		"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator());
-
-        // Determines, if the query mol column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
-        		"Query molecule column has not been specified yet.",
-        		"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
-
-        // Check, if query name column exists, if user wants to use it
-        if (m_modelUseQueryNameColumn.getBooleanValue()) {
-            // Auto guess the query name column if not set - fails if no compatible column found
-            SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
-            		(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
-            		"Auto guessing: Using column %COLUMN_NAME% as query name column.",
-            		"No String compatible column (to be used as query name) in query molecule table.", 
-            		getWarningConsolidator());
-
-            // Determines, if the query name column exists - fails if it does not
-            SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
-            		"Substructure name column has not been specified yet.",
-            		"Substructure name column %COLUMN_NAME% does not exist. Has the second input table changed?");
-        }
-        
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
-
-        // We cannot know how many columns we will generate before execution
-        return new DataTableSpec[] { null };
-    }
-
-    /**
-     * This implementation generates input data info object for the input mol column
-     * as well as the query molecule column and connects it with the information coming
-     * from the appropriate setting models.
-     * {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
-		throws InvalidSettingsException {
-
-    	InputDataInfo[] arrDataInfo = null;
-
-    	switch (inPort) {
-    		case 0: // First table with molecule column
-	    		arrDataInfo = new InputDataInfo[1]; // We have only one input mol column
-	    		arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
-	    				InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-	    				RDKitMolValue.class);
-	    		break;
-
-    		case 1: // Second table with query molecule column and optional name column
-    			boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
-	    		arrDataInfo = new InputDataInfo[bUseNameColumn ? 2 : 1]; 
-	    		arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
-	    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-	    				RDKitMolValue.class);
-	    		if (bUseNameColumn) {
-		    		arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelQueryNameColumn,
-		    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-		    				StringValue.class);
-	    		}
-		    	break;
-    	}
-
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
-
-
-    /**
-     * Returns the output table specification of the specified out port. This implementation
-     * works based on a ColumnRearranger and delivers only a specification for
-     * out port 0, based on an input table on in port 0. Override this method if
-     * other behavior is needed.
-     *
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     *
-     * @return The specification of all output tables.
-     *
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
-     * 		given DataTableSpec elements.
-     *
-     * @see #createOutputFactories(int)
-     */
-    @Override
-    protected DataTableSpec getOutputTableSpec(final int outPort,
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
-
-    	if (outPort == 0) {
-    		// Create the column rearranger, which will generate the spec
-	        spec = createColumnRearranger(outPort, inSpecs[0]).createSpec();
-    	}
-
-    	return spec;
-    }
-
-    /**
-     * {@inheritDoc}
-     * Calculates additionally to the normal execution procedure the pre-processing
-     * percentage.
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-    		final ExecutionContext exec) throws Exception {
-    	// Calculate pre-processing share based on overall rows
-    	m_dPreProcessingShare = (double)inData[1].getRowCount() /
-    		(double)(inData[0].getRowCount() + inData[1].getRowCount());
-
-    	// Perform normalized execution
-    	return super.execute(inData, exec);
-    }
-
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-    protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
-		throws InvalidSettingsException {
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
+
+		// Auto guess the input mol column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME% as Mol input column.",
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
+
+		// Determines, if the mol input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the first input table changed?");
+
+		// Auto guess the query mol column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+				(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
+				"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
+				"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
+
+		// Determines, if the query mol column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+				"Query molecule column has not been specified yet.",
+				"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
+
+		// Check, if query name column exists, if user wants to use it
+		if (m_modelUseQueryNameColumn.getBooleanValue()) {
+			// Auto guess the query name column if not set - fails if no compatible column found
+			SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
+					(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
+					"Auto guessing: Using column %COLUMN_NAME% as query name column.",
+					"No String compatible column (to be used as query name) in query molecule table.",
+					getWarningConsolidator());
+
+			// Determines, if the query name column exists - fails if it does not
+			SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
+					"Substructure name column has not been specified yet.",
+					"Substructure name column %COLUMN_NAME% does not exist. Has the second input table changed?");
+		}
+
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// We cannot know how many columns we will generate before execution
+		return new DataTableSpec[] { null };
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * as well as the query molecule column and connects it with the information coming
+	 * from the appropriate setting models.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		switch (inPort) {
+		case 0: // First table with molecule column
+			arrDataInfo = new InputDataInfo[1]; // We have only one input mol column
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+					RDKitMolValue.class);
+			break;
+
+		case 1: // Second table with query molecule column and optional name column
+			final boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
+			arrDataInfo = new InputDataInfo[bUseNameColumn ? 2 : 1];
+			arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+					RDKitMolValue.class);
+			if (bUseNameColumn) {
+				arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelQueryNameColumn,
+						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+						StringValue.class);
+			}
+			break;
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+
+	/**
+	 * Returns the output table specification of the specified out port. This implementation
+	 * works based on a ColumnRearranger and delivers only a specification for
+	 * out port 0, based on an input table on in port 0. Override this method if
+	 * other behavior is needed.
+	 *
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 *
+	 * @return The specification of all output tables.
+	 *
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 *
+	 * @see #createOutputFactories(int)
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
+
+		if (outPort == 0) {
+			// Create the column rearranger, which will generate the spec
+			spec = createColumnRearranger(outPort, inSpecs[0]).createSpec();
+		}
+
+		return spec;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * Calculates additionally to the normal execution procedure the pre-processing
+	 * percentage.
+	 */
+	@Override
+	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+			final ExecutionContext exec) throws Exception {
+		// Calculate pre-processing share based on overall rows
+		m_dPreProcessingShare = inData[1].getRowCount() /
+				(inData[0].getRowCount() + inData[1].getRowCount() + 1.0d);
+
+		// Perform normalized execution
+		return super.execute(inData, exec);
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
 
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
 
-    	// Specify output of table 1
-    	if (outPort == 0) {
-    		// Allocate space for all factories (usually we have only one)
-    		arrOutputFactories = new AbstractRDKitCellFactory[1];
+		// Specify output of table 1
+		if (outPort == 0) {
+			// Allocate space for all factories (usually we have only one)
+			arrOutputFactories = new AbstractRDKitCellFactory[1];
 
-    		// Factory 1:
-    		// ==========
-    		// Generate column specs for the output table columns produced by this factory
-    		// This is only possible, if pre-processing took already place and we know about
-    		// query molecules
-    		final int iResultColumnCount = m_arrResultColumnNames.length;
-    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iResultColumnCount];
-    		for (int i = 0; i < iResultColumnCount; i++) {
-    			// Create spec with additional information
-    			DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[i], IntCell.TYPE);
-    			new AdditionalHeaderInfo("Smiles", m_arrQueriesAsSmiles[i], -1).writeInColumnSpec(creator);
-        		arrOutputSpec[i] = creator.createSpec();
-    		}
+			// Factory 1:
+			// ==========
+			// Generate column specs for the output table columns produced by this factory
+			// This is only possible, if pre-processing took already place and we know about
+			// query molecules
+			final int iResultColumnCount = m_arrResultColumnNames.length;
+			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iResultColumnCount];
+			for (int i = 0; i < iResultColumnCount; i++) {
+				// Create spec with additional information
+				final DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[i], IntCell.TYPE);
+				new AdditionalHeaderInfo("Smiles", m_arrQueriesAsSmiles[i], -1).writeInColumnSpec(creator);
+				arrOutputSpec[i] = creator.createSpec();
+			}
 
-    		// Provide unique matches only option
-    		final boolean bUniqueMatchesOnly = m_modelUniqueMatchesOnly.getBooleanValue();
+			// Provide unique matches only option
+			final boolean bUniqueMatchesOnly = m_modelUniqueMatchesOnly.getBooleanValue();
 
-    		// Generate factory
-    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-           		getWarningConsolidator(), null, arrOutputSpec) {
+			// Generate factory
+			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+					getWarningConsolidator(), null, arrOutputSpec) {
 
-	   			@Override
-	   		    /**
-	   		     * This method implements the calculation logic to generate the new cells based on
-	   		     * the input made available in the first (and second) parameter.
-	   		     * {@inheritDoc}
-	   		     */
-	   		    public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
-	   		    	DataCell[] arrOutputCells = createEmptyCells(iResultColumnCount);
+				@Override
+				/**
+				 * This method implements the calculation logic to generate the new cells based on
+				 * the input made available in the first (and second) parameter.
+				 * {@inheritDoc}
+				 */
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+					final DataCell[] arrOutputCells = createEmptyCells(iResultColumnCount);
 
-	   		    	// Calculate the new cells
-	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row),
-	   		    			iUniqueWaveId);
+					// Calculate the new cells
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row),
+							iUniqueWaveId);
 
-	   		    	for (int i = 0; i < iResultColumnCount; i++) {
-	   		    		final ROMol query = m_arrQueriesAsRDKitMols[i];
-	   		    		if (mol != null && query != null) {
-	   		    			Match_Vect_Vect ms = markForCleanup(
-	   		    					mol.getSubstructMatches(query, bUniqueMatchesOnly), iUniqueWaveId);
-	   		    			arrOutputCells[i] = new IntCell((int)ms.size());
-	   		    		}
-	   		    	}
+					for (int i = 0; i < iResultColumnCount; i++) {
+						final ROMol query = m_arrQueriesAsRDKitMols[i];
+						if (mol != null && query != null) {
+							final Match_Vect_Vect ms = markForCleanup(
+									mol.getSubstructMatches(query, bUniqueMatchesOnly), iUniqueWaveId);
+							arrOutputCells[i] = new IntCell((int)ms.size());
+						}
+					}
 
-	   		        return arrOutputCells;
-	   		    }
-	   		};
+					return arrOutputCells;
+				}
+			};
 
-	   		// Enable or disable this factory to allow parallel processing
-	   		arrOutputFactories[0].setAllowParallelProcessing(true);
-    	}
+			// Enable or disable this factory to allow parallel processing
+			arrOutputFactories[0].setAllowParallelProcessing(true);
+		}
 
-    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
-    }
+		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+	}
 
 	/**
 	 * Returns the percentage of pre-processing activities from the total execution.
@@ -378,7 +377,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	 * @return Percentage of pre-processing.
 	 */
 	@Override
-    protected double getPreProcessingPercentage() {
+	protected double getPreProcessingPercentage() {
 		return m_dPreProcessingShare;
 	}
 
@@ -405,26 +404,26 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	 * @see #m_arrQueriesAsRDKitMols
 	 */
 	@Override
-    protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-		final ExecutionContext exec) throws Exception {
-		boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
-		int iQueryRowCount = inData[1].getRowCount();
-		List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
-		List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
-		List<ROMol> listQueriesAsRDKitMols = new ArrayList<ROMol>(iQueryRowCount);
-		List<RowKey> listEmptyQueries = new ArrayList<RowKey>();
-		List<RowKey> listInvalidQueries = new ArrayList<RowKey>();
-		List<RowKey> listDuplicatedQueries = new ArrayList<RowKey>();
-		List<RowKey> listEmptyNames = new ArrayList<RowKey>();
-		Map<String, Integer> mapDuplicates = new HashMap<String, Integer>();
+	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
+		final boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
+		final int iQueryRowCount = inData[1].getRowCount();
+		final List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
+		final List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
+		final List<ROMol> listQueriesAsRDKitMols = new ArrayList<ROMol>(iQueryRowCount);
+		final List<RowKey> listEmptyQueries = new ArrayList<RowKey>();
+		final List<RowKey> listInvalidQueries = new ArrayList<RowKey>();
+		final List<RowKey> listDuplicatedQueries = new ArrayList<RowKey>();
+		final List<RowKey> listEmptyNames = new ArrayList<RowKey>();
+		final Map<String, Integer> mapDuplicates = new HashMap<String, Integer>();
 
 		int iRow = 0;
 
 		// Creating an arrays of SMILES and ROMol query molecules
-		for (DataRow row : inData[1]) {
+		for (final DataRow row : inData[1]) {
 
 			// Get ROMol value
-			ROMol mol = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
+			final ROMol mol = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
 
 			// Generate column labels (SMILES)
 			// If we cannot get a mol, we remember the empty column
@@ -434,12 +433,12 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			// Otherwise: Get canonical SMILES from the query molecule
 			else {
 				String strQueryMolString = null;
-				
+
 				// Check (by heuristics) if we have a SMARTS as query molecule
 				if (mol.getNumAtoms() > 0 && mol.getAtomWithIdx(0).hasQuery()) {
 					strQueryMolString = RDKFuncs.MolToSmarts(mol);
 				}
-				
+
 				// Or a SMILES (or SMARTS convertion failed)
 				if (strQueryMolString == null) {
 					strQueryMolString = mol.MolToSmiles(true);
@@ -449,14 +448,14 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 				if (strQueryMolString == null) {
 					listInvalidQueries.add(row.getKey());
 				}
-				
+
 				// Otherwise: Everything is fine - use this query
 				else {
 					String strColumnName = strQueryMolString; // Default name
-					
+
 					// Optionally use a query name as header
 					if (bUseNameColumn) {
-						String strName = arrInputDataInfo[1][INPUT_COLUMN_NAME].getString(row);
+						final String strName = arrInputDataInfo[1][INPUT_COLUMN_NAME].getString(row);
 						if (strName != null) {
 							strColumnName = strName;
 						}
@@ -466,9 +465,9 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 					}
 
 					// Check for query duplicate, still include it, but warn
-					Integer intCount = mapDuplicates.get(strQueryMolString);
+					final Integer intCount = mapDuplicates.get(strQueryMolString);
 					if (intCount != null) {
-						int iDuplicate = intCount + 1;
+						final int iDuplicate = intCount + 1;
 						mapDuplicates.put(strQueryMolString, iDuplicate);
 						listDuplicatedQueries.add(row.getKey());
 						strColumnName += " (Duplicate " + iDuplicate + ")";
@@ -478,7 +477,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 					}
 
 					// Ensure that our target column name is unique
-					strColumnName = SettingsUtils.makeColumnNameUnique(strColumnName, 
+					strColumnName = SettingsUtils.makeColumnNameUnique(strColumnName,
 							inData[0].getDataTableSpec(), listColumnNames);
 					listColumnNames.add(strColumnName);
 					listQueriesAsRDKitMols.add(mol);
@@ -489,10 +488,10 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			iRow++;
 
 			exec.setProgress(new StringBuilder("Analyzing query molecules (")
-				.append(iRow)
-				.append(" of ")
-				.append(iQueryRowCount)
-				.append(")").toString());
+			.append(iRow)
+			.append(" of ")
+			.append(iQueryRowCount)
+			.append(")").toString());
 		}
 
 		// Store queries and column labels (SMILES) in intermediate result member variables
@@ -550,14 +549,14 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	 */
 	private void generateWarning(final List<RowKey> listRowKeys, final int iTotalQueries,
 			final String strMsgStump) {
-		int iQueryCount = listRowKeys.size();
+		final int iQueryCount = listRowKeys.size();
 
 		if (iQueryCount > 0) {
 			String strMsg = strMsgStump + " quer";
 			if (iQueryCount <= 10) {
-				String rowKeyList = listRowKeys.toString();
+				final String rowKeyList = listRowKeys.toString();
 				strMsg += "y in the following rows: " +
-					rowKeyList.substring(1, rowKeyList.length() - 1);
+						rowKeyList.substring(1, rowKeyList.length() - 1);
 			}
 			else {
 				strMsg +="ies.";

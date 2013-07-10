@@ -54,17 +54,17 @@ import javax.swing.JPanel;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitMolecule2InChI" Node.
  *
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
@@ -74,150 +74,150 @@ public class RDKitInChI2MoleculeNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitInChI2MoleculeNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "InChI code column: ", 0,
-                StringValue.class));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createRemoveSourceColumnsOptionModel(), "Remove source column"));
-        
-        super.createNewGroup("RDKit Molecule Generation");
-        super.addDialogComponent(new DialogComponentString(
-                createNewMolColumnNameModel(), "New column name for RDKit Molecule: "));
-        super.setHorizontalPlacement(true);
-        super.addDialogComponent(new DialogComponentLabel("Cleanup Options:"));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createSanitizeOptionModel(), "Sanitize molecule"));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createRemoveHydrogensOptionModel(), "Remove hydrogens"));
-        super.setHorizontalPlacement(false);
-        
-        super.createNewGroup("Extra InChI Conversion Information");
-        super.addDialogComponent(new DialogComponentString(
-                createExtraInformationColumnNamePrefixModel(), "New column name prefix for extra information: "));
-        super.setHorizontalPlacement(true);
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createExtraReturnCodeOptionModel(), "Return Code Column"));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createExtraMessageOptionModel(), "Message Column"));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createExtraLogOptionModel(), "Log Column"));
-        super.setHorizontalPlacement(false);
-        JPanel panelParent = super.getPanel();
-        Dimension dimPref = panelParent.getPreferredSize();
-        panelParent.setPreferredSize(new Dimension(500, dimPref.height + 20));
-    }
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "InChI code column: ", 0,
+				StringValue.class));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveSourceColumnsOptionModel(), "Remove source column"));
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+		super.createNewGroup("RDKit Molecule Generation");
+		super.addDialogComponent(new DialogComponentString(
+				createNewMolColumnNameModel(), "New column name for RDKit Molecule: "));
+		super.setHorizontalPlacement(true);
+		super.addDialogComponent(new DialogComponentLabel("Cleanup Options:"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createSanitizeOptionModel(), "Sanitize molecule"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveHydrogensOptionModel(), "Remove hydrogens"));
+		super.setHorizontalPlacement(false);
 
-    /**
-     * Creates the settings model to be used to specify the new column name
-     * for the RDKit molecule data.
-     * 
-     * @return Settings model for result column name (RDKit molecules).
-     */
-    static final SettingsModelString createNewMolColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+		super.createNewGroup("Extra InChI Conversion Information");
+		super.addDialogComponent(new DialogComponentString(
+				createExtraInformationColumnNamePrefixModel(), "New column name prefix for extra information: "));
+		super.setHorizontalPlacement(true);
+		super.addDialogComponent(new DialogComponentBoolean(
+				createExtraReturnCodeOptionModel(), "Return Code Column"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createExtraMessageOptionModel(), "Message Column"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createExtraLogOptionModel(), "Log Column"));
+		super.setHorizontalPlacement(false);
+		final JPanel panelParent = super.getPanel();
+		final Dimension dimPref = panelParent.getPreferredSize();
+		panelParent.setPreferredSize(new Dimension(500, dimPref.height + 20));
+	}
 
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * the source column shall be removed from the result table.
-     * The default is false.
-     * 
-     * @return Settings model for check box whether to remove source columns.
-     */
-    static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
-        return new SettingsModelBoolean("remove_source_columns", false);
-    }
-    
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * we want to generate the Return Code column as extra information 
-     * about InChI code generation. The default is false.
-     * Note: This option works only if the overall extra information option 
-     * is switched on.
-     * 
-     * @return Settings model for check box whether to generate the Return Code column.
-     */
-    static final SettingsModelBoolean createExtraReturnCodeOptionModel() {
-    	return new SettingsModelBoolean("generate_return_code", false);
-    }
-     
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * we want to generate the Message column as extra information 
-     * about InChI code generation. The default is false.
-     * Note: This option works only if the overall extra information option 
-     * is switched on.
-     * 
-     * @return Settings model for check box whether to generate the Message column.
-     */
-    static final SettingsModelBoolean createExtraMessageOptionModel() {
-    	return  new SettingsModelBoolean("generate_message", false);
-    }
-    
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * we want to generate the Log column as extra information 
-     * about InChI code generation. The default is false.
-     * Note: This option works only if the overall extra information option 
-     * is switched on.
-     * 
-     * @return Settings model for check box whether to generate the Log column.
-     */
-    static final SettingsModelBoolean createExtraLogOptionModel() {
-    	return new SettingsModelBoolean("generate_log", false);
-    }
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used to specify the new column name
-     * for extra information about InChI code generation.
-     * 
-     * @param m_modelExtraInformationOption Option to switch on/off extra information
-     * 		generation. Must not be null.
-     * 
-     * @return Settings model for result column name (Extra Information).
-     */
-    static final SettingsModelString createExtraInformationColumnNamePrefixModel() {
-    	return new SettingsModelString("new_extra_info_column_name_prefix", null);
-    }
-    
-    /**
-     * Creates the settings model to be used to specify if the generated
-     * molecule shall be sanitized.
-     * 
-     * @return Settings model for sanitizing option.
-     */
-    static final SettingsModelBoolean createSanitizeOptionModel() {
-        return new SettingsModelBoolean("sanitize", true);
-    }
-    
-    /**
-     * Creates the settings model to be used to specify if hydrogens
-     * shall be removed from the generated molecule.
-     * 
-     * @return Settings model for removing hydrogens option.
-     */
-    static final SettingsModelBoolean createRemoveHydrogensOptionModel() {
-        return new SettingsModelBoolean("remove_hydrogens", true);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the new column name
+	 * for the RDKit molecule data.
+	 * 
+	 * @return Settings model for result column name (RDKit molecules).
+	 */
+	static final SettingsModelString createNewMolColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
+
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * the source column shall be removed from the result table.
+	 * The default is false.
+	 * 
+	 * @return Settings model for check box whether to remove source columns.
+	 */
+	static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
+		return new SettingsModelBoolean("remove_source_columns", false);
+	}
+
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * we want to generate the Return Code column as extra information
+	 * about InChI code generation. The default is false.
+	 * Note: This option works only if the overall extra information option
+	 * is switched on.
+	 * 
+	 * @return Settings model for check box whether to generate the Return Code column.
+	 */
+	static final SettingsModelBoolean createExtraReturnCodeOptionModel() {
+		return new SettingsModelBoolean("generate_return_code", false);
+	}
+
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * we want to generate the Message column as extra information
+	 * about InChI code generation. The default is false.
+	 * Note: This option works only if the overall extra information option
+	 * is switched on.
+	 * 
+	 * @return Settings model for check box whether to generate the Message column.
+	 */
+	static final SettingsModelBoolean createExtraMessageOptionModel() {
+		return  new SettingsModelBoolean("generate_message", false);
+	}
+
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * we want to generate the Log column as extra information
+	 * about InChI code generation. The default is false.
+	 * Note: This option works only if the overall extra information option
+	 * is switched on.
+	 * 
+	 * @return Settings model for check box whether to generate the Log column.
+	 */
+	static final SettingsModelBoolean createExtraLogOptionModel() {
+		return new SettingsModelBoolean("generate_log", false);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the new column name
+	 * for extra information about InChI code generation.
+	 * 
+	 * @param m_modelExtraInformationOption Option to switch on/off extra information
+	 * 		generation. Must not be null.
+	 * 
+	 * @return Settings model for result column name (Extra Information).
+	 */
+	static final SettingsModelString createExtraInformationColumnNamePrefixModel() {
+		return new SettingsModelString("new_extra_info_column_name_prefix", null);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify if the generated
+	 * molecule shall be sanitized.
+	 * 
+	 * @return Settings model for sanitizing option.
+	 */
+	static final SettingsModelBoolean createSanitizeOptionModel() {
+		return new SettingsModelBoolean("sanitize", true);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify if hydrogens
+	 * shall be removed from the generated molecule.
+	 * 
+	 * @return Settings model for removing hydrogens option.
+	 */
+	static final SettingsModelBoolean createRemoveHydrogensOptionModel() {
+		return new SettingsModelBoolean("remove_hydrogens", true);
+	}
 }

@@ -65,64 +65,64 @@ import org.rdkit.knime.types.RDKitMolValue;
  * @author Greg Landrum
  */
 @Deprecated
-public class RDKitOneComponentReactionNodeDialogPane extends
-        DefaultNodeSettingsPane {
+public class RDKitOneComponentReactionNodeDialogPane extends DefaultNodeSettingsPane {
 
-    /**
-     * Create a new dialog pane with some default components.
-     */
-    RDKitOneComponentReactionNodeDialogPane() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        SettingsModelString smartsModel = createSmartsModel();
-        SettingsModelString fileModel = createFileModel();
-        SettingsModelBoolean fileEnableModel =
-            createFileEnableModel(fileModel, smartsModel);
-        super.addDialogComponent(new DialogComponentString(
-                smartsModel, "Reaction SMARTS: "));
-        super.addDialogComponent(new DialogComponentBoolean(fileEnableModel,
-                "Use Reaction from RXN file: "));
-        super.addDialogComponent(new DialogComponentFileChooser(
-                fileModel, "rdkit_onecomp_reaction", ".rxn"));
-    }
+	/**
+	 * Create a new dialog pane with some default components.
+	 */
+	@SuppressWarnings("unchecked")
+	RDKitOneComponentReactionNodeDialogPane() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createFirstColumnModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		final SettingsModelString smartsModel = createSmartsModel();
+		final SettingsModelString fileModel = createFileModel();
+		final SettingsModelBoolean fileEnableModel =
+				createFileEnableModel(fileModel, smartsModel);
+		super.addDialogComponent(new DialogComponentString(
+				smartsModel, "Reaction SMARTS: "));
+		super.addDialogComponent(new DialogComponentBoolean(fileEnableModel,
+				"Use Reaction from RXN file: "));
+		super.addDialogComponent(new DialogComponentFileChooser(
+				fileModel, "rdkit_onecomp_reaction", ".rxn"));
+	}
 
-    /**
-     * @return settings model for first column selection
-     */
-    static final SettingsModelString createFirstColumnModel() {
-        return new SettingsModelString("first_column", null);
-    }
+	/**
+	 * @return settings model for first column selection
+	 */
+	static final SettingsModelString createFirstColumnModel() {
+		return new SettingsModelString("first_column", null);
+	}
 
-    /**
-     * @return settings model for the new appended column name
-     */
-    static final SettingsModelString createSmartsModel() {
-        return new SettingsModelString("smarts_value", "");
-    }
+	/**
+	 * @return settings model for the new appended column name
+	 */
+	static final SettingsModelString createSmartsModel() {
+		return new SettingsModelString("smarts_value", "");
+	}
 
-    static final SettingsModelBoolean createFileEnableModel(
-            final SettingsModelString fileModel,
-            final SettingsModelString smartsModel) {
-        boolean def = false;
-        final SettingsModelBoolean result =
-            new SettingsModelBoolean("use_rxn_file_input", def);
-        fileModel.setEnabled(def);
-        smartsModel.setEnabled(!def);
-        result.addChangeListener(new ChangeListener() {
+	static final SettingsModelBoolean createFileEnableModel(
+			final SettingsModelString fileModel,
+			final SettingsModelString smartsModel) {
+		final boolean def = false;
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("use_rxn_file_input", def);
+		fileModel.setEnabled(def);
+		smartsModel.setEnabled(!def);
+		result.addChangeListener(new ChangeListener() {
 
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                boolean isChecked = result.getBooleanValue();
-                fileModel.setEnabled(isChecked);
-                smartsModel.setEnabled(!isChecked);
-            }
-        });
-        return result;
-    }
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				final boolean isChecked = result.getBooleanValue();
+				fileModel.setEnabled(isChecked);
+				smartsModel.setEnabled(!isChecked);
+			}
+		});
+		return result;
+	}
 
-    static final SettingsModelString createFileModel() {
-        return new SettingsModelString("file_input", "");
-    }
+	static final SettingsModelString createFileModel() {
+		return new SettingsModelString("file_input", "");
+	}
 
 }

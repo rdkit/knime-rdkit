@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitTwoComponentReactionNodeFactory 
-        extends NodeFactory<RDKitTwoComponentReactionNodeModel> {
+public class RDKitTwoComponentReactionNodeFactory extends NodeFactory<RDKitTwoComponentReactionNodeModel> {
 
-    /**
-     * Creates a model for the RDKitTwoComponentReaction functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitTwoComponentReactionNodeModel createNodeModel() {
-        return new RDKitTwoComponentReactionNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitTwoComponentReaction functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitTwoComponentReactionNodeModel createNodeModel() {
+		return new RDKitTwoComponentReactionNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitTwoComponentReactionNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitTwoComponentReactionNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitTwoComponentReactionNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitTwoComponentReactionNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitTwoComponentReactionNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitTwoComponentReactionNodeDialog();
+	}
 }
 

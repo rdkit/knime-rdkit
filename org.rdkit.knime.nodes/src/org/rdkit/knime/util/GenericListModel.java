@@ -66,38 +66,38 @@ public class GenericListModel<T> extends AbstractListModel {
 	//
 	// Constants
 	//
-	
+
 	/** Serial number. */
 	private static final long serialVersionUID = -3050564084268208029L;
 
 	//
 	// Members
 	//
-	
+
 	/** Stores the type of the generic components. */
-	private Class<T> m_type;
-	
+	private final Class<T> m_type;
+
 	/** Delegate that we use as storage. */
-	private Vector<T> m_vDelegate = new Vector<T>();
+	private final Vector<T> m_vDelegate = new Vector<T>();
 
 	//
 	// Constructors
 	//
-	
-	public GenericListModel(Class<T> componentType) {
+
+	public GenericListModel(final Class<T> componentType) {
 		super();
-		
+
 		if (componentType == null) {
 			throw new IllegalArgumentException("Component type must not be null.");
 		}
-		
+
 		m_type = componentType;
 	}
-	
-	// 
+
+	//
 	// Public Methods
 	//
-	
+
 	/**
 	 * Returns the number of components in this list.
 	 * <p>
@@ -129,10 +129,10 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #get(int)
 	 */
 	@Override
-	public Object getElementAt(int index) {
+	public Object getElementAt(final int index) {
 		return m_vDelegate.elementAt(index);
 	}
-	
+
 	/**
 	 * Returns the component type of this list model.
 	 * 
@@ -141,10 +141,10 @@ public class GenericListModel<T> extends AbstractListModel {
 	public Class<T> getComponentType() {
 		return m_type;
 	}
-	
+
 	/**
 	 * Returns the component at the specified index using the correct
-	 * type of the list model. 
+	 * type of the list model.
 	 * <blockquote> <b>Note:</b>
 	 * Although this method is not deprecated, the preferred method to use is
 	 * <code>get(int)</code>, which implements the <code>List</code> interface
@@ -158,7 +158,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *                current size of this list
 	 * @see #get(int)
 	 */
-	public T getTypedElementAt(int index) {
+	public T getTypedElementAt(final int index) {
 		return m_vDelegate.elementAt(index);
 	}
 
@@ -171,7 +171,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            the array into which the components get copied
 	 * @see Vector#copyInto(Object[])
 	 */
-	public void copyInto(T anArray[]) {
+	public void copyInto(final T anArray[]) {
 		m_vDelegate.copyInto(anArray);
 	}
 
@@ -193,7 +193,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            the desired minimum capacity
 	 * @see Vector#ensureCapacity(int)
 	 */
-	public void ensureCapacity(int minCapacity) {
+	public void ensureCapacity(final int minCapacity) {
 		m_vDelegate.ensureCapacity(minCapacity);
 	}
 
@@ -204,8 +204,8 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            the new size of this list
 	 * @see Vector#setSize(int)
 	 */
-	public void setSize(int newSize) {
-		int oldSize = m_vDelegate.size();
+	public void setSize(final int newSize) {
+		final int oldSize = m_vDelegate.size();
 		m_vDelegate.setSize(newSize);
 		if (oldSize > newSize) {
 			fireIntervalRemoved(this, newSize, oldSize - 1);
@@ -265,7 +265,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         component in this list
 	 * @see Vector#contains(Object)
 	 */
-	public boolean contains(T elem) {
+	public boolean contains(final T elem) {
 		return m_vDelegate.contains(elem);
 	}
 
@@ -278,7 +278,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         returns <code>-1</code> if the object is not found
 	 * @see Vector#indexOf(Object)
 	 */
-	public int indexOf(T elem) {
+	public int indexOf(final T elem) {
 		return m_vDelegate.indexOf(elem);
 	}
 
@@ -295,7 +295,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         <code>elem</code> is not found in the list
 	 * @see Vector#indexOf(Object,int)
 	 */
-	public int indexOf(T elem, int index) {
+	public int indexOf(final T elem, final int index) {
 		return m_vDelegate.indexOf(elem, index);
 	}
 
@@ -308,7 +308,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         list; returns <code>-1</code> if the object is not found
 	 * @see Vector#lastIndexOf(Object)
 	 */
-	public int lastIndexOf(T elem) {
+	public int lastIndexOf(final T elem) {
 		return m_vDelegate.lastIndexOf(elem);
 	}
 
@@ -325,7 +325,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         <code>-1</code> if the object is not found
 	 * @see Vector#lastIndexOf(Object,int)
 	 */
-	public int lastIndexOf(T elem, int index) {
+	public int lastIndexOf(final T elem, final int index) {
 		return m_vDelegate.lastIndexOf(elem, index);
 	}
 
@@ -343,7 +343,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #get(int)
 	 * @see Vector#elementAt(int)
 	 */
-	public T elementAt(int index) {
+	public T elementAt(final int index) {
 		return m_vDelegate.elementAt(index);
 	}
 
@@ -387,7 +387,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #set(int,Object)
 	 * @see Vector#setElementAt(Object,int)
 	 */
-	public void setElementAt(T obj, int index) {
+	public void setElementAt(final T obj, final int index) {
 		m_vDelegate.setElementAt(obj, index);
 		fireContentsChanged(this, index, index);
 	}
@@ -406,7 +406,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #remove(int)
 	 * @see Vector#removeElementAt(int)
 	 */
-	public void removeElementAt(int index) {
+	public void removeElementAt(final int index) {
 		m_vDelegate.removeElementAt(index);
 		fireIntervalRemoved(this, index, index);
 	}
@@ -430,7 +430,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #add(int,Object)
 	 * @see Vector#insertElementAt(Object,int)
 	 */
-	public void insertElementAt(T obj, int index) {
+	public void insertElementAt(final T obj, final int index) {
 		m_vDelegate.insertElementAt(obj, index);
 		fireIntervalAdded(this, index, index);
 	}
@@ -442,8 +442,8 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            the component to be added
 	 * @see Vector#addElement(Object)
 	 */
-	public void addElement(T obj) {
-		int index = m_vDelegate.size();
+	public void addElement(final T obj) {
+		final int index = m_vDelegate.size();
 		m_vDelegate.addElement(obj);
 		fireIntervalAdded(this, index, index);
 	}
@@ -458,9 +458,9 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *         <code>false</code> otherwise
 	 * @see Vector#removeElement(Object)
 	 */
-	public boolean removeElement(T obj) {
-		int index = indexOf(obj);
-		boolean rv = m_vDelegate.removeElement(obj);
+	public boolean removeElement(final T obj) {
+		final int index = indexOf(obj);
+		final boolean rv = m_vDelegate.removeElement(obj);
 		if (index >= 0) {
 			fireIntervalRemoved(this, index, index);
 		}
@@ -478,7 +478,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see Vector#removeAllElements()
 	 */
 	public void removeAllElements() {
-		int index1 = m_vDelegate.size() - 1;
+		final int index1 = m_vDelegate.size() - 1;
 		m_vDelegate.removeAllElements();
 		if (index1 >= 0) {
 			fireIntervalRemoved(this, 0, index1);
@@ -490,6 +490,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * 
 	 * @return a String representation of this object
 	 */
+	@Override
 	public String toString() {
 		return m_vDelegate.toString();
 	}
@@ -508,7 +509,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 */
 	@SuppressWarnings("unchecked")
 	public T[] toArray() {
-		T[] rv = (T[])Array.newInstance(getComponentType(), m_vDelegate.size());
+		final T[] rv = (T[])Array.newInstance(getComponentType(), m_vDelegate.size());
 		m_vDelegate.copyInto(rv);
 		return rv;
 	}
@@ -522,7 +523,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @param index
 	 *            index of element to return
 	 */
-	public T get(int index) {
+	public T get(final int index) {
 		return m_vDelegate.elementAt(index);
 	}
 
@@ -539,8 +540,8 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            element to be stored at the specified position
 	 * @return the element previously at the specified position
 	 */
-	public T set(int index, T element) {
-		T rv = m_vDelegate.elementAt(index);
+	public T set(final int index, final T element) {
+		final T rv = m_vDelegate.elementAt(index);
 		m_vDelegate.setElementAt(element, index);
 		fireContentsChanged(this, index, index);
 		return rv;
@@ -557,7 +558,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @param element
 	 *            element to be inserted
 	 */
-	public void add(int index, T element) {
+	public void add(final int index, final T element) {
 		m_vDelegate.insertElementAt(element, index);
 		fireIntervalAdded(this, index, index);
 	}
@@ -572,8 +573,8 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @param index
 	 *            the index of the element to removed
 	 */
-	public T remove(int index) {
-		T rv = m_vDelegate.elementAt(index);
+	public T remove(final int index) {
+		final T rv = m_vDelegate.elementAt(index);
 		m_vDelegate.removeElementAt(index);
 		fireIntervalRemoved(this, index, index);
 		return rv;
@@ -584,7 +585,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * this call returns (unless it throws an exception).
 	 */
 	public void clear() {
-		int index1 = m_vDelegate.size() - 1;
+		final int index1 = m_vDelegate.size() - 1;
 		m_vDelegate.removeAllElements();
 		if (index1 >= 0) {
 			fireIntervalRemoved(this, 0, index1);
@@ -606,7 +607,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 *            the index of the upper end of the range
 	 * @see #remove(int)
 	 */
-	public void removeRange(int fromIndex, int toIndex) {
+	public void removeRange(final int fromIndex, final int toIndex) {
 		if (fromIndex > toIndex) {
 			throw new IllegalArgumentException("fromIndex must be <= toIndex");
 		}

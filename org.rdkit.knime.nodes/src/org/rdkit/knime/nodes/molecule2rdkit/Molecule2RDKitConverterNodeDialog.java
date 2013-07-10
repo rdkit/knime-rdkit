@@ -56,12 +56,12 @@ import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeModel.ParseErrorPolicy;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * The dialog to configure the RDKit node.
@@ -74,210 +74,210 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	Molecule2RDKitConverterNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "Molecule column: ", 0,
-                SmilesValue.class, SmartsValue.class, SdfValue.class));
-        super.addDialogComponent(new DialogComponentString(
-                createNewColumnNameModel(), "New column name: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createRemoveSourceColumnsOptionModel(), "Remove source column"));
-        
-        super.createNewGroup("Error Handling");
-        super.addDialogComponent(new DialogComponentButtonGroup(
-                createSeparateRowsModel(), null, true,
-                ParseErrorPolicy.values()));
-        SettingsModelBoolean generateErrorInformationColumn =
-        	 createGenerateErrorInfoOptionModel();
-        super.addDialogComponent(new DialogComponentBoolean(
-        		generateErrorInformationColumn, "Generate error information column"));
-        super.addDialogComponent(new DialogComponentString(
-                createErrorInfoColumnNameModel(generateErrorInformationColumn),
-                "Error Information Column Name: "));
-        
-        super.createNewGroup("2D Coordinates");
-        SettingsModelBoolean generateCoordinatesModel =
-            createGenerateCoordinatesModel();
-        super.addDialogComponent(new DialogComponentBoolean(
-                generateCoordinatesModel, "Generate 2D Coordinates"));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createForceGenerateCoordinatesModel(generateCoordinatesModel),
-                "Force Generation"));
-        
-        super.closeCurrentGroup();
-        
-        super.createNewTab("Advanced");
-        SettingsModelBoolean quickAndDirtyModel = createQuickAndDirtyModel();
-        super.addDialogComponent(new DialogComponentBoolean(
-                quickAndDirtyModel, "Partial Sanitization"));
-        super.createNewGroup("Partial Sanitization Options");
-        super.addDialogComponent(new DialogComponentBoolean(
-                createAromatizationModel(quickAndDirtyModel), "Reperceive Aromaticity"));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createStereochemistryModel(quickAndDirtyModel), "Correct Stereochemistry"));
-        super.addDialogComponent(new DialogComponentLabel(""));
-        super.closeCurrentGroup();        
-    }
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "Molecule column: ", 0,
+				SmilesValue.class, SmartsValue.class, SdfValue.class));
+		super.addDialogComponent(new DialogComponentString(
+				createNewColumnNameModel(), "New column name: "));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveSourceColumnsOptionModel(), "Remove source column"));
 
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+		super.createNewGroup("Error Handling");
+		super.addDialogComponent(new DialogComponentButtonGroup(
+				createSeparateRowsModel(), null, true,
+				ParseErrorPolicy.values()));
+		final SettingsModelBoolean generateErrorInformationColumn =
+				createGenerateErrorInfoOptionModel();
+		super.addDialogComponent(new DialogComponentBoolean(
+				generateErrorInformationColumn, "Generate error information column"));
+		super.addDialogComponent(new DialogComponentString(
+				createErrorInfoColumnNameModel(generateErrorInformationColumn),
+				"Error Information Column Name: "));
 
-    /**
-     * Creates the settings model to be used to specify the new column name.
-     * 
-     * @return Settings model for result column name.
-     */
-    static final SettingsModelString createNewColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+		super.createNewGroup("2D Coordinates");
+		final SettingsModelBoolean generateCoordinatesModel =
+				createGenerateCoordinatesModel();
+		super.addDialogComponent(new DialogComponentBoolean(
+				generateCoordinatesModel, "Generate 2D Coordinates"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createForceGenerateCoordinatesModel(generateCoordinatesModel),
+				"Force Generation"));
 
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * the source column shall be removed from the result table.
-     * The default is false.
-     * 
-     * @return Settings model for check box whether to remove source columns.
-     */
-    static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
-        return new SettingsModelBoolean("remove_source_columns", false);
-    }
+		super.closeCurrentGroup();
 
-    /**
-     * Creates the radio button option how to deal with rows that fail
-     * the conversion. Either set a missing value (false) or put them into separate
-     * table at port 1 (true).
-     * 
-     * @return new settings model for the flag 'send bad rows to port1'
-     */
-    static final SettingsModelString createSeparateRowsModel() {
-        return new SettingsModelString("bad_rows_to_port1",
-                ParseErrorPolicy.SPLIT_ROWS.getActionCommand());
-    }
+		super.createNewTab("Advanced");
+		final SettingsModelBoolean quickAndDirtyModel = createQuickAndDirtyModel();
+		super.addDialogComponent(new DialogComponentBoolean(
+				quickAndDirtyModel, "Partial Sanitization"));
+		super.createNewGroup("Partial Sanitization Options");
+		super.addDialogComponent(new DialogComponentBoolean(
+				createAromatizationModel(quickAndDirtyModel), "Reperceive Aromaticity"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createStereochemistryModel(quickAndDirtyModel), "Correct Stereochemistry"));
+		super.addDialogComponent(new DialogComponentLabel(""));
+		super.closeCurrentGroup();
+	}
 
-    /**
-     * Creates the checkbox option if an error column shall be added
-     * for rows that fail the conversion.
-     * 
-     * @return new settings model for the option to generate an error column.
-     */
-    static final SettingsModelBoolean createGenerateErrorInfoOptionModel() {
-        return new SettingsModelBoolean("generateErrorInfo", false);
-    }
-    
-    /**
-     * Creates the model to specify a column name for the optional
-     * error information column. This option is dependent on the passed 
-     * in model state.
-     * 
-     * @param modelGenerateErrorInfo Model that determines, if the
-     * 		error information column name model is enabled or disabled.
-     * 
-     * @return The error information column name model.
-     */
-    static final SettingsModelString createErrorInfoColumnNameModel(
-    		final SettingsModelBoolean modelGenerateErrorInfo) {
-        final SettingsModelString result =
-            new SettingsModelString("errorInfoColumnName", "");
-        modelGenerateErrorInfo.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
-            }
-        });
-        result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
-        return result;
-    }
-    
-    /**
-     * @return new settings model whether to also compute coordinates
-     */
-    static final SettingsModelBoolean createGenerateCoordinatesModel() {
-        return new SettingsModelBoolean("generateCoordinates", false);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 
-    /**
-     * @param generateCoordinatesModel
-     * The other model (to enable/disable the returned model).
-     * @return new settings model whether to also force coordinate generation
-     * (SDF may already have coordinates).
-     */
-    static final SettingsModelBoolean createForceGenerateCoordinatesModel(
-            final SettingsModelBoolean generateCoordinatesModel) {
-        final SettingsModelBoolean result =
-            new SettingsModelBoolean("forceGenerateCoordinates", false);
-        generateCoordinatesModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-            	result.setEnabled(generateCoordinatesModel.getBooleanValue());
-            }
-        });
-        result.setEnabled(generateCoordinatesModel.getBooleanValue());
-        return result;
-    }
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 
-    /**
-     * @return settings model for check box whether to turn off sanitization
-     */
-    static final SettingsModelBoolean createQuickAndDirtyModel() {
-        return new SettingsModelBoolean("skip_sanitization", false);
-    }
-    
-    /**
-     * Creates the model to select the option Aromatization.
-     * This option is dependent on the passed in model state.
-     * 
-     * @param quickAndDirtyModel Model that determines, if the
-     * Aromatization option is enabled or disabled.
-     * 
-     * @return The Aromatization option model.
-     */
-    static final SettingsModelBoolean createAromatizationModel(
-    		final SettingsModelBoolean quickAndDirtyModel) {
-        final SettingsModelBoolean result =
-            new SettingsModelBoolean("do_aromaticity", true);
-        quickAndDirtyModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                result.setEnabled(quickAndDirtyModel.getBooleanValue());
-            }
-        });
-        result.setEnabled(quickAndDirtyModel.getBooleanValue());
-        return result;
-    }
-    
-    /**
-     * Creates the model to select the option StereoChemistry.
-     * This option is dependent on the passed in model state.
-     * 
-     * @param quickAndDirtyModel Model that determines, if the
-     * StereoChemistry option is enabled or disabled.
-     * 
-     * @return The stereo chemistry option model.
-     */
-    static final SettingsModelBoolean createStereochemistryModel(
-    		final SettingsModelBoolean quickAndDirtyModel) {
-    	final SettingsModelBoolean result =
-    		new SettingsModelBoolean("do_stereochem", true);
-    	quickAndDirtyModel.addChangeListener(new ChangeListener() {
-    		@Override
-    		public void stateChanged(final ChangeEvent e) {
-    			result.setEnabled(quickAndDirtyModel.getBooleanValue());
-    		}
-    	});
-    	result.setEnabled(quickAndDirtyModel.getBooleanValue());
-    	return result;
-    }
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * the source column shall be removed from the result table.
+	 * The default is false.
+	 * 
+	 * @return Settings model for check box whether to remove source columns.
+	 */
+	static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
+		return new SettingsModelBoolean("remove_source_columns", false);
+	}
+
+	/**
+	 * Creates the radio button option how to deal with rows that fail
+	 * the conversion. Either set a missing value (false) or put them into separate
+	 * table at port 1 (true).
+	 * 
+	 * @return new settings model for the flag 'send bad rows to port1'
+	 */
+	static final SettingsModelString createSeparateRowsModel() {
+		return new SettingsModelString("bad_rows_to_port1",
+				ParseErrorPolicy.SPLIT_ROWS.getActionCommand());
+	}
+
+	/**
+	 * Creates the checkbox option if an error column shall be added
+	 * for rows that fail the conversion.
+	 * 
+	 * @return new settings model for the option to generate an error column.
+	 */
+	static final SettingsModelBoolean createGenerateErrorInfoOptionModel() {
+		return new SettingsModelBoolean("generateErrorInfo", false);
+	}
+
+	/**
+	 * Creates the model to specify a column name for the optional
+	 * error information column. This option is dependent on the passed
+	 * in model state.
+	 * 
+	 * @param modelGenerateErrorInfo Model that determines, if the
+	 * 		error information column name model is enabled or disabled.
+	 * 
+	 * @return The error information column name model.
+	 */
+	static final SettingsModelString createErrorInfoColumnNameModel(
+			final SettingsModelBoolean modelGenerateErrorInfo) {
+		final SettingsModelString result =
+				new SettingsModelString("errorInfoColumnName", "");
+		modelGenerateErrorInfo.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
+			}
+		});
+		result.setEnabled(modelGenerateErrorInfo.getBooleanValue());
+		return result;
+	}
+
+	/**
+	 * @return new settings model whether to also compute coordinates
+	 */
+	static final SettingsModelBoolean createGenerateCoordinatesModel() {
+		return new SettingsModelBoolean("generateCoordinates", false);
+	}
+
+	/**
+	 * @param generateCoordinatesModel
+	 * The other model (to enable/disable the returned model).
+	 * @return new settings model whether to also force coordinate generation
+	 * (SDF may already have coordinates).
+	 */
+	static final SettingsModelBoolean createForceGenerateCoordinatesModel(
+			final SettingsModelBoolean generateCoordinatesModel) {
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("forceGenerateCoordinates", false);
+		generateCoordinatesModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(generateCoordinatesModel.getBooleanValue());
+			}
+		});
+		result.setEnabled(generateCoordinatesModel.getBooleanValue());
+		return result;
+	}
+
+	/**
+	 * @return settings model for check box whether to turn off sanitization
+	 */
+	static final SettingsModelBoolean createQuickAndDirtyModel() {
+		return new SettingsModelBoolean("skip_sanitization", false);
+	}
+
+	/**
+	 * Creates the model to select the option Aromatization.
+	 * This option is dependent on the passed in model state.
+	 * 
+	 * @param quickAndDirtyModel Model that determines, if the
+	 * Aromatization option is enabled or disabled.
+	 * 
+	 * @return The Aromatization option model.
+	 */
+	static final SettingsModelBoolean createAromatizationModel(
+			final SettingsModelBoolean quickAndDirtyModel) {
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("do_aromaticity", true);
+		quickAndDirtyModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(quickAndDirtyModel.getBooleanValue());
+			}
+		});
+		result.setEnabled(quickAndDirtyModel.getBooleanValue());
+		return result;
+	}
+
+	/**
+	 * Creates the model to select the option StereoChemistry.
+	 * This option is dependent on the passed in model state.
+	 * 
+	 * @param quickAndDirtyModel Model that determines, if the
+	 * StereoChemistry option is enabled or disabled.
+	 * 
+	 * @return The stereo chemistry option model.
+	 */
+	static final SettingsModelBoolean createStereochemistryModel(
+			final SettingsModelBoolean quickAndDirtyModel) {
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("do_stereochem", true);
+		quickAndDirtyModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(quickAndDirtyModel.getBooleanValue());
+			}
+		});
+		result.setEnabled(quickAndDirtyModel.getBooleanValue());
+		return result;
+	}
 }

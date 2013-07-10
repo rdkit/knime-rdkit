@@ -83,7 +83,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.rdkit.knime.nodes.fingerprintreadwrite.FPSReadWriteUtil;
 
 /**
  * This is the model implementation of FingerprintReader.
@@ -95,7 +94,7 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	//
 	// Constants
 	//
-	
+
 	/**
 	 * Logger instance for logging purpose.
 	 */
@@ -123,11 +122,11 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	private static final String BLANK = "";
 	private static final String DELIMA = "=";
 	private static final String DELIMB = "\t";
-	
+
 	//
 	// Members
 	//
-	
+
 	/**
 	 * Instance for filename setting model.
 	 */
@@ -140,13 +139,13 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	private final SettingsModelBoolean m_setID = new SettingsModelBoolean(
 			"setID", false);
 
-	
 
-	
+
+
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Creates one out port for the fingerprint reader node.
 	 */
@@ -154,11 +153,11 @@ public class FingerprintReaderNodeModel extends NodeModel {
 		super(0, 1);
 	}
 
-	
+
 	//
 	// Protected Methods
 	//
-	
+
 	/**
 	 * This method is used to specify the structure the output table. The output
 	 * table will have two columns of type String and DenseBitVectorCell
@@ -168,15 +167,15 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
 
-		StringBuilder warningMessage = new StringBuilder();
-		String fileS = m_filename.getStringValue();
-		File file = FPSReadWriteUtil.checkFile(fileS, true, false);
+		final StringBuilder warningMessage = new StringBuilder();
+		final String fileS = m_filename.getStringValue();
+		final File file = FPSReadWriteUtil.checkFile(fileS, true, false);
 		if (!file.exists()) {
 			warningMessage.append("Specified input file doesn't exist.");
 		}
 		if (!file.isFile() || !file.canRead()) {
 			warningMessage
-					.append("Specified input file is not a readable file.");
+			.append("Specified input file is not a readable file.");
 		}
 		if (warningMessage.length() > 0) {
 			setWarningMessage(warningMessage.toString());
@@ -187,7 +186,7 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	/**
 	 * The execute method reads the hex encoded fingerprints from the fps file,
 	 * converts it into binary representation and likewise populates the
-	 * DenseBitVectorCell. 
+	 * DenseBitVectorCell.
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -196,11 +195,11 @@ public class FingerprintReaderNodeModel extends NodeModel {
 		LOGGER.debug("Enter Execute: reading fingerprints....");
 
 		BufferedDataContainer cont = null;
-		boolean setId = m_setID.getBooleanValue();
+		final boolean setId = m_setID.getBooleanValue();
 
 		cont = exec.createDataContainer(SPEC_TWO_COLUMN);
 
-		File f = FPSReadWriteUtil.checkFile(m_filename.getStringValue(), true,
+		final File f = FPSReadWriteUtil.checkFile(m_filename.getStringValue(), true,
 				false);
 		BufferedReader in;
 
@@ -214,15 +213,15 @@ public class FingerprintReaderNodeModel extends NodeModel {
 			in = new BufferedReader(new FileReader(f));
 		}
 		// To calculate the number of line in the file for progress status.
-		LineNumberReader lnr = new LineNumberReader(new FileReader(f));
+		final LineNumberReader lnr = new LineNumberReader(new FileReader(f));
 		lnr.skip(f.length() - 1);
-		int nLines = lnr.getLineNumber();
+		final int nLines = lnr.getLineNumber();
 
 		String str;
 		int iCount = 1;
 		int iFingCount = 0;
-		Map<String, String> mapFpsHeaders = new LinkedHashMap<String, String>();
-		Set<String> setIdentifier = new HashSet<String>();
+		final Map<String, String> mapFpsHeaders = new LinkedHashMap<String, String>();
+		final Set<String> setIdentifier = new HashSet<String>();
 		while ((str = in.readLine()) != null) {
 
 			if (!str.trim().equals(BLANK)) {
@@ -232,15 +231,15 @@ public class FingerprintReaderNodeModel extends NodeModel {
 
 				// code to read key value pairs of the FPS headers
 				if (str.charAt(0) == '#') {
-					StringTokenizer st = new StringTokenizer(str, DELIMA);
+					final StringTokenizer st = new StringTokenizer(str, DELIMA);
 					if (st.hasMoreTokens() && st.countTokens() > 1) {
-						String strKey = st.nextToken();
-						String strVal = st.nextToken();
+						final String strKey = st.nextToken();
+						final String strVal = st.nextToken();
 						if (strKey != null && !strKey.trim().equals(BLANK)) {
 							mapFpsHeaders.put(
 									strKey.trim().substring(1,
 											strKey.trim().length()),
-									strVal.trim());
+											strVal.trim());
 						}
 					}
 				} else {// code to read fingerprint records
@@ -248,11 +247,11 @@ public class FingerprintReaderNodeModel extends NodeModel {
 					if (FPSReadWriteUtil.fingerprintValidator(str,
 							mapFpsHeaders, setId, setIdentifier)) {
 
-						StringTokenizer st = new StringTokenizer(str, DELIMB);
+						final StringTokenizer st = new StringTokenizer(str, DELIMB);
 						if (st.hasMoreTokens() && st.countTokens() > 1) {
-							String strVal = st.nextToken();
-							String strKey = st.nextToken();
-							long[] arrBinBits = FPSReadWriteUtil
+							final String strVal = st.nextToken();
+							final String strKey = st.nextToken();
+							final long[] arrBinBits = FPSReadWriteUtil
 									.convertBinaryFingerprintsFromHex(strVal
 											.trim());
 							DataCell[] cells = null;
@@ -260,11 +259,11 @@ public class FingerprintReaderNodeModel extends NodeModel {
 							cells = new DataCell[2];
 							cells[1] = new StringCell(strKey);
 
-							DenseBitVector bitVector = new DenseBitVector(
+							final DenseBitVector bitVector = new DenseBitVector(
 									Integer.parseInt(mapFpsHeaders
 											.get("num_bits")));
 
-							int iLastPos = arrBinBits.length - 1;
+							final int iLastPos = arrBinBits.length - 1;
 							for (int i = 0; i <= iLastPos; i++) {
 								if (arrBinBits[i] == 0) {
 									bitVector.set(iLastPos - i, false);
@@ -273,7 +272,7 @@ public class FingerprintReaderNodeModel extends NodeModel {
 								}
 
 							}
-							DenseBitVectorCellFactory fact = new DenseBitVectorCellFactory(
+							final DenseBitVectorCellFactory fact = new DenseBitVectorCellFactory(
 									bitVector);
 							cells[0] = fact.createDataCell();
 
@@ -364,9 +363,9 @@ public class FingerprintReaderNodeModel extends NodeModel {
 	@Override
 	protected void validateSettings(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
-		SettingsModelString temp = new SettingsModelString("filename", null);
+		final SettingsModelString temp = new SettingsModelString("filename", null);
 		temp.loadSettingsFrom(settings);
-		String fileS = temp.getStringValue();
+		final String fileS = temp.getStringValue();
 		FPSReadWriteUtil.checkFile(fileS, true, false);
 	}
 

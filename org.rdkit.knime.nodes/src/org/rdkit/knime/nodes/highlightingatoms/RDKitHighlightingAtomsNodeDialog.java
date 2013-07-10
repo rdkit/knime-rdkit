@@ -50,19 +50,19 @@ package org.rdkit.knime.nodes.highlightingatoms;
 
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitHighlightingAtoms" Node.
- * Creates a SVG column showing a molecule with highlighted atoms based on 
- * information in the input table. A molecule column as well as a column 
+ * Creates a SVG column showing a molecule with highlighted atoms based on
+ * information in the input table. A molecule column as well as a column
  * with a list of the atoms to be highlighted needs to be provided.
  *
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
@@ -72,52 +72,52 @@ public class RDKitHighlightingAtomsNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitHighlightingAtomsNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputMolColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputAtomListColumnNameModel(), "Column with list of atoms to highlight: ", 0,
-                CollectionDataValue.class));
-        super.addDialogComponent(new DialogComponentString(
-                createNewColumnNameModel(), "Column name for molecule highlighted atoms: "));
-    }
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputMolColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputAtomListColumnNameModel(), "Column with list of atoms to highlight: ", 0,
+				CollectionDataValue.class));
+		super.addDialogComponent(new DialogComponentString(
+				createNewColumnNameModel(), "Column name for molecule highlighted atoms: "));
+	}
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputMolColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
-   
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputAtomListColumnNameModel() {
-        return new SettingsModelString("input_atom_list_column", null);
-    }
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used to specify the new column name.
-     * 
-     * @return Settings model for result column name.
-     */
-    static final SettingsModelString createNewColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputMolColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputAtomListColumnNameModel() {
+		return new SettingsModelString("input_atom_list_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 }

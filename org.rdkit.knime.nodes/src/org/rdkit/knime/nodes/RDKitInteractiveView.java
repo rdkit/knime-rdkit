@@ -63,6 +63,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JViewport;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -109,64 +110,64 @@ import org.knime.core.node.tableview.TableView;
  * @author Manuel Schwarze, Novartis
  */
 public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
-	
-    /** The Component displaying the table. */
-    private final TableView m_tableView;
-    
-    /** True, if the table to be shown is an input table. False, if it is an output table. */
-    private final boolean m_bIsInputTable;
-    
-    /** The index of the port of the table to be shown. */ 
-    private final int m_iIndex;
 
-    /**
-     * Starts a new <code>TableNodeView</code> displaying "&lt;no data&gt;".
-     * The content comes up when the super class {@link NodeView} calls the
-     * {@link #modelChanged()} method.
-     *
-     * @param nodeModel The underlying model.
+	/** The Component displaying the table. */
+	private final TableView m_tableView;
+
+	/** True, if the table to be shown is an input table. False, if it is an output table. */
+	private final boolean m_bIsInputTable;
+
+	/** The index of the port of the table to be shown. */
+	private final int m_iIndex;
+
+	/**
+	 * Starts a new <code>TableNodeView</code> displaying "&lt;no data&gt;".
+	 * The content comes up when the super class {@link NodeView} calls the
+	 * {@link #modelChanged()} method.
+	 *
+	 * @param nodeModel The underlying model.
 	 * @param bIsInputTable Set to true, if the passed in index is from an input table.
 	 * 		Set to false, if the passed in index is from an output table.
- 	 * @param iIndex Index of a port (table). 
-     */
-    public RDKitInteractiveView(final T nodeModel, boolean bIsInputTable, int iIndex) {
-        super(nodeModel);
+	 * @param iIndex Index of a port (table).
+	 */
+	public RDKitInteractiveView(final T nodeModel, final boolean bIsInputTable, final int iIndex) {
+		super(nodeModel);
 
-        m_bIsInputTable = bIsInputTable;
-        m_iIndex = iIndex;
-        
-        // Check, if proper methods are implemented in the node
-        if (nodeModel instanceof TableViewSupport == false) {
-        	throw new IllegalArgumentException("The specified node model must implement the TableViewSupport interface.");
-        }
-        
-        // Check, if node implementation is compatible with this view instance
-    	int[] arrSupportedPorts = (bIsInputTable ? 
-    			((TableViewSupport)nodeModel).getInputTablesToConserve() :
-    				((TableViewSupport)nodeModel).getOutputTablesToConserve());
-    	boolean bFound = false;
-    	for (int port : arrSupportedPorts) {
-    		if (port == iIndex) {
-    			bFound = true;
-    			break;
-    		}
-    	}
-    	
-    	if (!bFound) {
-        	throw new IllegalArgumentException("The specified node model does not conserve the " +
-        			(bIsInputTable ? "input" : "output") + " table on port " + iIndex + 
-        			". Override in the node model the method " + 
-        			(bIsInputTable ? "getInputTablesToConserve()" : "getOutputTablesToConserve()") +
-        			" and return the correct port values.");
-    	}
-    	
-        // get data model, init view
-        TableContentModel contentModel = ((TableViewSupport)nodeModel).getContentModel(m_bIsInputTable, m_iIndex);
-        assert (contentModel != null);
-                
-        m_tableView = new TableView(createTableContentView(contentModel)) {
-        	
-        	/** Serial number. */
+		m_bIsInputTable = bIsInputTable;
+		m_iIndex = iIndex;
+
+		// Check, if proper methods are implemented in the node
+		if (nodeModel instanceof TableViewSupport == false) {
+			throw new IllegalArgumentException("The specified node model must implement the TableViewSupport interface.");
+		}
+
+		// Check, if node implementation is compatible with this view instance
+		final int[] arrSupportedPorts = (bIsInputTable ?
+				((TableViewSupport)nodeModel).getInputTablesToConserve() :
+					((TableViewSupport)nodeModel).getOutputTablesToConserve());
+		boolean bFound = false;
+		for (final int port : arrSupportedPorts) {
+			if (port == iIndex) {
+				bFound = true;
+				break;
+			}
+		}
+
+		if (!bFound) {
+			throw new IllegalArgumentException("The specified node model does not conserve the " +
+					(bIsInputTable ? "input" : "output") + " table on port " + iIndex +
+					". Override in the node model the method " +
+					(bIsInputTable ? "getInputTablesToConserve()" : "getOutputTablesToConserve()") +
+					" and return the correct port values.");
+		}
+
+		// get data model, init view
+		final TableContentModel contentModel = ((TableViewSupport)nodeModel).getContentModel(m_bIsInputTable, m_iIndex);
+		assert (contentModel != null);
+
+		m_tableView = new TableView(createTableContentView(contentModel)) {
+
+			/** Serial number. */
 			private static final long serialVersionUID = -7248174233656738602L;
 
 			/**
@@ -174,77 +175,78 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 			 * {@inheritDoc}
 			 */
 			@Override
-        	public void setColumnHeaderViewHeight(int newHeight) {
-                JViewport header = getColumnHeader();
-                Component v;
-                if (header != null) {
-                    v = header.getView();
-                } else {
-                    // the header == null if the table has not been completely
-                    // initialized (i.e. configureEnclosingScrollPane has not been
-                    // called the JTable). The header will be the JTableHeader of the
-                    // table
-                    v = getContentTable().getTableHeader();
-                }
-                if (v != null) {
-                	// The following code differs from the original code to
-                	// fix a potential bug. We create new Dimensions here to
-                	// avoid manipulation of the dimension data through side effects.
-                    final Dimension d = v.getSize();
-                    v.setSize(new Dimension(d.width, newHeight));
-                    v.setPreferredSize(new Dimension(d.width, newHeight));
-                }
-        	}
-			
+			public void setColumnHeaderViewHeight(final int newHeight) {
+				final JViewport header = getColumnHeader();
+				Component v;
+				if (header != null) {
+					v = header.getView();
+				} else {
+					// the header == null if the table has not been completely
+					// initialized (i.e. configureEnclosingScrollPane has not been
+					// called the JTable). The header will be the JTableHeader of the
+					// table
+					v = getContentTable().getTableHeader();
+				}
+				if (v != null) {
+					// The following code differs from the original code to
+					// fix a potential bug. We create new Dimensions here to
+					// avoid manipulation of the dimension data through side effects.
+					final Dimension d = v.getSize();
+					v.setSize(new Dimension(d.width, newHeight));
+					v.setPreferredSize(new Dimension(d.width, newHeight));
+				}
+			}
+
 			/**
 			 * Overridden to configure the header renderer of the row id column.
 			 * {@inheritDoc}
 			 */
-			public void setCorner(String key, Component corner) {
+			@Override
+			public void setCorner(final String key, final Component corner) {
 				super.setCorner(key, corner);
-				
+
 				if (UPPER_LEFT_CORNER.equals(key) && corner instanceof JTableHeader) {
-					TableCellRenderer headerRenderer = ((JTableHeader)corner).getDefaultRenderer();
+					final TableCellRenderer headerRenderer = ((JTableHeader)corner).getDefaultRenderer();
 					if (headerRenderer instanceof JLabel) {
-						((JLabel)headerRenderer).setVerticalAlignment(SwingUtilities.BOTTOM);
+						((JLabel)headerRenderer).setVerticalAlignment(SwingConstants.BOTTOM);
 					}
 				}
 			};
-        };
- 
-        contentModel.addTableModelListener(new TableModelListener() {
-            @Override	
-            public void tableChanged(final TableModelEvent e) {
-                // fired when new rows have been seen (refer to description
-                // of caching strategy of the model)
-                updateTitle();
-            }
-        });
-        
-        getJMenuBar().add(m_tableView.createHiLiteMenu());
-        getJMenuBar().add(m_tableView.createNavigationMenu());
-        getJMenuBar().add(m_tableView.createViewMenu());
-        getJMenuBar().add(createWriteCSVMenu());
-        setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-        
-        setComponent(m_tableView);
-    } // TableNodeView(TableNodeModel)
+		};
 
-    /**
-     * This method is called from the constructor and creates the instance of
-     * the table content view. We override here the method 
-     * {@link TableContentView#getNewColumnHeaderRenderer()} to create
-     * an instance of derived class of ColumnHeaderRenderer, which is
-     * capable of showing additional header information in the column header.
-     * 
-     * @param contentModel Table content model retrieved from the node model.
-     * 
-     * @return New instance of a Table Content View.
-     */
-    public TableContentView createTableContentView(TableContentModel contentModel) {
-    	return new TableContentView(contentModel) {
-        	
-        	/** Serial number. */
+		contentModel.addTableModelListener(new TableModelListener() {
+			@Override
+			public void tableChanged(final TableModelEvent e) {
+				// fired when new rows have been seen (refer to description
+				// of caching strategy of the model)
+				updateTitle();
+			}
+		});
+
+		getJMenuBar().add(m_tableView.createHiLiteMenu());
+		getJMenuBar().add(m_tableView.createNavigationMenu());
+		getJMenuBar().add(m_tableView.createViewMenu());
+		getJMenuBar().add(createWriteCSVMenu());
+		setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
+
+		setComponent(m_tableView);
+	} // TableNodeView(TableNodeModel)
+
+	/**
+	 * This method is called from the constructor and creates the instance of
+	 * the table content view. We override here the method
+	 * {@link TableContentView#getNewColumnHeaderRenderer()} to create
+	 * an instance of derived class of ColumnHeaderRenderer, which is
+	 * capable of showing additional header information in the column header.
+	 * 
+	 * @param contentModel Table content model retrieved from the node model.
+	 * 
+	 * @return New instance of a Table Content View.
+	 */
+	public TableContentView createTableContentView(final TableContentModel contentModel) {
+		return new TableContentView(contentModel) {
+
+			/** Serial number. */
 			private static final long serialVersionUID = -6921326301846067804L;
 
 			/**
@@ -252,437 +254,438 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 			 * 
 			 * @return AddInfoColumnHeaderRenderer.
 			 */
+			@Override
 			protected ColumnHeaderRenderer getNewColumnHeaderRenderer() {
-        		return new AdditionalHeaderInfoRenderer();
-        	}
-        };
-    	
-    }
-    
-    /** {@inheritDoc} Removes all new lines and replaces them by a comma. */
-    @Override
-    public void warningChanged(final String warning) {
-    	String warningWithoutNewLines = (warning == null ? null : warning.replace("\n", ", "));
-    	super.warningChanged(warningWithoutNewLines);
-    }
-    
-    /**
-     * Checks if there is data to display. That is: The model's content model
-     * (keeping the cache and so on) needs to have a {@link DataTable} to show.
-     * This method returns <code>true</code> when the node was executed and
-     * <code>false</code> otherwise.
-     *
-     * @return <code>true</code> if there is data to display
-     */
-    public boolean hasData() {
-        return m_tableView.hasData();
-    }
+				return new AdditionalHeaderInfoRenderer();
+			}
+		};
 
-    /**
-     * Checks is property handler is set.
-     *
-     * @return <code>true</code> if property handler set
-     * @see TableContentView#hasHiLiteHandler()
-     */
-    public boolean hasHiLiteHandler() {
-        return m_tableView.hasHiLiteHandler();
-    }
+	}
 
-    /**
-     * Sets a new handler for this view.
-     *
-     * @param hiLiteHdl the new handler to set, may be <code>null</code> to
-     *            disable any brushing
-     */
-    public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
-        m_tableView.setHiLiteHandler(hiLiteHdl);
-    }
+	/** {@inheritDoc} Removes all new lines and replaces them by a comma. */
+	@Override
+	public void warningChanged(final String warning) {
+		final String warningWithoutNewLines = (warning == null ? null : warning.replace("\n", ", "));
+		super.warningChanged(warningWithoutNewLines);
+	}
 
-    /**
-     * Shall row header encode the color information in an icon.
-     *
-     * @param isShowColor <code>true</code> for show icon (and thus the
-     *            color), <code>false</code> ignore colors
-     * @see org.knime.core.node.tableview.TableRowHeaderView
-     *      #setShowColorInfo(boolean)
-     */
-    public void setShowColorInfo(final boolean isShowColor) {
-        m_tableView.getHeaderTable().setShowColorInfo(isShowColor);
-    } // setShowColorInfo(boolean)
+	/**
+	 * Checks if there is data to display. That is: The model's content model
+	 * (keeping the cache and so on) needs to have a {@link DataTable} to show.
+	 * This method returns <code>true</code> when the node was executed and
+	 * <code>false</code> otherwise.
+	 *
+	 * @return <code>true</code> if there is data to display
+	 */
+	public boolean hasData() {
+		return m_tableView.hasData();
+	}
 
-    /**
-     * Is the color info shown.
-     *
-     * @return <code>true</code> Icon with the color is present
-     */
-    public boolean isShowColorInfo() {
-        return m_tableView.getHeaderTable().isShowColorInfo();
-    } // isShowColorInfo()
+	/**
+	 * Checks is property handler is set.
+	 *
+	 * @return <code>true</code> if property handler set
+	 * @see TableContentView#hasHiLiteHandler()
+	 */
+	public boolean hasHiLiteHandler() {
+		return m_tableView.hasHiLiteHandler();
+	}
 
-    /**
-     * Get row height from table.
-     *
-     * @return current row height
-     * @see javax.swing.JTable#getRowHeight()
-     */
-    public int getRowHeight() {
-        return m_tableView.getRowHeight();
-    }
+	/**
+	 * Sets a new handler for this view.
+	 *
+	 * @param hiLiteHdl the new handler to set, may be <code>null</code> to
+	 *            disable any brushing
+	 */
+	public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
+		m_tableView.setHiLiteHandler(hiLiteHdl);
+	}
 
-    /**
-     * Set a new row height in the table.
-     *
-     * @param newHeight the new height
-     * @see javax.swing.JTable#setRowHeight(int)
-     */
-    public void setRowHeight(final int newHeight) {
-        m_tableView.setRowHeight(newHeight);
-    }
+	/**
+	 * Shall row header encode the color information in an icon.
+	 *
+	 * @param isShowColor <code>true</code> for show icon (and thus the
+	 *            color), <code>false</code> ignore colors
+	 * @see org.knime.core.node.tableview.TableRowHeaderView
+	 *      #setShowColorInfo(boolean)
+	 */
+	public void setShowColorInfo(final boolean isShowColor) {
+		m_tableView.getHeaderTable().setShowColorInfo(isShowColor);
+	} // setShowColorInfo(boolean)
 
-    /**
-     * Hilites selected rows in the hilite handler.
-     *
-     * @see TableView#hiliteSelected()
-     */
-    public void hiliteSelected() {
-        m_tableView.hiliteSelected();
-    }
+	/**
+	 * Is the color info shown.
+	 *
+	 * @return <code>true</code> Icon with the color is present
+	 */
+	public boolean isShowColorInfo() {
+		return m_tableView.getHeaderTable().isShowColorInfo();
+	} // isShowColorInfo()
 
-    /**
-     * Unhilites selected rows in the hilite handler.
-     *
-     * @see TableView#unHiliteSelected()
-     */
-    public void unHiliteSelected() {
-        m_tableView.unHiliteSelected();
-    }
+	/**
+	 * Get row height from table.
+	 *
+	 * @return current row height
+	 * @see javax.swing.JTable#getRowHeight()
+	 */
+	public int getRowHeight() {
+		return m_tableView.getRowHeight();
+	}
 
-    /**
-     * Resets hiliting in the hilite handler.
-     *
-     * @see TableView#resetHilite()
-     */
-    public void resetHilite() {
-        m_tableView.resetHilite();
-    }
+	/**
+	 * Set a new row height in the table.
+	 *
+	 * @param newHeight the new height
+	 * @see javax.swing.JTable#setRowHeight(int)
+	 */
+	public void setRowHeight(final int newHeight) {
+		m_tableView.setRowHeight(newHeight);
+	}
 
-    /**
-     * Updates the title of the frame. It prints: "Table (#rows[+] x #cols)". It
-     * is invoked each time new rows are inserted (user scrolls down).
-     */
-    protected void updateTitle() {
-        final TableContentView view = m_tableView.getContentTable();
-        TableContentModel model = view.getContentModel();
-        StringBuffer title = new StringBuffer();
-        if (model.hasData()) {
-            String tableName = model.getTableName();
-            if (!tableName.equals("default")) {
-                title.append(" \"");
-                title.append(tableName);
-                title.append("\"");
-            }
-            title.append(" (");
-            int rowCount = model.getRowCount();
-            boolean isFinal = model.isRowCountFinal();
-            title.append(rowCount);
-            title.append(isFinal ? " x " : "+ x ");
-            title.append(model.getColumnCount());
-            title.append(")");
-        } else {
-            title.append(" <no data>");
-        }
-        super.setViewTitleSuffix(title.toString());
-    }
+	/**
+	 * Hilites selected rows in the hilite handler.
+	 *
+	 * @see TableView#hiliteSelected()
+	 */
+	public void hiliteSelected() {
+		m_tableView.hiliteSelected();
+	}
 
-    /**
-     * Called from the super class when a property of the node has been changed.
-     *
-     * @see org.knime.core.node.NodeView#modelChanged()
-     */
-    @Override
-    protected void modelChanged() {
-    	setComponent(m_tableView);
-      	
-        // The following asynchronous invocation is necessary to prevent that the
-        // header view of the table gets screwed up
-      	SwingUtilities.invokeLater(new Runnable() {
-      		@Override
-      		public void run() {
-      			int iInitialHeight = getInitialAdditionalHeaderInformationHeight();
-      	        m_tableView.setColumnHeaderResizingAllowed(iInitialHeight > -1);
-      			if (iInitialHeight > -1) {
-      	        	m_tableView.setColumnHeaderViewHeight(iInitialHeight);
-      	        }
-      		}
-      	});
+	/**
+	 * Unhilites selected rows in the hilite handler.
+	 *
+	 * @see TableView#unHiliteSelected()
+	 */
+	public void unHiliteSelected() {
+		m_tableView.unHiliteSelected();
+	}
 
-      	if (isOpen()) {
-            countRowsInBackground();
-        }
-    }    
-    
-    /**
-     * Traverses all columns of the table content model and determines if there is at least
-     * one column with additional header information, which can be handled.
-     * 
-     * @return True, if a column was found that has additional header information and
-     * 		can be handled.
-     */    
-    protected boolean canHandleAdditionalHeaderInformation() {
-    	boolean bRet = false;
-    	
-    	TableContentModel model = ((TableViewSupport)getNodeModel()).getContentModel(m_bIsInputTable, m_iIndex);
-    	if (model != null) {
-    		DataTableSpec tableSpec = model.getDataTableSpec();
-    		if (tableSpec != null) {
-    			for (DataColumnSpec colSpec : tableSpec) {
-    				AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
-    				if (addInfo.isAvailable()) {
-    					bRet = true;
-    					break;
-    				}
-    			}
-    		}
-    	}
-    
-    	return bRet;
-    }
-    
-    /**
-     * Traverses all columns of the table content model and determines the maximum initial 
-     * height to be used for additional header information. As this is an optional value
-     * it will use the column width as height, if no initial height information was found.
-     * 
-     * @return
-     */
-    protected int getInitialAdditionalHeaderInformationHeight() {
-    	int iInitialHeight = -1;
-    	
-    	TableContentModel model = ((TableViewSupport)getNodeModel()).getContentModel(m_bIsInputTable, m_iIndex);
-    	if (model != null) {
-    		DataTableSpec tableSpec = model.getDataTableSpec();
-    		if (tableSpec != null) {
-    	    	// If no initial header height was found, use the 
-    			// column width as height (square form)
-    	    	int iDefaultHeight = m_tableView.getColumnWidth();
+	/**
+	 * Resets hiliting in the hilite handler.
+	 *
+	 * @see TableView#resetHilite()
+	 */
+	public void resetHilite() {
+		m_tableView.resetHilite();
+	}
 
-    			for (DataColumnSpec colSpec : tableSpec) {
-    				AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
-    				if (addInfo.isAvailable()) {
-    					int iPreferredHeight = addInfo.getInitialHeight();
-    					iInitialHeight = Math.max(iInitialHeight, 
-    							iPreferredHeight == -1 ? iDefaultHeight : iPreferredHeight);
-    				}
-    			}
-    		}
-    	}
-    
-    	return iInitialHeight;
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
-        // unregister from hilite handler
-        m_tableView.cancelRowCountingInBackground();
-    }
+	/**
+	 * Updates the title of the frame. It prints: "Table (#rows[+] x #cols)". It
+	 * is invoked each time new rows are inserted (user scrolls down).
+	 */
+	protected void updateTitle() {
+		final TableContentView view = m_tableView.getContentTable();
+		final TableContentModel model = view.getContentModel();
+		final StringBuffer title = new StringBuffer();
+		if (model.hasData()) {
+			final String tableName = model.getTableName();
+			if (!tableName.equals("default")) {
+				title.append(" \"");
+				title.append(tableName);
+				title.append("\"");
+			}
+			title.append(" (");
+			final int rowCount = model.getRowCount();
+			final boolean isFinal = model.isRowCountFinal();
+			title.append(rowCount);
+			title.append(isFinal ? " x " : "+ x ");
+			title.append(model.getColumnCount());
+			title.append(")");
+		} else {
+			title.append(" <no data>");
+		}
+		super.setViewTitleSuffix(title.toString());
+	}
 
-    /**
-     * Does nothing since view is in sync anyway.
-     *
-     * @see org.knime.core.node.NodeView#onOpen()
-     */
-    @Override
-    protected void onOpen() {
-        countRowsInBackground();
-        updateTitle();
-    }
+	/**
+	 * Called from the super class when a property of the node has been changed.
+	 *
+	 * @see org.knime.core.node.NodeView#modelChanged()
+	 */
+	@Override
+	protected void modelChanged() {
+		setComponent(m_tableView);
 
-    /**
-     * Delegates to the table view that it should start a row counter thread.
-     * Multiple invocations of this method don't harm.
-     */
-    private void countRowsInBackground() {
-        if (hasData()) {
-            m_tableView.countRowsInBackground();
-        }
-    }
+		// The following asynchronous invocation is necessary to prevent that the
+		// header view of the table gets screwed up
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				final int iInitialHeight = getInitialAdditionalHeaderInformationHeight();
+				m_tableView.setColumnHeaderResizingAllowed(iInitialHeight > -1);
+				if (iInitialHeight > -1) {
+					m_tableView.setColumnHeaderViewHeight(iInitialHeight);
+				}
+			}
+		});
 
-    /* A JMenu that has one entry "Write to CSV file". */
-    private JMenu createWriteCSVMenu() {
-        JMenu menu = new JMenu("Output");
-        JMenuItem item = new JMenuItem("Write CSV");
-        item.addPropertyChangeListener("ancestor",
-                new PropertyChangeListener() {
-                    @Override
-                    public void propertyChange(final PropertyChangeEvent evt) {
-                        ((JMenuItem)evt.getSource()).setEnabled(hasData());
-                    }
-                });
-        final CSVFilesHistoryPanel hist = new CSVFilesHistoryPanel();
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                int i = JOptionPane.showConfirmDialog(m_tableView, hist,
-                        "Choose File", JOptionPane.OK_CANCEL_OPTION);
-                if (i == JOptionPane.OK_OPTION) {
-                    String sfile = hist.getSelectedFile();
-                    File file = CSVFilesHistoryPanel.getFile(sfile);
-                    writeToCSV(file);
-                }
-            }
-        });
-        menu.add(item);
-        return menu;
-    }
+		if (isOpen()) {
+			countRowsInBackground();
+		}
+	}
 
-    /**
-     * Called by the JMenu item "Write to CVS", it write the table as shown in
-     * table view to a CSV file.
-     *
-     * @param file the file to write to
-     */
-    private void writeToCSV(final File file) {
-        // CSV Writer supports ExecutionMonitor. Some table may be big.
-        DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
-        ExecutionMonitor e = new ExecutionMonitor(progMon);
-        // Frame of m_tableView (if any)
-        Frame f = (Frame)SwingUtilities.getAncestorOfClass(Frame.class,
-                m_tableView);
-        final NodeProgressMonitorView progView = new NodeProgressMonitorView(f,
-                progMon);
-        // CSV Writer does not support 1-100 progress (unknown row count)
-        progView.setShowProgress(false);
-        // Writing is done in a thread (allows repainting of GUI)
-        final CSVWriterThread t = new CSVWriterThread(file, e);
-        t.start();
-        // A thread that waits for t to finish and then disposes the prog view
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    t.join();
-                } catch (InterruptedException ie) {
-                    // do nothing. Only dispose the view
-                } finally {
-                    progView.dispose();
-                }
-            }
-        }).start();
-        progView.pack();
-        progView.setLocationRelativeTo(m_tableView);
-        progView.setVisible(true);
-    }
+	/**
+	 * Traverses all columns of the table content model and determines if there is at least
+	 * one column with additional header information, which can be handled.
+	 * 
+	 * @return True, if a column was found that has additional header information and
+	 * 		can be handled.
+	 */
+	protected boolean canHandleAdditionalHeaderInformation() {
+		boolean bRet = false;
 
-    /** Thread that write the current table to a file. */
-    private final class CSVWriterThread extends Thread {
+		final TableContentModel model = ((TableViewSupport)getNodeModel()).getContentModel(m_bIsInputTable, m_iIndex);
+		if (model != null) {
+			final DataTableSpec tableSpec = model.getDataTableSpec();
+			if (tableSpec != null) {
+				for (final DataColumnSpec colSpec : tableSpec) {
+					final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
+					if (addInfo.isAvailable()) {
+						bRet = true;
+						break;
+					}
+				}
+			}
+		}
 
-        private final File m_file;
+		return bRet;
+	}
 
-        private final ExecutionMonitor m_exec;
+	/**
+	 * Traverses all columns of the table content model and determines the maximum initial
+	 * height to be used for additional header information. As this is an optional value
+	 * it will use the column width as height, if no initial height information was found.
+	 * 
+	 * @return
+	 */
+	protected int getInitialAdditionalHeaderInformationHeight() {
+		int iInitialHeight = -1;
 
-        /**
-         * Creates instance.
-         *
-         * @param file the file to write to
-         * @param exec the execution monitor
-         */
-        public CSVWriterThread(final File file, final ExecutionMonitor exec) {
-            m_file = file;
-            m_exec = exec;
-        }
+		final TableContentModel model = ((TableViewSupport)getNodeModel()).getContentModel(m_bIsInputTable, m_iIndex);
+		if (model != null) {
+			final DataTableSpec tableSpec = model.getDataTableSpec();
+			if (tableSpec != null) {
+				// If no initial header height was found, use the
+				// column width as height (square form)
+				final int iDefaultHeight = m_tableView.getColumnWidth();
 
-        @Override
-        public void run() {
-            TableContentModel model = m_tableView.getContentModel();
-            TableContentFilter filter = model.getTableContentFilter();
-            DataTable table = model.getDataTable();
-            HiLiteHandler hdl = model.getHiLiteHandler();
-            Object mutex = filter.performsFiltering() ? hdl : new Object();
-            // if hilighted rows are written only, we need to sync with
-            // the handler (prevent others to (un-)hilight rows in the meantime)
-            synchronized (mutex) {
-                if (filter.performsFiltering()) {
-                    DataTable hilightOnlyTable = new RowFilterTable(table,
-                            new RowHiliteFilter(filter, hdl));
-                    table = hilightOnlyTable;
-                }
-                try {
-                    FileWriterSettings settings = new FileWriterSettings();
-                    settings.setWriteColumnHeader(true);
-                    settings.setWriteRowID(true);
-                    settings.setColSeparator(",");
-                    settings.setSeparatorReplacement("");
-                    settings.setReplaceSeparatorInStrings(true);
-                    settings.setMissValuePattern("");
-                    CSVWriter writer = new CSVWriter(new FileWriter(m_file),
-                            settings);
-                    String message;
-                    try {
-                        writer.write(table, m_exec);
-                        writer.close();
-                        message = "Done.";
-                    } catch (CanceledExecutionException ce) {
-                        writer.close();
-                        m_file.delete();
-                        message = "Canceled.";
-                    }
-                    JOptionPane.showMessageDialog(m_tableView,
-                            message, "Write CSV",
-                            JOptionPane.INFORMATION_MESSAGE);
-                } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(m_tableView,
-                            ioe.getMessage(), "Write error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }
-    }
+				for (final DataColumnSpec colSpec : tableSpec) {
+					final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
+					if (addInfo.isAvailable()) {
+						final int iPreferredHeight = addInfo.getInitialHeight();
+						iInitialHeight = Math.max(iInitialHeight,
+								iPreferredHeight == -1 ? iDefaultHeight : iPreferredHeight);
+					}
+				}
+			}
+		}
 
-    /**
-     * Row filter that filters non-hilited rows - it's the most convenient way
-     * to write only the hilited rows.
-     *
-     * @author Bernd Wiswedel, University of Konstanz
-     */
-    private static final class RowHiliteFilter extends RowFilter {
+		return iInitialHeight;
+	}
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void onClose() {
+		// unregister from hilite handler
+		m_tableView.cancelRowCountingInBackground();
+	}
 
-        private final HiLiteHandler m_handler;
-        private final TableContentFilter m_filter;
+	/**
+	 * Does nothing since view is in sync anyway.
+	 *
+	 * @see org.knime.core.node.NodeView#onOpen()
+	 */
+	@Override
+	protected void onOpen() {
+		countRowsInBackground();
+		updateTitle();
+	}
 
-        /**
-         * Creates new instance given a hilite handler.
-         * @param filter table content filter
-         * @param handler the handler to get the hilite info from
-         */
-        public RowHiliteFilter(final TableContentFilter filter,
-                final HiLiteHandler handler) {
-            m_handler = handler;
-            m_filter = filter;
-        }
+	/**
+	 * Delegates to the table view that it should start a row counter thread.
+	 * Multiple invocations of this method don't harm.
+	 */
+	private void countRowsInBackground() {
+		if (hasData()) {
+			m_tableView.countRowsInBackground();
+		}
+	}
 
-        @Override
-        public DataTableSpec configure(final DataTableSpec inSpec)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
+	/* A JMenu that has one entry "Write to CSV file". */
+	private JMenu createWriteCSVMenu() {
+		final JMenu menu = new JMenu("Output");
+		final JMenuItem item = new JMenuItem("Write CSV");
+		item.addPropertyChangeListener("ancestor",
+				new PropertyChangeListener() {
+			@Override
+			public void propertyChange(final PropertyChangeEvent evt) {
+				((JMenuItem)evt.getSource()).setEnabled(hasData());
+			}
+		});
+		final CSVFilesHistoryPanel hist = new CSVFilesHistoryPanel();
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				final int i = JOptionPane.showConfirmDialog(m_tableView, hist,
+						"Choose File", JOptionPane.OK_CANCEL_OPTION);
+				if (i == JOptionPane.OK_OPTION) {
+					final String sfile = hist.getSelectedFile();
+					final File file = CSVFilesHistoryPanel.getFile(sfile);
+					writeToCSV(file);
+				}
+			}
+		});
+		menu.add(item);
+		return menu;
+	}
 
-        @Override
-        public void loadSettingsFrom(final NodeSettingsRO cfg)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
+	/**
+	 * Called by the JMenu item "Write to CVS", it write the table as shown in
+	 * table view to a CSV file.
+	 *
+	 * @param file the file to write to
+	 */
+	private void writeToCSV(final File file) {
+		// CSV Writer supports ExecutionMonitor. Some table may be big.
+		final DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
+		final ExecutionMonitor e = new ExecutionMonitor(progMon);
+		// Frame of m_tableView (if any)
+		final Frame f = (Frame)SwingUtilities.getAncestorOfClass(Frame.class,
+				m_tableView);
+		final NodeProgressMonitorView progView = new NodeProgressMonitorView(f,
+				progMon);
+		// CSV Writer does not support 1-100 progress (unknown row count)
+		progView.setShowProgress(false);
+		// Writing is done in a thread (allows repainting of GUI)
+		final CSVWriterThread t = new CSVWriterThread(file, e);
+		t.start();
+		// A thread that waits for t to finish and then disposes the prog view
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					t.join();
+				} catch (final InterruptedException ie) {
+					// do nothing. Only dispose the view
+				} finally {
+					progView.dispose();
+				}
+			}
+		}).start();
+		progView.pack();
+		progView.setLocationRelativeTo(m_tableView);
+		progView.setVisible(true);
+	}
 
-        @Override
-        protected void saveSettings(final NodeSettingsWO cfg) {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
+	/** Thread that write the current table to a file. */
+	private final class CSVWriterThread extends Thread {
 
-        @Override
-        public boolean matches(final DataRow row, final int rowIndex)
-                throws EndOfTableException, IncludeFromNowOn {
-            return m_filter.matches(m_handler.isHiLit(row.getKey()));
-        }
-    }
+		private final File m_file;
+
+		private final ExecutionMonitor m_exec;
+
+		/**
+		 * Creates instance.
+		 *
+		 * @param file the file to write to
+		 * @param exec the execution monitor
+		 */
+		public CSVWriterThread(final File file, final ExecutionMonitor exec) {
+			m_file = file;
+			m_exec = exec;
+		}
+
+		@Override
+		public void run() {
+			final TableContentModel model = m_tableView.getContentModel();
+			final TableContentFilter filter = model.getTableContentFilter();
+			DataTable table = model.getDataTable();
+			final HiLiteHandler hdl = model.getHiLiteHandler();
+			final Object mutex = filter.performsFiltering() ? hdl : new Object();
+			// if hilighted rows are written only, we need to sync with
+			// the handler (prevent others to (un-)hilight rows in the meantime)
+			synchronized (mutex) {
+				if (filter.performsFiltering()) {
+					final DataTable hilightOnlyTable = new RowFilterTable(table,
+							new RowHiliteFilter(filter, hdl));
+					table = hilightOnlyTable;
+				}
+				try {
+					final FileWriterSettings settings = new FileWriterSettings();
+					settings.setWriteColumnHeader(true);
+					settings.setWriteRowID(true);
+					settings.setColSeparator(",");
+					settings.setSeparatorReplacement("");
+					settings.setReplaceSeparatorInStrings(true);
+					settings.setMissValuePattern("");
+					final CSVWriter writer = new CSVWriter(new FileWriter(m_file),
+							settings);
+					String message;
+					try {
+						writer.write(table, m_exec);
+						writer.close();
+						message = "Done.";
+					} catch (final CanceledExecutionException ce) {
+						writer.close();
+						m_file.delete();
+						message = "Canceled.";
+					}
+					JOptionPane.showMessageDialog(m_tableView,
+							message, "Write CSV",
+							JOptionPane.INFORMATION_MESSAGE);
+				} catch (final IOException ioe) {
+					JOptionPane.showMessageDialog(m_tableView,
+							ioe.getMessage(), "Write error",
+							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Row filter that filters non-hilited rows - it's the most convenient way
+	 * to write only the hilited rows.
+	 *
+	 * @author Bernd Wiswedel, University of Konstanz
+	 */
+	private static final class RowHiliteFilter extends RowFilter {
+
+		private final HiLiteHandler m_handler;
+		private final TableContentFilter m_filter;
+
+		/**
+		 * Creates new instance given a hilite handler.
+		 * @param filter table content filter
+		 * @param handler the handler to get the hilite info from
+		 */
+		public RowHiliteFilter(final TableContentFilter filter,
+				final HiLiteHandler handler) {
+			m_handler = handler;
+			m_filter = filter;
+		}
+
+		@Override
+		public DataTableSpec configure(final DataTableSpec inSpec)
+				throws InvalidSettingsException {
+			throw new IllegalStateException("Not intended for permanent usage");
+		}
+
+		@Override
+		public void loadSettingsFrom(final NodeSettingsRO cfg)
+				throws InvalidSettingsException {
+			throw new IllegalStateException("Not intended for permanent usage");
+		}
+
+		@Override
+		protected void saveSettings(final NodeSettingsWO cfg) {
+			throw new IllegalStateException("Not intended for permanent usage");
+		}
+
+		@Override
+		public boolean matches(final DataRow row, final int rowIndex)
+				throws EndOfTableException, IncludeFromNowOn {
+			return m_filter.matches(m_handler.isHiLit(row.getKey()));
+		}
+	}
 }

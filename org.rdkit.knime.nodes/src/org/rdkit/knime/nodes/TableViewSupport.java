@@ -52,7 +52,7 @@ import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.tableview.TableContentModel;
 
 /**
- * This interface must be implemented by node models when we want to be able to 
+ * This interface must be implemented by node models when we want to be able to
  * connect an interactive view with it. It provides functionality to
  * restore saved table data when a workflow loads ({@link BufferedDataTableHolder})
  * and also the functionality to generate a content model a view can work on.
@@ -60,7 +60,7 @@ import org.knime.core.node.tableview.TableContentModel;
  * @author Manuel Schwarze
  */
 public interface TableViewSupport extends BufferedDataTableHolder {
-	
+
 	/**
 	 * Returns the list of indices of input tables, which shall be used in
 	 * table views.
@@ -69,7 +69,7 @@ public interface TableViewSupport extends BufferedDataTableHolder {
 	 * 		be conserved.
 	 */
 	int[] getInputTablesToConserve();
-	
+
 	/**
 	 * Returns the list of indices of output tables, which shall be used in
 	 * table views.
@@ -78,13 +78,13 @@ public interface TableViewSupport extends BufferedDataTableHolder {
 	 * 		be conserved.
 	 */
 	int[] getOutputTablesToConserve();
-	
+
 	/**
 	 * Returns the content model of table data to be used in a view.
 	 * 
 	 * @param bIsInputTable Set to true, if the passed in index is from an input table.
 	 * 		Set to false, if the passed in index is from an output table.
-	 * @param iIndex Index of a port (table). 
+	 * @param iIndex Index of a port (table).
 	 * 
 	 * @return Table content model or null, if unavailable.
 	 * 

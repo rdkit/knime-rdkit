@@ -64,7 +64,7 @@ public final class StringUtils {
 	//
 	// Static Methods
 	//
-	
+
 	/**
 	 * Generates a friendly and easily readable description based on the passed in description.
 	 * 
@@ -78,7 +78,7 @@ public final class StringUtils {
 
 	/**
 	 * Generates a friendly and easily readable description based on the passed in description.
-	 * It may add a dot at the end, if no punctuation is set. 
+	 * It may add a dot at the end, if no punctuation is set.
 	 * 
 	 * @param description A description of something. Can be null.
 	 * @param bAddDot Set to true to force adding punctuation at the end (dot).
@@ -105,7 +105,7 @@ public final class StringUtils {
 			if (bAddDot && strRet.length() > 1) {
 				final char chEnd = strRet.charAt(strRet.length() - 1);
 				if (chEnd != '.' && chEnd != '!' && chEnd != '?') {
-					strRet += "."; 
+					strRet += ".";
 				}
 			}
 		}
@@ -132,7 +132,7 @@ public final class StringUtils {
 				try {
 					final int iVersion = Integer.parseInt(st.nextToken());
 					listVersion.add(iVersion);
-				} catch (NumberFormatException excNumber) { 
+				} catch (final NumberFormatException excNumber) {
 					// Ignore
 				}
 			}
@@ -192,15 +192,16 @@ public final class StringUtils {
 	 * 
 	 * @return Changed string. Returns <code>null</code> if the original string
 	 *         is <code>null</code>.
-	 *         
+	 * 
 	 * @deprecated Use {@link String#replace(CharSequence, CharSequence)} instead. Only
 	 * 		the null handling is different and needs to be checked manually before using the
 	 * 		string instance.
 	 */
+	@Deprecated
 	public static String replace(final String strOrig, final String strFind,
 			final String strReplace) {
 		String strRet = null;
-		
+
 		if (strOrig != null) {
 			if (strFind == null || strReplace == null || strFind.equals(strReplace)) {
 				strRet = strOrig;
@@ -209,10 +210,10 @@ public final class StringUtils {
 				strRet = strOrig.replace(strFind, strReplace);
 			}
 		}
-		
+
 		return strRet;
 	}
-	
+
 	/**
 	 * Returns a human readable list of the items as one string for the specified list of items.
 	 * The toString() method is called on the elements.
@@ -223,16 +224,17 @@ public final class StringUtils {
 	 * 
 	 * @deprecated Use the method {@link Arrays#toString(Object[])} instead.
 	 */
+	@Deprecated
 	public static String buildStringFromArray(final Object[] arrItems) {
 		String strRet = null;
-		
+
 		if (arrItems != null) {
 			strRet = Arrays.toString(arrItems);
 		}
-		
+
 		return strRet;
 	}
-	
+
 	/**
 	 * Returns a human readable list of the items as one string for the specified list of items.
 	 * The toString() method is called on the elements.
@@ -243,16 +245,17 @@ public final class StringUtils {
 	 * 
 	 * @deprecated Use the method {@link List#toString()} instead.
 	 */
+	@Deprecated
 	public static String buildStringFromList(final List<Object> listItems) {
 		String strRet = null;
-		
+
 		if (listItems != null) {
 			strRet = listItems.toString();
 		}
-		
+
 		return strRet;
-	}		
-	
+	}
+
 	/**
 	 * Determines, if the specified string would be empty (size = 0) after
 	 * removing leading and trailing whitespaces (trimming).
@@ -264,7 +267,7 @@ public final class StringUtils {
 	 */
 	public static boolean isEmptyAfterTrimming(final String str) {
 		boolean bEmpty = true;
-		
+
 		if (str != null) {
 			final int len = str.length();
 			for (int i = 0; i < len; i++) {
@@ -274,7 +277,7 @@ public final class StringUtils {
 				}
 			}
 		}
-		
+
 		return bEmpty;
 	}
 
@@ -288,7 +291,7 @@ public final class StringUtils {
 	public static String removeHtmlComments(final String str) {
 		return removeAreas(str, "<!--", "-->");
 	}
-	
+
 	/**
 	 * Removes all tag structures from the specified string. A tag here is
 	 * defines as an arbitrary string within < and > signs.
@@ -301,7 +304,7 @@ public final class StringUtils {
 	public static String removeTags(final String str) {
 		return removeAreas(str, "<", ">");
 	}
-	
+
 	/**
 	 * Removes all areas from the string, that start and end with the specified start and end strings.
 	 * 
@@ -313,57 +316,57 @@ public final class StringUtils {
 	 * 		null was passed in as string.
 	 */
 	private static String removeAreas(final String str, final String start, final String end) {
-		StringBuilder sbRet = new StringBuilder();
-		
+		final StringBuilder sbRet = new StringBuilder();
+
 		if (str != null) {
 			int iOffset = 0;
 			int iStart = str.indexOf(start, iOffset);
 			int iEnd = -1;
-			
+
 			while (iStart != -1) {
-				if (iOffset == iStart && sbRet.length() > 0 && !Character.isWhitespace(sbRet.charAt(sbRet.length() - 1))) {			
+				if (iOffset == iStart && sbRet.length() > 0 && !Character.isWhitespace(sbRet.charAt(sbRet.length() - 1))) {
 					sbRet.append(' ');
-				}			
+				}
 
 				sbRet.append(str.substring(iOffset, iStart));
-				
+
 				iEnd = str.indexOf(end, iStart + start.length());
 				if (iEnd != -1) {
 					iOffset = iEnd + end.length();
 					iStart = str.indexOf(start, iOffset);
-				} 
+				}
 				else {
 					iOffset = str.length();
 					iStart = -1;
 				}
 			}
-			
+
 			sbRet.append(str.substring(iOffset));
 		}
-		 
-		return (str == null ? null : sbRet.toString());	
+
+		return (str == null ? null : sbRet.toString());
 	}
-	
-   /**
-    * Sorts the specified string list. O(N) is n log(n).
-    *
-    * @param  list String list containing the elements to be sorted. Can be <code>null</code>.
-    *
-    * @return Sorted string list or <code>null</code> if <code>null</code> was passed in.
-    */
-	public static List<String> sort(List<String> list) {
+
+	/**
+	 * Sorts the specified string list. O(N) is n log(n).
+	 *
+	 * @param  list String list containing the elements to be sorted. Can be <code>null</code>.
+	 *
+	 * @return Sorted string list or <code>null</code> if <code>null</code> was passed in.
+	 */
+	public static List<String> sort(final List<String> list) {
 		List<String> listSorted = null;
 
 		if (list != null) {
 			listSorted = new ArrayList<String>();
-			for (String str : list) {
+			for (final String str : list) {
 				listSorted.add(getIndexForSortedInsert(listSorted, str), str);
 			}
 		}
 
 		return listSorted;
 	}
-	
+
 	/**
 	 * Sorts the specified string list. O(N) is n log(n).
 	 * 
@@ -373,12 +376,12 @@ public final class StringUtils {
 	 * @return Sorted string list or <code>null</code> if <code>null</code> was
 	 *         passed in.
 	 */
-	public static List<String> sort(Set<String> set) {
+	public static List<String> sort(final Set<String> set) {
 		List<String> listSorted = null;
 
 		if (set != null) {
 			listSorted = new ArrayList<String>();
-			for (String str : set){
+			for (final String str : set){
 				listSorted.add(getIndexForSortedInsert(listSorted, str), str);
 			}
 		}
@@ -402,18 +405,18 @@ public final class StringUtils {
 	 * 
 	 * @return Index for string insertion.
 	 */
-	private static int getIndexForSortedInsert(List<String> listSorted, String item) {
+	private static int getIndexForSortedInsert(final List<String> listSorted, final String item) {
 		if (listSorted == null || item == null) {
 			return 0;
 		}
-		
+
 		int low = 0;
 		int high = listSorted.size() - 1;
 
 		while (low <= high) {
-			int mid = (low + high) >>> 1;
-			String midVal = listSorted.get(mid);
-			int cmp = midVal.compareToIgnoreCase(item);
+			final int mid = (low + high) >>> 1;
+			final String midVal = listSorted.get(mid);
+			final int cmp = midVal.compareToIgnoreCase(item);
 
 			if (cmp < 0) {
 				low = mid + 1;
@@ -425,18 +428,18 @@ public final class StringUtils {
 				return mid; // key found
 			}
 		}
-		
+
 		return low; // key not found.
 	}
-	
+
 	//
 	// Constructor
 	//
-	
+
 	/**
-	 * This constructor serves only the purpose to avoid instantiation of this class. 
+	 * This constructor serves only the purpose to avoid instantiation of this class.
 	 */
 	private StringUtils() {
 		// To avoid instantiation of this class.
-	}	
+	}
 }

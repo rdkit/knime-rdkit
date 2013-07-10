@@ -61,7 +61,7 @@ import org.rdkit.knime.util.LayoutUtils;
 import org.rdkit.knime.util.VerticalCompoundIcon;
 
 /**
- * This extension of the normal column header renderer is capable of 
+ * This extension of the normal column header renderer is capable of
  * rendering also additional information of column headers.
  * 
  * @see AdditionalHeaderInfo
@@ -69,71 +69,71 @@ import org.rdkit.knime.util.VerticalCompoundIcon;
  * @author Manuel Schwarze
  */
 public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
-	
+
 	//
 	// Constants
 	//
-	
+
 	/** Serial number. */
 	private static final long serialVersionUID = -8244286663789284680L;
-	
+
 	/** Gap between icons and labels. */
 	private final static int GAP = 2;
-	
+
 	//
 	// Public Methods
 	//
-	
+
 	@Override
 	public synchronized Component getTableCellRendererComponent(
-			JTable table, Object value, boolean isSelected,
-			boolean hasFocus, int row, int column) {
-		Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
+			final JTable table, final Object value, final boolean isSelected,
+			final boolean hasFocus, final int row, final int column) {
+		final Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
 				row, column);
-        
-        setVerticalAlignment(BOTTOM); 
+
+		setVerticalAlignment(BOTTOM);
 
 		// Check, if we render a header
 		if (value instanceof DataColumnSpec) {
-			
+
 			// Determine, if additional information is available to be shown
-			AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo((DataColumnSpec)value);
+			final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo((DataColumnSpec)value);
 			if (addInfo.isAvailable()) {
-    	        // Change background
+				// Change background
 				setBackground(LayoutUtils.changeColor(getBackground(), 10));
 
 				// Get cell height
-				int widthCell = table.getColumnModel().getColumn(column).getWidth();
-				int heightCell = table.getTableHeader().getHeight();
+				final int widthCell = table.getColumnModel().getColumn(column).getWidth();
+				final int heightCell = table.getTableHeader().getHeight();
 
 				// Manipulate header renderer
 				// Calculate space for the label
-				Icon iconTypeSort = getIcon();
-				int widthLabel = widthCell - (iconTypeSort == null ? 0 : 
+				final Icon iconTypeSort = getIcon();
+				final int widthLabel = widthCell - (iconTypeSort == null ? 0 :
 					(iconTypeSort.getIconWidth() + GAP));
-				int heightLabel = (iconTypeSort == null ? getFontMetrics(getFont()).getHeight() : 
+				final int heightLabel = (iconTypeSort == null ? getFontMetrics(getFont()).getHeight() :
 					Math.max(iconTypeSort.getIconHeight(), getFontMetrics(getFont()).getHeight()));
-				Icon iconLabel = createTextIcon(iconTypeSort == null ? 0 : GAP, 12, widthLabel, heightLabel);
-				
+				final Icon iconLabel = createTextIcon(iconTypeSort == null ? 0 : GAP, 12, widthLabel, heightLabel);
+
 				// Create compound icon from icon and label
-				Icon iconHeader = new HorizontalCompoundIcon(iconTypeSort, iconLabel);
+				final Icon iconHeader = new HorizontalCompoundIcon(iconTypeSort, iconLabel);
 
 				// Calculate space for additional info
-				int widthAddInfo = widthCell;
-				int heightAddInfo = heightCell - (iconHeader.getIconHeight() + GAP);
-    	        Icon iconAddInfo = addInfo.createIconWrapper(table, column, widthAddInfo, heightAddInfo);
+				final int widthAddInfo = widthCell;
+				final int heightAddInfo = heightCell - (iconHeader.getIconHeight() + GAP);
+				final Icon iconAddInfo = addInfo.createIconWrapper(table, column, widthAddInfo, heightAddInfo);
 
-    	        // Create compound icon from additional info and header
-    	        setIcon(new VerticalCompoundIcon(iconAddInfo, iconHeader, RIGHT, GAP));
+				// Create compound icon from additional info and header
+				setIcon(new VerticalCompoundIcon(iconAddInfo, iconHeader, RIGHT, GAP));
 			}
 		}
-  		
+
 		return comp;
 	}
 
 	/**
 	 * Creates an icon that shows the text that the renderer currently uses.
-	 * This is necessary because the normal label the master renderer is based 
+	 * This is necessary because the normal label the master renderer is based
 	 * on cannot be us for rendering the text as it is fully used to show
 	 * an icon representation.
 	 * 
@@ -146,12 +146,12 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 	 */
 	public Icon createTextIcon(final int xCoord, final int yCoord, final int width, final int height) {
 
-		Icon iconLabel = new Icon() {
-			
+		final Icon iconLabel = new Icon() {
+
 			@Override
-			public void paintIcon(Component c, Graphics g, int x,
-					int y) { 
-				Graphics g2 = g.create(x, y, getIconWidth(), getIconHeight());
+			public void paintIcon(final Component c, final Graphics g, final int x,
+					final int y) {
+				final Graphics g2 = g.create(x, y, getIconWidth(), getIconHeight());
 				g2.setFont(c.getFont());
 				g2.setColor(c.getForeground());
 				g2.drawString(getText(), xCoord, yCoord);
@@ -161,13 +161,13 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 			public int getIconWidth() {
 				return width;
 			}
-			
+
 			@Override
 			public int getIconHeight() {
 				return height;
 			}
-		};	
-		
+		};
+
 		return iconLabel;
 	}
 

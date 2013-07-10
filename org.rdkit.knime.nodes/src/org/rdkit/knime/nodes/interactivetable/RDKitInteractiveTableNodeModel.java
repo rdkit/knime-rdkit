@@ -63,85 +63,86 @@ import org.rdkit.knime.util.InputDataInfo;
  * to show additional header information like Smiles structures and
  * behaves for everything else like the normal interactive table from KNIME.
  * 
- * @author Manuel Schwarze 
+ * @author Manuel Schwarze
  */
 public class RDKitInteractiveTableNodeModel extends AbstractRDKitNodeModel implements TableViewSupport {
 
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitInteractiveTableNodeModel.class);
-    
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with one data in- and one out-port.
-     */
-    RDKitInteractiveTableNodeModel() {
-        super(1, 1);
-    }
 
-    //
-    // Public Methods
-    //
-    
-    /**
-     * This implementation just returns [ 0 ].
-     * {@inheritDoc}
-     * @return [ 0 ].
-     */
-    @Override
-    public int[] getOutputTablesToConserve() {
-    	return new int[] { 0 };
-    }
+	//
+	// Constructor
+	//
 
-    //
-    // Protected Methods
-    //
-   
-    /**
-     * This implementation just returns the input table spec.
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
-        return inSpecs;
-    }
+	/**
+	 * Create new node model with one data in- and one out-port.
+	 */
+	RDKitInteractiveTableNodeModel() {
+		super(1, 1);
+	}
 
-    /**
-     * This implementation just returns null.
-     * {@inheritDoc}
-     */
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {    	
-    	return null;
-    }
+	//
+	// Public Methods
+	//
 
-    /**
-     * This implementation just returns the input spec of the specified outport.
-     * {@inheritDoc}
-     */
+	/**
+	 * This implementation just returns [ 0 ].
+	 * {@inheritDoc}
+	 * @return [ 0 ].
+	 */
 	@Override
-	protected DataTableSpec getOutputTableSpec(int outPort,
-			DataTableSpec[] inSpecs) throws InvalidSettingsException {
+	public int[] getOutputTablesToConserve() {
+		return new int[] { 0 };
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * This implementation just returns the input table spec.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
+		return inSpecs;
+	}
+
+	/**
+	 * This implementation just returns null.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+		return null;
+	}
+
+	/**
+	 * This implementation just returns the input spec of the specified outport.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
 		return inSpecs[outPort];
 	}
-    /**
-     * This implementation just returns the input table(s).
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] processing(BufferedDataTable[] inData,
-    		InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
-    		throws Exception {
-    	return inData;
-    }
+	/**
+	 * This implementation just returns the input table(s).
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
+					throws Exception {
+		return inData;
+	}
 }

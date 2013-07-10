@@ -61,6 +61,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
@@ -77,7 +78,7 @@ public class FPSReadWriteUtil {
 	//
 	// Constants
 	//
-	
+
 	/**
 	 * Logger instance for logging purpose.
 	 */
@@ -94,11 +95,11 @@ public class FPSReadWriteUtil {
 	private static final String HEX_E = "e";
 	private static final String HEX_F = "f";
 
-	
+
 	//
 	// Public Methods
 	//
-	
+
 	/**
 	 * This function will validate the Fingerprint records and also populate
 	 * num_bits if not present at header
@@ -115,15 +116,15 @@ public class FPSReadWriteUtil {
 	 * @throws Exception
 	 *             while duplicate id found
 	 */
-	public static boolean fingerprintValidator(String fingStr,
-			Map<String, String> mapFpsHeaders, boolean setId,
-			Set<String> setIdentifier) throws Exception {
+	public static boolean fingerprintValidator(final String fingStr,
+			final Map<String, String> mapFpsHeaders, final boolean setId,
+			final Set<String> setIdentifier) throws Exception {
 		boolean bRetStat = false;
-		StringTokenizer st = new StringTokenizer(fingStr, DELIMB);
+		final StringTokenizer st = new StringTokenizer(fingStr, DELIMB);
 
 		if (st.hasMoreTokens() && st.countTokens() == 2) {
-			String strVal = st.nextToken();
-			String strKey = st.nextToken();
+			final String strVal = st.nextToken();
+			final String strKey = st.nextToken();
 
 			if (strKey != null && strKey.trim().length() > 0) {
 				if (strVal == null || strVal.trim().length() > 0) {
@@ -158,13 +159,13 @@ public class FPSReadWriteUtil {
 	 * @throws Exception
 	 *             Exception thrown during Hex to Binary conversion
 	 */
-	public static long[] convertBinaryFingerprintsFromHex(String strHexFing)
+	public static long[] convertBinaryFingerprintsFromHex(final String strHexFing)
 			throws Exception {
 		LOGGER.debug("Entered convertBinaryFingerprintsFromHex with strVal "
 				+ strHexFing);
 		int iCount = 0;
 		// finalk to hold the final resultant bits
-		long arrFinalk[] = new long[strHexFing.trim().length() * 4];
+		final long arrFinalk[] = new long[strHexFing.trim().length() * 4];
 		int iDecimalVal = 0;
 
 		// traverse through each character of Fingerprint , processing 2 char at
@@ -172,10 +173,10 @@ public class FPSReadWriteUtil {
 		// value for each character and generate 4 binary bits per character
 		for (int i = 0; i < strHexFing.trim().length(); i++) {
 			if (i % 2 == 0) {
-				String strHex2dig = strHexFing.substring(i, i + 2);
+				final String strHex2dig = strHexFing.substring(i, i + 2);
 
 				for (int n = 1; n >= 0; n--) {
-					char chHexPos = strHex2dig.charAt(n);
+					final char chHexPos = strHex2dig.charAt(n);
 
 					if (chHexPos == 'a' || chHexPos == 'A') {
 						iDecimalVal = 10;
@@ -193,15 +194,13 @@ public class FPSReadWriteUtil {
 						iDecimalVal = Integer.parseInt(Character
 								.toString(chHexPos));
 
-					List<Integer> listK = new ArrayList<Integer>();
-					int j = 0;
+					final List<Integer> listK = new ArrayList<Integer>();
 					while (iDecimalVal != 0) {
-						int iRes = iDecimalVal % 2;
+						final int iRes = iDecimalVal % 2;
 						listK.add(iRes);
 						iDecimalVal = iDecimalVal / 2;
-						j++;
 					}
-					int iSizeListK = listK.size();
+					final int iSizeListK = listK.size();
 					for (int l = 0; l < iSizeListK; l++) {
 						arrFinalk[iCount++] = listK.get(l);
 					}
@@ -227,7 +226,7 @@ public class FPSReadWriteUtil {
 	 * @throws Exception
 	 *             Exception thrown during Binary to Hex conversion
 	 */
-	public static String convertHexFingerprintsFromBin(long[] arrBinFing)
+	public static String convertHexFingerprintsFromBin(final long[] arrBinFing)
 			throws Exception {
 
 		LOGGER.debug("Entered function convertHexFingerprintsFromBin");
@@ -241,7 +240,7 @@ public class FPSReadWriteUtil {
 		// a time to get Decimal value,
 		// and converting to 2 hex character
 
-		int iArrCount = arrBinFing.length;
+		final int iArrCount = arrBinFing.length;
 		for (int i = 0; i < iArrCount; i++) {
 			// String strByte = "";
 			dDecValue = dDecValue + (Math.pow(2, j) * arrBinFing[i]);
@@ -249,7 +248,7 @@ public class FPSReadWriteUtil {
 
 			if (i % 8 == 7) {
 
-				StringBuilder strTemp = new StringBuilder();
+				final StringBuilder strTemp = new StringBuilder();
 				long lDecVal = (long) dDecValue;
 
 				if (lDecVal == 0) {
@@ -258,7 +257,7 @@ public class FPSReadWriteUtil {
 
 				while (lDecVal != 0) {
 
-					long lRes = lDecVal % 16;
+					final long lRes = lDecVal % 16;
 
 					if (lRes == 10) {
 						strTemp.append(HEX_A);
@@ -299,13 +298,13 @@ public class FPSReadWriteUtil {
 	public static String getDateInFPSFormat() {
 
 		// Get default locale
-		Locale locale = Locale.getDefault();
+		final Locale locale = Locale.getDefault();
 		// Get today's date
-		Date date = new Date();
+		final Date date = new Date();
 		// Formatting the date/time using a custom FPS format :
 		// [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]
-		Format formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", locale);
-		String strDate = formatter.format(date);
+		final Format formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", locale);
+		final String strDate = formatter.format(date);
 
 		return strDate;
 	}
@@ -326,7 +325,7 @@ public class FPSReadWriteUtil {
 	 *             The exception thrown in case of invalid file name is entered.
 	 */
 
-	public static File checkFile(String fileS, boolean reader, boolean retError)
+	public static File checkFile(final String fileS, final boolean reader, final boolean retError)
 			throws InvalidSettingsException {
 		File tmp = null;
 		if (fileS == null || fileS.isEmpty()) {
@@ -335,12 +334,12 @@ public class FPSReadWriteUtil {
 		URL url;
 		try {
 			url = new URL(fileS);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// see if they specified a file without giving the protocol
 			tmp = new File(fileS);
 			try {
 				url = tmp.getAbsoluteFile().toURI().toURL();
-			} catch (MalformedURLException e1) {
+			} catch (final MalformedURLException e1) {
 				throw new InvalidSettingsException("Invalid URL: "
 						+ e1.getMessage(), e1);
 			}
@@ -359,7 +358,7 @@ public class FPSReadWriteUtil {
 								"Specified input file is not a readable file.");
 					}
 				}
-			} catch (URISyntaxException e) {
+			} catch (final URISyntaxException e) {
 				throw new InvalidSettingsException("Invalid URL: "
 						+ e.getMessage(), e);
 			}

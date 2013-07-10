@@ -88,171 +88,173 @@ import org.rdkit.knime.util.WarningConsolidator;
  * This class implements the node model of the RDKitFingerprintReader node
  * providing calculations based on the open source RDKit library.
  * 
- * @author Manuel Schwarze 
+ * @author Manuel Schwarze
  */
 public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitFingerprintReaderNodeModel.class);
-	
+
 	/** Warning context for salts. */
-	protected static final WarningConsolidator.Context FP_CONTEXT = 
-		new WarningConsolidator.Context("Fingerprint", "fingerprint", "fingerprints", true);
-	
+	protected static final WarningConsolidator.Context FP_CONTEXT =
+			new WarningConsolidator.Context("Fingerprint", "fingerprint", "fingerprints", true);
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the input file. */
-    private final SettingsModelString m_modelInputFile =
-            registerSettings(RDKitFingerprintReaderNodeDialog.createInputFileModel());
-	
+	private final SettingsModelString m_modelInputFile =
+			registerSettings(RDKitFingerprintReaderNodeDialog.createInputFileModel());
+
 	/** Settings model for the option to use IDs read from the fingerprint file as row IDs. */
-    private final SettingsModelBoolean m_modelUseIdsFromFileAsRowIds =
-            registerSettings(RDKitFingerprintReaderNodeDialog.createUseIdsFromFileAsRowIdsModel());
+	private final SettingsModelBoolean m_modelUseIdsFromFileAsRowIds =
+			registerSettings(RDKitFingerprintReaderNodeDialog.createUseIdsFromFileAsRowIdsModel());
 
-    //
-    // Internals
-    //
-    
-    private int m_iReadFingerprintLines = 0;
-    
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with no data in- and one out-port.
-     */
-    RDKitFingerprintReaderNodeModel() {
-    	super(0, 1);
-    	
-    	getWarningConsolidator().registerContext(FP_CONTEXT);
-    }
+	//
+	// Internals
+	//
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings and check RDKit library readiness
-    	super.configure(inSpecs);
- 
+	private int m_iReadFingerprintLines = 0;
+
+	//
+	// Constructor
+	//
+
+	/**
+	 * Create new node model with no data in- and one out-port.
+	 */
+	RDKitFingerprintReaderNodeModel() {
+		super(0, 1);
+
+		getWarningConsolidator().registerContext(FP_CONTEXT);
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings and check RDKit library readiness
+		super.configure(inSpecs);
+
 		// Perform checks on the specified input file
 		FileUtils.convertToFile(m_modelInputFile.getStringValue(), true, false);
 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
 
-    /**
-     * This implementation returns always null as we do not have any input tables.
-     * {@inheritDoc}
-     * @return Always null.
-     */
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	return null;
-    }
-    
+	/**
+	 * This implementation returns always null as we do not have any input tables.
+	 * {@inheritDoc}
+	 * @return Always null.
+	 */
+	@Override
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+		return null;
+	}
 
-    /**
-     * Returns the output table specification of the specified out port. 
-     * 
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     * 
-     * @return The specification of all output tables.
-     * 
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with 
-     * 		given DataTableSpec elements.
-     * 
-     * @see #createOutputFactories(int)
-     */
-    protected DataTableSpec getOutputTableSpec(final int outPort, 
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
-    	List<DataColumnSpec> listSpecs;
-   	    	
-    	switch (outPort) {
-    	
-    		case 0:    			
-    			// Define output table
-    	        listSpecs = new ArrayList<DataColumnSpec>();
-    	        listSpecs.add(new DataColumnSpecCreator("Fingerprint", DenseBitVectorCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Identifier", StringCell.TYPE).createSpec());
 
-    	        spec = new DataTableSpec("Fingerprints", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
-    	        break;   	        
-        }
-    	
-    	return spec;
-    }   
-	
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] processing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
-    		final ExecutionContext exec) throws Exception {
-        final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
-        
-        // Contains the rows with the result column
-        final BufferedDataContainer newTableData = exec.createDataContainer(arrOutSpecs[0]);
-              
-        // Prepare all settings and pre-requisites
-        final File fileFps = FileUtils.convertToFile(m_modelInputFile.getStringValue(), true, false);
-        final boolean bUseFileIds = m_modelUseIdsFromFileAsRowIds.getBooleanValue();
-        
-        // Read from input file
-        int iFileLength = (int)fileFps.length();
-        m_iReadFingerprintLines = 0;
+	/**
+	 * Returns the output table specification of the specified out port.
+	 * 
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 * 
+	 * @return The specification of all output tables.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 * 
+	 * @see #createOutputFactories(int)
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
+		List<DataColumnSpec> listSpecs;
+
+		switch (outPort) {
+
+		case 0:
+			// Define output table
+			listSpecs = new ArrayList<DataColumnSpec>();
+			listSpecs.add(new DataColumnSpecCreator("Fingerprint", DenseBitVectorCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Identifier", StringCell.TYPE).createSpec());
+
+			spec = new DataTableSpec("Fingerprints", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
+			break;
+		}
+
+		return spec;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final ExecutionContext exec) throws Exception {
+		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
+
+		// Contains the rows with the result column
+		final BufferedDataContainer newTableData = exec.createDataContainer(arrOutSpecs[0]);
+
+		// Prepare all settings and pre-requisites
+		final File fileFps = FileUtils.convertToFile(m_modelInputFile.getStringValue(), true, false);
+		final boolean bUseFileIds = m_modelUseIdsFromFileAsRowIds.getBooleanValue();
+
+		// Read from input file
+		final int iFileLength = (int)fileFps.length();
+		m_iReadFingerprintLines = 0;
 		BufferedReader reader = null;
 		InputStream inFile = null;
-		
+
 		// Input file can either be a text file or a zipped text file
 		try {
 			if (fileFps.getName().endsWith(".gz")) {
 				inFile = new FileInputStream(fileFps);
 				reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(inFile)));
-			} 
+			}
 			else {
 				reader = new BufferedReader(new FileReader(fileFps));
 			}
-	        
+
 			int iNumberOfBits = -1; // Undefined
 			int iLineNumber = 0;
 			int iAddedFingerprints = 0;
 			String strLine = null;
-			
+
 			// Process the file line by line
 			while((strLine = reader.readLine()) != null) {
 				iLineNumber++;
 				strLine = strLine.trim();
-			
+
 				// Skip empty lines
 				if (strLine.isEmpty()) {
 					continue;
 				}
-				
+
 				// Process a header line
 				if (strLine.startsWith("#")) {
 					strLine = strLine.substring(1);
-					String keyValue[] = strLine.split("=");
-					
+					final String keyValue[] = strLine.split("=");
+
 					// Read number of fingerprint bit, skip all other information
 					if (keyValue.length == 2 && "num_bits".equals(keyValue[0])) {
 						if (iNumberOfBits != -1) {
@@ -262,74 +264,74 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 						try {
 							iNumberOfBits = Integer.parseInt(keyValue[1]);
 						}
-						catch (NumberFormatException excParse) {
+						catch (final NumberFormatException excParse) {
 							throw new NumberFormatException(
 									"The header num_bits of the fingerprint file contains " +
 									"an invalid number.");
 						}
 					}
 				}
-				
+
 				// Read normal line and add it to the table
 				else {
 					m_iReadFingerprintLines++;
-					StringTokenizer st = new StringTokenizer(strLine, "\t", false);
-					
+					final StringTokenizer st = new StringTokenizer(strLine, "\t", false);
+
 					if (st.countTokens() > 1) {
-						String strFingerprint = st.nextToken().trim();
-						String strId = st.nextToken().trim();
-						
+						final String strFingerprint = st.nextToken().trim();
+						final String strId = st.nextToken().trim();
+
 						try {
-							DenseBitVector dbvFingerprint = convertFromFpsFormat(strFingerprint, iNumberOfBits);
-	
-							// If there was no num_bits header defined, we take 
+							final DenseBitVector dbvFingerprint = convertFromFpsFormat(strFingerprint, iNumberOfBits);
+
+							// If there was no num_bits header defined, we take
 							// that information from the first fingerprint
 							if (iNumberOfBits == -1) {
 								iNumberOfBits = (int)dbvFingerprint.length();
 							}
-							
+
 							// Create row id
-							RowKey rowKey = (bUseFileIds ? 
+							final RowKey rowKey = (bUseFileIds ?
 									new RowKey(strId) :
-									new RowKey("Row" + iAddedFingerprints));
-							
-							DataRow row = new DefaultRow(rowKey, 
+										new RowKey("Row" + iAddedFingerprints));
+
+							final DataRow row = new DefaultRow(rowKey,
 									new DenseBitVectorCellFactory(dbvFingerprint).createDataCell(),
 									new StringCell(strId));
-							
+
 							try {
 								newTableData.addRowToTable(row);
 								iAddedFingerprints++;
 							}
-							catch (Exception exc) {
+							catch (final Exception exc) {
 								// If the unique row id exists already it will fail here
 								LOGGER.warn("Fingerprint in line " + iLineNumber + " has a duplicated identifier - skipping it.");
 								getWarningConsolidator().saveWarning(FP_CONTEXT.getId(),
-									"Skipped fingerprint with duplicated identifier. Consider turning off the option to use it as row ID.");
+										"Skipped fingerprint with duplicated identifier. Consider turning off the option to use it as row ID.");
 							}
 						}
-						catch (NumberFormatException excFormat) {
+						catch (final NumberFormatException excFormat) {
 							LOGGER.warn(excFormat.getMessage() + " (Line " + iLineNumber + ")");
 							getWarningConsolidator().saveWarning(FP_CONTEXT.getId(),
-								"Encountered an invalid fingerprint size. Skipping this fingerprint.");
+									"Encountered an invalid fingerprint size. Skipping this fingerprint.");
 						}
-						catch (Exception exc) {
+						catch (final Exception exc) {
 							LOGGER.warn("Invalid fingerprint encountered in line " + iLineNumber);
 							getWarningConsolidator().saveWarning(FP_CONTEXT.getId(),
-								"Encountered an invalid fingerprint. Skipping this fingerprint.");
+									"Encountered an invalid fingerprint. Skipping this fingerprint.");
 						}
-							
+
 						// Check, if user cancelled and report progress every 20 lines
 						if (iLineNumber % 20 == 0) {
-						    exec.checkCanceled();
-						    
-						    StringBuilder sbMsg = new StringBuilder("Processed ")
+							exec.checkCanceled();
+
+							final StringBuilder sbMsg = new StringBuilder("Processed ")
 							.append(m_iReadFingerprintLines).append(" fingerprints ('")
 							.append(iAddedFingerprints - m_iReadFingerprintLines)
 							.append(" of them are invalid)");
-						    
-						    exec.setProgress(iLineNumber / (double)iFileLength / (double)strLine.length(), 
-						    		sbMsg.toString());
+
+							exec.setProgress(iLineNumber / (double)iFileLength / strLine.length(),
+									sbMsg.toString());
 						}
 					}
 					else {
@@ -339,7 +341,7 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 				}
 			}
 		}
-		catch (IOException excIo) {
+		catch (final IOException excIo) {
 			throw new IOException("The fingerprint file could not be read successfully: " + excIo, excIo);
 		}
 		finally {
@@ -352,90 +354,90 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 		exec.setProgress(1.0, "Finished Processing");
 
 		newTableData.close();
-        
-        return new BufferedDataTable[] { newTableData.getTable() };
-    }	  
-    
-    /**
-     * {@inheritDoc}
-     * This implementation considers the number of processed fingerprints.
-     */
-    @Override
-    protected Map<String, Integer> createWarningContextOccurrencesMap(
-    		BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
-    		BufferedDataTable[] resultData) {
-    	// We do not call super here, because it would fail due to missing 
-    	// input tables in this node
-    	Map<String, Integer> map =  new HashMap<String, Integer>();
-    	map.put(FP_CONTEXT.getId(), m_iReadFingerprintLines);
-    	
-    	return map;
-    }
-    
-    //
-    // Static Public Methods
-    //
-    
-    /**
-     * Converts the passed in hex string into a bit vector. The hex string
-     * which must be compatible to the FPS file format 
-     * (see http://code.google.com/p/chem-fingerprints/wiki/FPS).
-     * 
-     * @param strHexFpsFormat An FPS file format compatible fingerprint hex string. 
-     * 		Must not be null. 
-     * @param iForceBitLength If set to a value > 0 the input is checked and
-     * 		must be equal to this bit length. Specify -1 to skip the check.
-     * 
-     * @return Dense bit vector.
-     * 
-     * @throws NumberFormatException Thrown, if the bit length is not
-     * 		equal to the passed in parameter (only if set to > 0).
-     */
-    public static DenseBitVector convertFromFpsFormat(final String strHexFpsFormat,
-    		final int iForceBitLength) throws NumberFormatException {
-    	String strHexFingerprint = strHexFpsFormat.trim().toUpperCase();
-    	int iLen = strHexFingerprint.length();
-    	int iNumBits = iLen * 4;
+
+		return new BufferedDataTable[] { newTableData.getTable() };
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation considers the number of processed fingerprints.
+	 */
+	@Override
+	protected Map<String, Integer> createWarningContextOccurrencesMap(
+			final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+			final BufferedDataTable[] resultData) {
+		// We do not call super here, because it would fail due to missing
+		// input tables in this node
+		final Map<String, Integer> map =  new HashMap<String, Integer>();
+		map.put(FP_CONTEXT.getId(), m_iReadFingerprintLines);
+
+		return map;
+	}
+
+	//
+	// Static Public Methods
+	//
+
+	/**
+	 * Converts the passed in hex string into a bit vector. The hex string
+	 * which must be compatible to the FPS file format
+	 * (see http://code.google.com/p/chem-fingerprints/wiki/FPS).
+	 * 
+	 * @param strHexFpsFormat An FPS file format compatible fingerprint hex string.
+	 * 		Must not be null.
+	 * @param iForceBitLength If set to a value > 0 the input is checked and
+	 * 		must be equal to this bit length. Specify -1 to skip the check.
+	 * 
+	 * @return Dense bit vector.
+	 * 
+	 * @throws NumberFormatException Thrown, if the bit length is not
+	 * 		equal to the passed in parameter (only if set to > 0).
+	 */
+	public static DenseBitVector convertFromFpsFormat(final String strHexFpsFormat,
+			final int iForceBitLength) throws NumberFormatException {
+		String strHexFingerprint = strHexFpsFormat.trim().toUpperCase();
+		final int iLen = strHexFingerprint.length();
+		final int iNumBits = iLen * 4;
 		int iCount = 0;
-		
-		// Add a "4 bits" to ensure that we can read enough bits 
+
+		// Add a "4 bits" to ensure that we can read enough bits
 		// (since we read byte as pairs of 2 x 4 bits)
 		strHexFingerprint += "0";
-		
+
 		// Check fingerprint size
 		if (iForceBitLength > 0 && iNumBits != iForceBitLength) {
-			throw new NumberFormatException("Invalid fingerprint size encountered and ignored: " + 
+			throw new NumberFormatException("Invalid fingerprint size encountered and ignored: " +
 					iNumBits + " instead of " + iForceBitLength + ".");
 		}
-		
-		DenseBitVector bitVector = new DenseBitVector(iNumBits);
+
+		final DenseBitVector bitVector = new DenseBitVector(iNumBits);
 
 		// Traverse through each character of Fingerprint, processing 2 char at
-		// a time, convert to byte value for each character and generate 4 binary 
+		// a time, convert to byte value for each character and generate 4 binary
 		// bits per character
 		for (int i = 0; i < iLen; i = i + 2) {
 			for (int n = 1; n >= 0; n--) {
 				char ch = strHexFingerprint.charAt(i + n);
-				
-	            if (ch >= '0' && ch <= '9') {
-	                ch -= '0';
-	            } 
-	            else if (ch >= 'A' && ch <= 'F') {
-	                ch -= 'A' - 10;
-	            } 
-	            else {
-	                throw new NumberFormatException(
-	                        "Invalid fingerprint character encountered and ignored: '" + 
-	                        ch + "' instead of 0..F.");
-	            }
-	            
-	            for (int bit = 1; bit < 16; bit = bit << 1) {
-	            	bitVector.set(iNumBits - iCount - 1, (ch & bit) == bit);
+
+				if (ch >= '0' && ch <= '9') {
+					ch -= '0';
+				}
+				else if (ch >= 'A' && ch <= 'F') {
+					ch -= 'A' - 10;
+				}
+				else {
+					throw new NumberFormatException(
+							"Invalid fingerprint character encountered and ignored: '" +
+									ch + "' instead of 0..F.");
+				}
+
+				for (int bit = 1; bit < 16; bit = bit << 1) {
+					bitVector.set(iNumBits - iCount - 1, (ch & bit) == bit);
 					iCount++;
-	            }
+				}
 			}
 		}
-	
-    	return bitVector;
-    }        
+
+		return bitVector;
+	}
 }

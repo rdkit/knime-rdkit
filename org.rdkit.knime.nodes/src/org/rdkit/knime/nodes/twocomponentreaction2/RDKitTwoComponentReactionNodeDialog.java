@@ -50,92 +50,92 @@ package org.rdkit.knime.nodes.twocomponentreaction2;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.onecomponentreaction2.AbstractRDKitReactionNodeDialog;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitTwoComponentReaction" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
 public class RDKitTwoComponentReactionNodeDialog extends AbstractRDKitReactionNodeDialog {
-	   
+
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Creates a new dialog settings panel.
 	 */
 	public RDKitTwoComponentReactionNodeDialog() {
 		super(2);
 	}
-    
-    //
-    // Protected Methods
-    //
-    
+
+	//
+	// Protected Methods
+	//
+
 	/**
 	 * {@inheritDoc}
 	 * This implementation adds the input mol column selection components for the reactants.
 	 */
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	@Override
-    protected void addDialogComponentsBeforeReactionSettings() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-        		createReactant1ColumnNameModel(), "Reactants 1 RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-        		createReactant2ColumnNameModel(), "Reactants 2 RDKit Mol column: ", 1,
-                RDKitMolValue.class));
-    }
-    
+	protected void addDialogComponentsBeforeReactionSettings() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createReactant1ColumnNameModel(), "Reactants 1 RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createReactant2ColumnNameModel(), "Reactants 2 RDKit Mol column: ", 1,
+				RDKitMolValue.class));
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * This implementation adds the matrix expansion option.
 	 */
-    @Override
-    protected void addDialogComponentsAfterReactionSettings() {
-    	super.addDialogComponent(new DialogComponentBoolean(
-    			createDoMatrixExpansionModel(), "Do matrix expansion"));
-    }
+	@Override
+	protected void addDialogComponentsAfterReactionSettings() {
+		super.addDialogComponent(new DialogComponentBoolean(
+				createDoMatrixExpansionModel(), "Do matrix expansion"));
+	}
 
-    //
-    // Static Methods
-    //
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used for the input column for reactant 1.
-     * 
-     * @return Settings model for input column selection for reactant 1.
-     */
-    static final SettingsModelString createReactant1ColumnNameModel() {
-        return new SettingsModelString("reactant1_column", null);
-    }
+	/**
+	 * Creates the settings model to be used for the input column for reactant 1.
+	 * 
+	 * @return Settings model for input column selection for reactant 1.
+	 */
+	static final SettingsModelString createReactant1ColumnNameModel() {
+		return new SettingsModelString("reactant1_column", null);
+	}
 
-    /**
-     * Creates the settings model to be used for the input column for reactant 2.
-     * 
-     * @return Settings model for input column selection for reactant 2.
-     */
-    static final SettingsModelString createReactant2ColumnNameModel() {
-        return new SettingsModelString("reactant2_column", null);
-    } 
-    
-    /**
-     * Creates the settings model for the matrix expansion option.
-     * 
-     * @return Settings model for for the matrix expansion option.
-     */
-    static final SettingsModelBoolean createDoMatrixExpansionModel() {
-        return new SettingsModelBoolean("matrixExpansion", false);
-    }    
+	/**
+	 * Creates the settings model to be used for the input column for reactant 2.
+	 * 
+	 * @return Settings model for input column selection for reactant 2.
+	 */
+	static final SettingsModelString createReactant2ColumnNameModel() {
+		return new SettingsModelString("reactant2_column", null);
+	}
+
+	/**
+	 * Creates the settings model for the matrix expansion option.
+	 * 
+	 * @return Settings model for for the matrix expansion option.
+	 */
+	static final SettingsModelBoolean createDoMatrixExpansionModel() {
+		return new SettingsModelBoolean("matrixExpansion", false);
+	}
 }

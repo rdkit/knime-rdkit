@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel
  * @author Manuel Schwarze
  */
-public class RDKit2MoleculeConverterNodeFactory 
-        extends NodeFactory<RDKit2MoleculeConverterNodeModel> {
+public class RDKit2MoleculeConverterNodeFactory extends NodeFactory<RDKit2MoleculeConverterNodeModel> {
 
-    /**
-     * Creates a model for the RDKit2Molecule functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKit2MoleculeConverterNodeModel createNodeModel() {
-        return new RDKit2MoleculeConverterNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKit2Molecule functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKit2MoleculeConverterNodeModel createNodeModel() {
+		return new RDKit2MoleculeConverterNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKit2MoleculeConverterNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKit2MoleculeConverterNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKit2MoleculeConverterNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKit2MoleculeConverterNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKit2MoleculeConverterNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKit2MoleculeConverterNodeDialog();
+	}
 }
 

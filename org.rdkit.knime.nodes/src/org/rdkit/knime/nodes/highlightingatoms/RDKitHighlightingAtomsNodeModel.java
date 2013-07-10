@@ -81,8 +81,7 @@ import org.rdkit.knime.util.SettingsUtils;
  * 
  * @author Manuel Schwarze
  */
-public class RDKitHighlightingAtomsNodeModel extends
-		AbstractRDKitCalculatorNodeModel {
+public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	//
 	// Constants
@@ -102,13 +101,13 @@ public class RDKitHighlightingAtomsNodeModel extends
 	/** Input data info index for Atom List. */
 	protected static final int INPUT_COLUMN_ATOM_LIST = 1;
 
-	/** 
+	/**
 	 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
-	 * which has caused crashes under Windows 7 and Linux before. Once there is a fix 
+	 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
 	private static final Object LOCK = new Object();
-	
+
 	//
 	// Members
 	//
@@ -160,52 +159,52 @@ public class RDKitHighlightingAtomsNodeModel extends
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputMolColumnName,
 				RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" "
-						+ "node to convert Smiles or SDF.",
-				getWarningConsolidator());
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" "
+						+ "node to convert SMARTS.",
+						getWarningConsolidator());
 
 		// Auto guess the input atom list column if not set - fails if no
 		// compatible column found
 		SettingsUtils
-				.autoGuessColumn(
-						inSpecs[0],
-						m_modelInputAtomListColumnName,
-						CollectionDataValue.class,
-						0,
-						"Auto guessing: Using column %COLUMN_NAME%.",
-						"No Collection type column found in input table, which would contain atoms to be highlighted.",
-						getWarningConsolidator());
+		.autoGuessColumn(
+				inSpecs[0],
+				m_modelInputAtomListColumnName,
+				CollectionDataValue.class,
+				0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No Collection type column found in input table, which would contain atoms to be highlighted.",
+				getWarningConsolidator());
 
 		// Determines, if the input mol column exists - fails if it does not
 		SettingsUtils
-				.checkColumnExistence(inSpecs[0], m_modelInputMolColumnName,
-						RDKitMolValue.class,
-						"Input column has not been specified yet.",
-						"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+		.checkColumnExistence(inSpecs[0], m_modelInputMolColumnName,
+				RDKitMolValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
 		// Determines, if the input atom list column exists - fails if it does
 		// not
 		SettingsUtils
-				.checkColumnExistence(inSpecs[0],
-						m_modelInputAtomListColumnName,
-						CollectionDataValue.class,
-						"Input column has not been specified yet.",
-						"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+		.checkColumnExistence(inSpecs[0],
+				m_modelInputAtomListColumnName,
+				CollectionDataValue.class,
+				"Input column has not been specified yet.",
+				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
 		// Auto guess the new column name and make it unique
-		String strInputMolColumnName = m_modelInputMolColumnName
+		final String strInputMolColumnName = m_modelInputMolColumnName
 				.getStringValue();
 		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
 				m_modelNewColumnName, strInputMolColumnName
-						+ " (Highlighted Atoms)");
+				+ " (Highlighted Atoms)");
 
 		// Determine, if the new column name has been set and if it is really
 		// unique
 		SettingsUtils
-				.checkColumnNameUniqueness(inSpecs[0], null, null,
-						m_modelNewColumnName,
-						"Output column has not been specified yet.",
-						"The name %COLUMN_NAME% of the new column exists already in the input.");
+		.checkColumnNameUniqueness(inSpecs[0], null, null,
+				m_modelNewColumnName,
+				"Output column has not been specified yet.",
+				"The name %COLUMN_NAME% of the new column exists already in the input.");
 
 		// Consolidate all warnings and make them available to the user
 		generateWarnings();
@@ -219,9 +218,10 @@ public class RDKitHighlightingAtomsNodeModel extends
 	 * column and connects it with the information coming from the appropriate
 	 * setting model. {@inheritDoc}
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort,
-			DataTableSpec inSpec) throws InvalidSettingsException {
+	protected InputDataInfo[] createInputDataInfos(final int inPort,
+			final DataTableSpec inSpec) throws InvalidSettingsException {
 
 		InputDataInfo[] arrDataInfo = null;
 
@@ -244,80 +244,82 @@ public class RDKitHighlightingAtomsNodeModel extends
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AbstractRDKitCellFactory[] createOutputFactories(int outPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
+	@Override
+	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
-    	
-    	// Specify output of table 1
-    	if (outPort == 0) {
-    		// Allocate space for all factories (usually we have only one)
-    		arrOutputFactories = new AbstractRDKitCellFactory[1]; 
 
-    		// Factory 1:
-    		// ==========
-    		// Generate column specs for the output table columns produced by this factory
-    		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-    		arrOutputSpec[0] = new DataColumnSpecCreator(
-    				m_modelNewColumnName.getStringValue(), SvgCell.TYPE)
-    				.createSpec();
-    
-    		// Generate factory 
-    	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-           		getWarningConsolidator(), null, arrOutputSpec) {
-	   			
-	   			@Override
-	   		    /**
-	   		     * This method implements the calculation logic to generate the new cells based on 
-	   		     * the input made available in the first (and second) parameter.
-	   		     * {@inheritDoc}
-	   		     */
-	   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
-	   		    	DataCell outputCell = null;
-	   		    	
-	   		    	// Calculate the new cells
-	   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
-	   		    	Int_Vect vectInt  = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row);
-	   		    	
-	   		    	String xmlSvg = null;
-	   		    	
-		   		 	/** 
-		   		 	 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
-		   		 	 * which has caused crashes under Windows 7 and Linux before. Once there is a fix 
-		   		 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-		   		 	 */
-	   		    	synchronized(LOCK) {
-	   		    		xmlSvg = mol.ToSVG(vectInt,8,50);
-	   		    	}
+		// Specify output of table 1
+		if (outPort == 0) {
+			// Allocate space for all factories (usually we have only one)
+			arrOutputFactories = new AbstractRDKitCellFactory[1];
 
-	   		    	if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {
-	   		    		// Important: Use the factory here, because using the normal SvgCell contructor causes
-	   		    		//			  OutOfMemory exceptions when processing many SVG structures.
-	   		    		outputCell = SvgCellFactory.create(xmlSvg);
-	   		        }
-	   		        else {
-	   		        	outputCell = DataType.getMissingCell();
-	                }
-	   		    	
-	   		        return new DataCell[] { outputCell };
-	   		    }
-	   		};
-	   		
-	   		// Enable or disable this factory to allow parallel processing 		
-	   		arrOutputFactories[0].setAllowParallelProcessing(true);	   		
-    	}
-    	
-    	return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
-    }
+			// Factory 1:
+			// ==========
+			// Generate column specs for the output table columns produced by this factory
+			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
+			arrOutputSpec[0] = new DataColumnSpecCreator(
+					m_modelNewColumnName.getStringValue(), SvgCell.TYPE)
+			.createSpec();
+
+			// Generate factory
+			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
+					getWarningConsolidator(), null, arrOutputSpec) {
+
+				@Override
+				/**
+				 * This method implements the calculation logic to generate the new cells based on
+				 * the input made available in the first (and second) parameter.
+				 * {@inheritDoc}
+				 */
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+					DataCell outputCell = null;
+
+					// Calculate the new cells
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final Int_Vect vectInt  = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row);
+
+					String xmlSvg = null;
+
+					/**
+					 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
+					 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
+					 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
+					 */
+					synchronized(LOCK) {
+						xmlSvg = mol.ToSVG(vectInt,8,50);
+					}
+
+					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {
+						// Important: Use the factory here, because using the normal SvgCell contructor causes
+						//			  OutOfMemory exceptions when processing many SVG structures.
+						outputCell = SvgCellFactory.create(xmlSvg);
+					}
+					else {
+						outputCell = DataType.getMissingCell();
+					}
+
+					return new DataCell[] { outputCell };
+				}
+			};
+
+			// Enable or disable this factory to allow parallel processing
+			arrOutputFactories[0].setAllowParallelProcessing(true);
+		}
+
+		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+	}
 
 	/**
 	 * {@inheritDoc} This implementation removes additionally the compound
 	 * source column, if specified in the settings.
 	 */
-	protected ColumnRearranger createColumnRearranger(int outPort,
-			DataTableSpec inSpec) throws InvalidSettingsException {
+	@Override
+	protected ColumnRearranger createColumnRearranger(final int outPort,
+			final DataTableSpec inSpec) throws InvalidSettingsException {
 		// Perform normal work
-		ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
+		final ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
 		return result;
 	}
 }

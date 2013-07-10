@@ -58,12 +58,12 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.HiddenSettingComponent;
 
 /**
@@ -71,7 +71,7 @@ import org.rdkit.knime.util.HiddenSettingComponent;
  * 
  *
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
@@ -81,92 +81,92 @@ public class RDKitFingerprintWriterNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitFingerprintWriterNodeDialog() {
-    	super.createNewGroup("Output file");
-    	
-    	DialogComponentFileChooser fileSelector = new DialogComponentFileChooser(
-        		createOutputFileModel(), "FpsWriterHistory", 
-        		JFileChooser.SAVE_DIALOG, ".fps|.fps.gz");
-    	Component comp = fileSelector.getComponentPanel().getComponent(0);
-    	if (comp instanceof JPanel) {
-    		((JPanel)comp).setBorder(null);
-    	}
-    	
-        super.addDialogComponent(fileSelector);
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createOverwriteOptionModel(), "Overwrite if file exists"));
-        super.createNewGroup("Column selection");
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-        		createFingerprintColumnNameModel(), "Fingerprint column: ", 0,
-        		BitVectorValue.class));
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-        		createIdColumnNameModel(), "ID column: ", 0, false,
-        		StringValue.class));
-        super.addDialogComponent(new HiddenSettingComponent(createSuppressTimeOptionModel()));
-        
-        ((JPanel)super.getTab("Options")).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-    }
+		super.createNewGroup("Output file");
 
-    //
-    // Static Methods
-    //
+		final DialogComponentFileChooser fileSelector = new DialogComponentFileChooser(
+				createOutputFileModel(), "FpsWriterHistory",
+				JFileChooser.SAVE_DIALOG, ".fps|.fps.gz");
+		final Component comp = fileSelector.getComponentPanel().getComponent(0);
+		if (comp instanceof JPanel) {
+			((JPanel)comp).setBorder(null);
+		}
 
-    /**
-     * Creates the settings model to be used for the fingerprint column.
-     * 
-     * @return Settings model for fingerprint column selection.
-     */
-    static final SettingsModelString createFingerprintColumnNameModel() {
-        return new SettingsModelString("fps_column", null);
-    }    
+		super.addDialogComponent(fileSelector);
+		super.addDialogComponent(new DialogComponentBoolean(
+				createOverwriteOptionModel(), "Overwrite if file exists"));
+		super.createNewGroup("Column selection");
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createFingerprintColumnNameModel(), "Fingerprint column: ", 0,
+				BitVectorValue.class));
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createIdColumnNameModel(), "ID column: ", 0, false,
+				StringValue.class));
+		super.addDialogComponent(new HiddenSettingComponent(createSuppressTimeOptionModel()));
 
-    /**
-     * Creates the settings model to be used for the ID column.
-     * Due to the model class the option to use the RowID as identifier
-     * is included.
-     * 
-     * @return Settings model for ID column selection.
-     */
-    static final SettingsModelColumnName createIdColumnNameModel() {
-        return new SettingsModelColumnName("id_column", null);
-    }    
-    /**
-     * 
-     * Creates the settings model to be used for the output file selection.
-     * 
-     * @return Settings model for output file selection.
-     */
-    static final SettingsModelString createOutputFileModel() {
-        return new SettingsModelString("output_file", "");
-    }
-   
-    /**
-     * Creates the settings model to be used to declare that overriding
-     * an existing file is desired.
-     * 
-     * @return Settings model for overriding an existing file.
-     */
-    static final SettingsModelBoolean createOverwriteOptionModel() {
-        return new SettingsModelBoolean("overwriteOK", false);
-    }
-    
-    /**
-     * Creates the settings model for a hidden option to suppress the time
-     * when writing out the FPS file header. When switched on via flow
-     * variable the time will always be 00:00:00. This is useful for
-     * file comparisons when testing the node. As currently boolean
-     * flow variables are not supported, we are using an Integer here.
-     * 
-     * @return Settings model for suppressing the time option.
-     */
-    static final SettingsModelInteger createSuppressTimeOptionModel() {
-    	return new SettingsModelInteger("suppressTime", 0);
-    }
+		((JPanel)super.getTab("Options")).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model to be used for the fingerprint column.
+	 * 
+	 * @return Settings model for fingerprint column selection.
+	 */
+	static final SettingsModelString createFingerprintColumnNameModel() {
+		return new SettingsModelString("fps_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for the ID column.
+	 * Due to the model class the option to use the RowID as identifier
+	 * is included.
+	 * 
+	 * @return Settings model for ID column selection.
+	 */
+	static final SettingsModelColumnName createIdColumnNameModel() {
+		return new SettingsModelColumnName("id_column", null);
+	}
+	/**
+	 * 
+	 * Creates the settings model to be used for the output file selection.
+	 * 
+	 * @return Settings model for output file selection.
+	 */
+	static final SettingsModelString createOutputFileModel() {
+		return new SettingsModelString("output_file", "");
+	}
+
+	/**
+	 * Creates the settings model to be used to declare that overriding
+	 * an existing file is desired.
+	 * 
+	 * @return Settings model for overriding an existing file.
+	 */
+	static final SettingsModelBoolean createOverwriteOptionModel() {
+		return new SettingsModelBoolean("overwriteOK", false);
+	}
+
+	/**
+	 * Creates the settings model for a hidden option to suppress the time
+	 * when writing out the FPS file header. When switched on via flow
+	 * variable the time will always be 00:00:00. This is useful for
+	 * file comparisons when testing the node. As currently boolean
+	 * flow variables are not supported, we are using an Integer here.
+	 * 
+	 * @return Settings model for suppressing the time option.
+	 */
+	static final SettingsModelInteger createSuppressTimeOptionModel() {
+		return new SettingsModelInteger("suppressTime", 0);
+	}
 }

@@ -74,43 +74,43 @@ public class FunctionalGroupDefinitions {
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(FunctionalGroupDefinitions.class);
 
 	/** The context for warnings that occur when reading lines of the definition file. */
-	public static final WarningConsolidator.Context LINE_CONTEXT = 
-		new WarningConsolidator.Context("Line", "line", "lines", true);
-	
+	public static final WarningConsolidator.Context LINE_CONTEXT =
+			new WarningConsolidator.Context("Line", "line", "lines", true);
+
 	//
 	// Members
 	//
-	
+
 	/** The list of all functional groups. */
-	private List<FunctionalGroup> m_listFunctionalGroups;
-	
+	private final List<FunctionalGroup> m_listFunctionalGroups;
+
 	/** A quick access map of all functional groups based on their unique name. */
-	private Map<String, FunctionalGroup> m_mapFunctionalGroups;
-	
+	private final Map<String, FunctionalGroup> m_mapFunctionalGroups;
+
 	/** The total number of functional group lines read from the definition file. */
 	private int m_iReadFunctionalGroupLines;
-	
+
 	/** The number of encountered doubles. */
 	private int m_iDoublesInFunctionalGroupLines;
-	
+
 	/** The number of lines that failed reading. */
 	private int m_iFailuresInFunctionalGroupLines;
-	
+
 	/** Stores all warnings that occurred during loading of definitions. */
-	private WarningConsolidator m_warnings;
-	
+	private final WarningConsolidator m_warnings;
+
 	//
 	// Constructors
 	//
-	
+
 	/**
-	 * Creates a new functional group definitions object and reads 
+	 * Creates a new functional group definitions object and reads
 	 * definitions from the specified input stream. The stream will
 	 * be closed at the end.
 	 * 
@@ -118,21 +118,21 @@ public class FunctionalGroupDefinitions {
 	 * 
 	 * @throws IOException Thrown, if the input stream cannot be read.
 	 */
-	public FunctionalGroupDefinitions(InputStream in) throws IOException {
+	public FunctionalGroupDefinitions(final InputStream in) throws IOException {
 		if (in == null) {
 			throw new IllegalArgumentException(
 					"Functional group definition input stream must not be null.");
 		}
-		
+
 		m_listFunctionalGroups = new ArrayList<FunctionalGroup>(100);
 		m_mapFunctionalGroups = new HashMap<String, FunctionalGroup>(100);
 		m_warnings = new WarningConsolidator();
 		m_iReadFunctionalGroupLines = 0;
 		m_iDoublesInFunctionalGroupLines = 0;
 		m_iFailuresInFunctionalGroupLines = 0;
-		
+
 		BufferedReader reader = null;
-			
+
 		try {
 			String strLine = null;
 			int iLineCounter = 0;
@@ -142,35 +142,35 @@ public class FunctionalGroupDefinitions {
 			while ((strLine = reader.readLine()) != null) {
 
 				// Remove all leading and trailing whitespaces
-				String strTempLine = strLine.trim();
-				
+				final String strTempLine = strLine.trim();
+
 				// Ignore comments and empty lines starting with '//', else get inside
-				if (!strTempLine.isEmpty() && !strTempLine.startsWith("//") && 
-					!strTempLine.startsWith("'")) {
-					
+				if (!strTempLine.isEmpty() && !strTempLine.startsWith("//") &&
+						!strTempLine.startsWith("'")) {
+
 					try {
 						m_iReadFunctionalGroupLines++;
-						
+
 						// Parses and creates a functional group
-						FunctionalGroup group = new FunctionalGroup(strLine);
-						
+						final FunctionalGroup group = new FunctionalGroup(strLine);
+
 						// Successfully created - Now register it
 						m_listFunctionalGroups.add(group);
 						if (m_mapFunctionalGroups.put(group.getName(), group) != null) {
-							m_warnings.saveWarning("The functional group name '" + 
-								group.getName() + "' is not unique (line " + 
-								iLineCounter + "). Keeping only the last line.");
+							m_warnings.saveWarning("The functional group name '" +
+									group.getName() + "' is not unique (line " +
+									iLineCounter + "). Keeping only the last line.");
 							m_iDoublesInFunctionalGroupLines++;
 						}
 					}
-					catch (ParseException excParse) {
-						String strMsg = excParse.getMessage();
+					catch (final ParseException excParse) {
+						final String strMsg = excParse.getMessage();
 						LOGGER.warn(strMsg + " (Line " + iLineCounter + ")");
 						m_warnings.saveWarning(LINE_CONTEXT.getId(), strMsg);
 						m_iFailuresInFunctionalGroupLines++;
 					}
 				}
-				
+
 				iLineCounter++;
 			}
 		}
@@ -179,25 +179,25 @@ public class FunctionalGroupDefinitions {
 			FileUtils.close(in);
 		}
 	}
-	
+
 	//
 	// Public Methods
 	//
-	
+
 	/**
 	 * The warning consolidator that conserved warnings
 	 * that occurred during loading of the definition file.
 	 */
 	public WarningConsolidator getWarningConsolidator() {
-		return m_warnings;		
+		return m_warnings;
 	}
-	
+
 	/**
 	 * Returns the number of all lines that have been read from the
 	 * definition file as functional group definition lines.
 	 * This includes all malformed lines as well and is basically the
 	 * total of the results of {@link #getFunctionalGroupCount()},
-	 * {@link #getDoublesInFunctionalGroupLines()} and 
+	 * {@link #getDoublesInFunctionalGroupLines()} and
 	 * {@link #getFailuresInFunctionalGroupLines()}.
 	 * 
 	 * @return Total number of lines that have been read as functional
@@ -206,7 +206,7 @@ public class FunctionalGroupDefinitions {
 	public int getReadFunctionalGroupLines() {
 		return m_iReadFunctionalGroupLines;
 	}
-	
+
 	/**
 	 * Returns the number of functional groups that
 	 * had no unique id and were overridden.
@@ -216,9 +216,9 @@ public class FunctionalGroupDefinitions {
 	public int getDoublesInFunctionalGroupLines() {
 		return m_iDoublesInFunctionalGroupLines;
 	}
-	
+
 	/**
-	 * Returns the number of functional group lines, 
+	 * Returns the number of functional group lines,
 	 * which could not be read successfully and are
 	 * not part of this object.
 	 * 
@@ -227,7 +227,7 @@ public class FunctionalGroupDefinitions {
 	public int getFailuresInFunctionalGroupLines() {
 		return m_iFailuresInFunctionalGroupLines;
 	}
-	
+
 	/**
 	 * Returns the number of functional groups that
 	 * were read successfully and can be used.
@@ -237,7 +237,7 @@ public class FunctionalGroupDefinitions {
 	public int getFunctionalGroupCount() {
 		return m_listFunctionalGroups.size();
 	}
-	
+
 	/**
 	 * Returns an array of the functional groups contained in this
 	 * definition.
@@ -248,26 +248,26 @@ public class FunctionalGroupDefinitions {
 		return m_listFunctionalGroups.toArray(
 				new FunctionalGroup[m_listFunctionalGroups.size()]);
 	}
-	
+
 	/**
 	 * Returns an array of all names of defined functional groups.
 	 * 
 	 * @return All functional group names.
 	 */
 	public String[] getFunctionalGroupNames() {
-		int iCount = m_listFunctionalGroups.size();
-		String[] arrNames = new String[iCount]; 
-		
+		final int iCount = m_listFunctionalGroups.size();
+		final String[] arrNames = new String[iCount];
+
 		for (int i = 0; i < iCount; i++) {
 			arrNames[i] = m_listFunctionalGroups.get(i).getName();
 		}
-		
+
 		return arrNames;
 	}
-	
+
 	/**
 	 * Returns an iterator over all names of defined functional groups.
-	 * The order is undefined. Call {@link #getFunctionalGroups()} 
+	 * The order is undefined. Call {@link #getFunctionalGroups()}
 	 * or {@link #getFunctionalGroupNames()} to
 	 * get the functional groups in the order that they were defined
 	 * in the file they were read from.
@@ -277,7 +277,7 @@ public class FunctionalGroupDefinitions {
 	public Iterator<String> names() {
 		return m_mapFunctionalGroups.keySet().iterator();
 	}
-	
+
 	/**
 	 * Retrieves the functional group with the specified name.
 	 * 
@@ -286,7 +286,7 @@ public class FunctionalGroupDefinitions {
 	 * @return Functional group or null, if name does not exist or
 	 * 		null was passed in.
 	 */
-	public FunctionalGroup get(String strName) {
+	public FunctionalGroup get(final String strName) {
 		return m_mapFunctionalGroups.get(strName);
 	}
 }

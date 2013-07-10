@@ -58,9 +58,9 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumFilterPanel;
 import org.rdkit.knime.util.SettingsModelEnumerationArray;
 
@@ -68,7 +68,7 @@ import org.rdkit.knime.util.SettingsModelEnumerationArray;
  * <code>NodeDialog</code> for the "RDKitDescriptorCalculation" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Dillip K Mohanty
@@ -79,28 +79,28 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
-	DescriptorCalculationNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        
-        DialogComponentEnumFilterPanel<Descriptor> panelDescriptors =
-        	new DialogComponentEnumFilterPanel<Descriptor>(
-        		createDescriptorsModel(), "Available descriptors: (Hover your mouse over a descriptor to get a short description)", null, true);
-        panelDescriptors.setListCellRenderer(new DefaultListCellRenderer() {
 
-        	//
-        	// Constants
-        	//
-        	
-            /** Serial number. */
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
+	DescriptorCalculationNodeDialog() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+
+		final DialogComponentEnumFilterPanel<Descriptor> panelDescriptors =
+				new DialogComponentEnumFilterPanel<Descriptor>(
+						createDescriptorsModel(), "Available descriptors: (Hover your mouse over a descriptor to get a short description)", null, true);
+		panelDescriptors.setListCellRenderer(new DefaultListCellRenderer() {
+
+			//
+			// Constants
+			//
+
+			/** Serial number. */
 			private static final long serialVersionUID = -3432992669822820183L;
 
 			/** Icon used for flow variable placeholders and unknown items. */
@@ -108,89 +108,89 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
 
 			/** Icon used for list items of descriptors that calculate more than one column. */
 			private final Icon MULTI_VALUE_ICON = CollectionDataValue.UTILITY.getIcon();
-			
+
 			//
 			// Public Methods
 			//
-			
+
 			/**
-             * {@inheritDoc}
-             */
-            @Override
-            public Component getListCellRendererComponent(
-                    final JList list, final Object value, final int index,
-                    final boolean isSelected, final boolean cellHasFocus) {
-                // The super method will reset the icon if we call this method
-                // last. So we let super do its job first and then we take care
-                // that everything is properly set.
-                Component c =  super.getListCellRendererComponent(list, value, index,
-                        isSelected, cellHasFocus);
-                
-                assert (c == this);
-                
-                if (value instanceof Descriptor) {
-                	Descriptor descriptor = (Descriptor)value;
-                	
-                	// Set text
-                    setText(descriptor.toString());
-                    
-                    // Set icon
-                    DataType[] arrDataTypes = descriptor.getDataTypes(); 
-                    if (arrDataTypes != null && arrDataTypes.length == 1) {
-                    	setIcon(arrDataTypes[0].getIcon());
-                    }
-                    else if (arrDataTypes != null && arrDataTypes.length > 1){
-                    	setIcon(MULTI_VALUE_ICON);
-                    }
-                    else {
-                        setIcon(UNKNOWN_ICON);                    	
-                    }
+			 * {@inheritDoc}
+			 */
+			@Override
+			public Component getListCellRendererComponent(
+					final JList list, final Object value, final int index,
+					final boolean isSelected, final boolean cellHasFocus) {
+				// The super method will reset the icon if we call this method
+				// last. So we let super do its job first and then we take care
+				// that everything is properly set.
+				final Component c =  super.getListCellRendererComponent(list, value, index,
+						isSelected, cellHasFocus);
 
-                	// Set tooltip
-                    String strTooltip = descriptor.getDescription();
-                    if (strTooltip != null) {
-                    	strTooltip = "<html>" + 
-                    	strTooltip.
-                			replace("<=", "&le;"). 
-                			replace(">=", "&ge;"). 
-                    		replace("<", "&lt;"). 
-                    		replace(">", "&gt;"). 
-                    		replace("\n", "<br>") + 
-                    	"</html>";
-                    }
-                    
-                	list.setToolTipText(strTooltip);
-                }
-                
-                
-                return this;
-            }        	
-        });
-        
-        super.addDialogComponent(panelDescriptors);
-    }
+				assert (c == this);
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+				if (value instanceof Descriptor) {
+					final Descriptor descriptor = (Descriptor)value;
 
-    /**
-     * Creates the settings model to be used for the selected descriptors.
-     * All descriptors are added as default value.
-     * 
-     * @return Settings model for selected descriptors.
-     */
-    static final SettingsModelEnumerationArray<Descriptor> createDescriptorsModel() {
-        return new SettingsModelEnumerationArray<Descriptor>(Descriptor.class, 
-        		"selectedDescriptors", Descriptor.class.getEnumConstants());
-    }
+					// Set text
+					setText(descriptor.toString());
+
+					// Set icon
+					final DataType[] arrDataTypes = descriptor.getDataTypes();
+					if (arrDataTypes != null && arrDataTypes.length == 1) {
+						setIcon(arrDataTypes[0].getIcon());
+					}
+					else if (arrDataTypes != null && arrDataTypes.length > 1){
+						setIcon(MULTI_VALUE_ICON);
+					}
+					else {
+						setIcon(UNKNOWN_ICON);
+					}
+
+					// Set tooltip
+					String strTooltip = descriptor.getDescription();
+					if (strTooltip != null) {
+						strTooltip = "<html>" +
+								strTooltip.
+								replace("<=", "&le;").
+								replace(">=", "&ge;").
+								replace("<", "&lt;").
+								replace(">", "&gt;").
+								replace("\n", "<br>") +
+								"</html>";
+					}
+
+					list.setToolTipText(strTooltip);
+				}
+
+
+				return this;
+			}
+		});
+
+		super.addDialogComponent(panelDescriptors);
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for the selected descriptors.
+	 * All descriptors are added as default value.
+	 * 
+	 * @return Settings model for selected descriptors.
+	 */
+	static final SettingsModelEnumerationArray<Descriptor> createDescriptorsModel() {
+		return new SettingsModelEnumerationArray<Descriptor>(Descriptor.class,
+				"selectedDescriptors", Descriptor.class.getEnumConstants());
+	}
 }

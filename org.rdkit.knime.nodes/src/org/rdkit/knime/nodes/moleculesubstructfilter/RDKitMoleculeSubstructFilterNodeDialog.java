@@ -48,8 +48,8 @@
  */
 package org.rdkit.knime.nodes.moleculesubstructfilter;
 
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitMoleculeSubstructFilter" Node.
@@ -63,10 +63,10 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends AbstractRDKitSubstru
 	 * This implementation creates a column selector component for an RDKit Mol type.
 	 */
 	@Override
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	protected DialogComponentColumnNameSelection createQueryColumnNameSelectionComponent() {
 		return new DialogComponentColumnNameSelection(
-                createQueryColumnNameModel(), "Query Mol column: ", 1,
-                RDKitMolValue.class);
+				createQueryColumnNameModel(), "Query Mol column: ", 1,
+				RDKitMolValue.class);
 	}
 }

@@ -120,6 +120,7 @@ import org.knime.core.node.NodeLogger;
  * @author Manuel Schwarze
  */
 public final class LayoutUtils {
+
 	//
 	// Constants
 	//
@@ -194,11 +195,11 @@ public final class LayoutUtils {
 	static {
 		try {
 			g_defaultFont = new Font("Helvetica", Font.PLAIN, 12); // $NON-NLS-1$
-		} 
-		catch (ThreadDeath excThread) { 
+		}
+		catch (final ThreadDeath excThread) {
 			throw excThread;
 		}
-		catch (Throwable exc) { // Catching also errors cause my unavailable Graphic devices
+		catch (final Throwable exc) { // Catching also errors cause my unavailable Graphic devices
 			LOGGER.warn("Unable to initialize default font.", exc);
 		}
 	}
@@ -1121,29 +1122,29 @@ public final class LayoutUtils {
 	 */
 	public static Color changeColor(final Color color, final int difference) {
 		Color retColor = null;
-		
+
 		if (color != null) {
-			int[] colors = new int[3];
-	
+			final int[] colors = new int[3];
+
 			colors[0] = color.getRed();
 			colors[1] = color.getGreen();
 			colors[2] = color.getBlue();
-	
+
 			for (int i = 0; i < 3; i++) {
 				colors[i] += difference;
-	
+
 				if (colors[i] < 0) {
 					colors[i] = 0;
 				}
-	
+
 				if (colors[i] > 255) {
 					colors[i] = 255;
 				}
 			}
-	
+
 			retColor = new Color(colors[0], colors[1], colors[2]);
 		}
-		
+
 		return retColor;
 	}
 
@@ -1345,14 +1346,14 @@ public final class LayoutUtils {
 	 */
 	public static void constrain(final Container cont, final Component comp, final int iGridX,
 			final int iGridY, final int iGridWidth, final int iGridHeight, final int iFill,
-			final int iAnchor, final double dWeightX, final double dWeightY, 
+			final int iAnchor, final double dWeightX, final double dWeightY,
 			final int iTop, final int iLeft, final int iBottom, final int iRight) {
 		// Ensure the parameters are valid
 		if (cont == null || comp == null) {
 			throw new IllegalArgumentException(
 					"Parameters cont and comp must not be null.");
 		}
-		
+
 		if (!(cont.getLayout() instanceof GridBagLayout)) {
 			throw new IllegalArgumentException(
 					"Container parameter \"cont\" must have a GridBagLayout.");
@@ -1393,20 +1394,23 @@ public final class LayoutUtils {
 						.getSystemClipboard();
 
 				clipboard.setContents(new Transferable() {
+					@Override
 					public Object getTransferData(final DataFlavor flavor)
 							throws UnsupportedFlavorException, IOException {
 						return pImage;
 					}
 
+					@Override
 					public DataFlavor[] getTransferDataFlavors() {
 						return new DataFlavor[] { DataFlavor.imageFlavor };
 					}
 
+					@Override
 					public boolean isDataFlavorSupported(final DataFlavor flavor) {
 						return flavor.equals(DataFlavor.imageFlavor);
 					}
 				}, null);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				bResult = false;
 			}
 		} // end if
@@ -1434,7 +1438,7 @@ public final class LayoutUtils {
 	 */
 	public static ImageIcon createImageIcon(final Object objRoot, final String strPath,
 			final String strDescription) {
-		return createImageIcon((objRoot == null) ? LayoutUtils.class : objRoot.getClass(), 
+		return createImageIcon((objRoot == null) ? LayoutUtils.class : objRoot.getClass(),
 				strPath, strDescription);
 	}
 
@@ -1462,7 +1466,7 @@ public final class LayoutUtils {
 			throw new IllegalArgumentException(
 					"Parameter strPath must not be null.");
 		}
-		
+
 		ImageIcon img = null;
 
 		try {
@@ -1474,7 +1478,7 @@ public final class LayoutUtils {
 				// Ignore (images not found)
 				LOGGER.warn("Couldn't find image resource: " + strPath);
 			}
-		} catch (Exception exc) {
+		} catch (final Exception exc) {
 			// Ignore (images not found)
 			LOGGER.warn("Couldn't load image resource: " + strPath);
 		}
@@ -1502,20 +1506,20 @@ public final class LayoutUtils {
 			throw new IllegalArgumentException(
 					"Parameters objRoot and strResourcePath must not be null.");
 		}
-		
+
 		Image img = null;
 
 		try {
 			final Toolkit toolkit = Toolkit.getDefaultToolkit();
 			img = toolkit.getImage(objRoot.getClass().getResource(strResourcePath));
-		} catch (Exception exc) {
+		} catch (final Exception exc) {
 			LOGGER.warn("Image resource '" + strResourcePath + "' not found. Ignored.");
 			// Ignore (images not found)
 		}
 
 		return img;
 	}
-	
+
 	/**
 	 * Call this method to save an image as a JPEG.
 	 * 
@@ -1540,7 +1544,7 @@ public final class LayoutUtils {
 			// Write the Image to disk
 			ImageIO.write(bImage, "jpg", fImage);
 			bResult = true;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			JOptionPane.showMessageDialog(null, "Error saving image to disk. "
 					+ e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		} finally {
@@ -1553,18 +1557,19 @@ public final class LayoutUtils {
 
 		return bResult;
 	} // end method saveImage
-	
-    /**
-     * Creates a unique combo box item. 
-     * 
-     * @param item The name of the item to be shown in the combo box.
-     * 
-     * @return An object that wraps the passed in string item and returns it in 
-     * 		when the toString() method gets called on that object.
-     */
-    public static Object createUniqueComboBoxItem(final String item)  {
-	     return new Object() { 
-	    	 public String toString() { return item; } 
-	     };
-    }	
+
+	/**
+	 * Creates a unique combo box item.
+	 * 
+	 * @param item The name of the item to be shown in the combo box.
+	 * 
+	 * @return An object that wraps the passed in string item and returns it in
+	 * 		when the toString() method gets called on that object.
+	 */
+	public static Object createUniqueComboBoxItem(final String item)  {
+		return new Object() {
+			@Override
+			public String toString() { return item; }
+		};
+	}
 }

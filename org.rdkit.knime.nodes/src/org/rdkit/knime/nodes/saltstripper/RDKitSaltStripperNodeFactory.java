@@ -58,61 +58,60 @@ import org.knime.core.node.NodeView;
  * @author Dillip K Mohanty
  * @author Manuel Schwarze
  */
-public class RDKitSaltStripperNodeFactory 
-        extends NodeFactory<RDKitSaltStripperNodeModel> {
+public class RDKitSaltStripperNodeFactory extends NodeFactory<RDKitSaltStripperNodeModel> {
 
-    /**
-     * Creates a model for the RDKitSaltStripper functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitSaltStripperNodeModel createNodeModel() {
-        return new RDKitSaltStripperNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitSaltStripper functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitSaltStripperNodeModel createNodeModel() {
+		return new RDKitSaltStripperNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitSaltStripperNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitSaltStripperNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitSaltStripperNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitSaltStripperNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitSaltStripperNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitSaltStripperNodeDialog();
+	}
 }
 

@@ -50,18 +50,18 @@ package org.rdkit.knime.nodes.rgroups;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitRGroups" Node.
  * 
  *
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Greg Landrum
@@ -72,50 +72,50 @@ public class RDKitRGroupsNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitRGroupsNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentString(
-        		createSmartsModel(), "Core SMARTS: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-        		createRemoveEmptyColumnsModel(), "Remove empty Rx columns"));
-    }
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentString(
+				createSmartsModel(), "Core SMARTS: "));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveEmptyColumnsModel(), "Remove empty Rx columns"));
+	}
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used as core SMARTS.
-     * 
-     * @return Settings model for the core SMARTS value.
-     */
-    static final SettingsModelString createSmartsModel() {
-        return new SettingsModelString("smarts_value", "");
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 
-    /**
-     * Creates the settings model for the option to remove empty Rx columns.
-     * 
-     * @return Settings model for removing empty Rx columns.
-     */
-    static final SettingsModelBoolean createRemoveEmptyColumnsModel() {
-        return new SettingsModelBoolean("remove_empty_columns", true);
-    }}
+	/**
+	 * Creates the settings model to be used as core SMARTS.
+	 * 
+	 * @return Settings model for the core SMARTS value.
+	 */
+	static final SettingsModelString createSmartsModel() {
+		return new SettingsModelString("smarts_value", "");
+	}
+
+	/**
+	 * Creates the settings model for the option to remove empty Rx columns.
+	 * 
+	 * @return Settings model for removing empty Rx columns.
+	 */
+	static final SettingsModelBoolean createRemoveEmptyColumnsModel() {
+		return new SettingsModelBoolean("remove_empty_columns", true);
+	}}

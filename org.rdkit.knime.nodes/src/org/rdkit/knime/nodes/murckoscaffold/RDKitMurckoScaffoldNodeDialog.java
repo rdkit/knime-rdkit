@@ -49,11 +49,11 @@ package org.rdkit.knime.nodes.murckoscaffold;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * The dialog to configure the RDKit node.
@@ -66,58 +66,58 @@ public class RDKitMurckoScaffoldNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitMurckoScaffoldNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentString(
-                createNewColumnNameModel(), "New column name: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createRemoveSourceColumnsOptionModel(), "Remove source column"));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createDoFrameworksModel(), "Create frameworks"));
-    }
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentString(
+				createNewColumnNameModel(), "New column name: "));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveSourceColumnsOptionModel(), "Remove source column"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createDoFrameworksModel(), "Create frameworks"));
+	}
 
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 
-    /**
-     * Creates the settings model to be used to specify the new column name.
-     * 
-     * @return Settings model for result column name.
-     */
-    static final SettingsModelString createNewColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 
-    /**
-     * Creates the settings model for the boolean flag to determine, if
-     * the source column shall be removed from the result table.
-     * The default is false.
-     * 
-     * @return Settings model for check box whether to remove source columns.
-     */
-    static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
-        return new SettingsModelBoolean("remove_source_columns", false);
-    }
-    
-    /**
-     * @return settings model for check box whether to generate frameworks
-     */
-    static final SettingsModelBoolean createDoFrameworksModel() {
-        return new SettingsModelBoolean("do_frameworks", false);
-    }    
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * the source column shall be removed from the result table.
+	 * The default is false.
+	 * 
+	 * @return Settings model for check box whether to remove source columns.
+	 */
+	static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
+		return new SettingsModelBoolean("remove_source_columns", false);
+	}
+
+	/**
+	 * @return settings model for check box whether to generate frameworks
+	 */
+	static final SettingsModelBoolean createDoFrameworksModel() {
+		return new SettingsModelBoolean("do_frameworks", false);
+	}
 }

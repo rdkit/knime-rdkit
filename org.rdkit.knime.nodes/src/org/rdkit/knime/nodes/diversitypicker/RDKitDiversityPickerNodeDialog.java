@@ -50,58 +50,63 @@ package org.rdkit.knime.nodes.diversitypicker;
 
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
+ * <code>NodeDialog</code> for the "RDKitDiversityPicker" Node.
+ * 
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+ * creation of a simple dialog with standard components. If you need a more
+ * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  *
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitDiversityPickerNodeDialog
-        extends DefaultNodeSettingsPane {
+public class RDKitDiversityPickerNodeDialog extends DefaultNodeSettingsPane {
 
 	/**
-     * Create a new dialog pane with some default components.
-     */
-    @SuppressWarnings("unchecked")
-    RDKitDiversityPickerNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "Fingerprint column: ", 0,
-                BitVectorValue.class));
-        super.addDialogComponent(new DialogComponentNumber(createNumberToPickModel(),
-        		"Number to pick: ", 1));
-        super.addDialogComponent(new DialogComponentNumberEdit(createRandomSeedModel(),
+	 * Create a new dialog pane with some default components.
+	 */
+	@SuppressWarnings("unchecked")
+	RDKitDiversityPickerNodeDialog() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "Fingerprint column: ", 0,
+				BitVectorValue.class));
+		super.addDialogComponent(new DialogComponentNumber(createNumberToPickModel(),
+				"Number to pick: ", 1));
+		super.addDialogComponent(new DialogComponentNumberEdit(createRandomSeedModel(),
 				"Random seed: ", 10));
-    }
+	}
 
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 
-    /**
-     * Creates the settings model to be used to enter the number to pick.
-     * 
-     * @return Settings model for number to pick.
-     */
-    static final SettingsModelInteger createNumberToPickModel() {
-        return new SettingsModelIntegerBounded("num_picks", 10, 1, Integer.MAX_VALUE);
-    }
-    
-    /**
-     * Creates the settings model to be used to enter a random seed.
-     * 
-     * @return Settings model for the optional random seed.
-     */
-    static final SettingsModelInteger createRandomSeedModel() {
-        return new SettingsModelInteger("random_seed", -1);
-    }
+	/**
+	 * Creates the settings model to be used to enter the number to pick.
+	 * 
+	 * @return Settings model for number to pick.
+	 */
+	static final SettingsModelInteger createNumberToPickModel() {
+		return new SettingsModelIntegerBounded("num_picks", 10, 1, Integer.MAX_VALUE);
+	}
+
+	/**
+	 * Creates the settings model to be used to enter a random seed.
+	 * 
+	 * @return Settings model for the optional random seed.
+	 */
+	static final SettingsModelInteger createRandomSeedModel() {
+		return new SettingsModelInteger("random_seed", -1);
+	}
 }

@@ -54,57 +54,56 @@ import org.knime.core.node.NodeView;
 
 /**
  * This NodeFactory for the "FingerprintReader" Node is used to get the node components registered.
- * It creates the node views and node dialog components. 
+ * It creates the node views and node dialog components.
  *
  * @author Sudip Ghosh
  */
-public class FingerprintReaderNodeFactory 
-        extends NodeFactory<FingerprintReaderNodeModel> {
-	
+public class FingerprintReaderNodeFactory extends NodeFactory<FingerprintReaderNodeModel> {
+
 	//
 	// Public Methods
 	//
-	
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public FingerprintReaderNodeModel createNodeModel() {
-        return new FingerprintReaderNodeModel();
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public FingerprintReaderNodeModel createNodeModel() {
+		return new FingerprintReaderNodeModel();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<FingerprintReaderNodeModel> createNodeView(final int viewIndex,
-            final FingerprintReaderNodeModel nodeModel) {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<FingerprintReaderNodeModel> createNodeView(final int viewIndex,
+			final FingerprintReaderNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new FingerprintReaderNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new FingerprintReaderNodeDialog();
+	}
 
 }
 

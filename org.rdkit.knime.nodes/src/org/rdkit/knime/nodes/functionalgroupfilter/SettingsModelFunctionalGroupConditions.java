@@ -150,16 +150,16 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 		@Override
 		public String toString() {
 			switch (this) {
-				case LessThan:
-					return "<";
-				case AtMost:
-					return "<=";
-				case Exactly:
-					return "=";
-				case AtLeast:
-					return ">=";
-				case MoreThan:
-					return ">";
+			case LessThan:
+				return "<";
+			case AtMost:
+				return "<=";
+			case Exactly:
+				return "=";
+			case AtLeast:
+				return ">=";
+			case MoreThan:
+				return ">";
 			}
 
 			return super.toString();
@@ -253,7 +253,7 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 			String strQual = config.getString("qualifier_" + index, "=");
 			if (strQual.endsWith(")")) {
 				// Old version found which ended with "(qualifier)"
-				int lastIndex  = strQual.lastIndexOf("(");
+				final int lastIndex  = strQual.lastIndexOf("(");
 				strQual = strQual.substring(lastIndex + 1, strQual.length() - 1);
 			}
 
@@ -393,7 +393,7 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 
 			m_iCount = iCount;
 		}
-		
+
 		/**
 		 * Calculates the hash code based on the member variables.
 		 * 
@@ -401,10 +401,10 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 		 */
 		@Override
 		public int hashCode() {
-			return getName().hashCode() | 
-				getQualifier().hashCode() | 
-				getCount() | 
-				(isActive() ? 1 : 2);
+			return getName().hashCode() |
+					getQualifier().hashCode() |
+					getCount() |
+					(isActive() ? 1 : 2);
 		}
 
 		/**
@@ -412,11 +412,11 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 		 * {@inheritDoc}
 		 */
 		@Override
-        public boolean equals(final Object o) {
+		public boolean equals(final Object o) {
 			boolean bRet = false;
 
 			if (o instanceof FunctionalGroupCondition) {
-				FunctionalGroupCondition lp = (FunctionalGroupCondition)o;
+				final FunctionalGroupCondition lp = (FunctionalGroupCondition)o;
 				bRet = (SettingsUtils.equals(m_strName, lp.m_strName) &&
 						SettingsUtils.equals(m_qualifier, lp.m_qualifier) &&
 						m_iCount == lp.m_iCount && m_bActive == lp.m_bActive);
@@ -430,7 +430,7 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 		 */
 		@Override
 		public String toString() {
-			StringBuilder sb = new StringBuilder("FunctionalGroupCondition { ");
+			final StringBuilder sb = new StringBuilder("FunctionalGroupCondition { ");
 			sb.append("name = ").append(getName())
 			.append(", qualifier = ").append(getQualifier())
 			.append(", count = ").append(getCount())
@@ -483,17 +483,17 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 	/** Flag to determine, if old settings get cached for user convenience. */
 	private final boolean m_bUseOldSettingsCache;
 
-    /** The key used to store the enumeration value in the settings. */
-    private final String m_strConfigName;
+	/** The key used to store the enumeration value in the settings. */
+	private final String m_strConfigName;
 
-    /** Functional group definition, if known. */
-    private FunctionalGroupDefinitions m_definitions;
+	/** Functional group definition, if known. */
+	private FunctionalGroupDefinitions m_definitions;
 
 	/** The current list of functional group conditions. Can be empty, but never null. */
-    private List<FunctionalGroupCondition> m_listConditions;
+	private final List<FunctionalGroupCondition> m_listConditions;
 
-    /** List of listeners */
-    private EventListenerList m_listenerList = new EventListenerList();
+	/** List of listeners */
+	private final EventListenerList m_listenerList = new EventListenerList();
 
 	/**
 	 * A cache that stores condition configurations from old functional group settings,
@@ -504,592 +504,592 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 	 * again. The key of this map here is a SHA1 hash over a concatenation of all
 	 * functional group names, which has been sorted alphabetically.
 	 */
-	private HashMap<String, FunctionalGroupCondition[]> m_mapOldSettingsCache =
-		new HashMap<String, FunctionalGroupCondition[]>();
+	private final HashMap<String, FunctionalGroupCondition[]> m_mapOldSettingsCache =
+			new HashMap<String, FunctionalGroupCondition[]>();
 
-	//
-	// Constructor
-	//
+			//
+			// Constructor
+			//
 
-	/**
-	 * Creates a new settings model with the specified config name.
-	 *
-	 * @param configName Config name. Must not be null or empty.
-	 */
-	public SettingsModelFunctionalGroupConditions(final String configName) {
-		this(configName, false);
-	}
+			/**
+			 * Creates a new settings model with the specified config name.
+			 *
+			 * @param configName Config name. Must not be null or empty.
+			 */
+			public SettingsModelFunctionalGroupConditions(final String configName) {
+				this(configName, false);
+			}
 
-	/**
-	 * Creates a new settings model with the specified config name.
-	 *
-	 * @param configName Config name. Must not be null or empty.
-	 * @param bUseOldSettingsCache Set to true to cache old settings when
-	 * 		the user updates the settings by loading a new definition file.
-	 * 		If this is enabled, the settings model can restore these settings
-	 * 		in the same KNIME session (same node, same dialog) when the
-	 * 		user is reloading the old definition file again.
-	 */
-	public SettingsModelFunctionalGroupConditions(final String configName,
-			final boolean bUseOldSettingsCache) {
-	    if ((configName == null) || (configName.isEmpty())) {
-	        throw new IllegalArgumentException("The configName must be a "
-	                + "non-empty string");
-	    }
+			/**
+			 * Creates a new settings model with the specified config name.
+			 *
+			 * @param configName Config name. Must not be null or empty.
+			 * @param bUseOldSettingsCache Set to true to cache old settings when
+			 * 		the user updates the settings by loading a new definition file.
+			 * 		If this is enabled, the settings model can restore these settings
+			 * 		in the same KNIME session (same node, same dialog) when the
+			 * 		user is reloading the old definition file again.
+			 */
+			public SettingsModelFunctionalGroupConditions(final String configName,
+					final boolean bUseOldSettingsCache) {
+				if ((configName == null) || (configName.isEmpty())) {
+					throw new IllegalArgumentException("The configName must be a "
+							+ "non-empty string");
+				}
 
-	    m_strConfigName = configName;
-	    m_listConditions = new ArrayList<FunctionalGroupCondition>(100);
-	    m_bUseOldSettingsCache = bUseOldSettingsCache;
-	}
+				m_strConfigName = configName;
+				m_listConditions = new ArrayList<FunctionalGroupCondition>(100);
+				m_bUseOldSettingsCache = bUseOldSettingsCache;
+			}
 
-	//
-	// Public Methods
-	//
+			//
+			// Public Methods
+			//
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public int getRowCount() {
-		return m_listConditions.size();
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public int getRowCount() {
+				return m_listConditions.size();
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public int getColumnCount() {
-		return COLUMN_HEADERS.length;
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public int getColumnCount() {
+				return COLUMN_HEADERS.length;
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public String getColumnName(final int columnIndex) {
-		return COLUMN_HEADERS[columnIndex];
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public String getColumnName(final int columnIndex) {
+				return COLUMN_HEADERS[columnIndex];
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public Class<?> getColumnClass(final int columnIndex) {
-		return COLUMN_CLASSES[columnIndex];
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public Class<?> getColumnClass(final int columnIndex) {
+				return COLUMN_CLASSES[columnIndex];
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public boolean isCellEditable(final int rowIndex, final int columnIndex) {
-		return COLUMN_EDITABLE[columnIndex];
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public boolean isCellEditable(final int rowIndex, final int columnIndex) {
+				return COLUMN_EDITABLE[columnIndex];
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public Object getValueAt(final int rowIndex, final int columnIndex) {
-		FunctionalGroupCondition cond = m_listConditions.get(rowIndex);
-		Object retObject = null;
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public Object getValueAt(final int rowIndex, final int columnIndex) {
+				final FunctionalGroupCondition cond = m_listConditions.get(rowIndex);
+				Object retObject = null;
 
-		switch (columnIndex) {
-			case COLUMN_ACTIVE:
-				retObject = cond.isActive();
-				break;
-			case COLUMN_DISPLAY_NAME:
-				// Get the display name directly from the functional group definition
-				if (m_definitions != null) {
-					FunctionalGroup group = m_definitions.get(cond.getName());
-					if (group != null) {
-						retObject = group.getDisplayLabel();
+				switch (columnIndex) {
+				case COLUMN_ACTIVE:
+					retObject = cond.isActive();
+					break;
+				case COLUMN_DISPLAY_NAME:
+					// Get the display name directly from the functional group definition
+					if (m_definitions != null) {
+						final FunctionalGroup group = m_definitions.get(cond.getName());
+						if (group != null) {
+							retObject = group.getDisplayLabel();
+						}
+					}
+
+					// Fallback only
+					if (retObject == null) {
+						retObject = cond.getName();
+					}
+					break;
+				case COLUMN_QUALIFIER:
+					retObject = cond.getQualifier();
+					break;
+				case COLUMN_COUNT:
+					retObject = cond.getCount();
+					break;
+				default:
+					throw new IndexOutOfBoundsException();
+				}
+
+				return retObject;
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public void setValueAt(final Object aValue, final int rowIndex, final int columnIndex) {
+				final FunctionalGroupCondition cond = m_listConditions.get(rowIndex);
+				boolean bChanged = false;
+
+				// Update correct condition field, if value really changed
+				switch (columnIndex) {
+				case COLUMN_ACTIVE:
+					final boolean bNewValue = ((Boolean)aValue).booleanValue();
+					if (cond.isActive() != bNewValue) {
+						cond.setActive(bNewValue);
+						bChanged = true;
+					}
+					break;
+				case COLUMN_DISPLAY_NAME:
+					// This column is not modifiable via this interface
+					break;
+				case COLUMN_QUALIFIER:
+					final Qualifier newQualifier = SettingsUtils.getEnumValueFromString(
+							Qualifier.class, "" + aValue, Qualifier.Exactly);
+					if (cond.getQualifier() != newQualifier) {
+						cond.setQualifier(newQualifier);
+						bChanged = true;
+					}
+					break;
+				case COLUMN_COUNT:
+					final int iNewValue = ((Integer)aValue).intValue();
+					if (cond.getCount() != iNewValue) {
+						cond.setCount(iNewValue);
+						bChanged = true;
+					}
+					break;
+				default:
+					throw new IndexOutOfBoundsException();
+				}
+
+				// Inform all table model listeners about the change
+				if (bChanged) {
+					fireTableChangedEvent(new TableModelEvent(
+							this, rowIndex, rowIndex, columnIndex));
+				}
+			}
+
+			/**
+			 * Resets the values of all conditions. Does not touch the names.
+			 *
+			 * @return True, if something has changed. False otherwise.
+			 */
+			public boolean resetAll() {
+				boolean bChanged = false;
+
+				for (final FunctionalGroupCondition cond : m_listConditions) {
+					bChanged |= cond.reset();
+				}
+
+				// Inform all table model listeners about the change
+				if (bChanged) {
+					fireTableChangedEvent(new TableModelEvent(this));
+				}
+
+				return bChanged;
+			}
+
+			/**
+			 * Activates or deactivates all conditions. Does not touch the names.
+			 *
+			 * @param bTargetState True to activate all conditions. False to
+			 * 		deactivate all conditions.
+			 *
+			 * @return True, if something has changed. False otherwise.
+			 */
+			public boolean setAllActivated(final boolean bTargetState) {
+				boolean bChanged = false;
+
+				for (final FunctionalGroupCondition cond : m_listConditions) {
+					if (cond.isActive() != bTargetState) {
+						cond.setActive(bTargetState);
+						bChanged = true;
 					}
 				}
 
-				// Fallback only
-				if (retObject == null) {
-					retObject = cond.getName();
+				// Inform all table model listeners about the change
+				if (bChanged) {
+					fireTableChangedEvent(new TableModelEvent(this));
 				}
-				break;
-			case COLUMN_QUALIFIER:
-				retObject = cond.getQualifier();
-				break;
-			case COLUMN_COUNT:
-				retObject = cond.getCount();
-				break;
-			default:
-				throw new IndexOutOfBoundsException();
-		}
 
-		return retObject;
-	}
+				return bChanged;
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public void setValueAt(final Object aValue, final int rowIndex, final int columnIndex) {
-		FunctionalGroupCondition cond = m_listConditions.get(rowIndex);
-		boolean bChanged = false;
+			/**
+			 * If we have a valid definitions file, this will return a tooltip
+			 * representation for the specified row.
+			 *
+			 * @param rowIndex Row index.
+			 *
+			 * @return Tooltip with details about the functional group. Null,
+			 * 		if no definition file known or invalid row index.
+			 */
+			public String getTooltip(final int rowIndex) {
+				String strTooltip = null;
 
-		// Update correct condition field, if value really changed
-		switch (columnIndex) {
-			case COLUMN_ACTIVE:
-				boolean bNewValue = ((Boolean)aValue).booleanValue();
-				if (cond.isActive() != bNewValue) {
-					cond.setActive(bNewValue);
-					bChanged = true;
+				if (m_definitions != null) {
+					try {
+						strTooltip = m_definitions.get(m_listConditions.get(rowIndex).getName()).getTooltip();
+					}
+					catch (final Exception exc) {
+						// Ignored by purpose
+					}
 				}
-				break;
-			case COLUMN_DISPLAY_NAME:
-				// This column is not modifiable via this interface
-				break;
-			case COLUMN_QUALIFIER:
-				Qualifier newQualifier = SettingsUtils.getEnumValueFromString(
-						Qualifier.class, "" + aValue, Qualifier.Exactly);
-				if (cond.getQualifier() != newQualifier) {
-					cond.setQualifier(newQualifier);
-					bChanged = true;
+
+				return strTooltip;
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public void addTableModelListener(final TableModelListener l) {
+				m_listenerList.add(TableModelListener.class, l);
+				fireTableChangedEvent(new TableModelEvent(this));
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public void removeTableModelListener(final TableModelListener l) {
+				m_listenerList.remove(TableModelListener.class, l);
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public String toString() {
+				final StringBuilder sb = new StringBuilder("FunctionalGroupConditionsSettingsModel { ");
+				sb.append("configName = ").append(getConfigName())
+				.append("conditions = { ");
+
+				final FunctionalGroupCondition[] arrConditions = getConditions();
+				if (arrConditions != null && arrConditions.length > 0) {
+					sb.append('\n');
+					for (final FunctionalGroupCondition cond : arrConditions) {
+						sb.append(cond.toString()).append('\n');
+					}
 				}
-				break;
-			case COLUMN_COUNT:
-				int iNewValue = ((Integer)aValue).intValue();
-				if (cond.getCount() != iNewValue) {
-					cond.setCount(iNewValue);
-					bChanged = true;
+				sb.append("} }");
+
+				return sb.toString();
+			}
+
+			//
+			// Protected Methods
+			//
+
+			/**
+			 * Fires the specified table model change event to all registered
+			 * table model listeners.
+			 */
+			protected void fireTableChangedEvent(final TableModelEvent event) {
+				final TableModelListener[] arrListeners =
+						m_listenerList.getListeners(TableModelListener.class);
+
+				for (final TableModelListener l : arrListeners) {
+					try {
+						l.tableChanged(event);
+					}
+					catch (final Exception exc) {
+						LOGGER.error("Table model listener of Functional Group Conditions table generated an exception.", exc);
+					}
 				}
-				break;
-			default:
-				throw new IndexOutOfBoundsException();
-		}
-
-		// Inform all table model listeners about the change
-		if (bChanged) {
-			fireTableChangedEvent(new TableModelEvent(
-					this, rowIndex, rowIndex, columnIndex));
-		}
-	}
-
-	/**
-	 * Resets the values of all conditions. Does not touch the names.
-	 *
-	 * @return True, if something has changed. False otherwise.
-	 */
-	public boolean resetAll() {
-		boolean bChanged = false;
-
-		for (FunctionalGroupCondition cond : m_listConditions) {
-			bChanged |= cond.reset();
-		}
-
-		// Inform all table model listeners about the change
-		if (bChanged) {
-			fireTableChangedEvent(new TableModelEvent(this));
-		}
-
-		return bChanged;
-	}
-
-	/**
-	 * Activates or deactivates all conditions. Does not touch the names.
-	 *
-	 * @param bTargetState True to activate all conditions. False to
-	 * 		deactivate all conditions.
-	 *
-	 * @return True, if something has changed. False otherwise.
-	 */
-	public boolean setAllActivated(final boolean bTargetState) {
-		boolean bChanged = false;
-
-		for (FunctionalGroupCondition cond : m_listConditions) {
-			if (cond.isActive() != bTargetState) {
-				cond.setActive(bTargetState);
-				bChanged = true;
-			}
-		}
-
-		// Inform all table model listeners about the change
-		if (bChanged) {
-			fireTableChangedEvent(new TableModelEvent(this));
-		}
-
-		return bChanged;
-	}
-
-	/**
-	 * If we have a valid definitions file, this will return a tooltip
-	 * representation for the specified row.
-	 *
-	 * @param rowIndex Row index.
-	 *
-	 * @return Tooltip with details about the functional group. Null,
-	 * 		if no definition file known or invalid row index.
-	 */
-	public String getTooltip(final int rowIndex) {
-		String strTooltip = null;
-
-		if (m_definitions != null) {
-			try {
-				strTooltip = m_definitions.get(m_listConditions.get(rowIndex).getName()).getTooltip();
-			}
-			catch (Exception exc) {
-				// Ignored by purpose
-			}
-		}
-
-		return strTooltip;
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public void addTableModelListener(final TableModelListener l) {
-		m_listenerList.add(TableModelListener.class, l);
-		fireTableChangedEvent(new TableModelEvent(this));
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	public void removeTableModelListener(final TableModelListener l) {
-		m_listenerList.remove(TableModelListener.class, l);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder("FunctionalGroupConditionsSettingsModel { ");
-		sb.append("configName = ").append(getConfigName())
-		.append("conditions = { ");
-
-		FunctionalGroupCondition[] arrConditions = getConditions();
-		if (arrConditions != null && arrConditions.length > 0) {
-			sb.append('\n');
-			for (FunctionalGroupCondition cond : arrConditions) {
-				sb.append(cond.toString()).append('\n');
-			}
-		}
-		sb.append("} }");
-
-		return sb.toString();
-	}
-
-	//
-	// Protected Methods
-	//
-
-	/**
-	 * Fires the specified table model change event to all registered
-	 * table model listeners.
-	 */
-	protected void fireTableChangedEvent(final TableModelEvent event) {
-		TableModelListener[] arrListeners =
-			m_listenerList.getListeners(TableModelListener.class);
-
-		for (TableModelListener l : arrListeners) {
-			try {
-				l.tableChanged(event);
-			}
-			catch (Exception exc) {
-				LOGGER.error("Table model listener of Functional Group Conditions table generated an exception.", exc);
-			}
-		}
-	}
-
-	/**
-     * Creates a new settings model with identical values for everything except
-     * the registered table model listeners.
-	 *
-     * @return a new settings model with the same configName and conditions.
-     */
-	@Override
-	@SuppressWarnings("unchecked")
-	protected SettingsModelFunctionalGroupConditions createClone() {
-		SettingsModelFunctionalGroupConditions newModel =
-			new SettingsModelFunctionalGroupConditions(getConfigName());
-		FunctionalGroupCondition[] arrConditions = getConditions();
-
-		for (FunctionalGroupCondition cond : arrConditions) {
-			newModel.m_listConditions.add(cond);
-		}
-
-		return newModel;
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected String getModelTypeID() {
-		return "SMID_functionalgroupconditions";
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected String getConfigName() {
-		return m_strConfigName;
-	}
-
-    /**
-     * Returns a copy of all functional group conditions stored in this model.
-     * Changing parameters in these objects will not effect the model.
-     *
-     * @return Array of functional group conditions.
-     */
-	protected FunctionalGroupCondition[] getConditions() {
-		FunctionalGroupCondition[] arrConditions =
-			m_listConditions.toArray(new FunctionalGroupCondition[m_listConditions.size()]);
-
-		// Create copies of all conditions so that changes will not effect the model
-		for (int i = 0; i < arrConditions.length; i++) {
-			arrConditions[i] = new FunctionalGroupCondition(arrConditions[i]);
-		}
-
-		return arrConditions;
-	}
-
-    /**
-     * Returns a copy of all activated functional group conditions stored in this model.
-     * Changing parameters in these objects will not effect the model.
-     *
-     * @return Array of activated functional group conditions.
-     */
-	protected FunctionalGroupCondition[] getActivatedConditions() {
-		int iTotalCount = m_listConditions.size();
-		List<FunctionalGroupCondition> listActivatedConditions =
-			new ArrayList<SettingsModelFunctionalGroupConditions.
-			FunctionalGroupCondition>(iTotalCount);
-
-		// Create copies of all activated conditions so that changes will not effect the model
-		for (int i = 0; i < iTotalCount; i++) {
-			FunctionalGroupCondition cond = m_listConditions.get(i);
-			if (cond.isActive()) {
-				listActivatedConditions.add(new FunctionalGroupCondition(cond));
-			}
-		}
-
-		return listActivatedConditions.toArray(
-				new FunctionalGroupCondition[listActivatedConditions.size()]);
-	}
-
-	/**
-	 * Updates the conditions contained in this setting model with new functional group
-	 * names. It will try to find old settings that were done in this node before
-	 * for the new set of names. If not possible, it will try to keep the existing settings.
-	 * This will be possible, if the name of an existing function group condition
-	 * is equal to a new one that is in the list if names.
-	 *
-	 * @param definitions New definitions of functional groups. Only the unique names will
-	 * 		be used here. Can be null, which would reset the entire list.
-	 */
-	protected void updateConditions(final FunctionalGroupDefinitions definitions) {
-		// Save current conditions into cache
-		if (m_bUseOldSettingsCache && m_listConditions != null) {
-			int iCount = m_listConditions.size();
-			String[] arrNames = new String[iCount];
-			for (int i = 0; i < iCount; i++) {
-				arrNames[i] = m_listConditions.get(i).getName();
-			}
-			putInOldSettingsCache(arrNames, getConditions());
-		}
-
-		if (definitions == null) {
-			m_listConditions.clear();
-			m_definitions = null;
-			fireTableChangedEvent(new TableModelEvent(this));
-		}
-		else {
-			// We are mainly interested in the unique names here
-			String[] arrNames = definitions.getFunctionalGroupNames();
-
-			// Check, if we have old settings stored for the set of new names
-			FunctionalGroupCondition[] arrOldConditions =
-				m_bUseOldSettingsCache ? getFromOldSettingsCache(arrNames) : null;
-
-			// If not found, try to conserve the current conditions
-			if (arrOldConditions == null) {
-				arrOldConditions = getConditions();
 			}
 
-			// Conserve conditions
-			Map<String, FunctionalGroupCondition> mapOldConditions =
-				new HashMap<String, FunctionalGroupCondition>(arrOldConditions.length);
-			for (FunctionalGroupCondition cond : arrOldConditions) {
-				mapOldConditions.put(cond.getName(), cond);
-			}
+			/**
+			 * Creates a new settings model with identical values for everything except
+			 * the registered table model listeners.
+			 *
+			 * @return a new settings model with the same configName and conditions.
+			 */
+			@Override
+			@SuppressWarnings("unchecked")
+			protected SettingsModelFunctionalGroupConditions createClone() {
+				final SettingsModelFunctionalGroupConditions newModel =
+						new SettingsModelFunctionalGroupConditions(getConfigName());
+				final FunctionalGroupCondition[] arrConditions = getConditions();
 
-			// Load new conditions, possibly using old values
-			m_listConditions.clear();
-			for (String newName : arrNames) {
-				FunctionalGroupCondition newCond = mapOldConditions.get(newName);
-				if (newCond == null) {
-					newCond = new FunctionalGroupCondition(newName);
+				for (final FunctionalGroupCondition cond : arrConditions) {
+					newModel.m_listConditions.add(cond);
 				}
-				m_listConditions.add(newCond);
+
+				return newModel;
 			}
 
-			m_definitions = definitions;
-			fireTableChangedEvent(new TableModelEvent(this));
-		}
-	}
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected String getModelTypeID() {
+				return "SMID_functionalgroupconditions";
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void loadSettingsForDialog(final NodeSettingsRO settings,
-			final PortObjectSpec[] specs) throws NotConfigurableException {
-		m_listConditions.clear();
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected String getConfigName() {
+				return m_strConfigName;
+			}
 
-		try {
-			Config config = settings.getConfig(getConfigName());
-			int count = config.getInt("count");
+			/**
+			 * Returns a copy of all functional group conditions stored in this model.
+			 * Changing parameters in these objects will not effect the model.
+			 *
+			 * @return Array of functional group conditions.
+			 */
+			protected FunctionalGroupCondition[] getConditions() {
+				final FunctionalGroupCondition[] arrConditions =
+						m_listConditions.toArray(new FunctionalGroupCondition[m_listConditions.size()]);
 
-			for (int i = 0; i < count; i++) {
+				// Create copies of all conditions so that changes will not effect the model
+				for (int i = 0; i < arrConditions.length; i++) {
+					arrConditions[i] = new FunctionalGroupCondition(arrConditions[i]);
+				}
+
+				return arrConditions;
+			}
+
+			/**
+			 * Returns a copy of all activated functional group conditions stored in this model.
+			 * Changing parameters in these objects will not effect the model.
+			 *
+			 * @return Array of activated functional group conditions.
+			 */
+			protected FunctionalGroupCondition[] getActivatedConditions() {
+				final int iTotalCount = m_listConditions.size();
+				final List<FunctionalGroupCondition> listActivatedConditions =
+						new ArrayList<SettingsModelFunctionalGroupConditions.
+						FunctionalGroupCondition>(iTotalCount);
+
+				// Create copies of all activated conditions so that changes will not effect the model
+				for (int i = 0; i < iTotalCount; i++) {
+					final FunctionalGroupCondition cond = m_listConditions.get(i);
+					if (cond.isActive()) {
+						listActivatedConditions.add(new FunctionalGroupCondition(cond));
+					}
+				}
+
+				return listActivatedConditions.toArray(
+						new FunctionalGroupCondition[listActivatedConditions.size()]);
+			}
+
+			/**
+			 * Updates the conditions contained in this setting model with new functional group
+			 * names. It will try to find old settings that were done in this node before
+			 * for the new set of names. If not possible, it will try to keep the existing settings.
+			 * This will be possible, if the name of an existing function group condition
+			 * is equal to a new one that is in the list if names.
+			 *
+			 * @param definitions New definitions of functional groups. Only the unique names will
+			 * 		be used here. Can be null, which would reset the entire list.
+			 */
+			protected void updateConditions(final FunctionalGroupDefinitions definitions) {
+				// Save current conditions into cache
+				if (m_bUseOldSettingsCache && m_listConditions != null) {
+					final int iCount = m_listConditions.size();
+					final String[] arrNames = new String[iCount];
+					for (int i = 0; i < iCount; i++) {
+						arrNames[i] = m_listConditions.get(i).getName();
+					}
+					putInOldSettingsCache(arrNames, getConditions());
+				}
+
+				if (definitions == null) {
+					m_listConditions.clear();
+					m_definitions = null;
+					fireTableChangedEvent(new TableModelEvent(this));
+				}
+				else {
+					// We are mainly interested in the unique names here
+					final String[] arrNames = definitions.getFunctionalGroupNames();
+
+					// Check, if we have old settings stored for the set of new names
+					FunctionalGroupCondition[] arrOldConditions =
+							m_bUseOldSettingsCache ? getFromOldSettingsCache(arrNames) : null;
+
+							// If not found, try to conserve the current conditions
+							if (arrOldConditions == null) {
+								arrOldConditions = getConditions();
+							}
+
+							// Conserve conditions
+							final Map<String, FunctionalGroupCondition> mapOldConditions =
+									new HashMap<String, FunctionalGroupCondition>(arrOldConditions.length);
+							for (final FunctionalGroupCondition cond : arrOldConditions) {
+								mapOldConditions.put(cond.getName(), cond);
+							}
+
+							// Load new conditions, possibly using old values
+							m_listConditions.clear();
+							for (final String newName : arrNames) {
+								FunctionalGroupCondition newCond = mapOldConditions.get(newName);
+								if (newCond == null) {
+									newCond = new FunctionalGroupCondition(newName);
+								}
+								m_listConditions.add(newCond);
+							}
+
+							m_definitions = definitions;
+							fireTableChangedEvent(new TableModelEvent(this));
+				}
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void loadSettingsForDialog(final NodeSettingsRO settings,
+					final PortObjectSpec[] specs) throws NotConfigurableException {
+				m_listConditions.clear();
+
 				try {
+					final Config config = settings.getConfig(getConfigName());
+					final int count = config.getInt("count");
+
+					for (int i = 0; i < count; i++) {
+						try {
+							m_listConditions.add(new FunctionalGroupCondition(config, i));
+						}
+						catch (final InvalidSettingsException exc) {
+							// Ignore this here and read as much as we can
+						}
+					}
+				}
+				catch (final InvalidSettingsException exc) {
+					// Ignore this here
+				}
+
+				fireTableChangedEvent(new TableModelEvent(this));
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void saveSettingsForDialog(final NodeSettingsWO settings)
+					throws InvalidSettingsException {
+				saveSettingsForModel(settings);
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void validateSettingsForModel(final NodeSettingsRO settings)
+					throws InvalidSettingsException {
+				final Config config = settings.getConfig(getConfigName());
+				final int count = config.getInt("count");
+
+				for (int i = 0; i < count; i++) {
+					new FunctionalGroupCondition(config, i);
+				}
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void loadSettingsForModel(final NodeSettingsRO settings)
+					throws InvalidSettingsException {
+				m_listConditions.clear();
+
+				final Config config = settings.getConfig(getConfigName());
+				final int count = config.getInt("count");
+
+				for (int i = 0; i < count; i++) {
 					m_listConditions.add(new FunctionalGroupCondition(config, i));
 				}
-				catch (InvalidSettingsException exc) {
-					// Ignore this here and read as much as we can
+
+				fireTableChangedEvent(new TableModelEvent(this));
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void saveSettingsForModel(final NodeSettingsWO settings) {
+				final FunctionalGroupCondition[] arrConditions = getConditions();
+				final int iCount = arrConditions.length;
+
+				final Config config = settings.addConfig(getConfigName());
+				config.addInt("count", iCount);
+
+				for (int i = 0; i < iCount; i++) {
+					arrConditions[i].saveSettings(config, i);
 				}
 			}
-		}
-		catch (InvalidSettingsException exc) {
-			// Ignore this here
-		}
 
-		fireTableChangedEvent(new TableModelEvent(this));
-	}
+			/**
+			 * Tries to find old functional group conditions for the specified name set in
+			 * the old settings cache.
+			 *
+			 * @param arrNames Array of functional group names. Can be null.
+			 *
+			 * @return Array of old conditions or null, if not found.
+			 */
+			protected FunctionalGroupCondition[] getFromOldSettingsCache(final String[] arrNames) {
+				FunctionalGroupCondition[] arrConditions = null;
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void saveSettingsForDialog(final NodeSettingsWO settings)
-			throws InvalidSettingsException {
-		saveSettingsForModel(settings);
-	}
+				if (arrNames != null && arrNames.length > 0) {
+					arrConditions = m_mapOldSettingsCache.get(createCacheHashKey(arrNames));
+				}
 
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void validateSettingsForModel(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		Config config = settings.getConfig(getConfigName());
-		int count = config.getInt("count");
-
-		for (int i = 0; i < count; i++) {
-			new FunctionalGroupCondition(config, i);
-		}
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void loadSettingsForModel(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		m_listConditions.clear();
-
-		Config config = settings.getConfig(getConfigName());
-		int count = config.getInt("count");
-
-		for (int i = 0; i < count; i++) {
-			m_listConditions.add(new FunctionalGroupCondition(config, i));
-		}
-
-		fireTableChangedEvent(new TableModelEvent(this));
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void saveSettingsForModel(final NodeSettingsWO settings) {
-		FunctionalGroupCondition[] arrConditions = getConditions();
-		int iCount = arrConditions.length;
-
-		Config config = settings.addConfig(getConfigName());
-		config.addInt("count", iCount);
-
-		for (int i = 0; i < iCount; i++) {
-			arrConditions[i].saveSettings(config, i);
-		}
-	}
-
-	/**
-	 * Tries to find old functional group conditions for the specified name set in
-	 * the old settings cache.
-	 *
-	 * @param arrNames Array of functional group names. Can be null.
-	 *
-	 * @return Array of old conditions or null, if not found.
-	 */
-	protected FunctionalGroupCondition[] getFromOldSettingsCache(final String[] arrNames) {
-		FunctionalGroupCondition[] arrConditions = null;
-
-		if (arrNames != null && arrNames.length > 0) {
-			arrConditions = m_mapOldSettingsCache.get(createCacheHashKey(arrNames));
-		}
-
-		return arrConditions;
-	}
-
-	/**
-	 * Puts old functional group conditions for the specified name set in
-	 * the old settings cache.
-	 *
-	 * @param arrNames Array of functional group names. Can be null.
-	 * @param arrConditions Array of conditions to be cached. Can be null.
-	 */
-	protected void putInOldSettingsCache(final String[] arrNames,
-			final FunctionalGroupCondition[] arrConditions) {
-		if (arrNames != null && arrNames.length > 0 && arrConditions != null) {
-			m_mapOldSettingsCache.put(createCacheHashKey(arrNames), arrConditions);
-		}
-	}
-
-	/**
-	 * Creates a SHA1 hash over all concatenated names in the specified list.
-	 * Before the hash gets calculated a copy of the list is sorted alphetically to
-	 * ensure a well-defined order. The passed in list will not be changed.
-	 *
-	 * @param arrNames Array of names.
-	 *
-	 * @return The SHA1 hash. Returns null, if the list is null.
-	 */
-	protected String createCacheHashKey(final String[] arrNames) {
-		String strHash = null;
-
-		if (arrNames != null) {
-			List<String> listSortedNames = new ArrayList<String>(Arrays.asList(arrNames));
-			Collections.sort(listSortedNames);
-			int iLength = listSortedNames.size();
-			StringBuilder sb = new StringBuilder(iLength * 20);
-
-			for (int i = 0; i < iLength; i++) {
-				sb.append(listSortedNames.get(i));
+				return arrConditions;
 			}
 
-			try {
-				MessageDigest md = MessageDigest.getInstance("SHA1");
-				md.update(sb.toString().getBytes());
-				strHash = Base64.encode(md.digest());
+			/**
+			 * Puts old functional group conditions for the specified name set in
+			 * the old settings cache.
+			 *
+			 * @param arrNames Array of functional group names. Can be null.
+			 * @param arrConditions Array of conditions to be cached. Can be null.
+			 */
+			protected void putInOldSettingsCache(final String[] arrNames,
+					final FunctionalGroupCondition[] arrConditions) {
+				if (arrNames != null && arrNames.length > 0 && arrConditions != null) {
+					m_mapOldSettingsCache.put(createCacheHashKey(arrNames), arrConditions);
+				}
 			}
-			catch (NoSuchAlgorithmException exc) {
-				// Fallback - should never happen, but will also work
-				strHash = sb.toString();
-			}
-		}
 
-		return strHash;
-	}
+			/**
+			 * Creates a SHA1 hash over all concatenated names in the specified list.
+			 * Before the hash gets calculated a copy of the list is sorted alphetically to
+			 * ensure a well-defined order. The passed in list will not be changed.
+			 *
+			 * @param arrNames Array of names.
+			 *
+			 * @return The SHA1 hash. Returns null, if the list is null.
+			 */
+			protected String createCacheHashKey(final String[] arrNames) {
+				String strHash = null;
+
+				if (arrNames != null) {
+					final List<String> listSortedNames = new ArrayList<String>(Arrays.asList(arrNames));
+					Collections.sort(listSortedNames);
+					final int iLength = listSortedNames.size();
+					final StringBuilder sb = new StringBuilder(iLength * 20);
+
+					for (int i = 0; i < iLength; i++) {
+						sb.append(listSortedNames.get(i));
+					}
+
+					try {
+						final MessageDigest md = MessageDigest.getInstance("SHA1");
+						md.update(sb.toString().getBytes());
+						strHash = Base64.encode(md.digest());
+					}
+					catch (final NoSuchAlgorithmException exc) {
+						// Fallback - should never happen, but will also work
+						strHash = sb.toString();
+					}
+				}
+
+				return strHash;
+			}
 }

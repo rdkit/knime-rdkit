@@ -49,8 +49,8 @@
 package org.rdkit.knime.nodes.multiplesubstrucfilter;
 
 import org.knime.chem.types.SmartsValue;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.rdkit.knime.nodes.moleculesubstructfilter.AbstractRDKitSubstructFilterNodeDialog;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitMoleculeSubstructFilter" Node.
@@ -64,10 +64,10 @@ public class RDKitDictSubstructFilterNodeDialog extends AbstractRDKitSubstructFi
 	 * This implementation creates a column selector component for a Smarts type.
 	 */
 	@Override
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	protected DialogComponentColumnNameSelection createQueryColumnNameSelectionComponent() {
 		return new DialogComponentColumnNameSelection(
-                createQueryColumnNameModel(), "Query SMARTS column: ", 1,
-                SmartsValue.class);
+				createQueryColumnNameModel(), "Query SMARTS column: ", 1,
+				SmartsValue.class);
 	}
 }

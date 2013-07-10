@@ -46,7 +46,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-
 package org.rdkit.knime.util;
 
 import org.RDKit.ChemicalReaction;
@@ -69,15 +68,15 @@ public final class ChemUtils {
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(ChemUtils.class);
- 
+
 	//
 	// Static Public Methods
 	//
-	
+
 	/**
 	 * Determines for the passed in string, if it is a valid Smiles string.
 	 * 
@@ -87,21 +86,21 @@ public final class ChemUtils {
 	 */
 	public static boolean isSmiles(final String value) {
 		boolean bRet = false;
-		
+
 		if (value != null) {
-            try {
-            	final ROMol mol = RWMol.MolFromSmiles(value);
-            	mol.delete();
-            	bRet = true;
-            } 
-            catch (Exception e) { 
-            	// Ignored by purpose
-            }			
+			try {
+				final ROMol mol = RWMol.MolFromSmiles(value);
+				mol.delete();
+				bRet = true;
+			}
+			catch (final Exception e) {
+				// Ignored by purpose
+			}
 		}
-		
+
 		return bRet;
 	}
-	
+
 	/**
 	 * Determines for the passed in string, if it is a valid CTab string.
 	 * 
@@ -113,59 +112,59 @@ public final class ChemUtils {
 		boolean bRet = false;
 
 		if (value != null) {
-            try {
-            	final ROMol mol = RWMol.MolFromMolBlock(value);
-            	mol.delete();
-            	bRet = true;
-            } 
-            catch (Exception e) { 
-            	// Ignored by purpose
-            }		
-        }
-		
+			try {
+				final ROMol mol = RWMol.MolFromMolBlock(value);
+				mol.delete();
+				bRet = true;
+			}
+			catch (final Exception e) {
+				// Ignored by purpose
+			}
+		}
+
 		return bRet;
 	}
-	
+
 	/**
 	 * Creates an RDKit Chemical Reaction from a the SMARTS value provided
 	 * by the model {@link #m_modelOptionalReactionSmartsPattern}.
 	 * After creation it will be validated.
 	 * 
 	 * @param strRxnSmarts Reaction smarts. Can be null to fail with exception.
-	 * @param iRequiredReactantsTemplates Number of reactants templates that 
-     * 		are expected to be found in the chemical reaction.
+	 * @param iRequiredReactantsTemplates Number of reactants templates that
+	 * 		are expected to be found in the chemical reaction.
 	 *
 	 * @return Chemical reaction object. Never null.
 	 * 
-     * @throws InvalidSettingsException Thrown, if the reaction could not
-     * 		be created from the SMARTS value of the model or if it
-     * 		is invalid for another reason.
-     */
-    public static ChemicalReaction createReactionFromSmarts(String strRxnSmarts, int iRequiredReactantsTemplates)
-            throws InvalidSettingsException {
-        
-    	ChemicalReaction rxn = null;
-    	
-    	if (strRxnSmarts == null || strRxnSmarts.trim().length() == 0) {
-            throw new InvalidSettingsException("No Reaction SMARTS provided.");
-        }
-    	
-    	try {
-	    	rxn = ChemicalReaction.ReactionFromSmarts(strRxnSmarts);
-    	}
-    	catch (Exception exc) {
-    		LOGGER.error("Creation of Reaction from SMARTS value failed: " + exc.getMessage(), exc);
-    	}
-    	
-        if (rxn == null) {
-            throw new InvalidSettingsException("Invalid Reaction SMARTS: " + strRxnSmarts);
-        }
-        
-        validateReaction(rxn, iRequiredReactantsTemplates);
-        
-        return rxn;
-    }
-    
+	 * @throws InvalidSettingsException Thrown, if the reaction could not
+	 * 		be created from the SMARTS value of the model or if it
+	 * 		is invalid for another reason.
+	 */
+	public static ChemicalReaction createReactionFromSmarts(final String strRxnSmarts, final int iRequiredReactantsTemplates)
+			throws InvalidSettingsException {
+
+		ChemicalReaction rxn = null;
+
+		if (strRxnSmarts == null || strRxnSmarts.trim().length() == 0) {
+			throw new InvalidSettingsException("No Reaction SMARTS provided.");
+		}
+
+		try {
+			rxn = ChemicalReaction.ReactionFromSmarts(strRxnSmarts);
+		}
+		catch (final Exception exc) {
+			LOGGER.error("Creation of Reaction from SMARTS value failed: " + exc.getMessage(), exc);
+		}
+
+		if (rxn == null) {
+			throw new InvalidSettingsException("Invalid Reaction SMARTS: " + strRxnSmarts);
+		}
+
+		validateReaction(rxn, iRequiredReactantsTemplates);
+
+		return rxn;
+	}
+
 	/**
 	 * Reads an RDKit Chemical Reaction from a the Rxn value provided
 	 * by the first row of the passed in table.
@@ -174,80 +173,80 @@ public final class ChemUtils {
 	 * @param table Table with reaction smart.
 	 * @param inputDataInfo Data info to access smarts column.
 	 * 
-     * @param iRequiredReactantTemplates Number of reactants templates that 
-     * 		are expected to be found in the chemical reaction.
+	 * @param iRequiredReactantTemplates Number of reactants templates that
+	 * 		are expected to be found in the chemical reaction.
 	 *
 	 * @return Chemical reaction object. Never null.
 	 * 
-     * @throws InvalidSettingsException Thrown, if the reaction could not
-     * 		be created from the SMARTS value of the model or if it
-     * 		is invalid for another reason.
-     */
-    public static ChemicalReaction readReactionFromTable(final BufferedDataTable table, 
-    		final InputDataInfo inputDataInfo, int iRequiredReactantsTemplates) 
-    	throws InvalidSettingsException, EmptyCellException {
-        
-    	// Pre-checks
-    	if (table == null) {
-        	throw new IllegalArgumentException("No Reaction table found.");
-        }
-    	
-    	if (inputDataInfo == null) {
-        	throw new IllegalArgumentException("Input data info must not be null.");
-        }
-        
-    	if (table.getRowCount() < 1) {
-            throw new IllegalArgumentException(
-                    "Reaction table does not have any rows.");
-        }
+	 * @throws InvalidSettingsException Thrown, if the reaction could not
+	 * 		be created from the SMARTS value of the model or if it
+	 * 		is invalid for another reason.
+	 */
+	public static ChemicalReaction readReactionFromTable(final BufferedDataTable table,
+			final InputDataInfo inputDataInfo, final int iRequiredReactantsTemplates)
+					throws InvalidSettingsException, EmptyCellException {
 
-    	CloseableRowIterator iterator = table.iterator();
-        DataRow row = iterator.next();
-        iterator.close();
-        
-        // Validate the found reaction
-        ChemicalReaction rxn = inputDataInfo.getChemicalReaction(row);
-        validateReaction(rxn, iRequiredReactantsTemplates);
-        
-        return rxn;
-    }
-    
-    /**
-     * Validates the specified reaction. One of the validations is to check the number
-     * of reactants templates, which can be passed in.
-     * 
-     * @param rxn Reaction to be validated. Must not null to succeed.
-     * @param iRequiredReactantTemplates Number of reactants templates that 
-     * 		are expected to be found in the chemical reaction.
-     * 
-     * @throws InvalidSettingsException Thrown, if the passed in reaction
-     * 		is null or if validation failed.
-     */
-    public static void validateReaction(final ChemicalReaction rxn, int iRequiredReactantsTemplates)
-            throws InvalidSettingsException {
-    	if (rxn == null) {
-            throw new InvalidSettingsException("No Reaction provided.");
-    	}
-    	
-        if (rxn.getNumReactantTemplates() != iRequiredReactantsTemplates) {
-            throw new InvalidSettingsException(
-                    "Reaction should have exactly " + iRequiredReactantsTemplates + " reactant(s), it has  "
-                            + rxn.getNumReactantTemplates() + " instead.");
-        }
+		// Pre-checks
+		if (table == null) {
+			throw new IllegalArgumentException("No Reaction table found.");
+		}
 
-        if (!rxn.validate()) {
-            throw new InvalidSettingsException("Reaction SMARTS has errors and cannot be used.");
-        }
-    }
+		if (inputDataInfo == null) {
+			throw new IllegalArgumentException("Input data info must not be null.");
+		}
+
+		if (table.getRowCount() < 1) {
+			throw new IllegalArgumentException(
+					"Reaction table does not have any rows.");
+		}
+
+		final CloseableRowIterator iterator = table.iterator();
+		final DataRow row = iterator.next();
+		iterator.close();
+
+		// Validate the found reaction
+		final ChemicalReaction rxn = inputDataInfo.getChemicalReaction(row);
+		validateReaction(rxn, iRequiredReactantsTemplates);
+
+		return rxn;
+	}
+
+	/**
+	 * Validates the specified reaction. One of the validations is to check the number
+	 * of reactants templates, which can be passed in.
+	 * 
+	 * @param rxn Reaction to be validated. Must not null to succeed.
+	 * @param iRequiredReactantTemplates Number of reactants templates that
+	 * 		are expected to be found in the chemical reaction.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the passed in reaction
+	 * 		is null or if validation failed.
+	 */
+	public static void validateReaction(final ChemicalReaction rxn, final int iRequiredReactantsTemplates)
+			throws InvalidSettingsException {
+		if (rxn == null) {
+			throw new InvalidSettingsException("No Reaction provided.");
+		}
+
+		if (rxn.getNumReactantTemplates() != iRequiredReactantsTemplates) {
+			throw new InvalidSettingsException(
+					"Reaction should have exactly " + iRequiredReactantsTemplates + " reactant(s), it has  "
+							+ rxn.getNumReactantTemplates() + " instead.");
+		}
+
+		if (!rxn.validate()) {
+			throw new InvalidSettingsException("Reaction SMARTS has errors and cannot be used.");
+		}
+	}
 
 
 
 	//
 	// Constructor
 	//
-	
+
 	/**
-	 * This constructor serves only the purpose to avoid instantiation of this class. 
+	 * This constructor serves only the purpose to avoid instantiation of this class.
 	 */
 	private ChemUtils() {
 		// To avoid instantiation of this class.

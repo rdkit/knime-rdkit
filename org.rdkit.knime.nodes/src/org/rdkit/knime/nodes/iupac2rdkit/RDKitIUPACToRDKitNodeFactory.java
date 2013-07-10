@@ -55,64 +55,62 @@ import org.knime.core.node.NodeView;
 /**
  * <code>NodeFactory</code> for the RDKit based "RDKitIUPACToRDKit" Node.
  * 
- *
  * @author Manuel Schwarze
  */
-public class RDKitIUPACToRDKitNodeFactory 
-        extends NodeFactory<RDKitIUPACToRDKitNodeModel> {
+public class RDKitIUPACToRDKitNodeFactory extends NodeFactory<RDKitIUPACToRDKitNodeModel> {
 
-    /**
-     * Creates a model for the RDKitIUPACToRDKit functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitIUPACToRDKitNodeModel createNodeModel() {
-        return new RDKitIUPACToRDKitNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitIUPACToRDKit functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitIUPACToRDKitNodeModel createNodeModel() {
+		return new RDKitIUPACToRDKitNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitIUPACToRDKitNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitIUPACToRDKitNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitIUPACToRDKitNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitIUPACToRDKitNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitIUPACToRDKitNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitIUPACToRDKitNodeDialog();
+	}
 }
 

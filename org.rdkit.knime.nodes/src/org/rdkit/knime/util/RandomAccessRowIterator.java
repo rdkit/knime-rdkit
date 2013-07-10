@@ -81,7 +81,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	private int m_iNextRowIndex;
 
 	/** Table to iterate over. */
-	private BufferedDataTable m_table;
+	private final BufferedDataTable m_table;
 
 	//
 	// Constructor
@@ -151,7 +151,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	public void close() {
 		m_bClosed = true;
 		m_iNextRowIndex = -1;
-		
+
 		if (m_iterator != null) {
 			m_iterator.close();
 		}
@@ -163,8 +163,8 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 */
 	@Override
 	public boolean hasNext() {
-		return !m_bClosed && m_iNextRowIndex >= 0 && 
-			m_iterator != null && m_iterator.hasNext();
+		return !m_bClosed && m_iNextRowIndex >= 0 &&
+				m_iterator != null && m_iterator.hasNext();
 	}
 
 	/**
@@ -195,7 +195,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 				}
 			}
 		}
-		catch (NoSuchElementException exc) {
+		catch (final NoSuchElementException exc) {
 			// Ignore this exception - we return null.
 		}
 
@@ -239,14 +239,14 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 			m_iNextRowIndex = -1;
 			throw new NoSuchElementException("Iterator not usable. Cannot skip rows.");
 		}
-		
+
 		try {
 			for (int i = 0; i < iNumberOfRows; i++) {
 				m_iterator.next();
 				m_iNextRowIndex++;
 			}
 		}
-		catch (NoSuchElementException exc) {
+		catch (final NoSuchElementException exc) {
 			m_iNextRowIndex = -1;
 			throw exc;
 		}
@@ -268,10 +268,10 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 * @return String representation.
 	 */
 	@Override
-    public String toString() {
-		StringBuilder sbRet = new StringBuilder("AbsoluteRowIterator { ");
+	public String toString() {
+		final StringBuilder sbRet = new StringBuilder("AbsoluteRowIterator { ");
 		sbRet.append("nextRowIndex=").append(m_iNextRowIndex).
-			append(" }");
+		append(" }");
 
 		return sbRet.toString();
 	}

@@ -66,11 +66,11 @@ public interface AdditionalHeaderInfoHandler {
 
 	/**
 	 * Returns the type that this handler can handle.
-	 *  
+	 * 
 	 * @return Type of additional header information. Must not be null.
 	 */
 	String getType();
-	
+
 	/**
 	 * Convert the information value, which is always a String due to the KNIME
 	 * column header properties specifications, into an object that the renderer
@@ -87,7 +87,7 @@ public interface AdditionalHeaderInfoHandler {
 	/**
 	 * Returns the appropriate renderer for the information of a specific type.
 	 * 
-	 * @return Renderer capable to render the object that is returned by 
+	 * @return Renderer capable to render the object that is returned by
 	 * 		a call to {@link #prepareValue(String)}.
 	 */
 	TableCellRenderer getRenderer();

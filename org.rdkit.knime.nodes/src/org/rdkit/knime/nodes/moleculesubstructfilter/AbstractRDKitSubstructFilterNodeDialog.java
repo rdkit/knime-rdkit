@@ -52,18 +52,19 @@ import java.awt.GridBagLayout;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.moleculesubstructfilter.AbstractRDKitSubstructFilterNodeModel.MatchingCriteria;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumButtonGroup;
 import org.rdkit.knime.util.LayoutUtils;
 import org.rdkit.knime.util.SettingsModelEnumeration;
@@ -72,7 +73,7 @@ import org.rdkit.knime.util.SettingsModelEnumeration;
  * <code>NodeDialog</code> for the "RDKitMoleculeSubstructFilter" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
@@ -82,174 +83,174 @@ public abstract class AbstractRDKitSubstructFilterNodeDialog extends DefaultNode
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with default components to configure an input column,
-     * the name of a new column, which will contain the calculation results, an option
-     * to tell, if the source column shall be removed from the result table.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
+	 */
+	@SuppressWarnings("unchecked")
 	protected AbstractRDKitSubstructFilterNodeDialog() {
-    	DialogComponent compInputColumn = add(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-    	DialogComponent compQueryColumn = add(createQueryColumnNameSelectionComponent());
-        final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria =
-    		createMatchingCriteriaModel();
-    	DialogComponent compMatchingCriteria = add(new DialogComponentEnumButtonGroup<MatchingCriteria>(
-    			modelMatchingCriteria, true, null));
-    	DialogComponent compMinimumMatches = add(new DialogComponentNumber(
-        		createMinimumMatchesModel(modelMatchingCriteria), null, 1, 3));
-    	DialogComponent compNewColumnName = add(new DialogComponentString(
-                createNewColumnNameModel(), "New column name for matching substructures: "));
-    	
-    	// Relayout the components
-    	JPanel panel = (JPanel)getTab("Options");
-    	panel.setLayout(new GridBagLayout());
-    	
-    	int iRow = 0;
-    	LayoutUtils.constrain(panel, compInputColumn.getComponentPanel(), 
-    			0, iRow++, LayoutUtils.REMAINDER, 1, 
-    			LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
-    			0, 10, 0, 10);
-    	LayoutUtils.constrain(panel, compQueryColumn.getComponentPanel(), 
-    			0, iRow++, LayoutUtils.REMAINDER, 1, 
-    			LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
-    			0, 10, 0, 10);
-    	LayoutUtils.constrain(panel, new JLabel("Match:", JLabel.RIGHT), 
-    			0, iRow, 1, 1, 
-    			LayoutUtils.HORIZONTAL, LayoutUtils.NORTHEAST, 1.0d, 0.0d,
-    			9, 10, 0, 0);
-    	LayoutUtils.constrain(panel, compMatchingCriteria.getComponentPanel(), 
-    			1, iRow, 1, 1, 
-    			LayoutUtils.NONE, LayoutUtils.NORTHEAST, 0.0d, 0.0d,
-    			0, 10, 7, 0);
-    	LayoutUtils.constrain(panel, compMinimumMatches.getComponentPanel(), 
-    			2, iRow, 1, 1, 
-    			LayoutUtils.NONE, LayoutUtils.SOUTHWEST, 0.0d, 0.0d,
-    			0, 0, 9, 0);
-    	LayoutUtils.constrain(panel, new JPanel(), 
-    			3, iRow++, LayoutUtils.REMAINDER, 1, 
-    			LayoutUtils.HORIZONTAL, LayoutUtils.NORTHWEST, 1.0d, 0.0d,
-    			0, 0, 0, 10);
-    	LayoutUtils.constrain(panel, compNewColumnName.getComponentPanel(), 
-    			0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER, 
-    			LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
-    			0, 10, 0, 10);
-    }
-    
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * Creates the dialog component to select the query column with the correct
-     * data value type. 
-     * 
-     * @return Dialog component for selecting the query column. Must not be null.
-     */
-    protected abstract DialogComponentColumnNameSelection createQueryColumnNameSelectionComponent();
-    
-    //
-    // Private Methods
-    //
-    
-    private DialogComponent add(DialogComponent comp) {
-    	addDialogComponent(comp);
-    	return comp;
-    }
+		final DialogComponent compInputColumn = add(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		final DialogComponent compQueryColumn = add(createQueryColumnNameSelectionComponent());
+		final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria =
+				createMatchingCriteriaModel();
+		final DialogComponent compMatchingCriteria = add(new DialogComponentEnumButtonGroup<MatchingCriteria>(
+				modelMatchingCriteria, true, null));
+		final DialogComponent compMinimumMatches = add(new DialogComponentNumber(
+				createMinimumMatchesModel(modelMatchingCriteria), null, 1, 3));
+		final DialogComponent compNewColumnName = add(new DialogComponentString(
+				createNewColumnNameModel(), "New column name for matching substructures: "));
 
-    //
-    // Static Methods
-    //
+		// Relayout the components
+		final JPanel panel = (JPanel)getTab("Options");
+		panel.setLayout(new GridBagLayout());
 
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
-   
-    /**
-     * Creates the settings model to be used for the query column.
-     * 
-     * @return Settings model for query column selection.
-     */
-    protected static final SettingsModelString createQueryColumnNameModel() {
-        return new SettingsModelString("query_column", null);
-    }    
-       
-    /**
-     * Creates the settings model for specifying the matching criteria.
-     * 
-     * @return Settings model for the matching criteria.
-     */
-    static final SettingsModelEnumeration<MatchingCriteria> createMatchingCriteriaModel() {
-    	return new SettingsModelEnumeration<AbstractRDKitSubstructFilterNodeModel.MatchingCriteria>(
-    			MatchingCriteria.class, "matching", MatchingCriteria.All);
-    }
-    
-    /**
-     * Creates the settings model for specifying the minimum matching number
-     * in case that the criteria "At least" was selected. Default is 1.
-     * The range of numbers goes from 1 to 999.
-     * 
-     * @return Settings model for the matching criteria number of "At least".
-     */
-    static final SettingsModelIntegerBounded createMinimumMatchesModel(
-    		final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria) {
-    	final SettingsModelIntegerBounded model = 
-    		new SettingsModelIntegerBounded("minimumMatches", 1, 1, 999) {
-    		
-    		/**
-    		 * Backward compatibility handling.
-    		 */
-    		@Override
-    		public void setIntValue(int newValue) {
-    			// These values are out of range, but could exist from an old node version.
-    			// We correct them here and apply the matching criteria they were expressing.
-    			if (newValue == 0) {
-    				newValue = 1;
-    				modelMatchingCriteria.setValue(MatchingCriteria.All);
-    			}
-    			else if (newValue == -1) {
-    				newValue = 1;
-    				modelMatchingCriteria.setValue(MatchingCriteria.Exact);
-    			}
-    			else if (newValue > 0 && modelMatchingCriteria.wasUndefinedInSettings()) {
-       				modelMatchingCriteria.setValue(MatchingCriteria.AtLeast);
-       			}
-    			
-    			super.setIntValue(newValue);
-    		}
-    	};
-    	
-    	// This model will depend on the state of the matching criteria
-        modelMatchingCriteria.addChangeListener(new ChangeListener() {
-			
-        	/**
-        	 * We use this to enable or disable the minimum number
-        	 * field, which makes only sense if "At least" is selected.
-        	 */
+		int iRow = 0;
+		LayoutUtils.constrain(panel, compInputColumn.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, compQueryColumn.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, new JLabel("Match:", SwingConstants.RIGHT),
+				0, iRow, 1, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTHEAST, 1.0d, 0.0d,
+				9, 10, 0, 0);
+		LayoutUtils.constrain(panel, compMatchingCriteria.getComponentPanel(),
+				1, iRow, 1, 1,
+				LayoutUtils.NONE, LayoutUtils.NORTHEAST, 0.0d, 0.0d,
+				0, 10, 7, 0);
+		LayoutUtils.constrain(panel, compMinimumMatches.getComponentPanel(),
+				2, iRow, 1, 1,
+				LayoutUtils.NONE, LayoutUtils.SOUTHWEST, 0.0d, 0.0d,
+				0, 0, 9, 0);
+		LayoutUtils.constrain(panel, new JPanel(),
+				3, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTHWEST, 1.0d, 0.0d,
+				0, 0, 0, 10);
+		LayoutUtils.constrain(panel, compNewColumnName.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * Creates the dialog component to select the query column with the correct
+	 * data value type.
+	 * 
+	 * @return Dialog component for selecting the query column. Must not be null.
+	 */
+	protected abstract DialogComponentColumnNameSelection createQueryColumnNameSelectionComponent();
+
+	//
+	// Private Methods
+	//
+
+	private DialogComponent add(final DialogComponent comp) {
+		addDialogComponent(comp);
+		return comp;
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for the query column.
+	 * 
+	 * @return Settings model for query column selection.
+	 */
+	protected static final SettingsModelString createQueryColumnNameModel() {
+		return new SettingsModelString("query_column", null);
+	}
+
+	/**
+	 * Creates the settings model for specifying the matching criteria.
+	 * 
+	 * @return Settings model for the matching criteria.
+	 */
+	static final SettingsModelEnumeration<MatchingCriteria> createMatchingCriteriaModel() {
+		return new SettingsModelEnumeration<AbstractRDKitSubstructFilterNodeModel.MatchingCriteria>(
+				MatchingCriteria.class, "matching", MatchingCriteria.All);
+	}
+
+	/**
+	 * Creates the settings model for specifying the minimum matching number
+	 * in case that the criteria "At least" was selected. Default is 1.
+	 * The range of numbers goes from 1 to 999.
+	 * 
+	 * @return Settings model for the matching criteria number of "At least".
+	 */
+	static final SettingsModelIntegerBounded createMinimumMatchesModel(
+			final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria) {
+		final SettingsModelIntegerBounded model =
+				new SettingsModelIntegerBounded("minimumMatches", 1, 1, 999) {
+
+			/**
+			 * Backward compatibility handling.
+			 */
 			@Override
-			public void stateChanged(ChangeEvent e) {
+			public void setIntValue(int newValue) {
+				// These values are out of range, but could exist from an old node version.
+				// We correct them here and apply the matching criteria they were expressing.
+				if (newValue == 0) {
+					newValue = 1;
+					modelMatchingCriteria.setValue(MatchingCriteria.All);
+				}
+				else if (newValue == -1) {
+					newValue = 1;
+					modelMatchingCriteria.setValue(MatchingCriteria.Exact);
+				}
+				else if (newValue > 0 && modelMatchingCriteria.wasUndefinedInSettings()) {
+					modelMatchingCriteria.setValue(MatchingCriteria.AtLeast);
+				}
+
+				super.setIntValue(newValue);
+			}
+		};
+
+		// This model will depend on the state of the matching criteria
+		modelMatchingCriteria.addChangeListener(new ChangeListener() {
+
+			/**
+			 * We use this to enable or disable the minimum number
+			 * field, which makes only sense if "At least" is selected.
+			 */
+			@Override
+			public void stateChanged(final ChangeEvent e) {
 				model.setEnabled(modelMatchingCriteria.getValue() == MatchingCriteria.AtLeast);
 			}
 		});
-        
-        model.setEnabled(modelMatchingCriteria.getValue() == MatchingCriteria.AtLeast);
-    	
-    	return model;
-    }  
-    
-    /**
-     * Creates the settings model to be used to specify the new column name.
-     * 
-     * @return Settings model for result column name.
-     */
-    static final SettingsModelString createNewColumnNameModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+
+		model.setEnabled(modelMatchingCriteria.getValue() == MatchingCriteria.AtLeast);
+
+		return model;
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 }

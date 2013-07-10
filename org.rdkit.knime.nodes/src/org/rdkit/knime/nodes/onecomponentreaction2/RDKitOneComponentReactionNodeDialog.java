@@ -49,68 +49,68 @@
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * <code>NodeDialog</code> for the "RDKitOneComponentReaction" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
 public class RDKitOneComponentReactionNodeDialog extends AbstractRDKitReactionNodeDialog {
-    
+
 	//
 	// Constructor
 	//
-	
+
 	/**
 	 * Creates a new dialog settings panel.
 	 */
 	public RDKitOneComponentReactionNodeDialog() {
 		super(1);
 	}
-	
-    //
-    // Protected Methods
-    //
-    
+
+	//
+	// Protected Methods
+	//
+
 	/**
 	 * {@inheritDoc}
 	 * This implementation adds the input mol column selection component.
 	 */
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	@Override
-    protected void addDialogComponentsBeforeReactionSettings() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-        		createReactantColumnNameModel(), "Reactant RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-    }
-    
+	protected void addDialogComponentsBeforeReactionSettings() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createReactantColumnNameModel(), "Reactant RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * This implementation does not add any components.
 	 */
-    @Override
-    protected void addDialogComponentsAfterReactionSettings() {
-    	// Nothing to add here
-    }
+	@Override
+	protected void addDialogComponentsAfterReactionSettings() {
+		// Nothing to add here
+	}
 
-    //
-    // Static Methods
-    //
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createReactantColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createReactantColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 }

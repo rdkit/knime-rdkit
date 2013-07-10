@@ -56,63 +56,62 @@ import org.knime.core.node.NodeView;
  * <code>NodeFactory</code> for the RDKit based "RDKitSubstructFilter" Node.
  * 
  * @author Greg Landrum
- * ²author Manuel Schwarze
+ * @author Manuel Schwarze
  */
-public class RDKitSubstructFilterNodeFactory 
-        extends NodeFactory<RDKitSubstructFilterNodeModel> {
+public class RDKitSubstructFilterNodeFactory extends NodeFactory<RDKitSubstructFilterNodeModel> {
 
-    /**
-     * Creates a model for the RDKitSubstructureFilter functionality
-     * of the RDKit library. The model is derived from the
-     * abstract class AbstractRDKitNodeModel, which provides
-     * common base functionality for RDKit nodes.
-     * {@inheritDoc}
-     *
-     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
-     */
-    @Override
-    public RDKitSubstructFilterNodeModel createNodeModel() {
-        return new RDKitSubstructFilterNodeModel();
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	/**
+	 * Creates a model for the RDKitSubstructureFilter functionality
+	 * of the RDKit library. The model is derived from the
+	 * abstract class AbstractRDKitNodeModel, which provides
+	 * common base functionality for RDKit nodes.
+	 * {@inheritDoc}
+	 *
+	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+	 */
+	@Override
+	public RDKitSubstructFilterNodeModel createNodeModel() {
+		return new RDKitSubstructFilterNodeModel();
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always null.
-     */
-    @Override
-    public NodeView<RDKitSubstructFilterNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitSubstructFilterNodeModel nodeModel) {
-        return null;
-    }
-    
-    /**
-     * This node does not have any views.
-     * 
+	 */
+	@Override
+	public NodeView<RDKitSubstructFilterNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitSubstructFilterNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * This node does not have any views.
+	 * 
 	 * @return Always 0.
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
+	 */
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * This node possesses a configuration dialog.
-     * 
+	/**
+	 * This node possesses a configuration dialog.
+	 * 
 	 * @return Always true.
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	 */
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RDKitSubstructFilterNodeDialog();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new RDKitSubstructFilterNodeDialog();
+	}
 }
 

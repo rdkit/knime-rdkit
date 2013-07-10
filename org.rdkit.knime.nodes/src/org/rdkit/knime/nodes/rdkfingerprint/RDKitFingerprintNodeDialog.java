@@ -50,7 +50,6 @@ package org.rdkit.knime.nodes.rdkfingerprint;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -59,6 +58,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeModel.FingerprintType;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumSelection;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 
@@ -71,95 +71,95 @@ import org.rdkit.knime.util.SettingsModelEnumeration;
 public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
 
 	/**
-     * Create a new dialog pane with some default components.
-     */
-    @SuppressWarnings("unchecked")
-    RDKitFingerprintNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createSmilesColumnModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentEnumSelection<FingerprintType>(
-                createFPTypeModel(), "Fingerprint type: ", FingerprintType.morgan, FingerprintType.featmorgan, 
-                FingerprintType.atompair, FingerprintType.torsion, FingerprintType.rdkit, FingerprintType.avalon,
-                FingerprintType.layered,FingerprintType.maccs));
+	 * Create a new dialog pane with some default components.
+	 */
+	@SuppressWarnings("unchecked")
+	RDKitFingerprintNodeDialog() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createSmilesColumnModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentEnumSelection<FingerprintType>(
+				createFPTypeModel(), "Fingerprint type: ", FingerprintType.morgan, FingerprintType.featmorgan,
+				FingerprintType.atompair, FingerprintType.torsion, FingerprintType.rdkit, FingerprintType.avalon,
+				FingerprintType.layered, FingerprintType.maccs));
 
-        super.addDialogComponent(new DialogComponentString(
-                createNewColumnModel(), "New column name: "));
-        super.addDialogComponent(new DialogComponentBoolean(
-                createBooleanModel(), "Remove source column"));
+		super.addDialogComponent(new DialogComponentString(
+				createNewColumnModel(), "New column name: "));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createBooleanModel(), "Remove source column"));
 
-        super.addDialogComponent(new DialogComponentNumberEdit(
-                createNumBitsModel(), "Num Bits: ", 4));
-        super.addDialogComponent(new DialogComponentNumber(createRadiusModel(),
-                "Radius: ", 1));
-        super.addDialogComponent(new DialogComponentNumber(
-                createMinPathModel(), "Min Path Length: ", 1));
-        super.addDialogComponent(new DialogComponentNumber(
-                createMaxPathModel(), "Max Path Length: ", 1));
-        super.addDialogComponent(new DialogComponentNumberEdit(
-                createLayerFlagsModel(), "Layer Flags: ", 8));
-    }
+		super.addDialogComponent(new DialogComponentNumberEdit(
+				createNumBitsModel(), "Num Bits: ", 4));
+		super.addDialogComponent(new DialogComponentNumber(createRadiusModel(),
+				"Radius: ", 1));
+		super.addDialogComponent(new DialogComponentNumber(
+				createMinPathModel(), "Min Path Length: ", 1));
+		super.addDialogComponent(new DialogComponentNumber(
+				createMaxPathModel(), "Max Path Length: ", 1));
+		super.addDialogComponent(new DialogComponentNumberEdit(
+				createLayerFlagsModel(), "Layer Flags: ", 8));
+	}
 
-    /**
-     * @return settings model for smiles column selection
-     */
-    static final SettingsModelString createSmilesColumnModel() {
-        return new SettingsModelString("smiles_column", null);
-    }
+	/**
+	 * @return settings model for smiles column selection
+	 */
+	static final SettingsModelString createSmilesColumnModel() {
+		return new SettingsModelString("smiles_column", null);
+	}
 
-    /**
-     * @return settings model for the new appended column name
-     */
-    static final SettingsModelString createNewColumnModel() {
-        return new SettingsModelString("new_column_name", null);
-    }
+	/**
+	 * @return settings model for the new appended column name
+	 */
+	static final SettingsModelString createNewColumnModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
 
-    /** @return settings model for check box whether to remove source columns. */
-    static final SettingsModelBoolean createBooleanModel() {
-        return new SettingsModelBoolean("remove_source_columns", false);
-    }
+	/** @return settings model for check box whether to remove source columns. */
+	static final SettingsModelBoolean createBooleanModel() {
+		return new SettingsModelBoolean("remove_source_columns", false);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelIntegerBounded createMinPathModel() {
-        return new SettingsModelIntegerBounded("min_path", 1, 1, 10);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelIntegerBounded createMinPathModel() {
+		return new SettingsModelIntegerBounded("min_path", 1, 1, 10);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelIntegerBounded createMaxPathModel() {
-        return new SettingsModelIntegerBounded("max_path", 7, 1, 10);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelIntegerBounded createMaxPathModel() {
+		return new SettingsModelIntegerBounded("max_path", 7, 1, 10);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelIntegerBounded createRadiusModel() {
-        return new SettingsModelIntegerBounded("radius", 2, 1, 6);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelIntegerBounded createRadiusModel() {
+		return new SettingsModelIntegerBounded("radius", 2, 1, 6);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelIntegerBounded createLayerFlagsModel() {
-        return new SettingsModelIntegerBounded("layer_flags", 0xFFFF,
-                1, 0xFFFF);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelIntegerBounded createLayerFlagsModel() {
+		return new SettingsModelIntegerBounded("layer_flags", 0xFFFF,
+				1, 0xFFFF);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelIntegerBounded createNumBitsModel() {
-        return new SettingsModelIntegerBounded("num_bits", 1024, 32, 9192);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelIntegerBounded createNumBitsModel() {
+		return new SettingsModelIntegerBounded("num_bits", 1024, 32, 9192);
+	}
 
-    /**
-     * @return settings model
-     */
-    static final SettingsModelEnumeration<FingerprintType> createFPTypeModel() {
-        return new SettingsModelEnumeration<FingerprintType>(FingerprintType.class, "fp_type", FingerprintType.morgan);
-    }
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelEnumeration<FingerprintType> createFPTypeModel() {
+		return new SettingsModelEnumeration<FingerprintType>(FingerprintType.class, "fp_type", FingerprintType.morgan);
+	}
 
 }

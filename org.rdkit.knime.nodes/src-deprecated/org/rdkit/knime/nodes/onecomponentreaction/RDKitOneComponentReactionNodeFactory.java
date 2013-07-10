@@ -57,49 +57,48 @@ import org.knime.core.node.NodeView;
  * @author Greg Landrum
  */
 @Deprecated
-public class RDKitOneComponentReactionNodeFactory extends
-        NodeFactory<RDKitOneComponentReactionNodeModel> {
+public class RDKitOneComponentReactionNodeFactory extends NodeFactory<RDKitOneComponentReactionNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RDKitOneComponentReactionNodeDialogPane();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitOneComponentReactionNodeDialogPane();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RDKitOneComponentReactionNodeModel createNodeModel() {
-        return new RDKitOneComponentReactionNodeModel();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public RDKitOneComponentReactionNodeModel createNodeModel() {
+		return new RDKitOneComponentReactionNodeModel();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<RDKitOneComponentReactionNodeModel> createNodeView(
-            final int viewIndex,
-            final RDKitOneComponentReactionNodeModel nodeModel) {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<RDKitOneComponentReactionNodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitOneComponentReactionNodeModel nodeModel) {
+		return null;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
 
 }

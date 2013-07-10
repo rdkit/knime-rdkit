@@ -83,182 +83,184 @@ import org.rdkit.knime.util.WarningConsolidator;
  * providing calculations based on the open source RDKit library.
  * 
  * @author Greg Landrum
- * @author Manuel Schwarze 
+ * @author Manuel Schwarze
  */
 public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNodeModel<RDKitOneComponentReactionNodeDialog> {
 
 	//
 	// Constants
 	//
-	
+
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitOneComponentReactionNodeModel.class);
- 	
+
 	/** Input data info index for Mol value of the reactant. */
 	protected static final int INPUT_COLUMN_REACTANT = 0;
-	
+
 	/** Input data info index for Reaction value. */
 	protected static final int INPUT_COLUMN_REACTION = 0;
-	
+
 	//
 	// Members
 	//
-	
+
 	/** Settings model for the column name of the input column. */
-    private final SettingsModelString m_modelInputColumnName =
-            registerSettings(RDKitOneComponentReactionNodeDialog.createReactantColumnNameModel(), "input_column", "firstColumn");
-    // Accept also deprecated keys
+	private final SettingsModelString m_modelInputColumnName =
+			registerSettings(RDKitOneComponentReactionNodeDialog.createReactantColumnNameModel(), "input_column", "firstColumn");
+	// Accept also deprecated keys
 
-    //
-    // Constructor
-    //
-    
-    /**
-     * Create new node model with two in- and one out-port.
-     */
-    RDKitOneComponentReactionNodeModel() {
-        super(new PortType[] { BufferedDataTable.TYPE, new PortType(BufferedDataTable.class, true)},
-              new PortType[] { BufferedDataTable.TYPE }, 
-              1);
-    }
+	//
+	// Constructor
+	//
 
-    //
-    // Protected Methods
-    //
-    
-    /**
-     * {@inheritDoc}
-     * This implementation returns 1.
-     * 
-     * @return Always 1.
-     */
-    @Override
-    protected int getNumberOfReactants() {
-    	return 1;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-    	// Reset warnings, check RDKit library readiness and check common reaction settings
-    	super.configure(inSpecs);
-    	
-    	// For molecule input column
-        // Auto guess the mol input column if not set - fails if no compatible column found
-        SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0, 
-        		"Auto guessing: Using column %COLUMN_NAME%.", 
-        		"No RDKit Mol compatible column in input table. Use \"Molecule to RDKit\" " +
-        			"node to convert Smiles or SDF.", getWarningConsolidator()); 
+	/**
+	 * Create new node model with two in- and one out-port.
+	 */
+	RDKitOneComponentReactionNodeModel() {
+		super(new PortType[] { BufferedDataTable.TYPE, new PortType(BufferedDataTable.class, true)},
+				new PortType[] { BufferedDataTable.TYPE },
+				1);
+	}
 
-        // Determines, if the mol input column exists - fails if it does not
-        SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,  
-        		"RDKit Mol input column has not been specified yet.",
-        		"RDKit Mol input column %COLUMN_NAME% does not exist. Has the input table changed?");
- 
-        // Consolidate all warnings and make them available to the user
-        generateWarnings();
+	//
+	// Protected Methods
+	//
 
-        // Generate output specs
-        return getOutputTableSpecs(inSpecs);
-    }
+	/**
+	 * {@inheritDoc}
+	 * This implementation returns 1.
+	 * 
+	 * @return Always 1.
+	 */
+	@Override
+	protected int getNumberOfReactants() {
+		return 1;
+	}
 
-    /**
-     * This implementation generates input data info object for the input mol column
-     * and connects it with the information coming from the appropriate setting model.
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-	protected InputDataInfo[] createInputDataInfos(int inPort, DataTableSpec inSpec)
-		throws InvalidSettingsException {
-    	
-    	InputDataInfo[] arrDataInfo = null;
- 
-    	// Specify input of table 1
-    	if (inPort == 0) {
-    		arrDataInfo = new InputDataInfo[1]; // We have only one input column
-    		arrDataInfo[INPUT_COLUMN_REACTANT] = new InputDataInfo(inSpec, m_modelInputColumnName, 
-    				InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-    				RDKitMolValue.class);
-    	}
-      	
-    	// Specify input of table 2 (Optional reaction table)
-    	else {
-    		arrDataInfo = super.createInputDataInfos(inPort, inSpec);
-    	}
-    	
-    	return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
-    }
-    
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+			throws InvalidSettingsException {
+		// Reset warnings, check RDKit library readiness and check common reaction settings
+		super.configure(inSpecs);
 
-    /**
-     * Returns the output table specification of the specified out port. 
-     * 
-     * @param outPort Index of output port in focus. Zero-based.
-     * @param inSpecs All input table specifications.
-     * 
-     * @return The specification of all output tables.
-     * 
-     * @throws InvalidSettingsException Thrown, if the settings are inconsistent with 
-     * 		given DataTableSpec elements.
-     * 
-     * @see #createOutputFactories(int)
-     */
-    protected DataTableSpec getOutputTableSpec(final int outPort, 
-    		final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	DataTableSpec spec = null;
-    	List<DataColumnSpec> listSpecs;
-   	    	
-    	switch (outPort) {
-    		case 0:    			
-    			// Define output table
-    	        listSpecs = new ArrayList<DataColumnSpec>();
-    	        listSpecs.add(new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Product Index", IntCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Reactant 1 sequence index", IntCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitMolCellFactory.TYPE).createSpec());
+		// For molecule input column
+		// Auto guess the mol input column if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
+				"Auto guessing: Using column %COLUMN_NAME%.",
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+						"node to convert SMARTS.", getWarningConsolidator());
 
-    	        spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
-    	        break;   	        
-        }
-       	
-    	return spec;
-    }   
-	
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] processing(final BufferedDataTable[] inData, 
-    		final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec) throws Exception {
-    	resetProductCounter();
-    	
-        final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
-        
-        // Contains the rows with the result columns
-        final BufferedDataContainer tableProducts = exec.createDataContainer(arrOutSpecs[0]);
+		// Determines, if the mol input column exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
+				"RDKit Mol input column has not been specified yet.",
+				"RDKit Mol input column %COLUMN_NAME% does not exist. Has the input table changed?");
+
+		// Consolidate all warnings and make them available to the user
+		generateWarnings();
+
+		// Generate output specs
+		return getOutputTableSpecs(inSpecs);
+	}
+
+	/**
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting model.
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
+
+		InputDataInfo[] arrDataInfo = null;
+
+		// Specify input of table 1
+		if (inPort == 0) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo[INPUT_COLUMN_REACTANT] = new InputDataInfo(inSpec, m_modelInputColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+					RDKitMolValue.class);
+		}
+
+		// Specify input of table 2 (Optional reaction table)
+		else {
+			arrDataInfo = super.createInputDataInfos(inPort, inSpec);
+		}
+
+		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
+	}
+
+
+	/**
+	 * Returns the output table specification of the specified out port.
+	 * 
+	 * @param outPort Index of output port in focus. Zero-based.
+	 * @param inSpecs All input table specifications.
+	 * 
+	 * @return The specification of all output tables.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
+	 * 		given DataTableSpec elements.
+	 * 
+	 * @see #createOutputFactories(int)
+	 */
+	@Override
+	protected DataTableSpec getOutputTableSpec(final int outPort,
+			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		DataTableSpec spec = null;
+		List<DataColumnSpec> listSpecs;
+
+		switch (outPort) {
+		case 0:
+			// Define output table
+			listSpecs = new ArrayList<DataColumnSpec>();
+			listSpecs.add(new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Product Index", IntCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Reactant 1 sequence index", IntCell.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitMolCellFactory.TYPE).createSpec());
+
+			spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
+			break;
+		}
+
+		return spec;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec) throws Exception {
+		resetProductCounter();
+
+		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
+
+		// Contains the rows with the result columns
+		final BufferedDataContainer tableProducts = exec.createDataContainer(arrOutSpecs[0]);
 
 		final int iTotalRowCount = inData[0].getRowCount();
 
-        if (iTotalRowCount == 0) {
-        	getWarningConsolidator().saveWarning("Input table 1 is empty - there are no reactants to process.");
-        }
-        else {
-	        // Get settings and define data specific behavior
+		if (iTotalRowCount == 0) {
+			getWarningConsolidator().saveWarning("Input table 1 is empty - there are no reactants to process.");
+		}
+		else {
+			// Get settings and define data specific behavior
 			final int iMaxParallelWorkers = (int)Math.ceil(1.5 * Runtime.getRuntime().availableProcessors());
 			final int iQueueSize = 10 * iMaxParallelWorkers;
-			
+
 			// Create the chemical reaction to be applied as safe guarded resource to avoid corruption
 			// by multiple thread processing
-			final SafeGuardedResource<ChemicalReaction> chemicalReaction = 
-				createSafeGuardedReactionResource(inData, arrInputDataInfo);
-			
+			final SafeGuardedResource<ChemicalReaction> chemicalReaction =
+					createSafeGuardedReactionResource(inData, arrInputDataInfo);
+
 			// Calculate one component reactions
 			new MultiThreadWorker<DataRow, DataRow[]>(iQueueSize, iMaxParallelWorkers) {
-				
+
 				/**
 				 * Computes the one component reactions.
 				 * 
@@ -266,46 +268,46 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * @param index Index of row.
 				 */
 				@Override
-				protected DataRow[] compute(DataRow row, long index) throws Exception {
+				protected DataRow[] compute(final DataRow row, final long index) throws Exception {
 					final int uniqueWaveId = createUniqueCleanupWaveId();
-	            	List<DataRow> listNewRows = null;
-	
+					List<DataRow> listNewRows = null;
+
 					// Empty cells will result in null items
-					ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT].getROMol(row), uniqueWaveId);
-					
-	                try {
+					final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT].getROMol(row), uniqueWaveId);
+
+					try {
 						if (mol != null) {
-		                    // The reaction takes a vector of reactants. For this
-		                    // single-component reaction that vector is one long
-							ROMol_Vect rs = new ROMol_Vect(1);
-		                    rs.set(0, mol);
-		                    
-		                    // Process reaction and create rows
-		                    listNewRows = processReactionResults(chemicalReaction.get(), rs, null,
-		                    		uniqueWaveId, (int)index);
+							// The reaction takes a vector of reactants. For this
+							// single-component reaction that vector is one long
+							final ROMol_Vect rs = new ROMol_Vect(1);
+							rs.set(0, mol);
+
+							// Process reaction and create rows
+							listNewRows = processReactionResults(chemicalReaction.get(), rs, null,
+									uniqueWaveId, (int)index);
 						}
 					}
 					finally {
 						cleanupMarkedObjects(uniqueWaveId);
 					}
-						
+
 					return (listNewRows == null ? null : listNewRows.toArray(new DataRow[listNewRows.size()]));
 				}
-				
+
 				/**
 				 * Adds the results to the table.
 				 * 
 				 * @param task Processing result for a row.
 				 */
 				@Override
-				protected void processFinished(ComputationTask task) 
-					throws ExecutionException, CancellationException, InterruptedException {
-					
-					DataRow[] arrResult = task.get();
-	
+				protected void processFinished(final ComputationTask task)
+						throws ExecutionException, CancellationException, InterruptedException {
+
+					final DataRow[] arrResult = task.get();
+
 					// Only consider valid results (which still could be empty)
 					if (arrResult != null) {
-						for (DataRow row : arrResult) {
+						for (final DataRow row : arrResult) {
 							tableProducts.addRowToTable(row);
 						}
 					}
@@ -313,30 +315,30 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 						getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
 								"Encountered empty molecule cell, which will be ignored.");
 					}
-			        
-			        // Check, if user pressed cancel (however, we will finish the method nevertheless)
-			        // Update the progress only every 20 rows
-			        if (task.getIndex() % 20 == 0) {
-				        try {
-					        AbstractRDKitNodeModel.reportProgress(exec, (int)task.getIndex(), 
-					        	iTotalRowCount, task.getInput(), 
-					        	new StringBuilder(" to calculate reactions [").append(getActiveCount()).append(" active, ")
-				            	.append(getFinishedTaskCount()).append(" pending]").toString());
-				        } 
-				        catch (CanceledExecutionException e) {
-				            cancel(true);
-				        }
-			        }
+
+					// Check, if user pressed cancel (however, we will finish the method nevertheless)
+					// Update the progress only every 20 rows
+					if (task.getIndex() % 20 == 0) {
+						try {
+							AbstractRDKitNodeModel.reportProgress(exec, (int)task.getIndex(),
+									iTotalRowCount, task.getInput(),
+									new StringBuilder(" to calculate reactions [").append(getActiveCount()).append(" active, ")
+									.append(getFinishedTaskCount()).append(" pending]").toString());
+						}
+						catch (final CanceledExecutionException e) {
+							cancel(true);
+						}
+					}
 				};
-			}.run(inData[0]);        
-        }
-        
+			}.run(inData[0]);
+		}
+
 		exec.checkCanceled();
 		exec.setProgress(1.0, "Finished Processing");
 
 		tableProducts.close();
-        
-        return new BufferedDataTable[] { tableProducts.getTable() };
-    }	
+
+		return new BufferedDataTable[] { tableProducts.getTable() };
+	}
 
 }

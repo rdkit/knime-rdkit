@@ -53,12 +53,12 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeModel.MatchHandling;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumSelection;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 
@@ -66,7 +66,7 @@ import org.rdkit.knime.util.SettingsModelEnumeration;
  * <code>NodeDialog</code> for the "RDKitSubstructFilter" Node.
  * 
  * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more 
+ * creation of a simple dialog with standard components. If you need a more
  * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Greg Landrum
@@ -77,92 +77,92 @@ public class RDKitSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
 	//
 	// Constructor
 	//
-	
-    /**
-     * Create a new dialog pane with settings components.
-     */
-    @SuppressWarnings("unchecked")
+
+	/**
+	 * Create a new dialog pane with settings components.
+	 */
+	@SuppressWarnings("unchecked")
 	RDKitSubstructFilterNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentString(createSmartsModel(),
-                "SMARTS query: "));
-        super.addDialogComponent(new DialogComponentBoolean(createExactMatchModel(),
-        		"Do exact match"));
-        
-        final SettingsModelEnumeration<MatchHandling> matchHandlingModel = createMatchHandlingModel();
-        super.addDialogComponent(new DialogComponentEnumSelection<MatchHandling>(matchHandlingModel, 
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentString(createSmartsModel(),
+				"SMARTS query: "));
+		super.addDialogComponent(new DialogComponentBoolean(createExactMatchModel(),
+				"Do exact match"));
+
+		final SettingsModelEnumeration<MatchHandling> matchHandlingModel = createMatchHandlingModel();
+		super.addDialogComponent(new DialogComponentEnumSelection<MatchHandling>(matchHandlingModel,
 				"Match handling: "));
-        super.addDialogComponent(new DialogComponentString(createNewMatchColumnNameModel(matchHandlingModel), 
-        		"Column name for matching atom list: ", true, 20));
-    }
+		super.addDialogComponent(new DialogComponentString(createNewMatchColumnNameModel(matchHandlingModel),
+				"Column name for matching atom list: ", true, 20));
+	}
 
-    //
-    // Static Methods
-    //
-    
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column selection.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
+	//
+	// Static Methods
+	//
 
-    /**
-     * Creates the settings model to be used for specifying the SMARTS value.
-     * 
-     * @return settings model for the smarts query
-     */
-    static final SettingsModelString createSmartsModel() {
-        return new SettingsModelString("smarts_value", "");
-    }
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
 
-    /**
-     * Creates the settings model to specify the exact match option.
-     * 
-     * @return settings model for the exact match toggle
-     */
-    static final SettingsModelBoolean createExactMatchModel() {
-        return new SettingsModelBoolean("exact_match", false);
-    }
-    
-    /**
-     * Creates the settings model for specifying how matches shall be handled.
-     * 
-     * @return settings model for the exact match toggle
-     */
-    static final SettingsModelEnumeration<MatchHandling> createMatchHandlingModel() {
-        return new SettingsModelEnumeration<MatchHandling>(
-        		MatchHandling.class, "match_handling", MatchHandling.DoNotAddMatchColumn);
-    }    
+	/**
+	 * Creates the settings model to be used for specifying the SMARTS value.
+	 * 
+	 * @return settings model for the smarts query
+	 */
+	static final SettingsModelString createSmartsModel() {
+		return new SettingsModelString("smarts_value", "");
+	}
 
-    /**
-     * Creates the settings model for specifying a new column name.
-     * This model is dependent on the passed in match handling model.
-     * 
-     * @return settings model for the name of the new column that contains matches
-     */
-    static final SettingsModelString createNewMatchColumnNameModel(
-    		final SettingsModelEnumeration<MatchHandling> matchHandlingModel) {
-    	final SettingsModelString modelWithDependency = new SettingsModelString("new_match_column", "Matching Atom List");
-    	
-    	// React on any changes in match handling model
-        matchHandlingModel.addChangeListener(new ChangeListener() {
-			
+	/**
+	 * Creates the settings model to specify the exact match option.
+	 * 
+	 * @return settings model for the exact match toggle
+	 */
+	static final SettingsModelBoolean createExactMatchModel() {
+		return new SettingsModelBoolean("exact_match", false);
+	}
+
+	/**
+	 * Creates the settings model for specifying how matches shall be handled.
+	 * 
+	 * @return settings model for the exact match toggle
+	 */
+	static final SettingsModelEnumeration<MatchHandling> createMatchHandlingModel() {
+		return new SettingsModelEnumeration<MatchHandling>(
+				MatchHandling.class, "match_handling", MatchHandling.DoNotAddMatchColumn);
+	}
+
+	/**
+	 * Creates the settings model for specifying a new column name.
+	 * This model is dependent on the passed in match handling model.
+	 * 
+	 * @return settings model for the name of the new column that contains matches
+	 */
+	static final SettingsModelString createNewMatchColumnNameModel(
+			final SettingsModelEnumeration<MatchHandling> matchHandlingModel) {
+		final SettingsModelString modelWithDependency = new SettingsModelString("new_match_column", "Matching Atom List");
+
+		// React on any changes in match handling model
+		matchHandlingModel.addChangeListener(new ChangeListener() {
+
 			@Override
-			public void stateChanged(ChangeEvent e) {
-				boolean bEnabled = matchHandlingModel.getValue() != MatchHandling.DoNotAddMatchColumn;
-				
+			public void stateChanged(final ChangeEvent e) {
+				final boolean bEnabled = matchHandlingModel.getValue() != MatchHandling.DoNotAddMatchColumn;
+
 				// Enable or disable the model
 				modelWithDependency.setEnabled(bEnabled);
 			}
 		});
-        
-        // Enable this model based on the dependent model's state
-        modelWithDependency.setEnabled(matchHandlingModel.getValue() != MatchHandling.DoNotAddMatchColumn);
-    	
-        return modelWithDependency;
-    }}
+
+		// Enable this model based on the dependent model's state
+		modelWithDependency.setEnabled(matchHandlingModel.getValue() != MatchHandling.DoNotAddMatchColumn);
+
+		return modelWithDependency;
+	}}

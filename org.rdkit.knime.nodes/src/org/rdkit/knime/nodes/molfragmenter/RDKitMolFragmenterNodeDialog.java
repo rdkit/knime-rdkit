@@ -49,11 +49,11 @@
 package org.rdkit.knime.nodes.molfragmenter;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
  * The dialog to configure the RDKit node.
@@ -61,56 +61,55 @@ import org.rdkit.knime.types.RDKitMolValue;
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitMolFragmenterNodeDialog
-        extends DefaultNodeSettingsPane {
+public class RDKitMolFragmenterNodeDialog extends DefaultNodeSettingsPane {
 
 	//
 	// Constructor
 	//
-	
+
 	/**
-     * Create a new dialog pane with default components to configure an input column
-     * and some other settings.
-     */
+	 * Create a new dialog pane with default components to configure an input column
+	 * and some other settings.
+	 */
 	@SuppressWarnings("unchecked")
-    RDKitMolFragmenterNodeDialog() {
-        super.addDialogComponent(new DialogComponentColumnNameSelection(
-                createInputColumnNameModel(), "RDKit Mol column: ", 0,
-                RDKitMolValue.class));
-        super.addDialogComponent(new DialogComponentNumber(
-                createMinPathModel(), "Min Path Length: ", 1));
-        super.addDialogComponent(new DialogComponentNumber(
-                createMaxPathModel(), "Max Path Length: ", 1));
-    }
+	RDKitMolFragmenterNodeDialog() {
+		super.addDialogComponent(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		super.addDialogComponent(new DialogComponentNumber(
+				createMinPathModel(), "Min Path Length: ", 1));
+		super.addDialogComponent(new DialogComponentNumber(
+				createMaxPathModel(), "Max Path Length: ", 1));
+	}
 
 	//
 	// Static Methods
 	//
-	
-    /**
-     * Creates the settings model to be used for the input column.
-     * 
-     * @return Settings model for input column name.
-     */
-    static final SettingsModelString createInputColumnNameModel() {
-        return new SettingsModelString("input_column", null);
-    }
-    
-    /**
-     * Creates the settings model to be used to set the minimum path length.
-     * 
-     * @return Settings model for minimum path length.
-     */
-    static final SettingsModelIntegerBounded createMinPathModel() {
-        return new SettingsModelIntegerBounded("min_path", 4, 1, 10);
-    }
-    
-    /**
-     * Creates the settings model to be used to set the maximum path length.
-     * 
-     * @return Settings model for maximum path length.
-     */
-    static final SettingsModelIntegerBounded createMaxPathModel() {
-        return new SettingsModelIntegerBounded("max_path", 7, 1, 10);
-    }
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column name.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used to set the minimum path length.
+	 * 
+	 * @return Settings model for minimum path length.
+	 */
+	static final SettingsModelIntegerBounded createMinPathModel() {
+		return new SettingsModelIntegerBounded("min_path", 4, 1, 10);
+	}
+
+	/**
+	 * Creates the settings model to be used to set the maximum path length.
+	 * 
+	 * @return Settings model for maximum path length.
+	 */
+	static final SettingsModelIntegerBounded createMaxPathModel() {
+		return new SettingsModelIntegerBounded("max_path", 7, 1, 10);
+	}
 }

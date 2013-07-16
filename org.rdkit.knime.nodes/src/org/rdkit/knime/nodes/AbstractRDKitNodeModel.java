@@ -957,20 +957,22 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				}
 			}
 
-			final int iCount = mapColumnRearrangers.size();
-			for (int i = 0; i < iCount; i++) {
-				exec.setMessage("Converting input tables for processing (" + i + " of " + iCount + ") ...");
-				final ColumnRearranger rearranger = mapColumnRearrangers.get(i);
+			final int iCountTablesToBeConverted = mapColumnRearrangers.size();
+			int iCount = 1;
+			for (int iTableIndex = 0; iTableIndex < inData.length; iTableIndex++) {
+				exec.setMessage("Converting input tables for processing (" + iCount + " of " + iCountTablesToBeConverted + ") ...");
+				final ColumnRearranger rearranger = mapColumnRearrangers.get(iTableIndex);
 				if (rearranger != null) {
-					arrConvertedTables[i] = exec.createColumnRearrangeTable(inData[i],
-							rearranger, exec.createSubProgress(1.0d / iCount / 2.0d));
+					iCount++;
+					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(inData[iTableIndex],
+							rearranger, exec.createSubProgress(1.0d / iCountTablesToBeConverted / 2.0d));
 
 					// Part 2 of workaround from above: We need to remove the last column again
-					final DataTableSpec tableSpec = arrConvertedTables[i].getDataTableSpec();
+					final DataTableSpec tableSpec = arrConvertedTables[iTableIndex].getDataTableSpec();
 					final ColumnRearranger rearrangerWorkaround = new ColumnRearranger(tableSpec);
 					rearrangerWorkaround.remove(tableSpec.getNumColumns() - 1);
-					arrConvertedTables[i] = exec.createColumnRearrangeTable(arrConvertedTables[i],
-							rearrangerWorkaround, exec.createSubProgress(1.0d / iCount / 2.0d));
+					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(arrConvertedTables[iTableIndex],
+							rearrangerWorkaround, exec.createSubProgress(1.0d / iCountTablesToBeConverted / 2.0d));
 				}
 			}
 		}

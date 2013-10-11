@@ -64,8 +64,11 @@ import org.knime.base.data.xml.SvgProvider;
 import org.knime.base.data.xml.SvgValueRenderer;
 import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.MissingCell;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
+import org.knime.core.data.renderer.DataValueRenderer;
 import org.w3c.dom.svg.SVGDocument;
 
 /**
@@ -77,12 +80,36 @@ import org.w3c.dom.svg.SVGDocument;
 public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
 implements SvgProvider {
 
+	/**
+	 * Factory for {@link RDKitMolValueRenderer}.
+	 */
+	public static final class Factory extends AbstractDataValueRendererFactory {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getDescription() {
+			return DESCRIPTION;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+			return new RDKitMolValueRenderer();
+		}
+	}
+
 	//
 	// Constants
 	//
 
 	/** Serial number. */
 	private static final long serialVersionUID = 8956038655901963406L;
+
+	/** Description / Renderer name. */
+	private static final String DESCRIPTION = "RDKit 2D depiction";
 
 	/** The font used for drawing empty cells. */
 	private static final Font MISSING_CELL_FONT = new Font("Helvetica", Font.PLAIN, 12);
@@ -197,7 +224,7 @@ implements SvgProvider {
 	 */
 	@Override
 	public String getDescription() {
-		return "RDKit 2D depiction";
+		return DESCRIPTION;
 	}
 
 	/**

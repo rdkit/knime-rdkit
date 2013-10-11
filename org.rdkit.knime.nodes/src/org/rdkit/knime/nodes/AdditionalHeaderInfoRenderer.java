@@ -51,11 +51,18 @@ package org.rdkit.knime.nodes;
 import java.awt.Component;
 import java.awt.Graphics;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.border.Border;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.node.tableview.ColumnHeaderRenderer;
+import org.rdkit.knime.headers.HeaderProperty;
+import org.rdkit.knime.headers.HeaderPropertyHandler;
+import org.rdkit.knime.headers.HeaderPropertyHandlerRegistry;
 import org.rdkit.knime.util.HorizontalCompoundIcon;
 import org.rdkit.knime.util.LayoutUtils;
 import org.rdkit.knime.util.VerticalCompoundIcon;
@@ -67,7 +74,10 @@ import org.rdkit.knime.util.VerticalCompoundIcon;
  * @see AdditionalHeaderInfo
  * 
  * @author Manuel Schwarze
+ * @deprecated Since version 2.3.0 replaced through RDKit Types Plugin class
+ * 		org.rdkit.knime.headers.AdditionalHeaderInfoRenderer.
  */
+@Deprecated
 public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 
 	//
@@ -79,6 +89,15 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 
 	/** Gap between icons and labels. */
 	private final static int GAP = 2;
+
+	/** Empty border to be applied around the additional data to ensure a margin. */
+	private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+
+	//
+	// Members
+	//
+
+	private final HeaderPropertyHandlerRegistry m_registry = HeaderPropertyHandlerRegistry.getInstance();
 
 	//
 	// Public Methods
@@ -96,9 +115,12 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 		// Check, if we render a header
 		if (value instanceof DataColumnSpec) {
 
+			final HeaderPropertyHandler[] arrHandlers =
+					m_registry.getHeaderPropertyHandlersForColumn((DataColumnSpec)value,
+							m_registry.getColumnHeaderRenderers());
+
 			// Determine, if additional information is available to be shown
-			final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo((DataColumnSpec)value);
-			if (addInfo.isAvailable()) {
+			if (arrHandlers != null && arrHandlers.length > 0) {
 				// Change background
 				setBackground(LayoutUtils.changeColor(getBackground(), 10));
 
@@ -121,7 +143,8 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 				// Calculate space for additional info
 				final int widthAddInfo = widthCell;
 				final int heightAddInfo = heightCell - (iconHeader.getIconHeight() + GAP);
-				final Icon iconAddInfo = addInfo.createIconWrapper(table, column, widthAddInfo, heightAddInfo);
+				final Icon iconAddInfo = createIconWrapper(table, column, widthAddInfo, heightAddInfo,
+						arrHandlers[0], (DataColumnSpec)value);
 
 				// Create compound icon from additional info and header
 				setIcon(new VerticalCompoundIcon(iconAddInfo, iconHeader, RIGHT, GAP));
@@ -169,6 +192,75 @@ public class AdditionalHeaderInfoRenderer extends ColumnHeaderRenderer {
 		};
 
 		return iconLabel;
+	}
+
+	/**
+	 * Creates an icon instance based on painting logic that the renderer of
+	 * the additional header information (see {@link #getRenderer()} provides.
+	 * 
+	 * @param table Table subject of rendering. Must not be null.
+	 * @param column Column index in focus of rendering.
+	 * @param width Width of the space that can be filled out with the additional
+	 * 		header information.
+	 * @param height Height of the space that can be filled out with the additional
+	 * 		header information.
+	 * 
+	 * @return Icon wrapper with capability to paint the additional header
+	 * 		information. If no information is available or no renderer was
+	 * 		found, it returns null.
+	 */
+	public Icon createIconWrapper(final JTable table, final int column,
+			final int width, final int height, final HeaderPropertyHandler handler,
+			final DataColumnSpec colSpec) {
+		Icon iconAddInfo = null;
+
+		// Create header property object
+		final HeaderProperty headerProperty = handler.createHeaderProperty(colSpec);
+
+		if (headerProperty != null) {
+			final DataValueRenderer renderer = handler.getPreferredRenderer(headerProperty);
+
+			if (renderer != null) {
+				final Component compAddInfo =
+						renderer.getTableCellRendererComponent(table,
+								headerProperty, false, false, -1, column);
+				compAddInfo.setSize(width, height);
+				if (compAddInfo instanceof JComponent) {
+					((JComponent)compAddInfo).setBorder(EMPTY_BORDER);
+				}
+
+				iconAddInfo = new Icon() {
+
+					/**
+					 * {@inheritDoc}
+					 * This implementation calls the paint method of the component that
+					 * the renderer that is retrieved from the registered handler returns.
+					 */
+					@Override
+					public void paintIcon(final Component c, final Graphics g, final int x, final int y) {
+						compAddInfo.paint(g);
+					}
+
+					/**
+					 * {@inheritDoc}
+					 */
+					@Override
+					public int getIconWidth() {
+						return width;
+					}
+
+					/**
+					 * {@inheritDoc}
+					 */
+					@Override
+					public int getIconHeight() {
+						return height;
+					}
+				};
+			}
+		}
+
+		return iconAddInfo;
 	}
 
 };

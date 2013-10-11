@@ -1,0 +1,235 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.rdkit.knime.types" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="org.rdkit.knime.types" id="org.rdkit.knime.properties.HeaderPropertyHandler" name="Header Property Handler"/>
+      </appinfo>
+      <documentation>
+         This extension point lets plug-ins register their own handlers for visualizing column properties in the RDKit Interactive View table headers.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="handler"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The extension point id that gets implemented.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="property">
+      <annotation>
+         <documentation>
+            Defines the property that can be handled by this Header Property Handler.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="key" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The key of a property that can be handled by this Header Property Handler.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="dataValue">
+      <annotation>
+         <documentation>
+            Defines the DataValue class that a property gets converted into for rendering.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="valueClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataValue"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="defaultRepresentation">
+      <annotation>
+         <documentation>
+            Defines how the handler represents the property in a header.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="mode" use="required">
+            <annotation>
+               <documentation>
+                  The initial default mode for the representation. Valid values are &quot;HeaderAndTooltip&quot;, &quot;HeaderOnly&quot;, &quot;TooltipOnly&quot; and &quot;Disable&quot;.
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="HeaderOnly">
+                  </enumeration>
+                  <enumeration value="TooltipOnly">
+                  </enumeration>
+                  <enumeration value="HeaderAndTooltip">
+                  </enumeration>
+                  <enumeration value="Disabled">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="acceptableProperties">
+      <annotation>
+         <documentation>
+            Defines the properties that can be handled by this Header Property Handler.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="property" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+      </complexType>
+   </element>
+
+   <element name="handler">
+      <annotation>
+         <documentation>
+            Defines the Header Property Handler defines by this extension point.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="acceptableProperties"/>
+            <element ref="dataValue"/>
+            <element ref="defaultRepresentation"/>
+         </sequence>
+         <attribute name="displayName" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The name that is shown to the user when selecting handlers in preferences.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique id to identify the handler, e.g. used in preferences.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The implementing class of the handler.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.rdkit.knime.properties.HeaderPropertyHandler"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         RDKit Nodes 2.3.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         &lt;extension 
+	point=&quot;org.rdkit.knime.properties.HeaderPropertyHandler&quot;&gt;
+	&lt;handler id=&quot;org.rdkit.knime.properties.SmilesHeaderHandler&quot;
+		class=&quot;org.rdkit.knime.properties.SmilesHeaderHandler&quot; displayName=&quot;SMILES Header&quot;&gt;
+	    &lt;acceptableProperties&gt;
+	    	&lt;property key=&quot;smiles&quot;/&gt;
+	    	&lt;property key=&quot;addInfoValue&quot;/&gt;
+	    &lt;/acceptableProperties&gt;
+		&lt;dataValue valueClass=&quot;org.knime.chem.types.SmilesValue&quot;/&gt;
+		&lt;defaultRepresentation mode=&quot;HeaderOnly&quot;/&gt;
+	&lt;/handler&gt;
+&lt;/extension&gt;
+      </documentation>
+   </annotation>
+
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         This source code, its documentation and all appendant files
+are protected by copyright law. All rights reserved.
+Copyright (C) 2013
+Novartis Institutes for BioMedical Research
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License, Version 3, as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see &lt;http://www.gnu.org/licenses&gt;.
+
+Additional permission under GNU GPL version 3 section 7:
+KNIME interoperates with ECLIPSE solely via ECLIPSE&apos;s plug-in APIs.
+Hence, KNIME and ECLIPSE are both independent programs and are not
+derived from each other. Should, however, the interpretation of the
+GNU GPL Version 3 (&quot;License&quot;) under any applicable laws result in
+KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+you the additional permission to use and propagate KNIME together with
+ECLIPSE with only the license terms in place for ECLIPSE applying to
+ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+license terms of ECLIPSE themselves allow for the respective use and
+propagation of ECLIPSE together with KNIME.
+
+Additional permission relating to nodes for KNIME that extend the Node
+Extension (and in particular that are based on subclasses of NodeModel,
+NodeDialog, and NodeView) and that only interoperate with KNIME through
+standard APIs (&quot;Nodes&quot;):
+Nodes are deemed to be separate and independent programs and to not be
+covered works.  Notwithstanding anything to the contrary in the
+License, the License does not apply to Nodes, you are not required to
+license Nodes under the License, and you are granted a license to
+prepare and propagate Nodes, in each case even if such Nodes are
+propagated with or for interoperation with KNIME.  The owner of a Node
+may freely choose the license terms applicable to such Node, including
+when such Node is propagated with or for interoperation with KNIME.
+
+      </documentation>
+   </annotation>
+
+</schema>

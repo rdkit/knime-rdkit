@@ -69,6 +69,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.properties.FingerprintSettingsHeaderProperty;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumeration;
@@ -90,34 +91,264 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 
 	/** Defines supported fingerprint types. */
 	public enum FingerprintType {
-		morgan, featmorgan, atompair, torsion, rdkit, avalon, layered, maccs;
+		morgan("Morgan") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						iNumBits,
+						iRadius,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits());
+			}
+		},
+
+		featmorgan("FeatMorgan") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						iNumBits,
+						iRadius,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				final UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
+				RDKFuncs.getFeatureInvariants(mol, ivs);
+				return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits(), ivs);
+			}
+		},
+
+		atompair("AtomPair") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						iNumBits,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol, settings.getNumBits());
+			}
+		},
+
+		torsion("Torsion") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						iNumBits,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits());
+			}
+		},
+
+		rdkit("RDKit") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						iMinPath,
+						iMaxPath,
+						iNumBits,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.RDKFingerprintMol(
+						mol, settings.getMinPath(), settings.getMaxPath(), settings.getNumBits(), 2);
+			}
+		},
+
+		avalon("Avalon") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						iNumBits,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						RDKFuncs.getAvalonSimilarityBits()); // A constant from the RDKit
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				final int bitNumber = settings.getNumBits();
+				final ExplicitBitVect fingerprint = new ExplicitBitVect(bitNumber);
+				synchronized (LOCK) {
+					RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false, settings.getSimilarityBits());
+				}
+				return fingerprint;
+			}
+		},
+
+		layered("Layered") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						iMinPath,
+						iMaxPath,
+						iNumBits,
+						FingerprintSettings.UNAVAILABLE,
+						iLayerFlags,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.LayeredFingerprintMol(mol, settings.getLayerFlags(), settings.getMinPath(),
+						settings.getMaxPath(), settings.getNumBits());
+			}
+		},
+
+		maccs("MACCS") {
+			@Override
+			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
+					final int iNumBits, final int iRadius, final int iLayerFlags) {
+				return new DefaultFingerprintSettings(toString(),
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						166,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE,
+						FingerprintSettings.UNAVAILABLE);
+			}
+
+			/**
+			 * Calculates the fingerprint for the specified molecule based on the
+			 * specified settings.
+			 * 
+			 * @param mol Molecule to calculate fingerprint for. Must not be null.
+			 * @param settings Fingerprint settings to apply. Must not be null.
+			 * 
+			 * @throws NullPointerException Thrown, if one of the settings is null.
+			 */
+			@Override
+			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+				return RDKFuncs.MACCSFingerprintMol(mol);
+			}
+		};
+
+		//
+		// Members
+		//
+
+		private final String m_strName;
+
+		//
+		// Constructors
+		//
+
+		/**
+		 * Creates a new fingerprint type enumeration value.
+		 * 
+		 * @param strName Name to be shown as string representation.
+		 */
+		private FingerprintType(final String strName) {
+			m_strName = strName;
+		}
+
+		/**
+		 * Creates a new fingerprint settings object for a fingerprint type.
+		 * Not all parameters are used for all fingerprints. This method
+		 * takes are that only those parameters are included in the
+		 * fingerprint specification, if they are are really used.
+		 * 
+		 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+		 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+		 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
+		 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
+		 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+		 * 
+		 * @return Specification of the fingerprint based on the passed in
+		 * 		values. Never null.
+		 */
+		public abstract FingerprintSettings getSpecification(final int iMinPath,
+				final int iMaxPath, final int iNumBits, final int iRadius, final int iLayerFlags);
+
+		/**
+		 * Calculates the fingerprint based on the specified settings. Important:
+		 * It is the responsibility of the caller of the function to free memory
+		 * for the returned fingerprint when it is not needed anymore. Call
+		 * the {@link ExplicitBitVect#delete()} for this purpose.
+		 * 
+		 * @param Fingerprint settings. Must not be null.
+		 * 
+		 * @return Fingerprint or null.
+		 */
+		public abstract ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings);
 
 		/**
 		 * {@inheritDoc}
 		 */
 		@Override
 		public String toString() {
+			return m_strName;
+		}
 
-			switch (this) {
-			case morgan:
-				return "Morgan";
-			case featmorgan:
-				return "FeatMorgan";
-			case atompair:
-				return "AtomPair";
-			case torsion:
-				return "Torsion";
-			case rdkit:
-				return "RDKit";
-			case avalon:
-				return "Avalon";
-			case layered:
-				return "Layered";
-			case maccs:
-				return "MACCS";
+		/**
+		 * Tries to determine the fingerprint type based on the passed in string. First it
+		 * will try to determine it by assuming that the passed in string is the
+		 * name of the fingerprint type ({@link #name()}. If this fails, it will compare the
+		 * string representation trying to find a match there ({@link #toString()}.
+		 * If none is found it will return null.
+		 */
+		public static FingerprintType parseString(String str) {
+			FingerprintType type = null;
+
+			if (str != null) {
+				try {
+					type = FingerprintType.valueOf(str);
+				}
+				catch (final IllegalArgumentException exc) {
+					// Ignored here
+				}
+
+				if (type == null) {
+					str = str.trim().toUpperCase();
+					for (final FingerprintType typeExisting : FingerprintType.values()) {
+						if (str.equals(typeExisting.toString().toUpperCase())) {
+							type = typeExisting;
+							break;
+						}
+					}
+				}
 			}
 
-			return super.toString();
+			return type;
 		}
 	}
 
@@ -279,9 +510,19 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 			// ==========
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), DenseBitVectorCell.TYPE)
-			.createSpec();
+			final DataColumnSpecCreator creator = new DataColumnSpecCreator(
+					m_modelNewColumnName.getStringValue(), DenseBitVectorCell.TYPE);
+			// Add fingerprint specification properties to column header
+			final FingerprintType fpType = m_modelFingerprintType.getValue();
+			if (fpType != null) {
+				new FingerprintSettingsHeaderProperty(fpType.getSpecification(
+						m_modelMinPath.getIntValue(),
+						m_modelMaxPath.getIntValue(),
+						m_modelNumBits.getIntValue(),
+						m_modelRadius.getIntValue(),
+						m_modelLayerFlags.getIntValue())).writeToColumnSpec(creator);
+			}
+			arrOutputSpec[0] = creator.createSpec();
 
 			// Generate factory
 			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
@@ -299,65 +540,24 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
+					// Calculate fingerprint
+					final FingerprintType fpType = m_modelFingerprintType.getValue();
+					final FingerprintSettings settings = fpType.getSpecification(
+							m_modelMinPath.getIntValue(),
+							m_modelMaxPath.getIntValue(),
+							m_modelNumBits.getIntValue(),
+							m_modelRadius.getIntValue(),
+							m_modelLayerFlags.getIntValue());
 					ExplicitBitVect fingerprint = null;
 
-					// Calculate fingerprint
-					switch (m_modelFingerprintType.getValue()) {
-					case rdkit:
-						fingerprint = markForCleanup(RDKFuncs.RDKFingerprintMol(mol,
-								m_modelMinPath.getIntValue(), m_modelMaxPath.getIntValue(),
-								m_modelNumBits.getIntValue(), 2), iUniqueWaveId);
-						break;
-
-					case atompair:
-						fingerprint = markForCleanup(RDKFuncs.getHashedAtomPairFingerprintAsBitVect(
-								mol, m_modelNumBits.getIntValue()), iUniqueWaveId);
-						break;
-
-					case torsion:
-						fingerprint = markForCleanup(RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(
-								mol, m_modelNumBits.getIntValue()), iUniqueWaveId);
-						break;
-
-					case morgan:
-						fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
-								mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue()), iUniqueWaveId);
-						break;
-
-					case featmorgan:
-						final UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
-						RDKFuncs.getFeatureInvariants(mol, ivs);
-						fingerprint = markForCleanup(RDKFuncs.getMorganFingerprintAsBitVect(
-								mol, m_modelRadius.getIntValue(), m_modelNumBits.getIntValue(), ivs), iUniqueWaveId);
-						break;
-
-					case avalon:
-						final int bitNumber = m_modelNumBits.getIntValue();
-						fingerprint = markForCleanup(new ExplicitBitVect(bitNumber), iUniqueWaveId);
-						synchronized (LOCK) {
-							RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false,
-									RDKFuncs.getAvalonSimilarityBits());
-						}
-						break;
-
-					case layered:
-						fingerprint = markForCleanup(RDKFuncs.LayeredFingerprintMol(
-								mol, m_modelLayerFlags.getIntValue(), m_modelMinPath.getIntValue(),
-								m_modelMaxPath.getIntValue(), m_modelNumBits.getIntValue()), iUniqueWaveId);
-						break;
-
-					case maccs:
-						synchronized (LOCK) {
-							fingerprint = markForCleanup(RDKFuncs.MACCSFingerprintMol(mol),
-									iUniqueWaveId);
-						}
-						break;
-
-					default:
+					try {
+						fingerprint = markForCleanup(fpType.calculate(mol, settings), iUniqueWaveId);
+					}
+					catch (final Exception exc) {
 						final String strMsg = "Fingerprint Type '" + m_modelFingerprintType.getValue() +
-						"' cannot be handled by this node.";
+								"' could not be calculated.";
 						LOGGER.error(strMsg);
-						throw new RuntimeException(strMsg);
+						throw new RuntimeException(strMsg, exc);
 					}
 
 					// Transfer to bit vector

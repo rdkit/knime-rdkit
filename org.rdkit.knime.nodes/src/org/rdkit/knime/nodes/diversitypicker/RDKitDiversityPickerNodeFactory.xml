@@ -14,13 +14,22 @@
         The algorithm is quite fast, even for large datasets, but note that runtime
         increases rapidly with the number of rows to be picked.</intro>
 
-        <option name="Fingerprint column">The column containing the fingerprints</option>
+        <option name="Molecule or fingerprint column (table 1)">The column containing the molecules or fingerprints to pick from.
+        	If molecules are selected their fingerprints will be calculated automatically with Morgan, Radius 2, 2048 bit length.</option>
+        <option name="Molecule or fingerprint column to bias away from (table 2)">
+        	The column containing molecules or fingerprints to bias away from. This option has the effect of 
+        	seeding the diversity pick: Molecules selected will be diverse with respect to these biasing molecules 
+        	as well as each other. If molecules are provided as input their fingerprints will be calculated automatically based on input of table 1. 
+        	If table 1 has fingerprints with unknown settings this calculation will fail. In this case please regenerate fingerprints in table 1 with 
+        	the RDKit Fingerprint Node or select a compatible fingerprint column in table 2 instead of a molecule column.
+        </option>
         <option name="Number to pick">Number of diverse rows to pick.</option>
         <option name="Random seed">Random number seed to use.</option>
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Fingerprints">Table with input data</inPort>
+        <inPort index="0" name="Molecules or Fingerprints">Table with either molecule or fingerprints for diversity picking</inPort>
+        <inPort index="1" name="Additional Input to Bias Away From">Table with either molecules or fingerprints to bias away from</inPort>
         <outPort index="0" name="Diverse rows">The results of the diversity pick</outPort>
     </ports>
 </knimeNode>

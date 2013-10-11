@@ -49,12 +49,9 @@ package org.rdkit.knime.types;
 import javax.swing.Icon;
 
 import org.RDKit.ROMol;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.StringValueRenderer;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  * Smiles Data Value interface. (Only a wrapper for the underlying string)
@@ -62,93 +59,89 @@ import org.knime.core.data.renderer.StringValueRenderer;
  * @author Greg Landrum
  */
 public interface RDKitMolValue extends DataValue {
-    /**
-     * Meta information to this value type.
-     *
-     * @see DataValue#UTILITY
-     */
-    public static final UtilityFactory UTILITY = new RDKUtilityFactory();
+	/**
+	 * Meta information to this value type.
+	 *
+	 * @see DataValue#UTILITY
+	 */
+	public static final UtilityFactory UTILITY = new RDKUtilityFactory();
 
-    /**
-     * Reads and returns the ROMol object represented by this value.
-     * It's the callers responsibility to call the {@link ROMol#delete()}
-     * method when done!
-     *
-     * @return a newly created {@link ROMol} object.
-     */
-    ROMol readMoleculeValue();
+	/**
+	 * Reads and returns the ROMol object represented by this value.
+	 * It's the callers responsibility to call the {@link ROMol#delete()}
+	 * method when done!
+	 *
+	 * @return a newly created {@link ROMol} object.
+	 */
+	ROMol readMoleculeValue();
 
-    /**
-     * Returns the Smiles string of the molecule.
-     *
-     * @return a String value
-     */
-    String getSmilesValue();
+	/**
+	 * Returns the Smiles string of the molecule.
+	 *
+	 * @return a String value
+	 */
+	String getSmilesValue();
 
-    /**
-     * Returns whether or not our SMILES is canonical
-     *
-     * @return a boolean value
-     */
-    boolean isSmilesCanonical();
+	/**
+	 * Returns whether or not our SMILES is canonical
+	 *
+	 * @return a boolean value
+	 */
+	boolean isSmilesCanonical();
 
-    /** Implementations of the meta information of this value class. */
-    public static class RDKUtilityFactory extends UtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = loadIcon(RDKitMolValue.class,
-                "/rdkit_type.png");
+	/** Implementations of the meta information of this value class. */
+	public static class RDKUtilityFactory extends ExtensibleUtilityFactory {
+		/** Singleton icon to be used to display this cell type. */
+		private static final Icon ICON = loadIcon(RDKitMolValue.class,
+				"/rdkit_type.png");
 
-        private static final DataValueComparator COMPARATOR =
-                new DataValueComparator() {
-                    @Override
-                    protected int compareDataValues(final DataValue v1,
-                            final DataValue v2) {
-                        int atomCount1;
-                        int atomCount2;
-                        ROMol mol1 = ((RDKitMolValue)v1).readMoleculeValue();
-                        try {
-                            atomCount1 = (int)mol1.getNumAtoms();
-                        } finally {
-                            mol1.delete();
-                        }
-                        ROMol mol2 = ((RDKitMolValue)v2).readMoleculeValue();
-                        try {
-                            atomCount2 = (int)mol2.getNumAtoms();
-                        } finally {
-                            mol2.delete();
-                        }
-                        return atomCount1 - atomCount2;
-                    }
-                };
+		private static final DataValueComparator COMPARATOR =
+				new DataValueComparator() {
+			@Override
+			protected int compareDataValues(final DataValue v1,
+					final DataValue v2) {
+				int atomCount1;
+				int atomCount2;
+				final ROMol mol1 = ((RDKitMolValue)v1).readMoleculeValue();
+				try {
+					atomCount1 = (int)mol1.getNumAtoms();
+				} finally {
+					mol1.delete();
+				}
+				final ROMol mol2 = ((RDKitMolValue)v2).readMoleculeValue();
+				try {
+					atomCount2 = (int)mol2.getNumAtoms();
+				} finally {
+					mol2.delete();
+				}
+				return atomCount1 - atomCount2;
+			}
+		};
 
-        /** Only subclasses are allowed to instantiate this class. */
-        protected RDKUtilityFactory() {
-        }
+		/** Only subclasses are allowed to instantiate this class. */
+		protected RDKUtilityFactory() {
+			super(RDKitMolValue.class);
+		}
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public Icon getIcon() {
+			return ICON;
+		}
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return COMPARATOR;
-        }
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		protected DataValueComparator getComparator() {
+			return COMPARATOR;
+		}
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    new RDKitMolValueRenderer(), StringValueRenderer.INSTANCE); // TODO: Change for KNIME 2.8. Pending: use new StringValueRenderer()
-        }
-    }
+		@Override
+		public String getName() {
+			return "RDKit Molecule";
+		}
+	}
 }

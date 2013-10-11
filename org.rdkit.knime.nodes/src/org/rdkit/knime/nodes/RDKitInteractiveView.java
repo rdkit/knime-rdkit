@@ -96,6 +96,10 @@ import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
+import org.rdkit.knime.headers.AdditionalHeaderInfoRenderer;
+import org.rdkit.knime.headers.HeaderProperty;
+import org.rdkit.knime.headers.HeaderPropertyHandler;
+import org.rdkit.knime.headers.HeaderPropertyHandlerRegistry;
 
 /**
  * Table view on a {@link org.knime.core.data.DataTable} with the capability
@@ -258,6 +262,8 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 			protected ColumnHeaderRenderer getNewColumnHeaderRenderer() {
 				return new AdditionalHeaderInfoRenderer();
 			}
+
+			// TODO: Add to method getPopupMenu()
 		};
 
 	}
@@ -438,9 +444,11 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 		if (model != null) {
 			final DataTableSpec tableSpec = model.getDataTableSpec();
 			if (tableSpec != null) {
+				final HeaderPropertyHandlerRegistry registry = HeaderPropertyHandlerRegistry.getInstance();
+				final String strListColumnHeaderRenderers = registry.getColumnHeaderRenderers();
+
 				for (final DataColumnSpec colSpec : tableSpec) {
-					final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
-					if (addInfo.isAvailable()) {
+					if (registry.getHeaderPropertyHandlersForColumn(colSpec, strListColumnHeaderRenderers) != null) {
 						bRet = true;
 						break;
 					}
@@ -468,13 +476,28 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 				// If no initial header height was found, use the
 				// column width as height (square form)
 				final int iDefaultHeight = m_tableView.getColumnWidth();
+				final HeaderPropertyHandlerRegistry registry = HeaderPropertyHandlerRegistry.getInstance();
+				final String strListColumnHeaderRenderers = registry.getColumnHeaderRenderers();
 
+				// Walk through all columns to see which column header needs maximum height
 				for (final DataColumnSpec colSpec : tableSpec) {
-					final AdditionalHeaderInfo addInfo = new AdditionalHeaderInfo(colSpec);
-					if (addInfo.isAvailable()) {
-						final int iPreferredHeight = addInfo.getInitialHeight();
-						iInitialHeight = Math.max(iInitialHeight,
-								iPreferredHeight == -1 ? iDefaultHeight : iPreferredHeight);
+					final HeaderPropertyHandler[] arrHandlers =
+							registry.getHeaderPropertyHandlersForColumn(colSpec, strListColumnHeaderRenderers);
+
+					if (arrHandlers != null && arrHandlers.length > 0) {
+						int iTotalHeight = 0;
+
+						// Walk through all handlers of header properties to determine their height needs
+						for (final HeaderPropertyHandler handler : arrHandlers) {
+							final HeaderProperty headerProperty = handler.createHeaderProperty(colSpec);
+							if (headerProperty != null) {
+								final Dimension dimPref = handler.getPreferredDimension(headerProperty);
+								final int iPreferredHeight = dimPref == null ? iDefaultHeight : dimPref.height;
+								iTotalHeight += iPreferredHeight;
+							}
+						}
+
+						iInitialHeight = Math.max(iInitialHeight, iTotalHeight);
 					}
 				}
 			}

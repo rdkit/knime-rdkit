@@ -70,10 +70,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.headers.HeaderPropertyUtils;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
-import org.rdkit.knime.nodes.AdditionalHeaderInfo;
 import org.rdkit.knime.nodes.TableViewSupport;
+import org.rdkit.knime.properties.SmilesHeaderProperty;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
@@ -327,7 +328,8 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			for (int i = 0; i < iResultColumnCount; i++) {
 				// Create spec with additional information
 				final DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[i], IntCell.TYPE);
-				new AdditionalHeaderInfo("Smiles", m_arrQueriesAsSmiles[i], -1).writeInColumnSpec(creator);
+				HeaderPropertyUtils.writeInColumnSpec(creator,
+						SmilesHeaderProperty.PROPERTY_SMILES, m_arrQueriesAsSmiles[i]);
 				arrOutputSpec[i] = creator.createSpec();
 			}
 

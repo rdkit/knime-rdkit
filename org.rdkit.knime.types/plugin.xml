@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="org.rdkit.knime.properties.HeaderPropertyHandler" 
+   	name="Header Property Handler" schema="schema/org.rdkit.knime.properties.headerpropertyhandler.exsd"/>
+
+   	<extension point="org.eclipse.core.runtime.preferences">
+		<initializer class="org.rdkit.knime.types.preferences.RDKitTypesPreferenceInitializer"/>
+   	</extension>
+   
+   <extension
+         point="org.knime.core.DataValueRenderer">
+      <dataValue
+            valueClass="org.rdkit.knime.types.RDKitMolValue">
+         <renderer
+               rendererFactoryClass="org.rdkit.knime.types.RDKitMolValueRenderer$Factory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
+   </extension>
+</plugin>

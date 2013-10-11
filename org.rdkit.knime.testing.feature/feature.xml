@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.testing.feature"
       label="RDKit KNIME JUnit Test"
-      version="2.2.0.qualifier"
+      version="2.3.0.qualifier"
       provider-name="NIBR">
 
    <description>
@@ -699,11 +699,25 @@ Public License instead of this License.  But first, please read
    <requires>
       <import plugin="org.rdkit.knime.nodes"/>
       <import plugin="org.knime.chem.base"/>
-      <import feature="org.knime.features.testingapplication" version="2.7.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
          id="org.rdkit.knime.testing"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.knime.testing.headless"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ant.optional.junit"
          download-size="0"
          install-size="0"
          version="0.0.0"

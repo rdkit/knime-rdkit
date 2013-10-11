@@ -58,7 +58,10 @@ import javax.swing.SwingConstants;
  * Merges two icons to one aligning them vertically.
  * 
  * @author Manuel Schwarze
+ * @deprecated Since version 2.3.0 replaced through RDKit Types Plugin class
+ * 		org.rdkit.knime.headers.VerticalCompoundIcon.
  */
+@Deprecated
 public class VerticalCompoundIcon implements Icon {
 
 	//

@@ -50,6 +50,8 @@ package org.rdkit.knime.nodes;
 
 import javax.swing.table.TableCellRenderer;
 
+import org.rdkit.knime.headers.HeaderPropertyHandler;
+
 /**
  * A handler of additional header information knows how to render the
  * information value. Such a handler is called in two steps of the rendering
@@ -61,7 +63,10 @@ import javax.swing.table.TableCellRenderer;
  * Handlers can be registered in the class {@link AdditionalHeaderInfo}.
  * 
  * @author Manuel Schwarze
+ * @deprecated Deprecated since RDKit Nodes 2.3.0 and replaced by an
+ * 		extension point mechanism based on {@link HeaderPropertyHandler}.
  */
+@Deprecated
 public interface AdditionalHeaderInfoHandler {
 
 	/**

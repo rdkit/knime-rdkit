@@ -248,16 +248,16 @@ public class InputDataInfo {
 
 		// Perform compatibility check
 		m_dataType = m_colSpec.getType(); // The existing type of the input column
-		final List<Class<? extends DataValue>> m_listPreferredValueClasses = (arrDataValueClasses == null ?
+		final List<Class<? extends DataValue>> listPreferredValueClasses = (arrDataValueClasses == null ?
 				new ArrayList<Class<? extends DataValue>>(1) :
 					Arrays.asList(arrDataValueClasses));
 		final List<Class<? extends DataValue>> m_listCompatibleValueClasses =
-				RDKitAdapterCellSupport.expandByAdaptableTypes(m_listPreferredValueClasses);
+				RDKitAdapterCellSupport.expandByAdaptableTypes(listPreferredValueClasses);
 
 		Class<? extends DataValue> compatiblePreferredValueClass = null;
-		if (!m_listPreferredValueClasses.isEmpty()) {
+		if (!listPreferredValueClasses.isEmpty()) {
 			// Look first for preferred value classes
-			for (final Class<? extends DataValue> valueClass : m_listPreferredValueClasses) {
+			for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
 				if (m_dataType.isCompatible(valueClass)) {
 					compatiblePreferredValueClass = valueClass;
 					break;
@@ -266,7 +266,7 @@ public class InputDataInfo {
 
 			// If not found look if conversion is possible
 			if (compatiblePreferredValueClass == null) {
-				for (final Class<? extends DataValue> valueClass : m_listPreferredValueClasses) {
+				for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
 					for (final Class<? extends DataValue> valueClassCompatible :
 						RDKitAdapterCellSupport.expandByAdaptableTypes(valueClass)) {
 						if (m_dataType.isCompatible(valueClassCompatible)) {

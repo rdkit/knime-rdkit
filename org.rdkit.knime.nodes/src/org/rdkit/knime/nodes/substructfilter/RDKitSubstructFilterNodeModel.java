@@ -336,7 +336,9 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 
 				// A missing cell would result in mol == null
 				if (mol != null && molPattern != null &&
-						(!m_modelExactMatch.getBooleanValue() || mol.getNumAtoms() == molPattern.getNumAtoms())) {
+						(!m_modelExactMatch.getBooleanValue() ||
+								(mol.getNumAtoms() == molPattern.getNumAtoms() &&
+								mol.getNumBonds() == molPattern.getNumBonds()))) {
 
 					// See if there is a match
 					final boolean matched = mol.hasSubstructMatch(molPattern);
@@ -374,7 +376,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 
 											if (m_bDebug) {
 												sb.append("(").append(pair.getFirst()).
-														append(",").append(pair.getSecond()).append(")");
+												append(",").append(pair.getSecond()).append(")");
 												if (atomIndex < iCountMatchingAtoms - 1) {
 													sb.append(", ");
 												}

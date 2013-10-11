@@ -49,12 +49,17 @@
 package org.rdkit.knime.nodes.diversitypicker;
 
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
@@ -69,19 +74,80 @@ import org.rdkit.knime.util.DialogComponentColumnNameSelection;
  */
 public class RDKitDiversityPickerNodeDialog extends DefaultNodeSettingsPane {
 
+	//
+	// Members
+	//
+
+	/** Setting model component for the additional column selector. */
+	private final DialogComponent m_compAdditionalInputColumnName;
+
+	/** Setting model component for the hint label to connect a second table. */
+	private final DialogComponent m_compHintToConnectSecondTable;
+
+	//
+	// Constructor
+	//
+
 	/**
 	 * Create a new dialog pane with some default components.
 	 */
 	@SuppressWarnings("unchecked")
 	RDKitDiversityPickerNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
-				createInputColumnNameModel(), "Fingerprint column: ", 0,
-				BitVectorValue.class));
+				createInputColumnNameModel(), "Molecule or fingerprint column (table 1): ", 0,
+				BitVectorValue.class, RDKitMolValue.class));
+		super.addDialogComponent(m_compHintToConnectSecondTable = new DialogComponentLabel(
+				"You may connect a second input table with a molecule or fingerprint column to bias away from."));
+		super.addDialogComponent(m_compAdditionalInputColumnName = new DialogComponentColumnNameSelection(
+				createAdditionalInputColumnNameModel(), "Molecule or fingerprint column to bias away from (table 2): ", 1, false, true,
+				BitVectorValue.class, RDKitMolValue.class) {
+
+			/**
+			 * Hides or shows the optional components depending on
+			 * the existence of a second input table.
+			 */
+			@Override
+			protected void checkConfigurabilityBeforeLoad(
+					final PortObjectSpec[] specs)
+							throws NotConfigurableException {
+
+				final boolean bHasAdditionalInputTable =
+						RDKitDiversityPickerNodeModel.hasAdditionalInputTable(specs);
+
+				// Only check correctness of second input table if it is there
+				if (bHasAdditionalInputTable) {
+					super.checkConfigurabilityBeforeLoad(specs);
+				}
+
+				// Always show or hide proper components
+				updateVisibilityOfOptionalComponents(bHasAdditionalInputTable);
+			}
+		});
+
 		super.addDialogComponent(new DialogComponentNumber(createNumberToPickModel(),
 				"Number to pick: ", 1));
 		super.addDialogComponent(new DialogComponentNumberEdit(createRandomSeedModel(),
 				"Random seed: ", 10));
 	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * Show or hides additional input based settings based on availability of the
+	 * optional second input table.
+	 * 
+	 * @param bHasAdditionalInputTable
+	 */
+	protected void updateVisibilityOfOptionalComponents(final boolean bHasAdditionalInputTable) {
+		m_compHintToConnectSecondTable.getComponentPanel().setVisible(!bHasAdditionalInputTable);
+		m_compAdditionalInputColumnName.getComponentPanel().setVisible(bHasAdditionalInputTable);
+	}
+
+	//
+	// Static Methods
+	//
 
 	/**
 	 * Creates the settings model to be used for the input column.
@@ -90,6 +156,15 @@ public class RDKitDiversityPickerNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelString createInputColumnNameModel() {
 		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for an optional additional input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createAdditionalInputColumnNameModel() {
+		return new SettingsModelString("additional_input_column", null);
 	}
 
 	/**

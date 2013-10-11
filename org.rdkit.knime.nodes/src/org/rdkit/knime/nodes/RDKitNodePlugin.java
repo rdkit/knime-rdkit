@@ -48,32 +48,38 @@
  */
 package org.rdkit.knime.nodes;
 
-import org.eclipse.core.runtime.Plugin;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.rdkit.knime.nodes.preferences.RDKitNodesPreferenceInitializer;
 
 /**
- * This is the eclipse bundle activator. Note: KNIME node developers probably
- * won't have to do anything in here, as this class is only needed by the
- * eclipse platform/plugin mechanism. If you want to move/rename this file, make
- * sure to change the plugin.xml file in the project root directory accordingly.
+ * This is the eclipse bundle activator for the RDKit Nodes Plugin.
  *
  * @author Greg Landrum
+ * @author Manuel Schwarze
  */
-public class RDKitNodePlugin extends Plugin {
+public class RDKitNodePlugin extends AbstractUIPlugin {
 
 	//
 	// Constants
 	//
 
-	/** Make sure that this *always* matches the ID in plugin.xml. */
-	public static final String PLUGIN_ID = "org.knime.workshop.rdkit";
+	/**
+	 * The ID of the RDKit Nodes Plugin as defined also in the plug-ins
+	 * MANIFEST file: org.rdkit.knime.nodes.
+	 */
+	public static final String PLUGIN_ID = "org.rdkit.knime.nodes";
 
 	//
 	// Global Variables.
 	//
 
 	/** The shared instance of the plugin. */
-	private static RDKitNodePlugin plugin;
+	private static RDKitNodePlugin g_instance;
+
+	/** Flag to prevent recursive calls when initializing default preferences. */
+	private static boolean g_bSettingDefaultPreferencesFinished = false;
 
 	//
 	// Constructor
@@ -111,7 +117,7 @@ public class RDKitNodePlugin extends Plugin {
 	@Override
 	public void stop(final BundleContext context) throws Exception {
 		super.stop(context);
-		plugin = null;
+		g_instance = null;
 	}
 
 	/**
@@ -120,17 +126,40 @@ public class RDKitNodePlugin extends Plugin {
 	 * @return Singleton instance of the Plugin
 	 */
 	public static RDKitNodePlugin getDefault() {
-		return plugin;
+		return g_instance;
 	}
+
+	@Override
+	public IPreferenceStore getPreferenceStore() {
+		final IPreferenceStore prefStore = super.getPreferenceStore();
+
+		// Check, if default settings have already been initialized (normally
+		// true when KNIME is started with GUI,
+		// but not done when running regression tests) - If not done yet, do it
+		if (!g_bSettingDefaultPreferencesFinished) {
+
+			// Set to true to prevent endless loop recursion as
+			// getPreferenceStore() is called also from initializers
+			g_bSettingDefaultPreferencesFinished = true;
+
+			// Call all initializer here manually
+			new RDKitNodesPreferenceInitializer().initializeDefaultPreferences();
+		}
+
+		return prefStore;
+	}
+
+	//
+	// Static Private Methods
+	//
 
 	/**
 	 * Set the static plugin variable to the instance of the plugin.
 	 * 
 	 * @param defaultPlugin the plugin instance to be set as default.
 	 */
-	private static synchronized void
-	setDefault(final RDKitNodePlugin defaultPlugin) {
-		plugin = defaultPlugin;
+	private static synchronized void setDefault(final RDKitNodePlugin defaultPlugin) {
+		g_instance = defaultPlugin;
 	}
 
 }

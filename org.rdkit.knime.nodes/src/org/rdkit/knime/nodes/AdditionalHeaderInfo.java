@@ -62,6 +62,8 @@ import org.knime.chem.types.SmilesCell;
 import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.rdkit.knime.headers.HeaderPropertyHandler;
+import org.rdkit.knime.headers.HeaderPropertyUtils;
 import org.rdkit.knime.util.SettingsUtils;
 
 /**
@@ -85,7 +87,12 @@ import org.rdkit.knime.util.SettingsUtils;
  * might be added in the same style in the future.
  * 
  * @author Manuel Schwarze
+ * @deprecated Deprecated since RDKit Nodes 2.3.0 and replaced by an
+ * 		extension point mechanism based on {@link HeaderPropertyHandler}.
+ * 		Helper methods as found in {@link AdditionalHeaderInfo} are
+ * 		now available in a slightly different form in {@link HeaderPropertyUtils}.
  */
+@Deprecated
 public final class AdditionalHeaderInfo {
 
 	//

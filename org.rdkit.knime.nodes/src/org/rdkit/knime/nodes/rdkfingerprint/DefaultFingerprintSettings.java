@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes.rdkfingerprint;
 
 import java.util.Map;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 import org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeModel.FingerprintType;
 import org.rdkit.knime.util.SettingsUtils;
@@ -59,11 +60,14 @@ import org.rdkit.knime.util.SettingsUtils;
  * 
  * @author Manuel Schwarze
  */
-public class DefaultFingerprintSettings implements FingerprintSettings {
+public class DefaultFingerprintSettings extends DataCell implements FingerprintSettings {
 
 	//
 	// Constants
 	//
+
+	/** The serial number. */
+	private static final long serialVersionUID = 8340311731706138678L;
 
 	/** The logging instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultFingerprintSettings.class);
@@ -264,7 +268,7 @@ public class DefaultFingerprintSettings implements FingerprintSettings {
 	}
 
 	@Override
-	public synchronized boolean equals(final Object objSettingsToCompare) {
+	public synchronized boolean equalsDataCell(final DataCell objSettingsToCompare) {
 		boolean bRet = false;
 
 		if (objSettingsToCompare == this) {

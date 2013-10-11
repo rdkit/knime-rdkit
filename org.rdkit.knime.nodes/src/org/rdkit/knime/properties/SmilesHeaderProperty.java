@@ -52,6 +52,7 @@ import java.util.Map;
 
 import org.knime.chem.types.SmilesCell;
 import org.knime.chem.types.SmilesValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.rdkit.knime.headers.HeaderProperty;
@@ -63,11 +64,14 @@ import org.rdkit.knime.headers.HeaderPropertyUtils;
  * 
  * @author Manuel Schwarze
  */
-public class SmilesHeaderProperty implements HeaderProperty, SmilesValue {
+public class SmilesHeaderProperty extends DataCell implements HeaderProperty, SmilesValue {
 
 	//
 	// Constants
 	//
+
+	/** The serial number. */
+	private static final long serialVersionUID = -4065071445185767751L;
 
 	/** The property that holds a SMILES that can be handled with this handler. */
 	public static final String PROPERTY_SMILES = "rdkit.smiles";
@@ -185,9 +189,8 @@ public class SmilesHeaderProperty implements HeaderProperty, SmilesValue {
 	}
 
 	@Override
-	public synchronized boolean equals(final Object objSpecToCompare) {
+	public synchronized boolean equalsDataCell(final DataCell objSpecToCompare) {
 		boolean bRet = false;
-
 		if (objSpecToCompare == this) {
 			bRet = true;
 		}
@@ -204,6 +207,11 @@ public class SmilesHeaderProperty implements HeaderProperty, SmilesValue {
 
 	@Override
 	public synchronized String getSmilesValue() {
+		return getSmiles();
+	}
+
+	@Override
+	public String toString() {
 		return getSmiles();
 	}
 }

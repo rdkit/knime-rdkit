@@ -57,7 +57,12 @@ import org.knime.core.data.DataValue;
  * that can be stored in the properties that are part of a data colun
  * specification. Basically, it provides functionality to write
  * these values into a column specification and to read them again
- * from the specification to make them easily available.
+ * from the specification to make them easily available. Header
+ * properties are handed over to normal renderers to be drawn into
+ * table headers. Some renderers expect a DataCell object, which might
+ * be architecturally not 100% correct, but as we do not have control
+ * we recommend that a concrete HeaderProperty derives from DataCell
+ * to fulfill this expectation.
  * 
  * @author Manuel Schwarze
  */

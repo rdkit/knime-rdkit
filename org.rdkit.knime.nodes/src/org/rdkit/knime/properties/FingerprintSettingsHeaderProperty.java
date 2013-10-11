@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.StringValue;
@@ -72,6 +73,9 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	//
 	// Constants
 	//
+
+	/** The serial number. */
+	private static final long serialVersionUID = 6808143734891935432L;
 
 	/** The property that holds a fingerprint information that can be handled with this handler. */
 	public static final String PROPERTY_FP_TYPE = "rdkit.fingerprint.type";
@@ -230,14 +234,14 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 
 
 	@Override
-	public synchronized boolean equals(final Object objSettingsToCompare) {
+	public synchronized boolean equalsDataCell(final DataCell objSettingsToCompare) {
 		boolean bRet = false;
 
 		if (objSettingsToCompare == this) {
 			bRet = true;
 		}
 		else if (objSettingsToCompare instanceof FingerprintSettingsHeaderProperty) {
-			bRet = super.equals(objSettingsToCompare);
+			bRet = super.equalsDataCell(objSettingsToCompare);
 		}
 
 		return bRet;

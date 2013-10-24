@@ -239,6 +239,10 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 			registerSettings(Molecule2RDKitConverterNodeDialog.
 					createStereochemistryModel(m_modelQuickAndDirty), true);
 
+	/** Settings model for the option to do keep hydrogens. */
+	private final SettingsModelBoolean m_modelKeepHs =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createKeepHsOptionModel(), true);
+
 	//
 	// Internals
 	//
@@ -489,6 +493,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 		// Generate factory
 		final boolean bSanitize = !m_modelQuickAndDirty.getBooleanValue();
+		final boolean bRemoveHs = !m_modelKeepHs.getBooleanValue();
 
 		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
@@ -520,7 +525,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 					}
 					else {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-						mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize, bRemoveHs), iUniqueWaveId);
 					}
 				}
 				catch (final EmptyCellException excEmpty) {

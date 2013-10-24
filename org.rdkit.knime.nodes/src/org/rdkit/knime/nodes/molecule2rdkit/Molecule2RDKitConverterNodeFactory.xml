@@ -39,6 +39,10 @@
            already be available in the (SDF) input, so this option allows you to
            discard the original coordinates and recompute from scratch.
         </option> 
+        <option name="Advanced - Keep Hydrogens">
+           Switch this option on to prevent the RDKit from removing hydrogens
+       	   from molecules constructed from SDF. This option has no effect for SMILES or SMARTS input.
+        </option>
         <option name="Advanced - Partial Sanitization">
            The RDKit does a fair amount of work when compounds are loaded to make sure that they are 
            chemically reasonable and correct. This is called sanitization. When switching on 

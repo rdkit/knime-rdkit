@@ -53,6 +53,10 @@ import javax.swing.event.ChangeListener;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -72,6 +76,16 @@ import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 
 	//
+	// Members
+	//
+
+	/** The model for the option to keep hydrogens (only valid for SDF input). */
+	private SettingsModelBoolean m_modelKeepHs;
+
+	/** The dialog component for picking input columns. */
+	private DialogComponentColumnNameSelection m_compInputColumn;
+
+	//
 	// Constructor
 	//
 
@@ -82,9 +96,17 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	@SuppressWarnings("unchecked")
 	Molecule2RDKitConverterNodeDialog() {
-		super.addDialogComponent(new DialogComponentColumnNameSelection(
-				createInputColumnNameModel(), "Molecule column: ", 0,
+		final SettingsModelString modelInputColumn = createInputColumnNameModel();
+		super.addDialogComponent(m_compInputColumn = new DialogComponentColumnNameSelection(
+				modelInputColumn, "Molecule column: ", 0,
 				SmilesValue.class, SmartsValue.class, SdfValue.class));
+		modelInputColumn.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				updateOptionsAvailability();
+			}
+		});
+
 		super.addDialogComponent(new DialogComponentString(
 				createNewColumnNameModel(), "New column name: "));
 		super.addDialogComponent(new DialogComponentBoolean(
@@ -116,6 +138,8 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 		super.createNewTab("Advanced");
 		final SettingsModelBoolean quickAndDirtyModel = createQuickAndDirtyModel();
 		super.addDialogComponent(new DialogComponentBoolean(
+				m_modelKeepHs = createKeepHsOptionModel(), "Keep Hydrogens"));
+		super.addDialogComponent(new DialogComponentBoolean(
 				quickAndDirtyModel, "Partial Sanitization"));
 		super.createNewGroup("Partial Sanitization Options");
 		super.addDialogComponent(new DialogComponentBoolean(
@@ -125,6 +149,30 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(new DialogComponentLabel(""));
 		super.closeCurrentGroup();
 	}
+
+	@Override
+	public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+			final DataTableSpec[] specs) throws NotConfigurableException {
+		super.loadAdditionalSettingsFrom(settings, specs);
+		updateOptionsAvailability();
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * Enables or disables the Keep Hydrogens option based on the selected input column.
+	 * Only for SDF compatible input columns the Keep Hydrogens option will be selected.
+	 */
+	protected void updateOptionsAvailability() {
+		final DataColumnSpec specInput = m_compInputColumn.getSelectedAsSpec();
+		m_modelKeepHs.setEnabled(specInput != null && specInput.getType().isCompatible(SdfValue.class));
+	}
+
+	//
+	// Static Methods
+	//
 
 	/**
 	 * Creates the settings model to be used for the input column.
@@ -280,4 +328,13 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 		result.setEnabled(quickAndDirtyModel.getBooleanValue());
 		return result;
 	}
-}
+
+	/**
+	 * Creates the model to select the option Keep Hydrogens.
+	 * The default is false.
+	 * 
+	 * @return The Keep Hs option model.
+	 */
+	static final SettingsModelBoolean createKeepHsOptionModel() {
+		return new SettingsModelBoolean("keepHs", false);
+	}}

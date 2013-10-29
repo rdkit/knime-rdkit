@@ -40,7 +40,9 @@ Export-Package: org.RDKit,
  org.rdkit.knime.nodes.substructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.substructurecounter,
  org.rdkit.knime.nodes.twocomponentreaction2;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
- org.rdkit.knime.util
+ org.rdkit.knime.util,
+ org.rdkit.knime.nodes.optimizegeometry,
+ org.rdkit.knime.nodes.open3dalignment
 Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,

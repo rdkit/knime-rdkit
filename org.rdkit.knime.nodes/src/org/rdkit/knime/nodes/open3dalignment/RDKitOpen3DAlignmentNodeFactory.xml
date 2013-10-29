@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit Open 3D Alignment</name>
+    
+    <shortDescription>
+    Aligns the 3D model of two structures based on their shape and three-dimensional conformation.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+	    	Aligns the 3D model of two structures based on their shape and three-dimensional conformation. The structure 
+	    	taken from table 1 will be aligned to a reference structure taken from table 2. 
+	    	If reference table 2 contains only a single row all query molecules of table 1 will be aligned to this single structure.
+        	If reference table 2 contains more than one row, the alignment will be performed row by row until one of the tables has no more
+        	rows to process. If the passed in molecules have no conformation, it will be calculated.
+        </intro>
+        <option name="Query RDKit Mol column (table 1)">The input column of table 1 with RDKit Query Molecules to be aligned.</option>
+        <option name="Reference RDKit Mol column (table 2)">The input column of table 2 with RDKit Reference Molecules to base
+        	the alignment on. If the table contains only a single row all query molecules of table 1 will be aligned based on this.
+        	If the table contains more than one row, the alignment will be performed row by row until one of the tables has no more
+        	rows to process.</option>
+        <option name="New column name for aligned molecule">The name of the new column, which will contain the aligned molecule.</option>
+        <option name="Remove source column">Set to true to remove the specified source column of table 1 from the result table.</option>
+        <option name="New molecule column name">The name of the new column, which will contain the aligned molecule.</option>
+        <option name="New column name for Row IDs of reference used molecule">The name of the new column, which will contain the row id of the used reference molecule of table 2.</option>
+        <option name="New column name for RMSD information">The name of the new column, which will contain the root-mean-square deviation (RMSD) for the aligned molecule.</option>
+        <option name="New column name for score information">The name of the new column, which will contain the score for the aligned molecule.</option>
+        <option name="Advanced - Allow reflection">Set to true to allow reflection of structure parts during the alignment process.</option>
+        <option name="Advanced - Maximal number of iterations">The maximal number of iterations used in the alignment process.</option>
+        <option name="Advanced - Accuracy">Determines how accurate the alignment process shall work (0 - most accurate, 3 - least accurate).</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with RDKit Query Molecules">The table with the molecules to be aligned.</inPort>
+        <inPort index="1" name="Input table with RDKit Reference Molecules">The table with the reference molecules to base the alignment on.</inPort>
+        <outPort index="0" name="Result table">Aligned molecules</outPort>
+    </ports>    
+</knimeNode>

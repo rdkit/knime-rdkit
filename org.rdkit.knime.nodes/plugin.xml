@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?eclipse version="3.0"?>
-
-<plugin>
+<?eclipse version="3.0"?><plugin>
    <extension point="org.knime.workbench.repository.nodes">
       <node category-path="/community/rdkit" factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory" id="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
       <node after="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory" category-path="/community/rdkit" factory-class="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory" id="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"/>
       <node after="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.inchi2rdkit.RDKitInChI2MoleculeNodeFactory" id="org.rdkit.knime.nodes.inchi2rdkit2.RDKitInChI2MoleculeNodeFactory"/>
       <node after="org.rdkit.knime.nodes.inchi2rdkit2.RDKitInChI2MoleculeNodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" id="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" id="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory"/>
+	  	<node after="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" id="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory"/>
       <node after="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" category-path="/community/rdkit" factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory" id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>      
       <node after="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory" category-path="/community/rdkit" factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory" id="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
       <node after="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory" category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory" id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>
@@ -27,9 +25,11 @@
       <node after="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory" id="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory"/>
       <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
       <node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory" id="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory"/>
-	  <node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" id="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>
+	  	<node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" id="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>
       <node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" id="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory"/>
-   </extension>
+   		<node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory" id="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory"/>
+			<node category-path="/community/rdkit" expert-flag="false" factory-class="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory" id="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory"/>
+</extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes using RDKit" icon="icons/category_rdkit.png" level-id="rdkit" name="RDKit" path="/community">
       </category>
@@ -45,10 +45,8 @@
  		<initializer class="org.rdkit.knime.nodes.preferences.RDKitNodesPreferenceInitializer"/>
    </extension>
   
-   <extension 
-	  point="org.rdkit.knime.properties.HeaderPropertyHandler">
-	  <handler id="org.rdkit.knime.properties.SmilesHeaderHandler"
-		class="org.rdkit.knime.properties.SmilesHeaderPropertyHandler" displayName="SMILES Header">
+   <extension point="org.rdkit.knime.properties.HeaderPropertyHandler">
+	  <handler class="org.rdkit.knime.properties.SmilesHeaderPropertyHandler" displayName="SMILES Header" id="org.rdkit.knime.properties.SmilesHeaderHandler">
 	    <acceptableProperties>
 	    	<property key="rdkit.smiles"/>
 	    	<property key="addInfoType"/>
@@ -59,10 +57,8 @@
 	  </handler>
    </extension> 
   
-   <extension 
-	  point="org.rdkit.knime.properties.HeaderPropertyHandler">
-	  <handler id="org.rdkit.knime.properties.FingerprintSettingsHeaderPropertyHandler"
-		class="org.rdkit.knime.properties.FingerprintSettingsHeaderPropertyHandler" displayName="Fingerprint Settings Header">
+   <extension point="org.rdkit.knime.properties.HeaderPropertyHandler">
+	  <handler class="org.rdkit.knime.properties.FingerprintSettingsHeaderPropertyHandler" displayName="Fingerprint Settings Header" id="org.rdkit.knime.properties.FingerprintSettingsHeaderPropertyHandler">
 	    <acceptableProperties>
 	    	<property key="rdkit.fingerprint.type"/>
 	    	<property key="rdkit.fingerprint.minPath"/>

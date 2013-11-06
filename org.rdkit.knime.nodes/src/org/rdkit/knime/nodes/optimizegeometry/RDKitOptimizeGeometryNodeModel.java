@@ -132,7 +132,13 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 	 * functionality, which has caused crashes under Windows 7. Once there is a fix
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
-	private static final Object LOCK = DistanceGeom.class;
+	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
+
+	/**
+	 * This lock prevents two calls at the same time into the RDKit Force Field
+	 * functionality as a pro-active measure to avoid threading issues.
+	 */
+	private static final Object FORCE_FIELD_LOCK = ForceField.class;
 
 	//
 	// Constructor
@@ -296,23 +302,26 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 
 					// Check, if 3D coordinates exist, otherwise create them
 					if (mol.getNumConformers() == 0) {
-						synchronized (LOCK) {
+						synchronized (DISTANCE_GEOM_LOCK) {
 							DistanceGeom.EmbedMolecule(mol, 0, 42);
 						}
 					}
 
 					// Calculate force field
-					final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), iUniqueWaveId);
 					int iConverge = -1;
 					double dEnergy = 0.0d;
 
-					if (forceField == null) {
-						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
-					}
-					else {
-						forceField.initialize();
-						iConverge = forceField.minimize(iIterations);
-						dEnergy = forceField.calcEnergy();
+					synchronized (FORCE_FIELD_LOCK) {
+						final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), iUniqueWaveId);
+
+						if (forceField == null) {
+							warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
+						}
+						else {
+							forceField.initialize();
+							iConverge = forceField.minimize(iIterations);
+							dEnergy = forceField.calcEnergy();
+						}
 					}
 
 					// Create output cells
@@ -338,7 +347,8 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 			};
 
 			// Enable or disable this factory to allow parallel processing
-			arrOutputFactories[0].setAllowParallelProcessing(true);
+			// For now we disallow parallel processing as there may be still some threading issues in the RDKit binaries
+			arrOutputFactories[0].setAllowParallelProcessing(false);
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);

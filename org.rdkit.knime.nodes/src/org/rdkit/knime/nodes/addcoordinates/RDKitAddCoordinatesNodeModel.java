@@ -124,7 +124,7 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 	 * functionality, which has caused crashes under Windows 7. Once there is a fix
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
-	private static final Object LOCK = new Object();
+	private static final Object LOCK = DistanceGeom.class;
 
 	//
 	// Members

@@ -104,7 +104,14 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 	 * functionality, which has caused crashes under Windows 7. Once there is a fix
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
-	private static final Object LOCK = DistanceGeom.class;
+	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
+
+	/**
+	 * This lock prevents two calls at the same time into the RDKit Open 3D Alignment
+	 * functionality as a pro-active measure to avoid threading issues.
+	 * Note, that the synchronization happens only for this class (node).
+	 */
+	private static final Object OPEN_3D_ALIGN_LOCK = new Object();
 
 	//
 	// Members
@@ -403,19 +410,26 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 							if (molReference.getNumConformers() != 0) {
 								// Check, if 3D coordinates exist in query molecule, otherwise create them
 								if (molQuery.getNumConformers() == 0) {
-									synchronized (LOCK) {
+									synchronized (DISTANCE_GEOM_LOCK) {
 										DistanceGeom.EmbedMolecule(molQuery, 0, 42);
 									}
 								}
 
-								final Double_Pair result = markForCleanup(
-										molQuery.O3AAlignMol(molReference, -1, -1, bAllowReflection, iMaxIterations, iAccuracy),
-										iUniqueWaveId);
-								final double dRMSD = result.getFirst();
-								final double dScore = result.getSecond();
+								boolean bNonEmpty = false;
+								double dRMSD, dScore;
 
-								// Only produce non-empty output, if we could align something that is not empty afterwards
-								if (molQuery.getNumAtoms() > 0) {
+								synchronized (OPEN_3D_ALIGN_LOCK) {
+									final Double_Pair result = markForCleanup(
+											molQuery.O3AAlignMol(molReference, -1, -1, bAllowReflection, iMaxIterations, iAccuracy),
+											iUniqueWaveId);
+									dRMSD = result.getFirst();
+									dScore = result.getSecond();
+
+									// Only produce non-empty output, if we could align something that is not empty afterwards
+									bNonEmpty = (molQuery.getNumAtoms() > 0);
+								}
+
+								if (bNonEmpty) {
 									outputAlignedMolecule = RDKitMolCellFactory.createRDKitMolCell(molQuery);
 									outputRefId = cellRefId;
 									outputRmsd = new DoubleCell(dRMSD);
@@ -455,7 +469,9 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 
 			// We cannot work in parallel here because this would screw up our iteration mechanism for
 			// the first table in case we are using more than a single element from it
-			arrOutputFactories[0].setAllowParallelProcessing(m_itReferenceRows == null);
+			// Also it has been shown that working parallel does not work for a single reference molecule either
+			// There seem to be threading issues in the binary code
+			arrOutputFactories[0].setAllowParallelProcessing(false);
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);

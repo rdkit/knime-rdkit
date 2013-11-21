@@ -348,8 +348,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 			};
 
 			// Enable or disable this factory to allow parallel processing
-			// For now we disallow parallel processing as there may be still some threading issues in the RDKit binaries
-			arrOutputFactories[0].setAllowParallelProcessing(false);
+			arrOutputFactories[0].setAllowParallelProcessing(true);
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);

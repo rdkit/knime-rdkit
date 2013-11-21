@@ -78,6 +78,7 @@ import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bitvector.DenseBitVector;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
@@ -85,6 +86,7 @@ import org.knime.core.data.vector.bytevector.DenseByteVector;
 import org.knime.core.data.vector.bytevector.DenseByteVectorCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -178,6 +180,9 @@ public class InputDataInfo {
 	/** Name of the identified column. */
 	private final String m_strColumnName;
 
+	/** Flag to tell that the column is the row key column. */
+	private final boolean m_bUseRowKey;
+
 	/**
 	 * Converter for columns that are not matching the preferred value classes, but
 	 * can be converted using Adapter Cells.
@@ -230,67 +235,73 @@ public class InputDataInfo {
 
 		// Store parameters
 		m_modelAsUniqueId = modelColumnName;
+		m_bUseRowKey = (modelColumnName instanceof SettingsModelColumnName && ((SettingsModelColumnName)modelColumnName).useRowID());
 		m_tableSpec = inSpec;
 
 		// Check, if the input column has been configured
 		m_strColumnName = modelColumnName.getStringValue();
-		if (m_strColumnName == null) {
+		if (m_strColumnName == null && !m_bUseRowKey) {
 			throw new InvalidSettingsException("There is no input column configured yet.");
 		}
 
 		// Try to find the column in the table
-		m_iColIndex = m_tableSpec.findColumnIndex(m_strColumnName);
-		m_colSpec = m_tableSpec.getColumnSpec(m_strColumnName);
-		if (m_iColIndex == -1 || m_colSpec == null) {
+		m_iColIndex = (m_bUseRowKey ? -1 : m_tableSpec.findColumnIndex(m_strColumnName));
+		m_colSpec = (m_bUseRowKey ? null : m_tableSpec.getColumnSpec(m_strColumnName));
+		if (!m_bUseRowKey && (m_iColIndex == -1 || m_colSpec == null)) {
 			throw new InvalidSettingsException("No such column in input table '" +
 					m_tableSpec.getName() + "': " + m_strColumnName);
 		}
 
 		// Perform compatibility check
-		m_dataType = m_colSpec.getType(); // The existing type of the input column
-		final List<Class<? extends DataValue>> listPreferredValueClasses = (arrDataValueClasses == null ?
-				new ArrayList<Class<? extends DataValue>>(1) :
-					Arrays.asList(arrDataValueClasses));
-		final List<Class<? extends DataValue>> m_listCompatibleValueClasses =
-				RDKitAdapterCellSupport.expandByAdaptableTypes(listPreferredValueClasses);
+		if (m_bUseRowKey) {
+			m_dataType = StringCell.TYPE;
+		}
+		else {
+			m_dataType = m_colSpec.getType(); // The existing type of the input column
+			final List<Class<? extends DataValue>> listPreferredValueClasses = (arrDataValueClasses == null ?
+					new ArrayList<Class<? extends DataValue>>(1) :
+						Arrays.asList(arrDataValueClasses));
+			final List<Class<? extends DataValue>> m_listCompatibleValueClasses =
+					RDKitAdapterCellSupport.expandByAdaptableTypes(listPreferredValueClasses);
 
-		Class<? extends DataValue> compatiblePreferredValueClass = null;
-		if (!listPreferredValueClasses.isEmpty()) {
-			// Look first for preferred value classes
-			for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
-				if (m_dataType.isCompatible(valueClass)) {
-					compatiblePreferredValueClass = valueClass;
-					break;
-				}
-			}
-
-			// If not found look if conversion is possible
-			if (compatiblePreferredValueClass == null) {
+			Class<? extends DataValue> compatiblePreferredValueClass = null;
+			if (!listPreferredValueClasses.isEmpty()) {
+				// Look first for preferred value classes
 				for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
-					for (final Class<? extends DataValue> valueClassCompatible :
-						RDKitAdapterCellSupport.expandByAdaptableTypes(valueClass)) {
-						if (m_dataType.isCompatible(valueClassCompatible)) {
-							compatiblePreferredValueClass = valueClass;
-							m_converter = RDKitAdapterCellSupport.createConverter(
-									getTableSpec(), getColumnIndex(), compatiblePreferredValueClass);
-							break;
-						}
-					}
-
-					if (compatiblePreferredValueClass != null) {
+					if (m_dataType.isCompatible(valueClass)) {
+						compatiblePreferredValueClass = valueClass;
 						break;
 					}
 				}
 
+				// If not found look if conversion is possible
 				if (compatiblePreferredValueClass == null) {
-					final StringBuilder sb = new StringBuilder("Column '");
-					sb.append(m_strColumnName).
-					append("' has an unexpected type. Acceptable types are: ");
-					for (final Class<? extends DataValue> valueType : m_listCompatibleValueClasses) {
-						sb.append(valueType.getSimpleName()).append(", ");
+					for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
+						for (final Class<? extends DataValue> valueClassCompatible :
+							RDKitAdapterCellSupport.expandByAdaptableTypes(valueClass)) {
+							if (m_dataType.isCompatible(valueClassCompatible)) {
+								compatiblePreferredValueClass = valueClass;
+								m_converter = RDKitAdapterCellSupport.createConverter(
+										getTableSpec(), getColumnIndex(), compatiblePreferredValueClass);
+								break;
+							}
+						}
+
+						if (compatiblePreferredValueClass != null) {
+							break;
+						}
 					}
-					sb.setLength(sb.length() - 2);
-					throw new InvalidSettingsException(sb.toString());
+
+					if (compatiblePreferredValueClass == null) {
+						final StringBuilder sb = new StringBuilder("Column '");
+						sb.append(m_strColumnName).
+						append("' has an unexpected type. Acceptable types are: ");
+						for (final Class<? extends DataValue> valueType : m_listCompatibleValueClasses) {
+							sb.append(valueType.getSimpleName()).append(", ");
+						}
+						sb.setLength(sb.length() - 2);
+						throw new InvalidSettingsException(sb.toString());
+					}
 				}
 			}
 		}
@@ -318,9 +329,18 @@ public class InputDataInfo {
 	}
 
 	/**
+	 * Determines, if this input column information is representing a row key column.
+	 * 
+	 * @return True, if this is a row key. False otherwise.
+	 */
+	public boolean isRowKey() {
+		return m_bUseRowKey;
+	}
+
+	/**
 	 * Returns a valid index to the column in the input table.
 	 * 
-	 * @return Column index.
+	 * @return Column index. -1, if this is a row key column.
 	 */
 	public int getColumnIndex() {
 		return m_iColIndex;
@@ -329,7 +349,7 @@ public class InputDataInfo {
 	/**
 	 * Returns the valid column specification of the column in the input table.
 	 * 
-	 * @return Column specification.
+	 * @return Column specification. Null, if this is a row key column.
 	 */
 	public DataColumnSpec getColumnSpec() {
 		return m_colSpec;
@@ -347,7 +367,7 @@ public class InputDataInfo {
 	/**
 	 * Returns the valid data type of the column in the input table.
 	 * 
-	 * @return Column data type.
+	 * @return Column data type. StringCell.TYPE, if this is a row key column.
 	 */
 	public DataType getDataType() {
 		return m_dataType;
@@ -422,25 +442,30 @@ public class InputDataInfo {
 	public DataCell getCell(final DataRow row) throws EmptyCellException {
 		DataCell retCell;
 
-		retCell = row.getCell(getColumnIndex());
+		if (isRowKey()) {
+			retCell = new StringCell(row.getKey().toString());
+		}
+		else {
+			retCell = row.getCell(getColumnIndex());
 
-		// Handle an empty / missing cell
-		if (retCell.isMissing()) {
-			switch (getEmptyCellPolicy()) {
-			case TreatAsNull:
-				retCell = null;
-				break;
-			case UseDefault:
-				retCell = m_defaultCell;
-				break;
-			case DeliverEmptyRow:
-				throw new EmptyCellException("Empty cell in ('" +
-						getColumnSpec().getName() + "', '" + row.getKey() + "'). All result cells will be empty.",
-						this, row.getKey());
-			case StopExecution:
-				throw new EmptyCellException("An empty cell has been encountered in ('" +
-						getColumnSpec().getName() + "', '" + row.getKey() + "'). Execution failed.",
-						this, row.getKey());
+			// Handle an empty / missing cell
+			if (retCell.isMissing()) {
+				switch (getEmptyCellPolicy()) {
+				case TreatAsNull:
+					retCell = null;
+					break;
+				case UseDefault:
+					retCell = m_defaultCell;
+					break;
+				case DeliverEmptyRow:
+					throw new EmptyCellException("Empty cell in ('" +
+							getColumnSpec().getName() + "', '" + row.getKey() + "'). All result cells will be empty.",
+							this, row.getKey());
+				case StopExecution:
+					throw new EmptyCellException("An empty cell has been encountered in ('" +
+							getColumnSpec().getName() + "', '" + row.getKey() + "'). Execution failed.",
+							this, row.getKey());
+				}
 			}
 		}
 
@@ -461,8 +486,11 @@ public class InputDataInfo {
 	 * @return True, if the cell is missing, false otherwise.
 	 */
 	public boolean isMissing(final DataRow row) {
-		final DataCell retCell = row.getCell(getColumnIndex());
-		return retCell.isMissing();
+		if (!isRowKey()) {
+			final DataCell retCell = row.getCell(getColumnIndex());
+			return retCell.isMissing();
+		}
+		return false;
 	}
 
 	/**
@@ -476,12 +504,19 @@ public class InputDataInfo {
 	 * 		False otherwise. Also false, if null was passed in.
 	 */
 	public boolean isCompatible(final Class<? extends DataValue> valueClass) {
-		Boolean bRet = m_mapCompatibilityCache.get(valueClass);
+		Boolean bRet = false;
 
-		if (bRet == null) {
-			bRet = (valueClass == null ? false :
-				getTableSpec().getColumnSpec(getColumnIndex()).getType().isCompatible(valueClass));
-			m_mapCompatibilityCache.put(valueClass, bRet);
+		if (!isRowKey()) {
+			bRet = m_mapCompatibilityCache.get(valueClass);
+
+			if (bRet == null) {
+				bRet = (valueClass == null ? false :
+					getTableSpec().getColumnSpec(getColumnIndex()).getType().isCompatible(valueClass));
+				m_mapCompatibilityCache.put(valueClass, bRet);
+			}
+		}
+		else {
+			bRet = getDataType().isCompatible(valueClass);
 		}
 
 		return bRet;
@@ -501,7 +536,7 @@ public class InputDataInfo {
 	 * @return True, if the cell is matching the configured default cell, false otherwise.
 	 */
 	public boolean isDefault(final DataRow row) {
-		final DataCell retCell = row.getCell(getColumnIndex());
+		final DataCell retCell = (isRowKey() ? new StringCell(row.getKey().toString()) : row.getCell(getColumnIndex()));
 		return retCell.equals(getDefaultCell());
 	}
 
@@ -522,16 +557,22 @@ public class InputDataInfo {
 	 * @see #getCell(DataRow)
 	 */
 	public String getString(final DataRow row) throws EmptyCellException {
-		final DataCell cell = getCell(row);
 		String strRet = null;
 
-		if (cell != null) {
-			if (cell.getType().isCompatible(StringValue.class)) {
-				strRet = ((StringValue)cell).getStringValue();
-			}
-			else {
-				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +
-						" is not compatible with a StringCell. This is usually an implementation error.");
+		if (isRowKey()) {
+			strRet = row.getKey().toString();
+		}
+		else {
+			final DataCell cell = getCell(row);
+
+			if (cell != null) {
+				if (cell.getType().isCompatible(StringValue.class)) {
+					strRet = ((StringValue)cell).getStringValue();
+				}
+				else {
+					throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +
+							" is not compatible with a StringCell. This is usually an implementation error.");
+				}
 			}
 		}
 
@@ -1120,12 +1161,12 @@ public class InputDataInfo {
 		 * Convenience method to get the column name of the column that caused the failure
 		 * from the input data info object.
 		 * 
-		 * @return Column name.
+		 * @return Column name. Returns "Row Key" if it is the row key instead of a real column.
 		 * 
 		 * @see #getInputDataInfo()
 		 */
 		public String getColumnName() {
-			return m_inputDataInfo.getColumnSpec().getName();
+			return m_inputDataInfo.isRowKey() ? "Row Key" : m_inputDataInfo.getColumnSpec().getName();
 		}
 
 		/**

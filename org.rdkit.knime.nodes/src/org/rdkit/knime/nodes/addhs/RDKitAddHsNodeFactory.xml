@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit Add Hs</name>
+    
+    <shortDescription>
+        Adds hydrogens to an RDKit molecule.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Adds hydrogens to an RDKit molecule.
+        </intro>
+        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with RDKit Molecules">Input table with RDKit Molecules</inPort>
+        <outPort index="0" name="Output table with RDKit Molecules with added Hs">Output table with RDKit Molecules with added Hs</outPort>
+    </ports>    
+</knimeNode>

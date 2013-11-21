@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes.open3dalignment;
 
 import org.RDKit.DistanceGeom;
 import org.RDKit.Double_Pair;
+import org.RDKit.ForceField;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -73,6 +74,7 @@ import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
+import org.rdkit.knime.util.InvalidInputException;
 import org.rdkit.knime.util.SettingsUtils;
 import org.rdkit.knime.util.WarningConsolidator;
 
@@ -105,13 +107,6 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
 	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
-
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Open 3D Alignment
-	 * functionality as a pro-active measure to avoid threading issues.
-	 * Note, that the synchronization happens only for this class (node).
-	 */
-	private static final Object OPEN_3D_ALIGN_LOCK = new Object();
 
 	//
 	// Members
@@ -406,6 +401,18 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 						final ROMol molQuery = markForCleanup(arrInputDataInfo[QUERY_INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
 						try {
+							// Check if atom properties are set
+							// 1. Check reference molecule (only if we have different reference molecules, otherwise
+							// we do the check during preprocessing to save time here)
+							if (m_itReferenceRows != null && !ForceField.MMFFHasAllMoleculeParams(molReference)) {
+								throw new InvalidInputException("The reference molecule is missing parameters.");
+							}
+
+							// 2. Check query molecule
+							if (!ForceField.MMFFHasAllMoleculeParams(molQuery)) {
+								throw new InvalidInputException("The query molecule is missing parameters.");
+							}
+
 							// Check, if 3D coordinates exist in reference molecule, otherwise fail
 							if (molReference.getNumConformers() != 0) {
 								// Check, if 3D coordinates exist in query molecule, otherwise create them
@@ -418,16 +425,14 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 								boolean bNonEmpty = false;
 								double dRMSD, dScore;
 
-								synchronized (OPEN_3D_ALIGN_LOCK) {
-									final Double_Pair result = markForCleanup(
-											molQuery.O3AAlignMol(molReference, -1, -1, bAllowReflection, iMaxIterations, iAccuracy),
-											iUniqueWaveId);
-									dRMSD = result.getFirst();
-									dScore = result.getSecond();
+								final Double_Pair result = markForCleanup(
+										molQuery.O3AAlignMol(molReference, -1, -1, bAllowReflection, iMaxIterations, iAccuracy),
+										iUniqueWaveId);
+								dRMSD = result.getFirst();
+								dScore = result.getSecond();
 
-									// Only produce non-empty output, if we could align something that is not empty afterwards
-									bNonEmpty = (molQuery.getNumAtoms() > 0);
-								}
+								// Only produce non-empty output, if we could align something that is not empty afterwards
+								bNonEmpty = (molQuery.getNumAtoms() > 0);
 
 								if (bNonEmpty) {
 									outputAlignedMolecule = RDKitMolCellFactory.createRDKitMolCell(molQuery);
@@ -451,9 +456,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 							if (strError == null) {
 								strError = exc.getClass().getName();
 							}
-							else {
-								strError += " (" + exc.getClass().getName() + ")";
-							}
+
 							warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
 									"Alignment of query molecule failed: " + strError);
 						}
@@ -469,8 +472,6 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 
 			// We cannot work in parallel here because this would screw up our iteration mechanism for
 			// the first table in case we are using more than a single element from it
-			// Also it has been shown that working parallel does not work for a single reference molecule either
-			// There seem to be threading issues in the binary code
 			arrOutputFactories[0].setAllowParallelProcessing(false);
 		}
 
@@ -511,8 +512,14 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 					m_cellConstantReference = new StringCell(rowReference.getKey().getString());
 					m_inputDataReference = null;
 					m_itReferenceRows = null;
+
 					if (m_molReference == null) {
-						throw new Exception("Reference molecule is not present.");
+						throw new InvalidInputException("Reference molecule is not present.");
+					}
+
+					// Check single reference molecule for necessary parameters
+					if (!ForceField.MMFFHasAllMoleculeParams(m_molReference)) {
+						throw new InvalidInputException("The reference molecule is missing parameters that are necessary for 3D alignment.");
 					}
 				}
 				else {

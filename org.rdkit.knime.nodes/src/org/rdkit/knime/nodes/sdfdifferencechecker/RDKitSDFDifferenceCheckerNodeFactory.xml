@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Other">
+    <name>RDKit SDF Difference Checker</name>
+    
+    <shortDescription>
+        Compares SDF strings of two columns and fails if differences are found. 
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	Compares SDF strings of two columns and fails if differences are found. A tolerance range can be defined
+        	for comparing floating point numbers. There is no "real" SDF logic in this node. It simply does the following:
+        	First it removes all operating system specific characters and removes all white spaces that are found in a row 
+        	replacing them by a single space. Then it walks through all remaining items which are now separated by single spaces and compares them.
+        	If a numeric value is encountered that includes a floating point, it will try to parse it as a double number,
+        	and if this succeeds for both sides, it will compare the numbers with each other. For the comparison
+        	we can specify a tolerance. 
+        </intro>
+        <option name="SDF column (table 1)">The first input column with SDF strings.</option>
+        <option name="SDF column (table 2)">The second input column with SDF strings.</option>
+        <option name="Tolerance for all floating point numbers">Every floating point number in the SDF string to be compared 
+        	is allowed to have this tolerance range.</option>
+        <option name="Fail on first encountered difference">Set to true to fail immediately when the first difference has been encountered.
+        	Set to false to walk through the tables until the end to find more differences (console output) and then fail and
+        	report the first encountered difference.</option>        	
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input first table with SDF strings to be compared">SDF strings to be compared</inPort>
+        <inPort index="1" name="Input second table with SDF strings to be compared">SDF strings to be compared</inPort>
+    </ports>    
+</knimeNode>

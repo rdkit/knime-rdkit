@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./to_rdkit.png" type="Manipulator">
-    <name>IUPAC to RDKit</name>
+    <name>RDKit From IUPAC</name>
     
     <shortDescription>
         Converts IUPAC names to RDKit molecules.

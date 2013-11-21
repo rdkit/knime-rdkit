@@ -1,4 +1,3 @@
-<!--
 /*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -47,17 +46,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
--->
-<body>
-This package implements functionality based on the RDKit library. 
-(insert package description here)
-<p>
-The <code>RDKitOpen3DAlignmentModel</code> ... 
-(short comments on the classes)
-<p>
-The <code>RDKitOpen3DAlignmentDialog</code> ... 
-(short comments on the classes)
-<p>
-More comments ...
-<br>
-</body>
+package org.rdkit.knime.nodes.removehs;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * <code>NodeFactory</code> for the RDKit based "RDKitRemoveHs" Node.
+ * Removes hydrogens from an RDKit Molecule.
+ *
+ * @author Manuel Schwarze
+ */
+public class RDKitRemoveHsNodeFactory 
+        extends NodeFactory<RDKitRemoveHsNodeModel> {
+
+    /**
+     * Creates a model for the RDKitRemoveHs functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
+     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+     */
+    @Override
+    public RDKitRemoveHsNodeModel createNodeModel() {
+        return new RDKitRemoveHsNodeModel();
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<RDKitRemoveHsNodeModel> createNodeView(
+            final int viewIndex,
+            final RDKitRemoveHsNodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitRemoveHsNodeDialog();
+    }
+}
+

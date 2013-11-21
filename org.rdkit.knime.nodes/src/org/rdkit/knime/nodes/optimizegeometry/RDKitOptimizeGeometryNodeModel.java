@@ -126,6 +126,9 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 	private final SettingsModelInteger m_modelIterations =
 			registerSettings(RDKitOptimizeGeometryNodeDialog.createIterationsModel());
 
+	/** Settings model for the advanced option to remove starting coordinates before optimizing the molecule. */
+	private final SettingsModelBoolean m_modelRemoveStartingCoordinates =
+			registerSettings(RDKitOptimizeGeometryNodeDialog.createRemoveStartingCoordinatesOptionModel(), true);
 
 	/**
 	 * This lock prevents two calls at the same time into the RDKit Distance Geometry
@@ -133,12 +136,6 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
 	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
-
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Force Field
-	 * functionality as a pro-active measure to avoid threading issues.
-	 */
-	private static final Object FORCE_FIELD_LOCK = ForceField.class;
 
 	//
 	// Constructor
@@ -281,6 +278,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 			final ForceFieldType forceFieldType = m_modelForceField.getValue();
 			final int iIterations = m_modelIterations.getIntValue();
 			final DataCell missingCell = DataType.getMissingCell();
+			final boolean bRemoveCoordinates = m_modelRemoveStartingCoordinates.getBooleanValue();
 
 			// Generate factory
 			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
@@ -300,6 +298,11 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
+					// Remove starting coordinates, if desired
+					if (bRemoveCoordinates) {
+						mol.clearConformers();
+					}
+
 					// Check, if 3D coordinates exist, otherwise create them
 					if (mol.getNumConformers() == 0) {
 						synchronized (DISTANCE_GEOM_LOCK) {
@@ -311,17 +314,15 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					int iConverge = -1;
 					double dEnergy = 0.0d;
 
-					synchronized (FORCE_FIELD_LOCK) {
-						final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), iUniqueWaveId);
+					final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), iUniqueWaveId);
 
-						if (forceField == null) {
-							warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
-						}
-						else {
-							forceField.initialize();
-							iConverge = forceField.minimize(iIterations);
-							dEnergy = forceField.calcEnergy();
-						}
+					if (forceField == null) {
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
+					}
+					else {
+						forceField.initialize();
+						iConverge = forceField.minimize(iIterations);
+						dEnergy = forceField.calcEnergy();
 					}
 
 					// Create output cells

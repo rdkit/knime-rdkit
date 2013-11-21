@@ -1,4 +1,3 @@
-<!--
 /*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
@@ -47,17 +46,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
--->
-<body>
-This package implements functionality based on the RDKit library. 
-(insert package description here)
-<p>
-The <code>RDKitOptimizeGeometryModel</code> ... 
-(short comments on the classes)
-<p>
-The <code>RDKitOptimizeGeometryDialog</code> ... 
-(short comments on the classes)
-<p>
-More comments ...
-<br>
-</body>
+package org.rdkit.knime.nodes.addconformers;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * <code>NodeFactory</code> for the RDKit based "RDKitAddConformers" Node.
+ * Creates a new table with multiple conformers per input molecule. Each conformer is a copy of the molecule with different coordinates assigned. * nEach conformer row is mapped back to the input table molecule with an identifier - usually the row id - taken from an input table column.
+ *
+ * @author Manuel Schwarze
+ */
+public class RDKitAddConformersNodeFactory 
+        extends NodeFactory<RDKitAddConformersNodeModel> {
+
+    /**
+     * Creates a model for the RDKitAddConformers functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
+     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+     */
+    @Override
+    public RDKitAddConformersNodeModel createNodeModel() {
+        return new RDKitAddConformersNodeModel();
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<RDKitAddConformersNodeModel> createNodeView(
+            final int viewIndex,
+            final RDKitAddConformersNodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitAddConformersNodeDialog();
+    }
+}
+

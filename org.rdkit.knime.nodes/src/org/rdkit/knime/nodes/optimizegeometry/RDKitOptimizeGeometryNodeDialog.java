@@ -109,7 +109,8 @@ public class RDKitOptimizeGeometryNodeDialog extends DefaultNodeSettingsPane {
 
 		super.createNewTab("Advanced");
 		super.addDialogComponent(new DialogComponentNumberEdit(createIterationsModel(), "Iterations: ", 8));
-
+		super.addDialogComponent(new DialogComponentBoolean(
+				createRemoveStartingCoordinatesOptionModel(), "Remove starting coordinates before optimizing the molecule"));
 	}
 
 	//
@@ -182,4 +183,15 @@ public class RDKitOptimizeGeometryNodeDialog extends DefaultNodeSettingsPane {
 	static final SettingsModelInteger createIterationsModel() {
 		return new SettingsModelIntegerBounded("iterations", DEFAULT_ITERATIONS, 1, Integer.MAX_VALUE);
 	}
+
+	/**
+	 * Creates the settings model for the boolean flag to determine, if
+	 * starting coordinates shall be removed before optimizing the molecule geometry.
+	 * 
+	 * @return Settings model for check box whether to remove starting coordinates.
+	 */
+	static final SettingsModelBoolean createRemoveStartingCoordinatesOptionModel() {
+		return new SettingsModelBoolean("remove_starting_coordinates", false);
+	}
+
 }

@@ -171,8 +171,55 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public boolean isSmilesCanonical() {
-		return ((RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class)).isSmilesCanonical();
+		boolean bIsSmilesCanonical = false;
+		final RDKitMolValue rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
+		final SmilesValue smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+
+		if (rdkitValue != null && smilesValue != null) {
+			if (rdkitValue == smilesValue) { // Same physical object, an RDKit cell
+				bIsSmilesCanonical = rdkitValue.isSmilesCanonical();
+			}
+			else { // Different cell objects, so check if SMILES value matches RDKit cell's SMILES value
+				final String strRdkitSmiles = rdkitValue.getSmilesValue();
+				final String strAdapterCellSmiles = getSmilesValue();
+
+				if (strRdkitSmiles != null && strRdkitSmiles.equals(strAdapterCellSmiles)) {
+					bIsSmilesCanonical = rdkitValue.isSmilesCanonical();
+				}
+			}
+		}
+
+		return bIsSmilesCanonical;
 	}
+
+	@Override
+	public String toString() {
+		String strRet = null;
+
+		// Lookup references to different molecule representations
+		final RDKitMolValue rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
+		final SdfValue sdfValue = (SdfValue)lookupFromAdapterMap(SdfValue.class);
+		final SmilesValue smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+
+		// Check, if the adapter cell was created from an SDF cell - in that case return the SDF value
+		if (rdkitValue != sdfValue) { // Note: It is very important to compare references here, not values!
+			strRet = sdfValue.getSdfValue();
+		}
+
+		// Check, if the adapter cell was created from a SMILES cell - in that case return the SMILES value
+		else if (rdkitValue != smilesValue) { // Note: It is very important to compare references here, not values!
+			strRet = smilesValue.getSmilesValue();
+		}
+
+		// Otherwise, just return whatever the RDKit cell returns
+		else {
+			strRet = rdkitValue.toString();
+		}
+
+		return strRet;
+	}
+
+
 
 	//
 	// Public Static Methods

@@ -174,7 +174,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		// Auto guess the mol input column of reactant 1 if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelReactant1ColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol compatible column for reactant 1 in input table 1. Use \"Molecule to RDKit\" " +
+				"No RDKit Mol compatible column for reactant 1 in input table 1. Use \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the mol input column of reactant 1 exists - fails if it does not
@@ -187,7 +187,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelReactant2ColumnName, RDKitMolValue.class,
 				(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol compatible column for reactant 2 in input table 2. Use \"Molecule to RDKit\" " +
+				"No RDKit Mol compatible column for reactant 2 in input table 2. Use \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the mol input column of reactant 2 exists - fails if it does not

@@ -187,7 +187,7 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 		// Auto guess the input column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the input column exists - fails if it does not
@@ -224,7 +224,8 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 			// Auto guess the salt input column if not set - fails if no compatible column found
 			SettingsUtils.autoGuessColumn(inSpecs[1], m_modelOptionalSaltColumnName, RDKitMolValue.class, 0,
 					"Auto guessing: Using column %COLUMN_NAME% as salt column.",
-					"No RDKit compatible column in salt table.", getWarningConsolidator());
+					"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
+							"node to convert SMARTS.", getWarningConsolidator());
 
 			// Determines, if the salt input column exists - fails if it does not
 			SettingsUtils.checkColumnExistence(inSpecs[1], m_modelOptionalSaltColumnName, RDKitMolValue.class,

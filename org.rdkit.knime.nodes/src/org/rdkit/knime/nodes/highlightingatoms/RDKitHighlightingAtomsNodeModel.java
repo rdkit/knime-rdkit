@@ -48,8 +48,6 @@
  */
 package org.rdkit.knime.nodes.highlightingatoms;
 
-import java.util.ArrayList;
-
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
 import org.knime.base.data.xml.SvgCell;
@@ -60,7 +58,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
@@ -71,6 +68,7 @@ import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.WarningConsolidator;
 
 /**
  * This class implements the node model of the RDKitHighlightingAtoms node
@@ -91,9 +89,8 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 	protected static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitHighlightingAtomsNodeModel.class);
 
-	/** An empty collection cell to be used as default value when no cell value is set. */
-	protected static final DataCell EMPTY_COLLECTION = CollectionCellFactory
-			.createListCell(new ArrayList<DataCell>());
+	/** Empty atom list to be used if an empty atom list cell is encountered. */
+	protected static final Int_Vect EMPTY_ATOM_LIST = new Int_Vect(0);
 
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
@@ -106,7 +103,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 	 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
 	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 	 */
-	private static final Object LOCK = new Object();
+	private static final Object TO_SVG_LOCK = new Object();
 
 	//
 	// Members
@@ -159,7 +156,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputMolColumnName,
 				RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" "
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" "
 						+ "node to convert SMARTS.",
 						getWarningConsolidator());
 
@@ -228,14 +225,14 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 		// Specify input of table 1
 		if (inPort == 0) {
 			arrDataInfo = new InputDataInfo[2]; // We have two input columns
-			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec,
-					m_modelInputMolColumnName,
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, null,
+					m_modelInputMolColumnName, "molecule",
 					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
 					RDKitMolValue.class);
-			arrDataInfo[INPUT_COLUMN_ATOM_LIST] = new InputDataInfo(inSpec,
-					m_modelInputAtomListColumnName,
-					InputDataInfo.EmptyCellPolicy.UseDefault,
-					EMPTY_COLLECTION, CollectionDataValue.class);
+			arrDataInfo[INPUT_COLUMN_ATOM_LIST] = new InputDataInfo(inSpec, null,
+					m_modelInputAtomListColumnName, "atom list",
+					InputDataInfo.EmptyCellPolicy.TreatAsNull,
+					null, CollectionDataValue.class);
 		}
 
 		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
@@ -248,6 +245,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 
+		final WarningConsolidator warnings = getWarningConsolidator();
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
 
 		// Specify output of table 1
@@ -278,17 +276,23 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					final Int_Vect vectInt  = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row);
+					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), iUniqueWaveId);
 
 					String xmlSvg = null;
+
+					if (vectInt == null) {
+						LOGGER.warn("Encountered empty atom list in row '" + row.getKey() + "'");
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty atom list cell. Using empty atom list.");
+						vectInt = EMPTY_ATOM_LIST; // This must not be cleaned up, it is a constant
+					}
 
 					/**
 					 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
 					 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
 					 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
 					 */
-					synchronized(LOCK) {
-						xmlSvg = mol.ToSVG(vectInt,8,50);
+					synchronized(TO_SVG_LOCK) {
+						xmlSvg = mol.ToSVG(vectInt, 8, 50);
 					}
 
 					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {

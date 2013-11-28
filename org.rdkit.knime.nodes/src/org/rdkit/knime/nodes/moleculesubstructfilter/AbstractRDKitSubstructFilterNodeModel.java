@@ -222,7 +222,7 @@ public abstract class AbstractRDKitSubstructFilterNodeModel extends AbstractRDKi
 		// Auto guess the input mol column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME% as Mol input column.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the mol input column exists - fails if it does not

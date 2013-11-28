@@ -52,7 +52,6 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
-import org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeModel.FingerprintType;
 import org.rdkit.knime.util.SettingsUtils;
 
 /**
@@ -82,11 +81,20 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	/** The RDKit Fingerprint type. Can be null if unknown or undefined. */
 	private FingerprintType m_rdkitType;
 
+	/** The Fingerprint Torsion path length. Can be -1 {@link #UNAVAILABLE}, if not set. */
+	private int m_iTorsionPathLength;
+
 	/** The Fingerprint minimum path. Can be -1 {@link #UNAVAILABLE}, if not set. */
 	private int m_iMinPath;
 
 	/** The Fingerprint maximum path. Can be -1 {@link #UNAVAILABLE}, if not set. */
 	private int m_iMaxPath;
+
+	/** The Fingerprint AtomPair minimum path. Can be -1 {@link #UNAVAILABLE}, if not set. */
+	private int m_iAtomPairMinPath;
+
+	/** The Fingerprint AtomPair maximum path. Can be -1 {@link #UNAVAILABLE}, if not set. */
+	private int m_iAtomPairMaxPath;
 
 	/** The Fingerprint length. Can be -1 {@link #UNAVAILABLE}, if not set. */
 	private int m_iNumBits;
@@ -100,6 +108,15 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	/** The Fingerprint similarity bits. Can be -1 {@link #UNAVAILABLE}, if not set. */
 	private int m_iSimilarityBits;
 
+	/** The Fingerprint rooted flag to tell that the fingerprint is or shall be a rooted fingerprint. */
+	private boolean m_bIsRooted;
+
+	/** The Fingerprint atom list column name for rooted fingerprints. Can be null, if not set. */
+	private String m_strAtomListColumnName;
+
+	/** The Fingerprint option to treat an atom list as include list for rooted fingerprints. */
+	private boolean m_bTreatAtomListAsIncludeList;
+
 	//
 	// Constructor
 	//
@@ -108,24 +125,60 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	 * Creates a new fingerprint settings object with the specified fingerprint type and settings.
 	 * 
 	 * @param strType Fingerprint type value. Can be null.
+	 * @param iTorsionPathLength Torsion min path values. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMinPath AtomPair Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMaxPath AtomPair Max Path value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
 	 */
-	public DefaultFingerprintSettings(final String strType, final int iMinPath,
-			final int iMaxPath, final int iNumBits, final int iRadius, final int iLayerFlags,
+	public DefaultFingerprintSettings(final String strType, final int iTorsionPathLength, final int iMinPath,
+			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
+			final int iNumBits, final int iRadius, final int iLayerFlags,
 			final int iSimilarityBits) {
+		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false);
+	}
+
+	/**
+	 * Creates a new fingerprint settings object with the specified fingerprint type and settings.
+	 * 
+	 * @param strType Fingerprint type value. Can be null.
+	 * @param iTorsionPathLength Torsion min path values. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMinPath AtomPair Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMaxPath AtomPair Max Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
+	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
+	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
+	 */
+	public DefaultFingerprintSettings(final String strType, final int iTorsionPathLength, final int iMinPath,
+			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
+			final int iNumBits, final int iRadius, final int iLayerFlags,
+			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final boolean bTreatAtomListAsIncludeList) {
 		m_strType = strType;
 		m_rdkitType = FingerprintType.parseString(m_strType);
+		m_iTorsionPathLength = iTorsionPathLength;
 		m_iMinPath = iMinPath;
 		m_iMaxPath = iMaxPath;
+		m_iAtomPairMinPath = iAtomPairMinPath;
+		m_iAtomPairMaxPath = iAtomPairMaxPath;
 		m_iNumBits = iNumBits;
 		m_iRadius = iRadius;
 		m_iLayerFlags = iLayerFlags;
 		m_iSimilarityBits = iSimilarityBits;
+		m_bIsRooted = bIsRooted;
+		m_strAtomListColumnName = strAtomListColumnName;
+		m_bTreatAtomListAsIncludeList = bTreatAtomListAsIncludeList;
 	}
 
 	/**
@@ -139,12 +192,18 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 		if (existing != null) {
 			m_strType = existing.getFingerprintType();
 			m_rdkitType = existing.getRdkitFingerprintType();
+			m_iTorsionPathLength = existing.getTorsionPathLength();
 			m_iMinPath = existing.getMinPath();
 			m_iMaxPath = existing.getMaxPath();
+			m_iAtomPairMinPath = existing.getAtomPairMinPath();
+			m_iAtomPairMaxPath = existing.getAtomPairMaxPath();
 			m_iNumBits = existing.getNumBits();
 			m_iRadius = existing.getRadius();
 			m_iLayerFlags = existing.getLayerFlags();
 			m_iSimilarityBits = existing.getSimilarityBits();
+			m_bIsRooted = existing.isRooted();
+			m_strAtomListColumnName = existing.getAtomListColumnName();
+			m_bTreatAtomListAsIncludeList = existing.isTreatAtomListAsIncludeList();
 		}
 	}
 
@@ -163,6 +222,11 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	}
 
 	@Override
+	public synchronized int getTorsionPathLength() {
+		return m_iTorsionPathLength;
+	}
+
+	@Override
 	public synchronized int getMinPath() {
 		return m_iMinPath;
 	}
@@ -170,6 +234,16 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	@Override
 	public synchronized int getMaxPath() {
 		return m_iMaxPath;
+	}
+
+	@Override
+	public synchronized int getAtomPairMinPath() {
+		return m_iAtomPairMinPath;
+	}
+
+	@Override
+	public synchronized int getAtomPairMaxPath() {
+		return m_iAtomPairMaxPath;
 	}
 
 	@Override
@@ -193,6 +267,25 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	}
 
 	@Override
+	public synchronized boolean isRooted() {
+		return m_bIsRooted && m_strAtomListColumnName != null;
+	}
+
+	@Override
+	public synchronized String getAtomListColumnName() {
+		return (isRooted() ? m_strAtomListColumnName : null);
+	}
+
+	@Override
+	public synchronized boolean isTreatAtomListAsIncludeList() {
+		return (isRooted() ? m_bTreatAtomListAsIncludeList : false);
+	}
+	@Override
+	public synchronized boolean isTreatAtomListAsExcludeList() {
+		return (isRooted() ? !m_bTreatAtomListAsIncludeList : false);
+	}
+
+	@Override
 	public synchronized void setFingerprintType(final String strType) {
 		m_strType = strType;
 		m_rdkitType = FingerprintType.parseString(m_strType);
@@ -205,6 +298,11 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	}
 
 	@Override
+	public synchronized void setTorsionPathLength(final int iTorsionPathLength) {
+		this.m_iTorsionPathLength = iTorsionPathLength;
+	}
+
+	@Override
 	public synchronized void setMinPath(final int iMinPath) {
 		this.m_iMinPath = iMinPath;
 	}
@@ -212,6 +310,16 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	@Override
 	public synchronized void setMaxPath(final int iMaxPath) {
 		this.m_iMaxPath = iMaxPath;
+	}
+
+	@Override
+	public synchronized void setAtomPairMinPath(final int iAtomPairMinPath) {
+		this.m_iAtomPairMinPath = iAtomPairMinPath;
+	}
+
+	@Override
+	public synchronized void setAtomPairMaxPath(final int iAtomPairMaxPath) {
+		this.m_iAtomPairMaxPath = iAtomPairMaxPath;
 	}
 
 	@Override
@@ -235,6 +343,26 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	}
 
 	@Override
+	public void setRooted(final boolean bRooted) {
+		this.m_bIsRooted = bRooted;
+	}
+
+	@Override
+	public void setAtomListColumnName(final String strColumnName) {
+		this.m_strAtomListColumnName = strColumnName;
+	}
+
+	@Override
+	public void setTreatAtomListAsIncludeList(final boolean bIncludeList) {
+		this.m_bTreatAtomListAsIncludeList = bIncludeList;
+	}
+
+	@Override
+	public void setTreatAtomListAsExcludeList(final boolean bExcludeList) {
+		this.m_bTreatAtomListAsIncludeList = !bExcludeList;
+	}
+
+	@Override
 	public synchronized boolean isAvailable(final int iNumber) {
 		return iNumber != UNAVAILABLE;
 	}
@@ -242,12 +370,18 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	public synchronized void reset() {
 		m_strType = null;
 		m_rdkitType = null;
+		m_iTorsionPathLength = UNAVAILABLE;
 		m_iMinPath = UNAVAILABLE;
 		m_iMaxPath = UNAVAILABLE;
+		m_iAtomPairMinPath = UNAVAILABLE;
+		m_iAtomPairMaxPath = UNAVAILABLE;
 		m_iNumBits = UNAVAILABLE;
 		m_iRadius = UNAVAILABLE;
 		m_iLayerFlags = UNAVAILABLE;
 		m_iSimilarityBits = UNAVAILABLE;
+		m_bIsRooted = false;
+		m_strAtomListColumnName = null;
+		m_bTreatAtomListAsIncludeList = false;
 	}
 
 	@Override
@@ -256,14 +390,21 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 		int result = 1;
 		result = prime * result + m_iLayerFlags;
 		result = prime * result + m_iSimilarityBits;
+		result = prime * result + m_iTorsionPathLength;
 		result = prime * result + m_iMaxPath;
 		result = prime * result + m_iMinPath;
+		result = prime * result + m_iAtomPairMaxPath;
+		result = prime * result + m_iAtomPairMinPath;
 		result = prime * result + m_iNumBits;
 		result = prime * result + m_iRadius;
 		result = prime * result
 				+ ((m_strType == null) ? 0 : m_strType.hashCode());
 		result = prime * result
 				+ ((m_rdkitType == null) ? 0 : m_rdkitType.hashCode());
+		result = prime * result + (m_bIsRooted ? 1 : 0);
+		result = prime * result
+				+ ((m_strAtomListColumnName == null) ? 0 : m_strAtomListColumnName.hashCode());
+		result = prime * result + (m_bTreatAtomListAsIncludeList ? 1 : 0);
 		return result;
 	}
 
@@ -279,12 +420,18 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 
 			if (SettingsUtils.equals(this.m_strType, specToCompare.m_strType) &&
 					SettingsUtils.equals(this.m_rdkitType, specToCompare.m_rdkitType) &&
+					this.m_iTorsionPathLength == specToCompare.m_iTorsionPathLength &&
 					this.m_iMinPath == specToCompare.m_iMinPath &&
 					this.m_iMaxPath == specToCompare.m_iMaxPath &&
+					this.m_iAtomPairMinPath == specToCompare.m_iAtomPairMinPath &&
+					this.m_iAtomPairMaxPath == specToCompare.m_iAtomPairMaxPath &&
 					this.m_iNumBits == specToCompare.m_iNumBits &&
 					this.m_iRadius == specToCompare.m_iRadius &&
 					this.m_iLayerFlags == specToCompare.m_iLayerFlags &&
-					this.m_iSimilarityBits == specToCompare.m_iSimilarityBits) {
+					this.m_iSimilarityBits == specToCompare.m_iSimilarityBits &&
+					this.m_bIsRooted == specToCompare.m_bIsRooted &&
+					SettingsUtils.equals(this.m_strAtomListColumnName, specToCompare.m_strAtomListColumnName) &&
+					this.m_bTreatAtomListAsIncludeList == specToCompare.m_bTreatAtomListAsIncludeList) {
 				bRet = true;
 			}
 		}
@@ -294,13 +441,19 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder(isRooted() ? "Rooted " : "");
 
 		if (getRdkitFingerprintType() != null) {
 			sb.append(getRdkitFingerprintType().toString()).append(" Fingerprint");
 		}
 		else if (getFingerprintType() != null) {
 			sb.append(getFingerprintType()).append(" Fingerprint");
+		}
+		if (isAvailable(getTorsionPathLength())) {
+			if (sb.length() > 0) {
+				sb.append("\n");
+			}
+			sb.append("Torsion Path Length: ").append(getTorsionPathLength());
 		}
 		if (isAvailable(getMinPath())) {
 			if (sb.length() > 0) {
@@ -313,6 +466,18 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 				sb.append("\n");
 			}
 			sb.append("Max Path: ").append(getMaxPath());
+		}
+		if (isAvailable(getAtomPairMinPath())) {
+			if (sb.length() > 0) {
+				sb.append("\n");
+			}
+			sb.append("AtomPair Min Path: ").append(getAtomPairMinPath());
+		}
+		if (isAvailable(getAtomPairMaxPath())) {
+			if (sb.length() > 0) {
+				sb.append("\n");
+			}
+			sb.append("AtomPair Max Path: ").append(getAtomPairMaxPath());
 		}
 		if (isAvailable(getNumBits())) {
 			if (sb.length() > 0) {
@@ -338,6 +503,15 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 			}
 			sb.append("Similarity Bits: ").append(getSimilarityBits());
 		}
+		if (isRooted()) {
+			if (sb.length() > 0) {
+				sb.append("\n");
+			}
+			final String str = getAtomListColumnName();
+			final boolean bIncluded = isTreatAtomListAsIncludeList();
+			sb.append(bIncluded ? "Included " : "Excluded ");
+			sb.append("Atom List Column: ").append(str == null ? "Undefined" : str);
+		}
 
 		return sb.length() == 0 ? null : sb.toString();
 	}
@@ -360,5 +534,21 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 		}
 
 		return iRet;
+	}
+
+	protected boolean getBoolean(final Map<String, String> mapProps, final String strKey, final String strColumnName) {
+		boolean bRet = false;
+
+		if (mapProps != null && mapProps.containsKey(strKey))
+			try {
+				bRet = Boolean.parseBoolean(mapProps.get(strKey));
+			}
+		catch (final Exception exc) {
+			LOGGER.warn("Header property '" + strKey + "' in column '" +
+					strColumnName + "' is not representing a valid boolean value: "
+					+ mapProps.get(strKey) + " cannot be parsed.");
+		}
+
+		return bRet;
 	}
 }

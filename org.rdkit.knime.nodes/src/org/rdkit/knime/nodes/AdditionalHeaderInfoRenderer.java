@@ -74,7 +74,7 @@ import org.rdkit.knime.util.VerticalCompoundIcon;
  * @see AdditionalHeaderInfo
  * 
  * @author Manuel Schwarze
- * @deprecated Since version 2.3.0 replaced through RDKit Types Plugin class
+ * @deprecated Deprecated and replaced by RDKit Types Plugin class
  * 		org.rdkit.knime.headers.AdditionalHeaderInfoRenderer.
  */
 @Deprecated

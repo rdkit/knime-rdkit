@@ -46,37 +46,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.rdkit.knime.nodes.aromatize;
+package org.rdkit.knime.nodes.calculatecharges;
 
-import org.RDKit.RDKFuncs;
+import java.util.ArrayList;
+
+import org.RDKit.Double_Vect;
 import org.RDKit.ROMol;
-import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
-import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
-import org.rdkit.knime.util.WarningConsolidator;
 
 /**
- * This class implements the node model of the RDKitAromatize node
+ * This class implements the node model of the RDKitCalculateCharges node
  * providing calculations based on the open source RDKit library.
- * Aromatizes an RDKit Molecule.
+ * 
  * @author Manuel Schwarze
  */
-public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
+public class RDKitCalculateChargesNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	//
 	// Constants
@@ -84,7 +83,7 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
-			.getLogger(RDKitAromatizeNodeModel.class);
+			.getLogger(RDKitCalculateChargesNodeModel.class);
 
 
 	/** Input data info index for Mol value. */
@@ -96,15 +95,11 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	/** Settings model for the column name of the input column. */
 	private final SettingsModelString m_modelInputColumnName =
-			registerSettings(RDKitAromatizeNodeDialog.createInputColumnNameModel());
+			registerSettings(RDKitCalculateChargesNodeDialog.createInputColumnNameModel());
 
 	/** Settings model for the column name of the new column to be added to the output table. */
 	private final SettingsModelString m_modelNewColumnName =
-			registerSettings(RDKitAromatizeNodeDialog.createNewColumnNameModel());
-
-	/** Settings model for the option to remove the source column from the output table. */
-	private final SettingsModelBoolean m_modelRemoveSourceColumns =
-			registerSettings(RDKitAromatizeNodeDialog.createRemoveSourceColumnsOptionModel());
+			registerSettings(RDKitCalculateChargesNodeDialog.createNewColumnNameModel());
 
 	//
 	// Constructor
@@ -113,7 +108,7 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 	/**
 	 * Create new node model with one data in- and one out-port.
 	 */
-	RDKitAromatizeNodeModel() {
+	RDKitCalculateChargesNodeModel() {
 		super(1, 1);
 	}
 
@@ -143,17 +138,13 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 		// Auto guess the new column name and make it unique
 		final String strInputColumnName = m_modelInputColumnName.getStringValue();
-		SettingsUtils.autoGuessColumnName(inSpecs[0], null,
-				(m_modelRemoveSourceColumns.getBooleanValue() ?
-						new String[] { strInputColumnName } : null),
-						m_modelNewColumnName, strInputColumnName + " (Aromatized)");
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+				m_modelNewColumnName, strInputColumnName + " (Charges)");
 
 		// Determine, if the new column name has been set and if it is really unique
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null,
-				(m_modelRemoveSourceColumns.getBooleanValue() ? new String[] {
-					m_modelInputColumnName.getStringValue() } : null),
-					m_modelNewColumnName,
-					"Output column has not been specified yet.",
+		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+				m_modelNewColumnName,
+				"Output column has not been specified yet.",
 				"The name %COLUMN_NAME% of the new column exists already in the input.");
 
 		// Consolidate all warnings and make them available to the user
@@ -194,7 +185,6 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 			throws InvalidSettingsException {
 
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
-		final WarningConsolidator warnings = getWarningConsolidator();
 
 		// Specify output of table 1
 		if (outPort == 0) {
@@ -206,8 +196,7 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
-			.createSpec();
+					m_modelNewColumnName.getStringValue(), ListCell.getCollectionType(DoubleCell.TYPE)).createSpec();
 
 			// Generate factory
 			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
@@ -224,17 +213,20 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					final RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
 
-					if (RDKFuncs.setAromaticity(temp) != 0) { // Success
-						RDKFuncs.adjustHs(temp);
-						final String strSmiles = temp.MolToSmiles(true);
-						outputCell = RDKitMolCellFactory.createRDKitMolCell(temp, strSmiles);
+					// Calculate charges
+					final int iAtomCount = (int)mol.getNumAtoms();
+					final Double_Vect listCharges = markForCleanup(new Double_Vect(iAtomCount), iUniqueWaveId);
+					mol.computeGasteigerCharges(mol, listCharges);
+
+					// Convert charges into KNIME Double Cells
+					final ArrayList<DataCell> listCellCharges = new ArrayList<DataCell>();
+					for (int i = 0; i < iAtomCount; i++) {
+						listCellCharges.add(new DoubleCell(listCharges.get(i)));
 					}
-					else {
-						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Unable to aromatize molecule. Producing empty cell.");
-						outputCell = DataType.getMissingCell();
-					}
+
+					// Create collection cell
+					outputCell = CollectionCellFactory.createListCell(listCellCharges);
 
 					return new DataCell[] { outputCell };
 				}
@@ -245,23 +237,5 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * This implementation removes additionally the compound source column, if specified in the settings.
-	 */
-	@Override
-	protected ColumnRearranger createColumnRearranger(final int outPort,
-			final DataTableSpec inSpec) throws InvalidSettingsException {
-		// Perform normal work
-		final ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
-
-		// Remove the input column, if desired
-		if (m_modelRemoveSourceColumns.getBooleanValue()) {
-			result.remove(createInputDataInfos(0, inSpec)[INPUT_COLUMN_MOL].getColumnIndex());
-		}
-
-		return result;
 	}
 }

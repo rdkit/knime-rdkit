@@ -216,10 +216,10 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 		// Specify input of table 2 (if it is connected only)
 		else if (inPort == 1 && inSpec != null) {
 			arrDataInfo = new InputDataInfo[2]; // We have two input column
-			arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelTargetColumnColumnName,
+			arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, null, m_modelTargetColumnColumnName, "target column",
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					StringValue.class);
-			arrDataInfo[INPUT_COLUMN_SMILES] = new InputDataInfo(inSpec, m_modelSmilesValueColumnName,
+			arrDataInfo[INPUT_COLUMN_SMILES] = new InputDataInfo(inSpec, null, m_modelSmilesValueColumnName, "SMILES value",
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					SmilesValue.class);
 		}

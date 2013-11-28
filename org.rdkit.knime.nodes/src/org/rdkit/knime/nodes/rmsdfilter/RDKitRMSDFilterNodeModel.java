@@ -205,7 +205,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		// Auto guess the molecule input column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelMoleculeInputColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME% as conformers column.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the molecule input column exists - fails if it does not
@@ -252,10 +252,10 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		// Specify input of table 1
 		if (inPort == 0) {
 			arrDataInfo = new InputDataInfo[2];
-			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelMoleculeInputColumnName,
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, null, m_modelMoleculeInputColumnName, "molecule",
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					RDKitMolValue.class);
-			arrDataInfo[INPUT_COLUMN_REFERENCE] = new InputDataInfo(inSpec, m_modelReferenceInputColumnName,
+			arrDataInfo[INPUT_COLUMN_REFERENCE] = new InputDataInfo(inSpec, null, m_modelReferenceInputColumnName, "reference data",
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					StringValue.class, DoubleValue.class);
 		}

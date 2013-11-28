@@ -50,7 +50,10 @@ package org.rdkit.knime.types;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.knime.chem.types.SdfCellFactory;
 import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmilesAdapterCell;
+import org.knime.chem.types.SmilesCell;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
@@ -271,7 +274,7 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSdf = ((SdfValue)source).getSdfValue();
-						return new RDKitAdapterCell(createRDKitMolCellFromSdf(strSdf));
+						return new RDKitAdapterCell((AdapterValue)SdfCellFactory.createAdapterCell(strSdf), createRDKitMolCellFromSdf(strSdf));
 					}
 				};
 			}
@@ -293,7 +296,7 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSmiles = ((SmilesValue)source).getSmilesValue();
-						return new RDKitAdapterCell(createRDKitMolCellFromSmiles(strSmiles));
+						return new RDKitAdapterCell(new SmilesAdapterCell(new SmilesCell(strSmiles)), createRDKitMolCellFromSmiles(strSmiles));
 					}
 				};
 			}
@@ -338,6 +341,7 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 				// If we got an RDKit molecule, parsing was successful, now create the SMILES from it and the cell
 				if (mol != null) {
 					try {
+						// RDKit cell will not have a canonical SMILES set
 						final String smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
 						cell = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
 					}

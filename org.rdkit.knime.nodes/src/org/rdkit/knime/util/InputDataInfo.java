@@ -59,6 +59,7 @@ import org.RDKit.ChemicalReaction;
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
+import org.RDKit.UInt_Vect;
 import org.knime.chem.types.RxnValue;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmartsValue;
@@ -159,8 +160,14 @@ public class InputDataInfo {
 	/** Specification of the table the column belongs to. */
 	private final DataTableSpec m_tableSpec;
 
+	/** Description for the table to be used in (e.g. error) messages. */
+	private final String m_strTableDescription;
+
 	/** Specification of the identified column. */
 	private final DataColumnSpec m_colSpec;
+
+	/** Description for the column to be used in (e.g. error) messages. */
+	private final String m_strColumnDescription;
 
 	/** Data type of the identified column. */
 	private final DataType m_dataType;
@@ -225,12 +232,52 @@ public class InputDataInfo {
 	public InputDataInfo(final DataTableSpec inSpec, final SettingsModelString modelColumnName,
 			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
 			final Class<? extends DataValue>... arrDataValueClasses) throws InvalidSettingsException {
+		this(inSpec, null, modelColumnName, null, emptyCellPolicy, defaultCell, arrDataValueClasses);
+	}
+
+	/**
+	 * Creates a new input data info object based on a concrete table spec,
+	 * a column name within a setting model object as well as a data value class
+	 * that specifies the expected type of value. There are several checks performed
+	 * to ensure that data are compatible with the processing that will happen later.
+	 * The most important information that is delivered is the index of the
+	 * column within the specified table. This must be easily accessible during
+	 * processing.
+	 * 
+	 * @param inSpec Table specification. Can be null to throw an InvalidSettingsException.
+	 * @param strTableDescription Optional table description to be used in error message that
+	 * 		concern the table. Can be null or empty to show "input table" in messages. Otherwise it
+	 * 		will show "strTableDescription table" in messages.
+	 * @param modelColumnName Column model, which act as container for the column name
+	 * 		and afterwards as unique id to distinguish between different data info objects.
+	 * 		Must not be null.
+	 * @param strColumnDescription Optional column description to be used in error message that
+	 * 		concern the column. Can be null or empty to show "input column" in messages. Otherwise it
+	 * 		will show "strColumnDescription column" in messages.
+	 * @param emptyCellPolicy Defines the policy to be used when an empty cell
+	 * 		is encountered during processing.
+	 * @param defaultCell A default cell value, which can be used when an empty cell
+	 * 		is encountered during processing. Can be null.
+	 * @param arrDataValueClasses A list of acceptable data types. Optional. If specified,
+	 * 		then one needs to be at least compatible with the column spec, otherwise
+	 * 		an exception is thrown.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if something is not set or not compatible
+	 * 		with the data types that are expected.
+	 */
+	public InputDataInfo(final DataTableSpec inSpec, final String strTableDescription,
+			final SettingsModelString modelColumnName, final String strColumnDescription,
+			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
+			final Class<? extends DataValue>... arrDataValueClasses) throws InvalidSettingsException {
+		m_strColumnDescription = strColumnDescription;
+		m_strTableDescription = strTableDescription;
+
 		// Pre-checks
 		if (inSpec == null) {
-			throw new InvalidSettingsException("There is no input table available yet.");
+			throw new InvalidSettingsException("There is no " + getTableIdentification() + " available yet.");
 		}
 		if (modelColumnName == null) {
-			throw new IllegalArgumentException("The column name model must not be null.");
+			throw new IllegalArgumentException("The " + getColumnIdentification() + " name model must not be null.");
 		}
 
 		// Store parameters
@@ -241,14 +288,14 @@ public class InputDataInfo {
 		// Check, if the input column has been configured
 		m_strColumnName = modelColumnName.getStringValue();
 		if (m_strColumnName == null && !m_bUseRowKey) {
-			throw new InvalidSettingsException("There is no input column configured yet.");
+			throw new InvalidSettingsException("There is no " + getColumnIdentification() + " configured yet.");
 		}
 
 		// Try to find the column in the table
 		m_iColIndex = (m_bUseRowKey ? -1 : m_tableSpec.findColumnIndex(m_strColumnName));
 		m_colSpec = (m_bUseRowKey ? null : m_tableSpec.getColumnSpec(m_strColumnName));
 		if (!m_bUseRowKey && (m_iColIndex == -1 || m_colSpec == null)) {
-			throw new InvalidSettingsException("No such column in input table '" +
+			throw new InvalidSettingsException("No such " + getColumnIdentification() + " in input table '" +
 					m_tableSpec.getName() + "': " + m_strColumnName);
 		}
 
@@ -356,12 +403,29 @@ public class InputDataInfo {
 	}
 
 	/**
+	 * Returns the optional column description.
+	 * 
+	 * @return Column description, e.g. "molecule" or "atom list". Can be null or empty.
+	 */
+	public String getColumnDescription() {
+		return m_strColumnDescription;
+	}
+	/**
 	 * Returns the valid table specification of the table the column belongs to.
 	 * 
 	 * @return Table specification.
 	 */
 	public DataTableSpec getTableSpec() {
 		return m_tableSpec;
+	}
+
+	/**
+	 * Returns the optional table description.
+	 * 
+	 * @return Table description, e.g. "first" or "molecule". Can be null or empty.
+	 */
+	public String getTableDescription() {
+		return m_strTableDescription;
 	}
 
 	/**
@@ -1027,10 +1091,11 @@ public class InputDataInfo {
 	 * @see #getCell(DataRow)
 	 */
 	public List<Integer> getIntegerList(final DataRow row) throws EmptyCellException {
+		List<Integer> listIntegers = null;
 		final DataCell cell = getCell(row);
-		final List<Integer> listIntegers = new ArrayList<Integer>(20);
 
 		if (cell != null) {
+			listIntegers = new ArrayList<Integer>(20);
 			if (cell.getType().isCollectionType()) {
 				boolean bIncompatibleValuesFound = false;
 
@@ -1082,15 +1147,79 @@ public class InputDataInfo {
 	 * @see #getCell(DataRow)
 	 */
 	public Int_Vect getRDKitIntegerVector(final DataRow row) throws EmptyCellException {
+		Int_Vect vectInt = null;
 		final List<Integer> listIntegers = getIntegerList(row);
 
-		final Int_Vect vectInt = new Int_Vect(listIntegers.size());
-		for (final Integer i : listIntegers) {
-			vectInt.add(i);
+		if (listIntegers != null) {
+			vectInt = new Int_Vect(listIntegers.size());
+			for (final Integer i : listIntegers) {
+				vectInt.add(i);
+			}
 		}
 
 		return vectInt;
 	}
+
+	/**
+	 * Convenience method that converts the result of {@link #getCell(DataRow)} into an RDKit Int_Vect object.
+	 * If the cell contains a collection, but some of the values are not compatible with an integer,
+	 * these values will be ignored and a warning is logged.
+	 * 
+	 * @param row The data row with concrete data cells. This data row must
+	 * 		belong to the table, which spec was used in the constructor.
+	 * 		Otherwise the behavior is undefined and will probably cause an
+	 * 		undefined Exception. Must not be null.
+	 * 
+	 * @return The UInt_Vect list based on the correct cell.
+	 * 
+	 * @throws EmptyCellException See {@link #getCell(DataRow)}.
+	 * @throws IllegalArgumentException Thrown, if the cell is not compatible
+	 * 		with the collection type. This is usually an implementation error.
+	 * 
+	 * @see #getCell(DataRow)
+	 */
+	public UInt_Vect getRDKitUIntegerVector(final DataRow row) throws EmptyCellException {
+		UInt_Vect vectInt = null;
+		final List<Integer> listIntegers = getIntegerList(row);
+
+		if (listIntegers != null) {
+			vectInt = new UInt_Vect(listIntegers.size());
+			for (final Integer i : listIntegers) {
+				vectInt.add(i);
+			}
+		}
+
+		return vectInt;
+	}
+
+	//
+	// Protected Methods
+	//
+
+	/**
+	 * Returns based on the table description passed in to the constructor
+	 * a short table info. If no table description is defined, it returns
+	 * "input table", otherwise "columndescription input table".
+	 * 
+	 * @return Table identification. Never null.
+	 */
+	protected String getTableIdentification() {
+		return (!StringUtils.isEmptyAfterTrimming(m_strColumnDescription) ?
+				m_strColumnDescription + " table" : "input table");
+	}
+
+	/**
+	 * Returns based on the column description passed in to the constructor
+	 * a short table info. If no column description is defined, it returns
+	 * "input column", otherwise "columndescription input column".
+	 * 
+	 * @return Table identification. Never null.
+	 */
+	protected String getColumnIdentification() {
+		return (!StringUtils.isEmptyAfterTrimming(m_strColumnDescription) ?
+				m_strColumnDescription + " column" : "input column");
+	}
+
 	/**
 	 * This exception is thrown, when an empty cell was encountered during processing,
 	 * which had an Empty Cell Policy DeliverEmptyValue or StopExecution assigned.

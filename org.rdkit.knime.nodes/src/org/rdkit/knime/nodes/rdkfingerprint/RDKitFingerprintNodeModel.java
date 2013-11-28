@@ -49,7 +49,6 @@
 package org.rdkit.knime.nodes.rdkfingerprint;
 
 import org.RDKit.ExplicitBitVect;
-import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
@@ -58,6 +57,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.vector.bitvector.DenseBitVector;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
@@ -74,6 +74,7 @@ import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.StringUtils;
 import org.rdkit.knime.util.WarningConsolidator;
 
 /**
@@ -86,273 +87,6 @@ import org.rdkit.knime.util.WarningConsolidator;
 public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	//
-	// Enumeration
-	//
-
-	/** Defines supported fingerprint types. */
-	public enum FingerprintType {
-		morgan("Morgan") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						iNumBits,
-						iRadius,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits());
-			}
-		},
-
-		featmorgan("FeatMorgan") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						iNumBits,
-						iRadius,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				final UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
-				RDKFuncs.getFeatureInvariants(mol, ivs);
-				return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits(), ivs);
-			}
-		},
-
-		atompair("AtomPair") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						iNumBits,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol, settings.getNumBits());
-			}
-		},
-
-		torsion("Torsion") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						iNumBits,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits());
-			}
-		},
-
-		rdkit("RDKit") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						iMinPath,
-						iMaxPath,
-						iNumBits,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.RDKFingerprintMol(
-						mol, settings.getMinPath(), settings.getMaxPath(), settings.getNumBits(), 2);
-			}
-		},
-
-		avalon("Avalon") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						iNumBits,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						RDKFuncs.getAvalonSimilarityBits()); // A constant from the RDKit
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				final int bitNumber = settings.getNumBits();
-				final ExplicitBitVect fingerprint = new ExplicitBitVect(bitNumber);
-				synchronized (LOCK) {
-					RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false, settings.getSimilarityBits());
-				}
-				return fingerprint;
-			}
-		},
-
-		layered("Layered") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						iMinPath,
-						iMaxPath,
-						iNumBits,
-						FingerprintSettings.UNAVAILABLE,
-						iLayerFlags,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.LayeredFingerprintMol(mol, settings.getLayerFlags(), settings.getMinPath(),
-						settings.getMaxPath(), settings.getNumBits());
-			}
-		},
-
-		maccs("MACCS") {
-			@Override
-			public FingerprintSettings getSpecification(final int iMinPath, final int iMaxPath,
-					final int iNumBits, final int iRadius, final int iLayerFlags) {
-				return new DefaultFingerprintSettings(toString(),
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						166,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE,
-						FingerprintSettings.UNAVAILABLE);
-			}
-
-			/**
-			 * Calculates the fingerprint for the specified molecule based on the
-			 * specified settings.
-			 * 
-			 * @param mol Molecule to calculate fingerprint for. Must not be null.
-			 * @param settings Fingerprint settings to apply. Must not be null.
-			 * 
-			 * @throws NullPointerException Thrown, if one of the settings is null.
-			 */
-			@Override
-			public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-				return RDKFuncs.MACCSFingerprintMol(mol);
-			}
-		};
-
-		//
-		// Members
-		//
-
-		private final String m_strName;
-
-		//
-		// Constructors
-		//
-
-		/**
-		 * Creates a new fingerprint type enumeration value.
-		 * 
-		 * @param strName Name to be shown as string representation.
-		 */
-		private FingerprintType(final String strName) {
-			m_strName = strName;
-		}
-
-		/**
-		 * Creates a new fingerprint settings object for a fingerprint type.
-		 * Not all parameters are used for all fingerprints. This method
-		 * takes are that only those parameters are included in the
-		 * fingerprint specification, if they are are really used.
-		 * 
-		 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
-		 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
-		 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
-		 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
-		 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
-		 * 
-		 * @return Specification of the fingerprint based on the passed in
-		 * 		values. Never null.
-		 */
-		public abstract FingerprintSettings getSpecification(final int iMinPath,
-				final int iMaxPath, final int iNumBits, final int iRadius, final int iLayerFlags);
-
-		/**
-		 * Calculates the fingerprint based on the specified settings. Important:
-		 * It is the responsibility of the caller of the function to free memory
-		 * for the returned fingerprint when it is not needed anymore. Call
-		 * the {@link ExplicitBitVect#delete()} for this purpose.
-		 * 
-		 * @param Fingerprint settings. Must not be null.
-		 * 
-		 * @return Fingerprint or null.
-		 */
-		public abstract ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings);
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public String toString() {
-			return m_strName;
-		}
-
-		/**
-		 * Tries to determine the fingerprint type based on the passed in string. First it
-		 * will try to determine it by assuming that the passed in string is the
-		 * name of the fingerprint type ({@link #name()}. If this fails, it will compare the
-		 * string representation trying to find a match there ({@link #toString()}.
-		 * If none is found it will return null.
-		 */
-		public static FingerprintType parseString(String str) {
-			FingerprintType type = null;
-
-			if (str != null) {
-				try {
-					type = FingerprintType.valueOf(str);
-				}
-				catch (final IllegalArgumentException exc) {
-					// Ignored here
-				}
-
-				if (type == null) {
-					str = str.trim().toUpperCase();
-					for (final FingerprintType typeExisting : FingerprintType.values()) {
-						if (str.equals(typeExisting.toString().toUpperCase())) {
-							type = typeExisting;
-							break;
-						}
-					}
-				}
-			}
-
-			return type;
-		}
-	}
-
-	//
 	// Constants
 	//
 
@@ -360,22 +94,20 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	private static final NodeLogger LOGGER = NodeLogger
 			.getLogger(RDKitFingerprintNodeModel.class);
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKKit FeatureInvariants
-	 * and Avalon Fingerprint functionality, which has caused crashes under Windows 7 before.
-	 * Once there is a fix implemented in the RDKit (or somewhere else?) we can
-	 * remove this LOCK again.
-	 */
-	private static final Object LOCK = new Object();
-
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
+
+	/** Input data info index for an optional atom list (used for rooted fingerprints only). */
+	protected static final int INPUT_COLUMN_ATOM_LIST = 1;
+
+	/** Empty atom list to be used if an empty atom list cell is encountered. */
+	protected static final UInt_Vect EMPTY_ATOM_LIST = new UInt_Vect(0);
 
 	//
 	// Members
 	//
 
-	/** Model for the input column. */
+	/** Model for the molecule input column. */
 	private final SettingsModelString m_modelInputColumnName =
 			registerSettings(RDKitFingerprintNodeDialog.createSmilesColumnModel(), true);
 
@@ -385,11 +117,15 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 
 	/** Model for the option to remove the input column. */
 	private final SettingsModelBoolean m_modelRemoveSourceColumns =
-			registerSettings(RDKitFingerprintNodeDialog.createBooleanModel(), true);
+			registerSettings(RDKitFingerprintNodeDialog.createRemoveSourceColumnOptionModel(), true);
 
 	/** Model for the fingerprint type to apply. */
 	private final SettingsModelEnumeration<FingerprintType> m_modelFingerprintType =
 			registerSettings(RDKitFingerprintNodeDialog.createFPTypeModel(), true);
+
+	/** Model for the Torsion path length to be used for calculations. */
+	private final SettingsModelIntegerBounded m_modelTorsionPathLength =
+			registerSettings(RDKitFingerprintNodeDialog.createTorsionPathLengthModel(), true);
 
 	/** Model for the minimum path length to be used for calculations. */
 	private final SettingsModelIntegerBounded m_modelMinPath =
@@ -398,6 +134,14 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	/** Model for the maximum path length to be used for calculations. */
 	private final SettingsModelIntegerBounded m_modelMaxPath =
 			registerSettings(RDKitFingerprintNodeDialog.createMaxPathModel(), true);
+
+	/** Model for the AtomPair minimum path length to be used for calculations. */
+	private final SettingsModelIntegerBounded m_modelAtomPairMinPath =
+			registerSettings(RDKitFingerprintNodeDialog.createAtomPairMinPathModel(), true);
+
+	/** Model for the AtomPair maximum path length to be used for calculations. */
+	private final SettingsModelIntegerBounded m_modelAtomPairMaxPath =
+			registerSettings(RDKitFingerprintNodeDialog.createAtomPairMaxPathModel(), true);
 
 	/** Model for the number of fingerprint bits to be used for calculations. */
 	private final SettingsModelIntegerBounded m_modelNumBits =
@@ -410,6 +154,18 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	/** Model for the layer flags to be used for calculations. */
 	private final SettingsModelIntegerBounded m_modelLayerFlags =
 			registerSettings(RDKitFingerprintNodeDialog.createLayerFlagsModel(), true);
+
+	/** Model for the flag to create rooted fingerprints. */
+	private final SettingsModelBoolean m_modelRootedOption =
+			registerSettings(RDKitFingerprintNodeDialog.createRootedOptionModel(), true);
+
+	/** Model for the atom list input column. */
+	private final SettingsModelString m_modelAtomListColumnName =
+			registerSettings(RDKitFingerprintNodeDialog.createAtomListColumnModel(m_modelFingerprintType, m_modelRootedOption), true);
+
+	/** Model for the flag to include atom list for calculation of rooted fingerprints. */
+	private final SettingsModelBoolean m_modelAtomListHandlingIncludeOption =
+			registerSettings(RDKitFingerprintNodeDialog.createAtomListHandlingIncludeOptionModel(m_modelFingerprintType, m_modelRootedOption), true);
 
 	//
 	// Constructors
@@ -434,7 +190,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 		// Auto guess the input column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the input column exists - fails if it does not
@@ -457,9 +213,25 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 					"Output column has not been specified yet.",
 				"The name %COLUMN_NAME% of the new column exists already in the input.");
 
-		// Determine, if path values are in conflict
-		if (m_modelMinPath.getIntValue() > m_modelMaxPath.getIntValue()) {
-			throw new InvalidSettingsException("Minimum path length is larger than maximum path length.");
+		// Check fingerprint settings
+		final FingerprintType fpType = m_modelFingerprintType.getValue();
+		if (fpType != null) {
+			final FingerprintSettings settings = fpType.getSpecification(
+					m_modelTorsionPathLength.getIntValue(),
+					m_modelMinPath.getIntValue(),
+					m_modelMaxPath.getIntValue(),
+					m_modelAtomPairMinPath.getIntValue(),
+					m_modelAtomPairMaxPath.getIntValue(),
+					m_modelNumBits.getIntValue(),
+					m_modelRadius.getIntValue(),
+					m_modelLayerFlags.getIntValue(),
+					m_modelRootedOption.getBooleanValue(),
+					m_modelAtomListColumnName.getStringValue(),
+					m_modelAtomListHandlingIncludeOption.getBooleanValue());
+			fpType.validateSpecification(settings, inSpecs[0]);
+		}
+		else {
+			throw new InvalidSettingsException("No fingerprint type selected yet.");
 		}
 
 		// Consolidate all warnings and make them available to the user
@@ -483,10 +255,18 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 
 		// Specify input of table 1
 		if (inPort == 0) {
-			arrDataInfo = new InputDataInfo[1]; // We have only one input column
-			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+			arrDataInfo = new InputDataInfo[2]; // We may have two input columns, but at least one
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, null, m_modelInputColumnName, "molecule",
 					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
 					RDKitMolValue.class);
+
+			// Check, if we should add additional column information for rooted fingerprints
+			final FingerprintType fpType = m_modelFingerprintType.getValue();
+			if (fpType != null && fpType.canCalculateRootedFingerprint() && m_modelRootedOption.getBooleanValue()) {
+				arrDataInfo[INPUT_COLUMN_ATOM_LIST] = new InputDataInfo(inSpec, null, m_modelAtomListColumnName, "atom list",
+						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
+						CollectionDataValue.class);
+			}
 		}
 
 		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
@@ -499,7 +279,9 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 
+		final WarningConsolidator warnings = getWarningConsolidator();
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
+		final boolean bIsRooted = m_modelRootedOption.getBooleanValue();
 
 		// Specify output of table 1
 		if (outPort == 0) {
@@ -512,16 +294,24 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			final DataColumnSpecCreator creator = new DataColumnSpecCreator(
 					m_modelNewColumnName.getStringValue(), DenseBitVectorCell.TYPE);
-			// Add fingerprint specification properties to column header
+
+			// Generate fingerprint settings
 			final FingerprintType fpType = m_modelFingerprintType.getValue();
-			if (fpType != null) {
-				new FingerprintSettingsHeaderProperty(fpType.getSpecification(
-						m_modelMinPath.getIntValue(),
-						m_modelMaxPath.getIntValue(),
-						m_modelNumBits.getIntValue(),
-						m_modelRadius.getIntValue(),
-						m_modelLayerFlags.getIntValue())).writeToColumnSpec(creator);
-			}
+			final FingerprintSettings settings = (fpType == null ? null : fpType.getSpecification(
+					m_modelTorsionPathLength.getIntValue(),
+					m_modelMinPath.getIntValue(),
+					m_modelMaxPath.getIntValue(),
+					m_modelAtomPairMinPath.getIntValue(),
+					m_modelAtomPairMaxPath.getIntValue(),
+					m_modelNumBits.getIntValue(),
+					m_modelRadius.getIntValue(),
+					m_modelLayerFlags.getIntValue(),
+					m_modelRootedOption.getBooleanValue(),
+					m_modelAtomListColumnName.getStringValue(),
+					m_modelAtomListHandlingIncludeOption.getBooleanValue()));
+
+			// Add fingerprint specification properties to column header
+			new FingerprintSettingsHeaderProperty(settings).writeToColumnSpec(creator);
 			arrOutputSpec[0] = creator.createSpec();
 
 			// Generate factory
@@ -541,21 +331,30 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
 					// Calculate fingerprint
-					final FingerprintType fpType = m_modelFingerprintType.getValue();
-					final FingerprintSettings settings = fpType.getSpecification(
-							m_modelMinPath.getIntValue(),
-							m_modelMaxPath.getIntValue(),
-							m_modelNumBits.getIntValue(),
-							m_modelRadius.getIntValue(),
-							m_modelLayerFlags.getIntValue());
 					ExplicitBitVect fingerprint = null;
 
 					try {
-						fingerprint = markForCleanup(fpType.calculate(mol, settings), iUniqueWaveId);
+						// Calculate rooted fingerprint
+						if (bIsRooted && fpType.canCalculateRootedFingerprint()) {
+							UInt_Vect atomList = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitUIntegerVector(row), iUniqueWaveId);
+							if (atomList == null) {
+								LOGGER.warn("Encountered empty atom list in row '" + row.getKey() + "'");
+								warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty atom list cell. Using empty atom list.");
+								atomList = EMPTY_ATOM_LIST; // This must not be cleaned up, it is a constant
+							}
+							fingerprint = markForCleanup(fpType.calculateRooted(mol, atomList, settings), iUniqueWaveId);
+						}
+
+						// Calculate normal fingerprint
+						else {
+							fingerprint = markForCleanup(fpType.calculate(mol, settings), iUniqueWaveId);
+						}
 					}
 					catch (final Exception exc) {
+						final String strError = exc.getMessage();
 						final String strMsg = "Fingerprint Type '" + m_modelFingerprintType.getValue() +
-								"' could not be calculated.";
+								"' could not be calculated: " + (StringUtils.isEmptyAfterTrimming(strError) ?
+										"An unknown error occurred." : strError);
 						LOGGER.error(strMsg);
 						throw new RuntimeException(strMsg, exc);
 					}

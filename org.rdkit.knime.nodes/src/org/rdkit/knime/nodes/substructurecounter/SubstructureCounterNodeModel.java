@@ -176,7 +176,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		// Auto guess the input mol column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME% as Mol input column.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"Molecule to RDKit\" " +
+				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the mol input column exists - fails if it does not
@@ -188,7 +188,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
 				(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
 				"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
-				"No RDKit Mol compatible column in query molecule table. Use \"Molecule to RDKit\" " +
+				"No RDKit Mol compatible column in query molecule table. Use \"RDKit from Molecule\" " +
 						"node to convert SMARTS.", getWarningConsolidator());
 
 		// Determines, if the query mol column exists - fails if it does not

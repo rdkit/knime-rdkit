@@ -138,7 +138,7 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName,
 				Arrays.asList(RDKitMolValue.class, SmilesValue.class), 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol or SMILES compatible column in input table. Use \"Molecule to RDKit\" " +
+				"No RDKit Mol or SMILES compatible column in input table. Use \"RDKit from Molecule\" " +
 						"node to convert from SDF.", getWarningConsolidator());
 
 		// Determines, if the input column exists - fails if it does not

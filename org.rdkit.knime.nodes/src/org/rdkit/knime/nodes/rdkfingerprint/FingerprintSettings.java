@@ -48,7 +48,6 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
-import org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeModel.FingerprintType;
 
 /**
  * Defines fingerprint settings used to calculate fingerprints. Not all settings
@@ -82,6 +81,13 @@ public interface FingerprintSettings {
 	FingerprintType getRdkitFingerprintType();
 
 	/**
+	 * Returns the Torsion path length setting if set or {@link #UNAVAILABLE} if not set.
+	 * 
+	 * @return the Torsion path length value or {@link #UNAVAILABLE}.
+	 */
+	int getTorsionPathLength();
+
+	/**
 	 * Returns the minimum path setting if set or {@link #UNAVAILABLE} if not set.
 	 * 
 	 * @return the MinPath value or {@link #UNAVAILABLE}.
@@ -94,6 +100,20 @@ public interface FingerprintSettings {
 	 * @return the MaxPath value or {@link #UNAVAILABLE}.
 	 */
 	int getMaxPath();
+
+	/**
+	 * Returns the AtomPair minimum path setting if set or {@link #UNAVAILABLE} if not set.
+	 * 
+	 * @return the AtomPair MinPath value or {@link #UNAVAILABLE}.
+	 */
+	int getAtomPairMinPath();
+
+	/**
+	 * Returns the AtomPair maximum path setting if set or {@link #UNAVAILABLE} if not set.
+	 * 
+	 * @return the AtomPair MaxPath value or {@link #UNAVAILABLE}.
+	 */
+	int getAtomPairMaxPath();
 
 	/**
 	 * Returns the number of bits (fingerprint length) if set or {@link #UNAVAILABLE} if not set.
@@ -124,6 +144,37 @@ public interface FingerprintSettings {
 	int getSimilarityBits();
 
 	/**
+	 * Returns true, if the fingerprint shall be calculated as rooted fingerprint.
+	 * 
+	 * @return True or false.
+	 */
+	boolean isRooted();
+
+	/**
+	 * Returns the atom list column name, which must be set if the fingerprint shall be
+	 * calculated as rooted fingerprint.
+	 * 
+	 * @return Column name of the atom list or null, if not set.
+	 */
+	String getAtomListColumnName();
+
+	/**
+	 * Returns true, if the atom list for rooted fingerprints shall be treated as
+	 * an include list, and false, if it shall be treated as an exclude list.
+	 * 
+	 * @return True or false. Also false, if undefined.
+	 */
+	boolean isTreatAtomListAsIncludeList();
+
+	/**
+	 * Returns true, if the atom list for rooted fingerprints shall be treated as
+	 * an exclude list, and false, if it shall be treated as an include list.
+	 * 
+	 * @return True or false. Also false, if undefined.
+	 */
+	boolean isTreatAtomListAsExcludeList();
+
+	/**
 	 * Sets the fingerprint type and also the RDKit Fingerprint Type based on it,
 	 * if known.
 	 * 
@@ -139,6 +190,13 @@ public interface FingerprintSettings {
 	void setRDKitFingerprintType(final FingerprintType type);
 
 	/**
+	 * Sets the Torsion path length setting or {@link #UNAVAILABLE}.
+	 * 
+	 * @param iPathLength the TorsionPathLength value or {@link #UNAVAILABLE}.
+	 */
+	void setTorsionPathLength(final int iTorsionPathLength);
+
+	/**
 	 * Sets the minimum path setting or {@link #UNAVAILABLE}.
 	 * 
 	 * @param iMinPath the MinPath value or {@link #UNAVAILABLE}.
@@ -151,6 +209,20 @@ public interface FingerprintSettings {
 	 * @param iMaxPath the MaxPath value or {@link #UNAVAILABLE}.
 	 */
 	void setMaxPath(final int iMaxPath);
+
+	/**
+	 * Sets the Atom Pairs minimum path setting or {@link #UNAVAILABLE}.
+	 * 
+	 * @param iMinPath the MinPath value or {@link #UNAVAILABLE}.
+	 */
+	void setAtomPairMinPath(final int iMinPath);
+
+	/**
+	 * Sets the Atom Pairs maximum path setting or {@link #UNAVAILABLE}.
+	 * 
+	 * @param iMaxPath the MaxPath value or {@link #UNAVAILABLE}.
+	 */
+	void setAtomPairMaxPath(final int iMaxPath);
 
 	/**
 	 * Sets the number of bits (fingerprint length) or {@link #UNAVAILABLE}.
@@ -181,6 +253,37 @@ public interface FingerprintSettings {
 	void setSimilarityBits(final int iSimilarityBits);
 
 	/**
+	 * Sets the option to calculate the fingerprint as rooted fingerprint.
+	 * 
+	 * @param bRooted True to be rooted, false otherwise.
+	 */
+	void setRooted(boolean bRooted);
+
+	/**
+	 * Sets the atom list column name, which must be set if the fingerprint shall be
+	 * calculated as rooted fingerprint.
+	 * 
+	 * @param strColumnName Column name of the atom list or null to unset.
+	 */
+	void setAtomListColumnName(String strColumnName);
+
+	/**
+	 * Set to true, if the atom list for rooted fingerprints shall be treated as
+	 * an include list, and false, if it shall be treated as an exclude list.
+	 * 
+	 * @param bIncludeList True or false. Set to false, if undefined.
+	 */
+	void setTreatAtomListAsIncludeList(boolean bIncludeList);
+
+	/**
+	 * Set to true, if the atom list for rooted fingerprints shall be treated as
+	 * an exclude list, and false, if it shall be treated as an include list.
+	 * 
+	 * @param bExcludeList True or false. Set to false, if undefined.
+	 */
+	void setTreatAtomListAsExcludeList(boolean bExcludeList);
+
+	/**
 	 * Returns true, if the specified number is a value that is not equal
 	 * to the value the represents an unavailable value.
 	 * 
@@ -190,4 +293,5 @@ public interface FingerprintSettings {
 	 * 		if it represents the reserved UNAVAILABLE value.
 	 */
 	boolean isAvailable(final int iNumber);
+
 }

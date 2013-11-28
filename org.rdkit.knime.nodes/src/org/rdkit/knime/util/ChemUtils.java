@@ -51,6 +51,7 @@ package org.rdkit.knime.util;
 import org.RDKit.ChemicalReaction;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
@@ -239,7 +240,56 @@ public final class ChemUtils {
 		}
 	}
 
+	/**
+	 * Reverses the specified atom index list for the specified molecule.
+	 * 
+	 * @param mol Molecule with atoms. Can be null to return null.
+	 * @param atomList Atom index list. Can be null to return a list with all atom indexes.
+	 * 
+	 * @return Atom index list that contains all atom indexes that are not in the specified list.
+	 */
+	public static UInt_Vect reverseAtomList(final ROMol mol, final UInt_Vect atomList) {
+		UInt_Vect reverseList = null;
 
+		if (mol != null) {
+			final int iAtomCount = (int)mol.getNumAtoms();
+
+			// Extreme case: No atoms in list => Reverse includes all
+			if (atomList == null || atomList.size() == 0) {
+				reverseList = new UInt_Vect(iAtomCount);
+				for (int i = 0; i < iAtomCount; i++) {
+					reverseList.set(i, i);
+				}
+			}
+
+			// Normal case
+			else {
+				final int iInputSize = (int)atomList.size();
+				int iDistinctInputCount = 0;
+				final boolean[] arr = new boolean[iAtomCount];
+
+				for (int i = 0; i < iInputSize; i++) {
+					final int index = (int)atomList.get(i);
+					if (index > 0 && index < arr.length) {
+						if (arr[index] == false) {
+							arr[index] = true;
+							iDistinctInputCount++;
+						}
+					}
+				}
+
+				reverseList = new UInt_Vect(iAtomCount - iDistinctInputCount);
+				int index = 0;
+				for (int i = 0; i < iAtomCount; i++) {
+					if (!arr[i]) {
+						reverseList.set(index++, i);
+					}
+				}
+			}
+		}
+
+		return reverseList;
+	}
 
 	//
 	// Constructor

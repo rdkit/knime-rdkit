@@ -88,6 +88,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -109,8 +110,11 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.JTextComponent;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -219,6 +223,43 @@ public final class LayoutUtils {
 	// Public Methods
 	//
 
+
+	public static JComponent findTitleGroupPanel(final NodeDialogPane dialogPane, final String strTitle) {
+		JComponent ret = null;
+
+		if (dialogPane != null && strTitle != null) {
+			final JPanel panel = dialogPane.getPanel();
+
+			if (panel != null) {
+				ret = findTitleGroupPanel(panel, strTitle);
+			}
+		}
+
+		return ret;
+	}
+
+
+	private static JComponent findTitleGroupPanel(final Component comp, final String strTitle) {
+		JComponent ret = null;
+
+		if (comp instanceof JComponent && strTitle != null) {
+			final Border border = ((JComponent)comp).getBorder();
+			if (border instanceof TitledBorder && strTitle.equals(((TitledBorder)border).getTitle())) {
+				ret = (JComponent)comp;
+			}
+			else {
+				for (final Component compChild : ((JComponent)comp).getComponents()) {
+					final JComponent found = findTitleGroupPanel(compChild, strTitle);
+					if (found != null) {
+						ret = found;
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
 	/**
 	 * Sets default background and foreground color as well as a default font
 	 * for the specified component. It uses values defined as UIManager

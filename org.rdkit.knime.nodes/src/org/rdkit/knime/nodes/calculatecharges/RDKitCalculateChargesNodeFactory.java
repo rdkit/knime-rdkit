@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
+ * Copyright (C)2013
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -46,54 +46,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.rdkit.knime.nodes;
+package org.rdkit.knime.nodes.calculatecharges;
 
-import javax.swing.table.TableCellRenderer;
-
-import org.rdkit.knime.headers.HeaderPropertyHandler;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * A handler of additional header information knows how to render the
- * information value. Such a handler is called in two steps of the rendering
- * process. In the first step, the method {@link #prepareValue(String)} is
- * called to convert the information value, which is always a String due to the
- * KNIME column header properties specifications, into an object that a renderer
- * can understand. In the second step the handler must be able to produce a
- * renderer that can render the converted information object to a table cell.
- * Handlers can be registered in the class {@link AdditionalHeaderInfo}.
+ * <code>NodeFactory</code> for the RDKit based "RDKitCalculateCharges" Node.
  * 
+ *
  * @author Manuel Schwarze
- * @deprecated Deprecated and replaced by an
- * 		extension point mechanism based on {@link HeaderPropertyHandler}.
  */
-@Deprecated
-public interface AdditionalHeaderInfoHandler {
+public class RDKitCalculateChargesNodeFactory 
+        extends NodeFactory<RDKitCalculateChargesNodeModel> {
 
-	/**
-	 * Returns the type that this handler can handle.
-	 * 
-	 * @return Type of additional header information. Must not be null.
-	 */
-	String getType();
+    /**
+     * Creates a model for the RDKitCalculateCharges functionality
+     * of the RDKit library. The model is derived from the
+     * abstract class AbstractRDKitNodeModel, which provides
+     * common base functionality for RDKit nodes.
+     * {@inheritDoc}
+     *
+     * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
+     */
+    @Override
+    public RDKitCalculateChargesNodeModel createNodeModel() {
+        return new RDKitCalculateChargesNodeModel();
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always null.
+     */
+    @Override
+    public NodeView<RDKitCalculateChargesNodeModel> createNodeView(
+            final int viewIndex,
+            final RDKitCalculateChargesNodeModel nodeModel) {
+        return null;
+    }
+    
+    /**
+     * This node does not have any views.
+     * 
+	 * @return Always 0.
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
 
-	/**
-	 * Convert the information value, which is always a String due to the KNIME
-	 * column header properties specifications, into an object that the renderer
-	 * returned by the method {@link #getRenderer()} can understand. If the
-	 * passed in information is null, it should return null.
-	 * 
-	 * @param value Additional header information value. Can be null.
-	 * 
-	 * @return The converted value of a type that the renderer can understand.
-	 * 		Should return null, if null was passed in.
-	 */
-	Object prepareValue(String value);
+    /**
+     * This node possesses a configuration dialog.
+     * 
+	 * @return Always true.
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
 
-	/**
-	 * Returns the appropriate renderer for the information of a specific type.
-	 * 
-	 * @return Renderer capable to render the object that is returned by
-	 * 		a call to {@link #prepareValue(String)}.
-	 */
-	TableCellRenderer getRenderer();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new RDKitCalculateChargesNodeDialog();
+    }
 }
+

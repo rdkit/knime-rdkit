@@ -87,7 +87,7 @@ import org.rdkit.knime.util.SettingsUtils;
  * might be added in the same style in the future.
  * 
  * @author Manuel Schwarze
- * @deprecated Deprecated since RDKit Nodes 2.3.0 and replaced by an
+ * @deprecated Deprecated and replaced by an
  * 		extension point mechanism based on {@link HeaderPropertyHandler}.
  * 		Helper methods as found in {@link AdditionalHeaderInfo} are
  * 		now available in a slightly different form in {@link HeaderPropertyUtils}.

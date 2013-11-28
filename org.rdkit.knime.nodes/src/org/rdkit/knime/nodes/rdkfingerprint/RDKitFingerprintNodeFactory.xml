@@ -4,14 +4,15 @@
 	<name>RDKit Fingerprint</name>
 	
 	<shortDescription>
-	    Generates fingerprints for input RDKit Mol column
+	    Generates fingerprints for an input RDKit Mol column.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>Generates fingerprints for an input RDKit Mol column and appends
-		them to the table.</intro>
-        <option name="RDKit Mol column">The column containing reactant molecules</option>
-		<option name="Fingerprint type">The type of fingerprint to generation. Choices are:
+		them to the table. Several fingerprint types are available. Not all settings are used for each type. Settings that
+		are not supported by a fingerprint type will be disabled/hidden and will have no effect. The settings a fingerprint gets
+		generated with are made available as column properties and can be visualized with the RDKit Interactive View Node.</intro>
+		<option name="Fingerprint type">The type of fingerprint to generate. Choices are:
 		<ul>
 		  <li>Morgan: Circular fingerprint based on the Morgan algorithm and connectivity invariants (ECFP-like)</li>
 		  <li>FeatMorgan: Circular fingerprint based on the Morgan algorithm and feature invariants (FCFP-like)</li>
@@ -23,13 +24,19 @@
 		  <li>MACCS: RDKit implementation of the 166 public MACCS keys</li>
 		</ul>
 		</option>
+        <option name="RDKit Mol column">The column containing reactant molecules</option>
 		<option name="New Column Name">Name of the fingerprint column in the output table.</option>
 		<option name="Remove source column">Toggles removal of the input RDKit Mol column in the output table.</option>
-		<option name="Num Bits">(Advanced option) Number of bits in the fingerprint. Applicable to all fingerprint types</option>
-		<option name="Radius">(Advanced option) The radius of the atomic environments considered. Applicable to fingerprint types: Morgan</option>
-		<option name="Min Path Length">(Advanced option) Minimum length (in bonds) of the paths to be considered. Applicable to fingerprint types: RDKit, Layered</option>
-		<option name="Max Path Length">(Advanced option) Maximum length (in bonds) of the paths to be considered. Applicable to fingerprint types: RDKit, Layered</option>
-		<option name="LayerFlags">(Advanced option) Which atomic layers should be included. Applicable to fingerprint types: Layered</option>
+		<option name="Advanced - Fingerprint Settings - Num Bits">Number of bits in the fingerprint.</option>
+		<option name="Advanced - Fingerprint Settings - Path length">Path length to be used (Torsion only).</option>
+		<option name="Advanced - Fingerprint Settings - Radius">The radius of the atomic environments considered.</option>
+		<option name="Advanced - Fingerprint Settings - LayerFlags">Which atomic layers should be included.</option>
+		<option name="Advanced - Fingerprint Settings - Min Path Length">Minimum length (in bonds) of the paths to be considered.</option>
+		<option name="Advanced - Fingerprint Settings - Max Path Length">Maximum length (in bonds) of the paths to be considered.</option>
+		<option name="Advanced - Rooted Fingerprints - Create rooted fingerprint">Check this option to create a rooted fingerprint based on an atom list.
+			This option is not applicable to all fingerprint types.</option>
+        <option name="Advanced - Rooted Fingerprints - Atom list column for rooted fingerprints">The column containing the atom lists that are necessary when calculating rooted fingerprints.</option>
+        <option name="Advanced - Rooted Fingerprints - Include atoms">Check this option to include the atoms when calculating rooted fingerprints or uncheck to exclude them.</option>
 	</fullDescription>
 	
 	<ports>

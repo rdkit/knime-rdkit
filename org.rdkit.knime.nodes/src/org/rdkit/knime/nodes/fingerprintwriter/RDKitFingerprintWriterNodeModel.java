@@ -232,7 +232,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 		// Specify input of table 1
 		if (inPort == 0) {
 			arrDataInfo = new InputDataInfo[2]; // We have two input column
-			arrDataInfo[INPUT_COLUMN_FPS] = new InputDataInfo(inSpec, m_modelFingerprintColumnName,
+			arrDataInfo[INPUT_COLUMN_FPS] = new InputDataInfo(inSpec, null, m_modelFingerprintColumnName, "fingerprint",
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					BitVectorValue.class);
 
@@ -241,7 +241,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 				arrDataInfo[INPUT_COLUMN_ID] = null;
 			}
 			else {
-				arrDataInfo[INPUT_COLUMN_ID] = new InputDataInfo(inSpec, m_modelIdColumnName,
+				arrDataInfo[INPUT_COLUMN_ID] = new InputDataInfo(inSpec, null, m_modelIdColumnName, "id",
 						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 						StringValue.class);
 			}

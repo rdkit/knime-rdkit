@@ -75,7 +75,7 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitSplitterNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintSettings;
-import org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeModel.FingerprintType;
+import org.rdkit.knime.nodes.rdkfingerprint.FingerprintType;
 import org.rdkit.knime.properties.FingerprintSettingsHeaderProperty;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -107,7 +107,8 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 
 	/** The default fingerprint settings to use, if a molecule column is selected from the first input table. */
 	protected static final FingerprintSettings DEFAULT_FINGERPRINT_SETTINGS = new DefaultFingerprintSettings(
-			"Morgan",
+			"Morgan", FingerprintSettings.UNAVAILABLE,
+			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE,
 			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE,
 			2048, 2, // NumBits, Radius
 			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE);
@@ -219,7 +220,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 				// Determines, if the input column exists - fails if it does not
 				SettingsUtils.checkColumnExistence(inSpecs[1], m_modelAdditionalInputColumnName,
 						ACCEPTABLE_VALUE_CLASSES, null,
-						"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
+						"Input column %COLUMN_NAME% does not exist in the second table. Has the second input table changed?");
 
 				final DataColumnSpec colSpec2 = inSpecs[1].getColumnSpec(strAdditionalInputColumn);
 
@@ -249,6 +250,11 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 					boolean bCompatible = true;
 
 					if (fpSpec1 == null || fpSpec1.getRdkitFingerprintType() == null) {
+						bCompatible = false;
+					}
+
+					// Incompatible, if fingerprints of table 1 are rooted fingerprints
+					else if (fpSpec1.isRooted()) {
 						bCompatible = false;
 					}
 
@@ -461,7 +467,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 					if (fpSpec1 == null || fpSpec2 == null) {
 						getWarningConsolidator().saveWarning("The fingerprints in table 1 and 2 might not be compatible, which may lead to wrong results.");
 					}
-					else if (!SettingsUtils.equals(fpSpec1, fpSpec2)) {
+					else if (!FingerprintType.isCompatible(fpSpec1, fpSpec2)) {
 						getWarningConsolidator().saveWarning("The fingerprints in table 1 and 2 are not compatible, which may lead to wrong results.");
 					}
 				}

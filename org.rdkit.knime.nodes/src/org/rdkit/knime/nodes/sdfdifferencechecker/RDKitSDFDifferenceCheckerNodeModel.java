@@ -155,12 +155,12 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 		// Reset warnings and check RDKit library readiness
 		super.configure(inSpecs);
 
-		// Auto guess the input column if not set - fails if no compatible column found
 		final List<Class<? extends DataValue>> listValueClasses =
 				new ArrayList<Class<? extends DataValue>>();
 		listValueClasses.add(SdfValue.class);
 		listValueClasses.add(StringValue.class);
 
+		// Auto guess the input column 1 if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumn1Name, SdfValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME% for input table 1.",
 				null, null);
@@ -168,23 +168,23 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 				"Auto guessing: Using column %COLUMN_NAME% for input table 1.",
 				"No SDF nor String compatible column in input table 1.", getWarningConsolidator());
 
-		// Determines, if the input column exists - fails if it does not
+		// Determines, if the input column 1 exists - fails if it does not
 		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumn1Name, listValueClasses,
 				"Input column of table 1 has not been specified yet.",
 				"Input column %COLUMN_NAME% of table 1 does not exist. Has the input table 1 changed?");
 
-		// Auto guess the input column if not set - fails if no compatible column found
-		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelInputColumn1Name, SdfValue.class,
+		// Auto guess the input column 2 if not set - fails if no compatible column found
+		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelInputColumn2Name, SdfValue.class,
 				(inSpecs[0] == inSpecs[1] ? 1 : 0),
 				"Auto guessing: Using column %COLUMN_NAME% for input table 2.",
 				null, null);
-		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelInputColumn1Name, StringValue.class,
+		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelInputColumn2Name, StringValue.class,
 				(inSpecs[0] == inSpecs[1] ? 1 : 0),
 				"Auto guessing: Using column %COLUMN_NAME% for input table 2.",
 				"No SDF nor String compatible column in input table 2.", getWarningConsolidator());
 
-		// Determines, if the input column exists - fails if it does not
-		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelInputColumn1Name, listValueClasses,
+		// Determines, if the input column 2 exists - fails if it does not
+		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelInputColumn2Name, listValueClasses,
 				"Input column of table 2 has not been specified yet.",
 				"Input column %COLUMN_NAME% of table 2 does not exist. Has the input table 2 changed?");
 
@@ -215,7 +215,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 					SdfValue.class, StringValue.class);
 		}
 
-		// Specify input of table 1
+		// Specify input of table 2
 		else if (inPort == 1) {
 			arrDataInfo = new InputDataInfo[1]; // We have only one input column
 			arrDataInfo[INPUT_COLUMN_SDF_2] = new InputDataInfo(inSpec, m_modelInputColumn2Name,
@@ -302,7 +302,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 							" than in table 2.", null);
 				}
 
-				while (st1.hasMoreTokens()) {
+				while (st1.hasMoreTokens() && st2.hasMoreTokens()) {
 					final String strToken1 = st1.nextToken();
 					final String strToken2 = st2.nextToken();
 

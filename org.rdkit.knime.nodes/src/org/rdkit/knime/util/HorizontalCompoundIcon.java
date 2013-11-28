@@ -58,7 +58,7 @@ import javax.swing.SwingConstants;
  * Merges two icons to one aligning them horizontally.
  * 
  * @author Manuel Schwarze
- * @deprecated Since version 2.3.0 replaced through RDKit Types Plugin class
+ * @deprecated Deprecated and replaced by RDKit Types Plugin class
  * 		org.rdkit.knime.headers.HorizontalCompoundIcon.
  */
 @Deprecated

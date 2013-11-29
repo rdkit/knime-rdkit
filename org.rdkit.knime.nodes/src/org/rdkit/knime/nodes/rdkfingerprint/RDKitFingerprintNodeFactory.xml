@@ -35,7 +35,10 @@
 		<option name="Advanced - Fingerprint Settings - Max Path Length">Maximum length (in bonds) of the paths to be considered.</option>
 		<option name="Advanced - Rooted Fingerprints - Create rooted fingerprint">Check this option to create a rooted fingerprint based on an atom list.
 			This option is not applicable to all fingerprint types.</option>
-        <option name="Advanced - Rooted Fingerprints - Atom list column for rooted fingerprints">The column containing the atom lists that are necessary when calculating rooted fingerprints.</option>
+        <option name="Advanced - Rooted Fingerprints - Atom list column for rooted fingerprints">
+        	The column containing the atom lists that are necessary when calculating rooted fingerprints. 
+        	Instead of a list it is also possible to provide an integer column with a single atom index.
+        </option>
         <option name="Advanced - Rooted Fingerprints - Include atoms">Check this option to include the atoms when calculating rooted fingerprints or uncheck to exclude them.</option>
 	</fullDescription>
 	

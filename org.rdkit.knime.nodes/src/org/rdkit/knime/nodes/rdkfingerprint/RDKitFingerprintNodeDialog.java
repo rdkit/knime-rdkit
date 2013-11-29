@@ -59,6 +59,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -218,7 +219,7 @@ public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				m_modelAtomListColumn = createAtomListColumnModel(m_modelFingerprintType, m_modelRootedOption),
 				"Atom list column for rooted fingerprints: ", 0, false, true,
-				CollectionDataValue.class));
+				CollectionDataValue.class, IntValue.class));
 		super.addDialogComponent(new DialogComponentBoolean(
 				m_modelAtomListHandlingOption = createAtomListHandlingIncludeOptionModel(m_modelFingerprintType, m_modelRootedOption),
 				"Include atoms (disable to exclude them)"));

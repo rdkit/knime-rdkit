@@ -57,6 +57,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.vector.bitvector.DenseBitVector;
@@ -265,7 +266,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 			if (fpType != null && fpType.canCalculateRootedFingerprint() && m_modelRootedOption.getBooleanValue()) {
 				arrDataInfo[INPUT_COLUMN_ATOM_LIST] = new InputDataInfo(inSpec, null, m_modelAtomListColumnName, "atom list",
 						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-						CollectionDataValue.class);
+						CollectionDataValue.class, IntValue.class);
 			}
 		}
 
@@ -336,12 +337,31 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitCalculatorNodeModel 
 					try {
 						// Calculate rooted fingerprint
 						if (bIsRooted && fpType.canCalculateRootedFingerprint()) {
-							UInt_Vect atomList = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitUIntegerVector(row), iUniqueWaveId);
+
+							UInt_Vect atomList = null;
+
+							// Check if we have a single atom index column (no collection)
+							if (arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getDataType().isCompatible(IntValue.class)) {
+
+								// Need to check for empty cells specially as it would return 0, which is also a valud atom index
+								if (!arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].isMissing(row)) {
+									final int iAtomIndex = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getInt(row);
+									atomList = markForCleanup(new UInt_Vect(1), iUniqueWaveId);
+									atomList.add(iAtomIndex);
+								}
+							}
+
+							// We have a collection column
+							else {
+								atomList = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitUIntegerVector(row), iUniqueWaveId);
+							}
+
 							if (atomList == null) {
 								LOGGER.warn("Encountered empty atom list in row '" + row.getKey() + "'");
 								warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty atom list cell. Using empty atom list.");
 								atomList = EMPTY_ATOM_LIST; // This must not be cleaned up, it is a constant
 							}
+
 							fingerprint = markForCleanup(fpType.calculateRooted(mol, atomList, settings), iUniqueWaveId);
 						}
 

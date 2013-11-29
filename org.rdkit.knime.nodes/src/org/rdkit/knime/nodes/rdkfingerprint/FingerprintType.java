@@ -659,8 +659,9 @@ public enum FingerprintType {
 					throw new InvalidSettingsException("No atom list column found with the name '" + strAtomListColumnName + "'.");
 				}
 				final DataType dataType = colSpec.getType();
-				if (!dataType.isCollectionType() || !dataType.getCollectionElementType().isCompatible(IntValue.class)) {
-					throw new InvalidSettingsException("Defined atom list column '" + strAtomListColumnName + "' is no integer collection column.");
+				if ((dataType.isCompatible(IntValue.class) ||
+						(dataType.isCollectionType() && dataType.getCollectionElementType().isCompatible(IntValue.class))) == false) {
+					throw new InvalidSettingsException("Defined atom list column '" + strAtomListColumnName + "' is no integer collection nor an integer column.");
 				}
 			}
 		}

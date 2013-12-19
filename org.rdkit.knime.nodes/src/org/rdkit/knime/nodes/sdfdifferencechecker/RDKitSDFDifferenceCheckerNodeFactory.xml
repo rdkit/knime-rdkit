@@ -23,7 +23,9 @@
         	is allowed to have this tolerance range.</option>
         <option name="Fail on first encountered difference">Set to true to fail immediately when the first difference has been encountered.
         	Set to false to walk through the tables until the end to find more differences (console output) and then fail and
-        	report the first encountered difference.</option>        	
+        	report the first encountered difference.</option>
+        <option name="Limit console output about different rows to">To avoid that the console gets cluttered with all
+        	differences that may be found you may set a limit here. Default is 3.</option>
     </fullDescription>
     
     <ports>

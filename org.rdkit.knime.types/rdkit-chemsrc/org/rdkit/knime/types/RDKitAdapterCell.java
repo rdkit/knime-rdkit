@@ -126,7 +126,7 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 * @param cell Cell to be added to the existing cell collection. Must not be null.
 	 */
 	@SuppressWarnings("unchecked")
-	public RDKitAdapterCell(final AdapterValue copy, final DataCell cell) {
+	public RDKitAdapterCell(final DataCell cell, final AdapterValue copy) {
 		super(cell, copy);
 	}
 
@@ -139,7 +139,17 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public String getSdfValue() {
-		return ((SdfValue)lookupFromAdapterMap(SdfValue.class)).getSdfValue();
+		SdfValue sdf = null;
+
+		try {
+			sdf = (SdfValue)lookupFromAdapterMap(SdfValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Rethrow a better error message, which appears as warning in the node
+			throw new IllegalArgumentException("Unable to access SDF value after auto-conversion to an RDKit Molecule.", exc);
+		}
+
+		return sdf.getSdfValue();
 	}
 
 	/**
@@ -147,7 +157,17 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public String getStringValue() {
-		return ((StringValue)lookupFromAdapterMap(StringValue.class)).getStringValue();
+		StringValue strValue = null;
+
+		try {
+			strValue = (StringValue)lookupFromAdapterMap(StringValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Rethrow a better error message, which appears as warning in the node
+			throw new IllegalArgumentException("Unable to access string value after auto-conversion to an RDKit Molecule.", exc);
+		}
+
+		return strValue.getStringValue();
 	}
 
 	/**
@@ -155,7 +175,17 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public ROMol readMoleculeValue() {
-		return ((RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class)).readMoleculeValue();
+		RDKitMolValue rdkitValue = null;
+
+		try {
+			rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Rethrow a better error message, which appears as warning in the node
+			throw new IllegalArgumentException("Unable to auto-convert input molecule to an RDKit Molecule.", exc);
+		}
+
+		return rdkitValue.readMoleculeValue();
 	}
 
 	/**
@@ -163,7 +193,17 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public String getSmilesValue() {
-		return ((SmilesValue)lookupFromAdapterMap(SmilesValue.class)).getSmilesValue();
+		SmilesValue smiles = null;
+
+		try {
+			smiles = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Rethrow a better error message, which appears as warning in the node
+			throw new IllegalArgumentException("Unable to access SMILES value after auto-conversion to an RDKit Molecule.", exc);
+		}
+
+		return smiles.getSmilesValue();
 	}
 
 	/**
@@ -172,8 +212,16 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	@Override
 	public boolean isSmilesCanonical() {
 		boolean bIsSmilesCanonical = false;
-		final RDKitMolValue rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
-		final SmilesValue smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		RDKitMolValue rdkitValue = null;
+		SmilesValue smilesValue = null;
+
+		try {
+			rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
+			smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Ignoring
+		}
 
 		if (rdkitValue != null && smilesValue != null) {
 			if (rdkitValue == smilesValue) { // Same physical object, an RDKit cell
@@ -196,10 +244,31 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	public String toString() {
 		String strRet = null;
 
+		RDKitMolValue rdkitValue = null;
+		SdfValue sdfValue = null;
+		SmilesValue smilesValue = null;
+
 		// Lookup references to different molecule representations
-		final RDKitMolValue rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
-		final SdfValue sdfValue = (SdfValue)lookupFromAdapterMap(SdfValue.class);
-		final SmilesValue smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		try {
+			rdkitValue = (RDKitMolValue)lookupFromAdapterMap(RDKitMolValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Ignored
+		}
+
+		try {
+			sdfValue = (SdfValue)lookupFromAdapterMap(SdfValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Ignored
+		}
+
+		try {
+			smilesValue = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		}
+		catch (final IllegalArgumentException exc) {
+			// Ignored
+		}
 
 		// Check, if the adapter cell was created from an SDF cell - in that case return the SDF value
 		if (rdkitValue != sdfValue) { // Note: It is very important to compare references here, not values!
@@ -212,9 +281,11 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 		}
 
 		// Otherwise, just return whatever the RDKit cell returns
-		else {
+		else if (rdkitValue != null) {
 			strRet = rdkitValue.toString();
 		}
+
+		// Otherwise it could also be null
 
 		return strRet;
 	}

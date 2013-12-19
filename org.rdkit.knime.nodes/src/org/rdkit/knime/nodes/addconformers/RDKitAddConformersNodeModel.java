@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.RDKit.DistanceGeom;
+import org.RDKit.ForceField;
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
@@ -155,6 +156,10 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 	/** Settings model for the box size multiplier. */
 	private final SettingsModelString m_modelReferenceOutputColumnName =
 			registerSettings(RDKitAddConformersNodeDialog.createReferenceOutputColumnNameModel());
+
+	/** Settings model for the option to cleanup a conformer after its calculation. */
+	private final SettingsModelBoolean m_modelCleanupOption =
+			registerSettings(RDKitAddConformersNodeDialog.createCleanupWithUffOptionModel(), true);
 
 	//
 	// Constructor
@@ -309,6 +314,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 		final double dPruneRmsThreshold = m_modelPruneRmsThreshold.getDoubleValue();
 		final boolean bUseRandomCoordinates = m_modelUseRandomCoordinatesOption.getBooleanValue();
 		final double dBoxSizeMultiplier = m_modelBoxSizeMultiplier.getDoubleValue();
+		final boolean bCleanup = m_modelCleanupOption.getBooleanValue();
 
 		// Iterate through all input rows and calculate results
 		int rowInputIndex = 0;
@@ -356,6 +362,12 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 
 							// Create a data row, if we have meaningful output (other checks could be added here)
 							if (output != null) {
+
+								// Cleanup the conformer molecule, if desired
+								if (bCleanup) {
+									ForceField.UFFOptimizeMolecule(output);
+								}
+
 								molCell = RDKitMolCellFactory.createRDKitMolCell(output);
 								final DataRow rowNew = new DefaultRow(RowKey.createRowKey(rowOutputIndex++),
 										new DataCell[] { molCell, refCell });

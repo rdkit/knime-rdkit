@@ -99,6 +99,9 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	/** Default value to be used as box size multiplier. */
 	public static final double DEFAULT_BOX_SIZE_MULTIPLIER = 2.0d;
 
+	/** Default value to be used as cleanup option. */
+	public static final boolean DEFAULT_CLEANUP = false;
+
 	//
 	// Constructor
 	//
@@ -140,6 +143,8 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 				createUseRandomCoordinatesOptionModel(), "Use random coordinates as a starting point instead of distance geometry"));
 		super.addDialogComponent(new DialogComponentNumberEdit(
 				createBoxSizeMultiplierModel(), "Multiplier for the size of the box for random coordinates: ", 10));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createCleanupWithUffOptionModel(), "Perform a cleanup using UFF (Universal force field) after calculation"));
 	}
 
 	//
@@ -240,4 +245,12 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 		return new SettingsModelString("output_ref_name", null);
 	}
 
+	/**
+	 * Creates the settings model for cleanup with UFF option.
+	 * 
+	 * @return Settings model for the cleanup with UFF option.
+	 */
+	static final SettingsModelBoolean createCleanupWithUffOptionModel() {
+		return new SettingsModelBoolean("cleanup_with_uff", true);
+	}
 }

@@ -51,6 +51,7 @@ package org.rdkit.knime.nodes.sdfdifferencechecker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.chem.types.SdfValue;
 import org.knime.core.data.DataRow;
@@ -64,6 +65,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.util.InputDataInfo;
@@ -117,7 +119,13 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelBoolean m_modelFailOnFirstDifferenceOption =
 			registerSettings(RDKitSDFDifferenceCheckerNodeDialog.createFailOnFirstDifferenceOptionModel(), true);
 
+	/** Settings model for the option to specify a limit for console output of differences. */
+	private final SettingsModelIntegerBounded m_modelLimitConsoleOutputOption =
+			registerSettings(RDKitSDFDifferenceCheckerNodeDialog.createLimitConsoleOutputOptionModel(), true);
+
 	// Intermediate results
+
+	private AtomicInteger m_diffRowCounter = null;
 
 	/** The first encountered row of table 1 that showed a difference. */
 	private DataRow m_errorRow1 = null;
@@ -257,6 +265,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 		final double dTolerance = m_modelTolerance.getDoubleValue();
 		final int iTotalRowCount1 = inData[0].getRowCount();
 		final int iTotalRowCount2 = inData[1].getRowCount();
+		m_diffRowCounter = new AtomicInteger(0);
 
 		if (iTotalRowCount1 != iTotalRowCount2) {
 			throw new InvalidInputException("Columns have a different number of rows: Table 1 has " + iTotalRowCount1 +
@@ -301,19 +310,22 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 							(st1.countTokens() > st2.countTokens() ? "greater" : "smaller") +
 							" than in table 2.", null);
 				}
+				else {
+					boolean bFurtherDifferences = false;
+					while (st1.hasMoreTokens() && st2.hasMoreTokens()) {
+						final String strToken1 = st1.nextToken();
+						final String strToken2 = st2.nextToken();
 
-				while (st1.hasMoreTokens() && st2.hasMoreTokens()) {
-					final String strToken1 = st1.nextToken();
-					final String strToken2 = st2.nextToken();
+						if (!strToken1.equals(strToken2)) {
+							final double number1 = normalizeNumber(strToken1);
+							final double number2 = normalizeNumber(strToken2);
 
-					if (!strToken1.equals(strToken2)) {
-						final double number1 = normalizeNumber(strToken1);
-						final double number2 = normalizeNumber(strToken2);
-
-						// Note: Integers are here also treated as NaN, because they can be string compared
-						if (number1 == Double.NaN || number2 == Double.NaN || Math.abs(number1 - number2) > dTolerance) {
-							recordDifference(row1, strSdf1, row2, strSdf2, "'" + strToken1 +
-									"' is different from '" + strToken2 + "'.", null);
+							// Note: Integers are here also treated as NaN, because they can be string compared
+							if (number1 == Double.NaN || number2 == Double.NaN || Math.abs(number1 - number2) > dTolerance) {
+								recordDifference(row1, strSdf1, row2, strSdf2, "'" + strToken1 +
+										"' is different from '" + strToken2 + "'.", null, bFurtherDifferences);
+								bFurtherDifferences = true;
+							}
 						}
 					}
 				}
@@ -333,8 +345,11 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 		}
 
 		if (hasDifference()) {
-			throw new InvalidInputException("Difference found in row " + m_errorRow1.getKey() + " (table 1) and row " +
-					m_errorRow2.getKey() + " (table 2): " + m_strErrorMessage, m_errorCause);
+			throw new InvalidInputException(
+					(bFailOnFirstDifference ? "" :
+						m_diffRowCounter.get() + " rows with differences found, e.g. ") +
+						"Difference found in row " + m_errorRow1.getKey() + " (table 1) and row " +
+						m_errorRow2.getKey() + " (table 2): " + m_strErrorMessage, m_errorCause);
 		}
 
 		return new BufferedDataTable[] { };
@@ -346,6 +361,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 		m_errorRow2 = null;
 		m_strErrorMessage = null;
 		m_errorCause = null;
+		m_diffRowCounter = null;
 	}
 
 	//
@@ -407,6 +423,11 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 
 	private void recordDifference(final DataRow row1, final String strSdf1, final DataRow row2, final String strSdf2,
 			final String strMessage, final Throwable cause) {
+		recordDifference(row1, strSdf1, row2, strSdf2, strMessage, cause, true);
+	}
+
+	private void recordDifference(final DataRow row1, final String strSdf1, final DataRow row2, final String strSdf2,
+			final String strMessage, final Throwable cause, final boolean bFurtherDifferenceInSDFs) {
 		// Remember the first difference for later
 		if (!hasDifference()) {
 			m_errorRow1 = row1;
@@ -415,13 +436,24 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 			m_errorCause = cause;
 		}
 
-		final StringBuilder sb = new StringBuilder("Difference found in row ")
-		.append(row1.getKey()).append(" (table 1) and row ")
-		.append(row2.getKey()).append(" (table 2): " )
-		.append(strMessage)
-		.append("\nSDF (table 1):\n").append(strSdf1)
-		.append("\nvs. SDF (table 2):\n").append(strSdf2);
+		if (!bFurtherDifferenceInSDFs) {
+			m_diffRowCounter.incrementAndGet();
+		}
 
-		LOGGER.warn(sb.toString(), cause);
+		if (m_diffRowCounter.get() < m_modelLimitConsoleOutputOption.getIntValue()) {
+			final StringBuilder sb = new StringBuilder(
+					(bFurtherDifferenceInSDFs ? "Further d" : "D") + ("ifference found in row "))
+			.append(row1.getKey()).append(" (table 1) and row ")
+			.append(row2.getKey()).append(" (table 2): " )
+			.append(strMessage);
+
+			// Record SDFs only for first difference
+			if (!bFurtherDifferenceInSDFs) {
+				sb.append("\nSDF (table 1):\n").append(strSdf1);
+				sb.append("\nvs. SDF (table 2):\n").append(strSdf2);
+			}
+
+			LOGGER.warn(sb.toString(), cause);
+		}
 	}
 }

@@ -55,6 +55,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
@@ -91,6 +92,8 @@ public class RDKitSDFDifferenceCheckerNodeDialog extends DefaultNodeSettingsPane
 				createToleranceModel(), "Tolerance for all floating point numbers", 0.1d, 5));
 		super.addDialogComponent(new DialogComponentBoolean(createFailOnFirstDifferenceOptionModel(),
 				"Fail already on first encountered error"));
+		super.addDialogComponent(new DialogComponentNumber(createLimitConsoleOutputOptionModel(),
+				"Limit console output about different rows to: ", 1, 8));
 	}
 
 	//
@@ -132,5 +135,16 @@ public class RDKitSDFDifferenceCheckerNodeDialog extends DefaultNodeSettingsPane
 	 */
 	static final SettingsModelBoolean createFailOnFirstDifferenceOptionModel() {
 		return new SettingsModelBoolean("failOnFirstDifference", true);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify a limit for console output
+	 * of differences. This has been introduced to avoid that the console is filling
+	 * up quickly, which may cause out of memory exceptions.
+	 * 
+	 * @return Settings model for limiting console output.
+	 */
+	static final SettingsModelIntegerBounded createLimitConsoleOutputOptionModel() {
+		return new SettingsModelIntegerBounded("limitConsoleOutput", 3, 1, Integer.MAX_VALUE);
 	}
 }

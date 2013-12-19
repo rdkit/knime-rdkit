@@ -204,8 +204,7 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSdf = ((AdapterValue)source).getAdapter(SdfValue.class).getSdfValue();
-						return new RDKitAdapterCell((AdapterValue)source,
-								createRDKitMolCellFromSdf(strSdf));
+						return new RDKitAdapterCell(createRDKitMolCellFromSdf(strSdf), (AdapterValue)source);
 					}
 				};
 			}
@@ -226,8 +225,7 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSmiles = ((AdapterValue)source).getAdapter(SmilesValue.class).getSmilesValue();
-						return new RDKitAdapterCell((AdapterValue)source,
-								createRDKitMolCellFromSmiles(strSmiles));
+						return new RDKitAdapterCell(createRDKitMolCellFromSmiles(strSmiles), (AdapterValue)source);
 					}
 				};
 			}
@@ -274,7 +272,8 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSdf = ((SdfValue)source).getSdfValue();
-						return new RDKitAdapterCell((AdapterValue)SdfCellFactory.createAdapterCell(strSdf), createRDKitMolCellFromSdf(strSdf));
+						return new RDKitAdapterCell(createRDKitMolCellFromSdf(strSdf),
+								(AdapterValue)SdfCellFactory.createAdapterCell(strSdf));
 					}
 				};
 			}
@@ -296,7 +295,8 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 						}
 
 						final String strSmiles = ((SmilesValue)source).getSmilesValue();
-						return new RDKitAdapterCell(new SmilesAdapterCell(new SmilesCell(strSmiles)), createRDKitMolCellFromSmiles(strSmiles));
+						return new RDKitAdapterCell(createRDKitMolCellFromSmiles(strSmiles),
+								new SmilesAdapterCell(new SmilesCell(strSmiles)));
 					}
 				};
 			}
@@ -342,7 +342,10 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 				if (mol != null) {
 					try {
 						// RDKit cell will not have a canonical SMILES set
-						final String smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+						String smiles = "";
+						if (mol.getNumAtoms() > 0) {
+							smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+						}
 						cell = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
 					}
 					catch (final Exception exc) {

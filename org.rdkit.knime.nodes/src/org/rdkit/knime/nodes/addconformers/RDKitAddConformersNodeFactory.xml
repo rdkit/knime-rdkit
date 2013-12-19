@@ -22,6 +22,10 @@
         	Setting this flag will use random coordinates as a starting point instead of distance geometry.</option>
         <option name="Advanced - Multiplier for the size of the box for random coordinates">
         	Specifies a multiplier for the size of the box for random coordinates.</option>
+        <option name="Advanced - Perform a cleanup using UFF (Universal force field) after calculation">
+        	Set this flag to perform cleanup with UFF after the conformer's calculation.
+        	Just clear this flag to output unprocessed conformers in case you want to perform other processing on them 
+        	before cleaning them up with a force field.</option>
     </fullDescription>
     
     <ports>

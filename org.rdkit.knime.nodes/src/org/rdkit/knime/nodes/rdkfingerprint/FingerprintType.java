@@ -564,9 +564,7 @@ public enum FingerprintType {
 		 */
 		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-			synchronized (MACCS_FP_LOCK) {
-				return RDKFuncs.MACCSFingerprintMol(mol);
-			}
+			return RDKFuncs.MACCSFingerprintMol(mol);
 		}
 
 		@Override
@@ -579,14 +577,6 @@ public enum FingerprintType {
 	//
 	// Constants
 	//
-
-	/**
-	 * This lock prevents two calls at the same time into the MACCS Fingerprint functionality,
-	 * which has caused crashes under Linux before.
-	 * Once there is a fix implemented in the RDKit (or somewhere else?) we can
-	 * remove this lock again.
-	 */
-	public static final Object MACCS_FP_LOCK = new Object();
 
 	/**
 	 * This lock prevents two calls at the same time into the Avalon Fingerprint functionality,

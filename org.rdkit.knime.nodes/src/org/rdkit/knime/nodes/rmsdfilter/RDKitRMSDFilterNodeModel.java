@@ -71,6 +71,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
@@ -163,6 +164,10 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 	/** Settings model for the RMSD threshold to be used for splitting. */
 	private final SettingsModelDoubleBounded m_modelRmsdThreshold =
 			registerSettings(RDKitRMSDFilterNodeDialog.createRmsdThresholdModel());
+
+	/** Settings model for the option to ignore Hs. */
+	private final SettingsModelBoolean m_modelIgnoreHsOption =
+			registerSettings(RDKitRMSDFilterNodeDialog.createIgnoreHsOptionModel(), true);
 
 	// Intermediate results
 
@@ -376,6 +381,9 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		// Get threshold to be used for splitting
 		final double dThreshold = m_modelRmsdThreshold.getDoubleValue();
 
+		// Get option for removing Hs on the fly
+		final boolean bIgnoreHs = m_modelIgnoreHsOption.getBooleanValue();
+
 		// Iterate through all input rows and calculate results
 		int rowInputIndex = 0;
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowInputIndex++) {
@@ -395,10 +403,15 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 					final int iUniqueWaveId = m_mapReferenceToUniqueWaveId.get(strRef);
 
 					// Get the conformers molecule
-					final ROMol molProbe = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					ROMol molProbe = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 
 					// We use only cells that could be resolved into an RDKit molecule (normal case)
 					if (molProbe != null) {
+						// Remove Hs, if set as option
+						if (bIgnoreHs) {
+							molProbe = markForCleanup(molProbe.removeHs(false), iUniqueWaveId);
+						}
+
 						final int iProcessedCount = setOrIncreaseCount(m_mapReferenceToProcessedCount, strRef);
 
 						// Check, if this is the first one of a group - if so we just add it to the output table

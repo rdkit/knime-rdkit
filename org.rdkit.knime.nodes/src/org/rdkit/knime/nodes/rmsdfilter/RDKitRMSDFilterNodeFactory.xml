@@ -16,6 +16,8 @@
         <option name="RDKit Mol column with conformers">The name of the column with RDKit molecules, each with exactly one conformer.
         	If the molecule has more than one conformer embedded, only the first one will be used for the calculation.</option>
         <option name="Reference column (e.g. an ID)">The name of the column that defines which conformers belong to each other.</option>
+        <option name="Ignore Hs (increases performance)">Set this option to remove any existing hydrogens before performing the
+        		calculation. (Default is false)</option>
     </fullDescription>
     
     <ports>

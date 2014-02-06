@@ -119,13 +119,6 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Distance Geometry
-	 * functionality, which has caused crashes under Windows 7. Once there is a fix
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-	 */
-	private static final Object LOCK = DistanceGeom.class;
-
 	//
 	// Members
 	//
@@ -322,9 +315,7 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 
 					// Calculate 3D Coordinates
 					else {
-						synchronized (LOCK) {
-							DistanceGeom.EmbedMolecule(mol, 0, 42);
-						}
+						DistanceGeom.EmbedMolecule(mol, 0, 42);
 					}
 
 					// Generate output cell

@@ -130,13 +130,6 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 	private final SettingsModelBoolean m_modelRemoveStartingCoordinates =
 			registerSettings(RDKitOptimizeGeometryNodeDialog.createRemoveStartingCoordinatesOptionModel(), true);
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Distance Geometry
-	 * functionality, which has caused crashes under Windows 7. Once there is a fix
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-	 */
-	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
-
 	//
 	// Constructor
 	//
@@ -305,9 +298,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 
 					// Check, if 3D coordinates exist, otherwise create them
 					if (mol.getNumConformers() == 0) {
-						synchronized (DISTANCE_GEOM_LOCK) {
-							DistanceGeom.EmbedMolecule(mol, 0, 42);
-						}
+						DistanceGeom.EmbedMolecule(mol, 0, 42);
 					}
 
 					// Calculate force field

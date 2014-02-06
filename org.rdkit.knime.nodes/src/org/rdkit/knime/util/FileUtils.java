@@ -237,8 +237,7 @@ public class FileUtils {
 
 						// Checks, if the file exists already and cannot be overridden
 						else if (!fileConverted.canWrite()) {
-							throw new InvalidSettingsException("Specified file cannot be written. " +
-									"The name refers to an existing directory.");
+							throw new InvalidSettingsException("Specified file cannot be overwritten.");
 						}
 					}
 				}

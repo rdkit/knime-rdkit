@@ -106,13 +106,6 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 	/** Input data info index for ID value. */
 	protected static final int INPUT_COLUMN_REFERENCE = 1;
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Distance Geometry
-	 * functionality, which has caused crashes under Windows 7. Once there is a fix
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-	 */
-	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
-
 	//
 	// Members
 	//
@@ -333,13 +326,10 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 				// We use only cells, which are not missing (see also createInputDataInfos(...) )
 				if (mol != null) {
 					final ROMol molTemp = markForCleanup(new ROMol(mol), iUniqueWaveId);
-					Int_Vect listConformerIds;
-
-					synchronized (DISTANCE_GEOM_LOCK) {
-						listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, iMaxIterations, iRandomSeed,
-								true /* clearConfs */, bUseRandomCoordinates, dBoxSizeMultiplier,
-								true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold), iUniqueWaveId);
-					}
+					final Int_Vect listConformerIds;
+					listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, iMaxIterations, iRandomSeed,
+							true /* clearConfs */, bUseRandomCoordinates, dBoxSizeMultiplier,
+							true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold), iUniqueWaveId);
 
 					// Note: There will be no output row, if there are no conformers at all, only a warning
 					if (listConformerIds != null) {

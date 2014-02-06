@@ -101,6 +101,18 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	//
 	// Constants
 	//
+	
+	/** Add button id. */
+	public static final int BUTTON_ADD = 1;
+	
+	/** Add All button id. */
+	public static final int BUTTON_ADD_ALL = 2;
+	
+	/** Remove button id. */
+	public static final int BUTTON_REMOVE = 4;
+	
+	/** Remove All button id. */
+	public static final int BUTTON_REMOVE_ALL = 8;
 
 	/** Line border for include list. */
 	private static final Border INCLUDE_BORDER =
@@ -670,6 +682,70 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 			}
 
 			m_setHiddenValues.clear();
+		}
+	}
+
+	/**
+	 * Sets the include list border color.
+	 * 
+	 * @param color Color. Set to null to use default.
+	 */
+	public final void setIncludeBorderColor(final Color color) {
+		if (color == null) {
+			m_borderIncl.setBorder(INCLUDE_BORDER);
+		}
+		else {
+			m_borderIncl.setBorder(BorderFactory.createLineBorder(color, 2));
+		}
+	}	
+
+	/**
+	 * Sets the exclude list border color.
+	 * 
+	 * @param color Color. Set to null to use default.
+	 */
+	public final void setExcludeBorderColor(final Color color) {
+		if (color == null) {
+			m_borderExcl.setBorder(EXCLUDE_BORDER);
+		}
+		else {
+			m_borderExcl.setBorder(BorderFactory.createLineBorder(color, 2));
+		}
+	}
+
+	/**
+	 * Sets the visibility of search GUI components.
+	 * 
+	 * @param bVisible True to show search GUI components. False to hide them.
+	 */
+	public final void setSearchVisible(final boolean bVisible) {
+		m_tfSearchInclude.setVisible(bVisible);
+		m_tfSearchExclude.setVisible(bVisible);
+		m_btnSearchInclude.setVisible(bVisible);
+		m_btnSearchExclude.setVisible(bVisible);
+		m_cbMarkAllHitsInclude.setVisible(bVisible);
+		m_cbMarkAllHitsExclude.setVisible(bVisible);
+	}
+
+	/**
+	 * Sets the visibility of buttons.
+	 * 
+	 * @param iButtonId One of the following constants: {@link #BUTTON_ADD}, 
+	 * 		{@link #BUTTON_ADD_ALL}, {@link #BUTTON_REMOVE}, {@link #BUTTON_REMOVE_ALL}.
+	 * @param bVisible True to show a button. False to hide it.
+	 */
+	public final void setButtonVisible(final int iButtonId, final boolean bVisible) {
+		JButton btn = null;
+		
+		switch (iButtonId) {
+		case BUTTON_ADD: btn = m_btnAdd; break;
+		case BUTTON_ADD_ALL: btn = m_btnAddAll; break;
+		case BUTTON_REMOVE: btn = m_btnRemove; break;
+		case BUTTON_REMOVE_ALL: btn = m_btnRemoveAll; break;
+		}
+		
+		if (btn != null) {
+			btn.setVisible(bVisible);
 		}
 	}
 

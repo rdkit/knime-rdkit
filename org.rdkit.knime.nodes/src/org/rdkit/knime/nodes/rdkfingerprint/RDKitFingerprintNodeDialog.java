@@ -179,7 +179,7 @@ public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(new DialogComponentEnumSelection<FingerprintType>(
 				m_modelFingerprintType = createFPTypeModel(), "Fingerprint type: ", FingerprintType.morgan, FingerprintType.featmorgan,
 				FingerprintType.atompair, FingerprintType.torsion, FingerprintType.rdkit, FingerprintType.avalon,
-				FingerprintType.layered, FingerprintType.maccs));
+				FingerprintType.layered, FingerprintType.maccs, FingerprintType.pattern));
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createSmilesColumnModel(), "RDKit Mol column: ", 0,
 				RDKitMolValue.class));

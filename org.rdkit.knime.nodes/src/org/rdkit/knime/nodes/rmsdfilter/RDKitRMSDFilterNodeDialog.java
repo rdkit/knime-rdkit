@@ -50,7 +50,9 @@ package org.rdkit.knime.nodes.rmsdfilter;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
@@ -75,6 +77,9 @@ public class RDKitRMSDFilterNodeDialog extends DefaultNodeSettingsPane {
 	/** Default value to be used as RMSD threshold. */
 	public static final double DEFAULT_RMSD_THRESHOLD = 0.5d;
 
+	/** Default value to be used as option for ignoring Hs. */
+	public static final boolean DEFAULT_IGNORE_HS = false;
+
 	//
 	// Constructor
 	//
@@ -94,6 +99,8 @@ public class RDKitRMSDFilterNodeDialog extends DefaultNodeSettingsPane {
 				DataValue.class));
 		super.addDialogComponent(new DialogComponentNumber(
 				createRmsdThresholdModel(), "RMSD threshold", 0.1d));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createIgnoreHsOptionModel(), "Ignore Hs (increases performance)"));
 	}
 
 	//
@@ -128,4 +135,12 @@ public class RDKitRMSDFilterNodeDialog extends DefaultNodeSettingsPane {
 		return new SettingsModelDoubleBounded("rmsd_threshold", DEFAULT_RMSD_THRESHOLD, 0.0d, Double.MAX_VALUE);
 	}
 
+	/**
+	 * Creates the settings model to be used for the option to ignore Hs.
+	 * 
+	 * @return Settings model for the option to ignore Hs.
+	 */
+	static final SettingsModelBoolean createIgnoreHsOptionModel() {
+		return new SettingsModelBoolean("ignore_hs", DEFAULT_IGNORE_HS);
+	}
 }

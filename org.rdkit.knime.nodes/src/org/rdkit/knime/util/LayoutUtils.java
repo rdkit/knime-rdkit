@@ -84,6 +84,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -111,6 +112,8 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.JTextComponent;
 
@@ -1612,5 +1615,53 @@ public final class LayoutUtils {
 			@Override
 			public String toString() { return item; }
 		};
+	}
+
+	/**
+	 * Can be called with a tab panel component that is derived from a JComponent.
+	 * This method is used to set borders around the inner components
+	 * of a tab panel.
+	 * 
+	 * @param Component of a tab panel. Can be null.
+	 */
+	public static void correctKnimeDialogBorders(final JPanel panel) {
+		// Correct borders
+		for (int i = 0; i < panel.getComponentCount(); i++) {
+			final Component comp = panel.getComponent(i);
+			if (comp instanceof JTabbedPane) {
+				final JTabbedPane tabPane = (JTabbedPane)comp;
+				for (int j = 0; j < tabPane.getTabCount(); j++) {
+					final Component compTab = tabPane.getComponentAt(j);
+					if (compTab instanceof JComponent) {
+						correctBorder((JComponent)compTab);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Called for each tab panel component that is derived from a JComponent.
+	 * This method is used to set borders around the inner components
+	 * of a tab panel.
+	 * 
+	 * @param Component of a tab panel. Can be null.
+	 */
+	private static void correctBorder(final JComponent comp) {
+		if (comp != null) {
+			Border border = comp.getBorder();
+
+			if (border == null) {
+				border = BorderFactory.createEmptyBorder(7, 7, 7, 7);
+			}
+			else if (border instanceof EmptyBorder == false &&
+					(border instanceof CompoundBorder == false ||
+					((CompoundBorder)border).getOutsideBorder() instanceof EmptyBorder == false)) {
+				border = BorderFactory.createCompoundBorder(
+						BorderFactory.createEmptyBorder(7, 7, 7, 7), border);
+			}
+
+			comp.setBorder(border);
+		}
 	}
 }

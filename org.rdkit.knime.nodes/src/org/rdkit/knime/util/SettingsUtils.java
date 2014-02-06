@@ -52,6 +52,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.swing.tree.TreeNode;
@@ -270,29 +271,30 @@ public class SettingsUtils {
 			bRet = true;
 		}
 		else if (settingColumn.getStringValue() == null) {
-			final List<String> listCompatibleCols = new ArrayList<String>();
-			for (final DataColumnSpec colSpec : inSpec) {
-				for (final Class<? extends DataValue> valueClass : RDKitAdapterCellSupport.expandByAdaptableTypes(listValueClasses)) {
+			final LinkedHashSet<String> setCompatibleCols = new LinkedHashSet<String>();
+			for (final Class<? extends DataValue> valueClass : RDKitAdapterCellSupport.expandByAdaptableTypes(listValueClasses)) {
+				for (final DataColumnSpec colSpec : inSpec) {
 					if (colSpec.getType().isCompatible(valueClass)) {
-						listCompatibleCols.add(colSpec.getName());
+						setCompatibleCols.add(colSpec.getName());
 						break;
 					}
 				}
 			}
 
+			final String[] arrCompatibleCols = setCompatibleCols.toArray(new String[setCompatibleCols.size()]);
 			// Use a single column, if only one is compatible, without a warning
-			if (indexOfFindingsToBeUsed == listCompatibleCols.size() - 1) {
-				settingColumn.setStringValue(listCompatibleCols.get(indexOfFindingsToBeUsed));
+			if (indexOfFindingsToBeUsed == arrCompatibleCols.length - 1) {
+				settingColumn.setStringValue(arrCompatibleCols[indexOfFindingsToBeUsed]);
 				bRet = true;
 			}
 
 			// Auto-guessing: Use the first matching column, but generate a warning (optionally)
-			else if (indexOfFindingsToBeUsed < listCompatibleCols.size() - 1) {
-				settingColumn.setStringValue(listCompatibleCols.get(indexOfFindingsToBeUsed));
+			else if (indexOfFindingsToBeUsed < arrCompatibleCols.length - 1) {
+				settingColumn.setStringValue(arrCompatibleCols[indexOfFindingsToBeUsed]);
 				bRet = true;
 				if (strWarningIfMoreThanOneAvailable != null) {
 					if (warningConsolidator != null) {
-						final String col = listCompatibleCols.get(indexOfFindingsToBeUsed);
+						final String col = arrCompatibleCols[indexOfFindingsToBeUsed];
 						warningConsolidator.saveWarning(strWarningIfMoreThanOneAvailable.replace(
 								"%COLUMN_NAME%", col == null ? "null" : col));
 					}

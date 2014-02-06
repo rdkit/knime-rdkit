@@ -101,13 +101,6 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 	/** Input data info index for reference Mol value (table 2). */
 	protected static final int REFERENCE_INPUT_COLUMN_MOL = 0;
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKit Distance Geometry
-	 * functionality, which has caused crashes under Windows 7. Once there is a fix
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-	 */
-	private static final Object DISTANCE_GEOM_LOCK = DistanceGeom.class;
-
 	//
 	// Members
 	//
@@ -417,9 +410,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 							if (molReference.getNumConformers() != 0) {
 								// Check, if 3D coordinates exist in query molecule, otherwise create them
 								if (molQuery.getNumConformers() == 0) {
-									synchronized (DISTANCE_GEOM_LOCK) {
-										DistanceGeom.EmbedMolecule(molQuery, 0, 42);
-									}
+									DistanceGeom.EmbedMolecule(molQuery, 0, 42);
 								}
 
 								boolean bNonEmpty = false;
@@ -472,7 +463,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 
 			// We cannot work in parallel here because this would screw up our iteration mechanism for
 			// the first table in case we are using more than a single element from it
-			arrOutputFactories[0].setAllowParallelProcessing(false);
+			arrOutputFactories[0].setAllowParallelProcessing(m_itReferenceRows == null);
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);

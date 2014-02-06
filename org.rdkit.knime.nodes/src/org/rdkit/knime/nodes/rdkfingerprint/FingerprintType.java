@@ -572,6 +572,54 @@ public enum FingerprintType {
 				final UInt_Vect atomList, final FingerprintSettings settings) {
 			throw new UnsupportedOperationException("MACCS fingerprints cannot be calculated as rooted fingerprints.");
 		}
+	},
+
+	pattern("Pattern") {
+		@Override
+		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
+				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
+				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bIsRooted, final String strAtomListColumnName,
+				final boolean bTreatAtomListAsIncludeList) {
+			return new DefaultFingerprintSettings(toString(),
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					iNumBits,
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					FingerprintSettings.UNAVAILABLE,
+					false, null, false);
+		}
+
+		@Override
+		public void validateSpecification(final FingerprintSettings settings, final DataTableSpec tableSpec)
+				throws InvalidSettingsException {
+			super.validateSpecification(settings, tableSpec);
+			if (settings.getNumBits() <= 0) {
+				throw new InvalidSettingsException("Number of bits must be a positive number > 0.");
+			}
+		}
+
+		@Override
+		public boolean canCalculateRootedFingerprint() {
+			return false;
+		}
+
+		@Override
+		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+			synchronized (PATTERN_FP_LOCK) {
+				return RDKFuncs.PatternFingerprintMol(mol, settings.getNumBits());
+			}
+		}
+
+		@Override
+		public ExplicitBitVect calculateRooted(final ROMol mol,
+				final UInt_Vect atomList, final FingerprintSettings settings) {
+			throw new UnsupportedOperationException("Pattern fingerprints cannot be calculated as rooted fingerprints.");
+		}
 	};
 
 	//
@@ -585,6 +633,14 @@ public enum FingerprintType {
 	 * remove this lock again.
 	 */
 	public static final Object AVALON_FP_LOCK = new Object();
+
+	/**
+	 * This lock prevents two calls at the same time into the Pattern Fingerprint functionality,
+	 * which is currently not thread-safe.
+	 * Once there is a fix implemented in the RDKit (or somewhere else?) we can
+	 * remove this lock again.
+	 */
+	public static final Object PATTERN_FP_LOCK = new Object();
 
 	//
 	// Members

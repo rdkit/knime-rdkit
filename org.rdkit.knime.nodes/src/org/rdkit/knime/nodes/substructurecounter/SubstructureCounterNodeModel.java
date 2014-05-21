@@ -48,7 +48,9 @@
  */
 package org.rdkit.knime.nodes.substructurecounter;
 
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,18 +58,25 @@ import java.util.Map;
 import org.RDKit.Match_Vect_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
+import org.knime.chem.types.SmartsValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.headers.HeaderPropertyUtils;
@@ -105,6 +114,12 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Input data info index for Substructure Name (second table). */
 	protected static final int INPUT_COLUMN_NAME = 1;
 
+	/** Default value for total hits column (optional). */
+	protected static final String DEFAULT_TOTAL_HITS_COLUMN = "Total hits";
+
+	/** Default value for query tags column (optional). */
+	protected static final String DEFAULT_QUERY_TAGS_COLUMN = "Query tags";
+
 	//
 	// Members
 	//
@@ -129,6 +144,22 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Settings model for the column name of the query name column. */
 	private final SettingsModelString m_modelQueryNameColumn =
 			registerSettings(SubstructureCounterNodeDialog.createQueryNameColumnModel(m_modelUseQueryNameColumn), true);
+
+	/** Settings model for the option to count total hits per row. */
+	private final SettingsModelBoolean m_modelCountTotalHitsOption =
+			registerSettings(SubstructureCounterNodeDialog.createCountTotalHitsOptionModel(), true);
+
+	/** Settings model for the column name of the total hits count column. */
+	private final SettingsModelString m_modelCountTotalHitsColumn =
+			registerSettings(SubstructureCounterNodeDialog.createCountTotalHitsColumnModel(m_modelCountTotalHitsOption), true);
+
+	/** Settings model for the option to track query tags per row. */
+	private final SettingsModelBoolean m_modelTrackQueryTagsOption =
+			registerSettings(SubstructureCounterNodeDialog.createTrackQueryTagsOptionModel(), true);
+
+	/** Settings model for the column name of the query tags column. */
+	private final SettingsModelString m_modelTrackQueryTagsColumn =
+			registerSettings(SubstructureCounterNodeDialog.createTrackQueryTagsColumnModel(m_modelTrackQueryTagsOption), true);
 
 	//
 	// Intermediate Results
@@ -167,6 +198,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
@@ -185,14 +217,14 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 				"Input column %COLUMN_NAME% does not exist. Has the first input table changed?");
 
 		// Auto guess the query mol column if not set - fails if no compatible column found
-		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+		final Class<? extends DataValue>[] arrClassesQueryType = new Class[] { SmartsValue.class, RDKitMolValue.class };
+		SettingsUtils.autoGuessColumn(inSpecs[1], m_modelQueryColumnName, Arrays.asList(arrClassesQueryType),
 				(inSpecs[0] == inSpecs[1] ? 1 : 0), // If 1st and 2nd table equal, auto guess with second match
 				"Auto guessing: Using column %COLUMN_NAME% as query molecule column.",
-				"No RDKit Mol compatible column in query molecule table. Use \"RDKit from Molecule\" " +
-						"node to convert SMARTS.", getWarningConsolidator());
+				"No RDKit Mol or SMARTS compatible column in query molecule table.", getWarningConsolidator());
 
 		// Determines, if the query mol column exists - fails if it does not
-		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, RDKitMolValue.class,
+		SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryColumnName, Arrays.asList(arrClassesQueryType),
 				"Query molecule column has not been specified yet.",
 				"Query molecule column %COLUMN_NAME% does not exist. Has the second input table changed?");
 
@@ -209,6 +241,30 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			SettingsUtils.checkColumnExistence(inSpecs[1], m_modelQueryNameColumn, StringValue.class,
 					"Substructure name column has not been specified yet.",
 					"Substructure name column %COLUMN_NAME% does not exist. Has the second input table changed?");
+		}
+
+		// Auto guess the new total hits column name and make it unique
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+				m_modelCountTotalHitsColumn, DEFAULT_TOTAL_HITS_COLUMN);
+
+		if (m_modelCountTotalHitsOption.getBooleanValue()) {
+			SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+					m_modelCountTotalHitsColumn,
+					"Column name for total hits column has not been specified yet.",
+					"The name %COLUMN_NAME% of the new total hits column exists already in the input.");
+		}
+
+		// Auto guess the new tags column name and make it unique
+		SettingsUtils.autoGuessColumnName(inSpecs[0],
+				new String[] { m_modelCountTotalHitsColumn.getStringValue() }, null,
+				m_modelTrackQueryTagsColumn, DEFAULT_QUERY_TAGS_COLUMN);
+
+		if (m_modelTrackQueryTagsOption.getBooleanValue()) {
+			SettingsUtils.checkColumnNameUniqueness(inSpecs[0],
+					new String[] { m_modelCountTotalHitsColumn.getStringValue() }, null,
+					m_modelTrackQueryTagsColumn,
+					"Column name for query tags column has not been specified yet.",
+					"The name %COLUMN_NAME% of the new query tags column exists already in the input.");
 		}
 
 		// Consolidate all warnings and make them available to the user
@@ -244,7 +300,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			arrDataInfo = new InputDataInfo[bUseNameColumn ? 2 : 1];
 			arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-					RDKitMolValue.class);
+					SmartsValue.class, RDKitMolValue.class);
 			if (bUseNameColumn) {
 				arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelQueryNameColumn,
 						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
@@ -323,14 +379,27 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			// Generate column specs for the output table columns produced by this factory
 			// This is only possible, if pre-processing took already place and we know about
 			// query molecules
+			final boolean bCountTotalHits = m_modelCountTotalHitsOption.getBooleanValue();
+			final boolean bTrackQueryTags = m_modelTrackQueryTagsOption.getBooleanValue();
 			final int iResultColumnCount = m_arrResultColumnNames.length;
-			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iResultColumnCount];
-			for (int i = 0; i < iResultColumnCount; i++) {
+			final int iTotalColumnCount = iResultColumnCount + (bCountTotalHits ? 1 : 0) + (bTrackQueryTags ? 1: 0);
+			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[iTotalColumnCount];
+			int iColIndex = 0;
+			for (iColIndex = 0; iColIndex < iResultColumnCount; iColIndex++) {
 				// Create spec with additional information
-				final DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[i], IntCell.TYPE);
+				final DataColumnSpecCreator creator = new DataColumnSpecCreator(m_arrResultColumnNames[iColIndex], IntCell.TYPE);
 				HeaderPropertyUtils.writeInColumnSpec(creator,
-						SmilesHeaderProperty.PROPERTY_SMILES, m_arrQueriesAsSmiles[i]);
-				arrOutputSpec[i] = creator.createSpec();
+						SmilesHeaderProperty.PROPERTY_SMILES, m_arrQueriesAsSmiles[iColIndex]);
+				arrOutputSpec[iColIndex] = creator.createSpec();
+			}
+
+			if (bCountTotalHits) {
+				arrOutputSpec[iColIndex++] = new DataColumnSpecCreator(m_modelCountTotalHitsColumn.getStringValue(), IntCell.TYPE).createSpec();
+			}
+
+			if (bTrackQueryTags) {
+				arrOutputSpec[iColIndex++] = new DataColumnSpecCreator(m_modelTrackQueryTagsColumn.getStringValue(),
+						ListCell.getCollectionType(StringCell.TYPE)).createSpec();
 			}
 
 			// Provide unique matches only option
@@ -347,19 +416,35 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 				 * {@inheritDoc}
 				 */
 				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
-					final DataCell[] arrOutputCells = createEmptyCells(iResultColumnCount);
+					final DataCell[] arrOutputCells = createEmptyCells(iTotalColumnCount);
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row),
 							iUniqueWaveId);
 
-					for (int i = 0; i < iResultColumnCount; i++) {
-						final ROMol query = m_arrQueriesAsRDKitMols[i];
+					final List<StringCell> listTags = (bTrackQueryTags ? new ArrayList<StringCell>() : null);
+					int iTotalHitsCount = 0;
+					int iColIndex;
+					for (iColIndex = 0; iColIndex < iResultColumnCount; iColIndex++) {
+						final ROMol query = m_arrQueriesAsRDKitMols[iColIndex];
 						if (mol != null && query != null) {
 							final Match_Vect_Vect ms = markForCleanup(
 									mol.getSubstructMatches(query, bUniqueMatchesOnly), iUniqueWaveId);
-							arrOutputCells[i] = new IntCell((int)ms.size());
+							final int iHits = (int)ms.size();
+							arrOutputCells[iColIndex] = new IntCell(iHits);
+							iTotalHitsCount += iHits;
+							if (bTrackQueryTags && iHits > 0) {
+								listTags.add(new StringCell(m_arrResultColumnNames[iColIndex]));
+							}
 						}
+					}
+
+					if (bCountTotalHits) {
+						arrOutputCells[iColIndex++] = new IntCell(iTotalHitsCount);
+					}
+
+					if (bTrackQueryTags) {
+						arrOutputCells[iColIndex++] = CollectionCellFactory.createListCell(listTags);
 					}
 
 					return arrOutputCells;
@@ -409,6 +494,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
 		final boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
+		final boolean bIsSmarts = arrInputDataInfo[1][INPUT_COLUMN_QUERY].getDataType().isCompatible(SmartsValue.class);
 		final int iQueryRowCount = inData[1].getRowCount();
 		final List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
 		final List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
@@ -423,9 +509,24 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 
 		// Creating an arrays of SMILES and ROMol query molecules
 		for (final DataRow row : inData[1]) {
+			ROMol mol = null;
+			String strSmarts = null;
 
-			// Get ROMol value
-			final ROMol mol = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
+			// Process SMARTS
+			if (bIsSmarts) {
+				strSmarts = arrInputDataInfo[1][INPUT_COLUMN_QUERY].getSmarts(row);
+				if (strSmarts != null) {
+					mol = markForCleanup(RWMol.MolFromSmarts(strSmarts, 0, true));
+					if (mol == null) {
+						throw new ParseException("Could not parse SMARTS '"
+								+ strSmarts + "' in row " + row.getKey(), 0);
+					}
+				}
+			}
+			else {
+				// Get ROMol value
+				mol = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_QUERY].getROMol(row));
+			}
 
 			// Generate column labels (SMILES)
 			// If we cannot get a mol, we remember the empty column
@@ -436,8 +537,13 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			else {
 				String strQueryMolString = null;
 
-				// Check (by heuristics) if we have a SMARTS as query molecule
-				if (mol.getNumAtoms() > 0 && mol.getAtomWithIdx(0).hasQuery()) {
+				// If we have SMARTS as input, use it directly
+				if (bIsSmarts) {
+					strQueryMolString = strSmarts;
+				}
+
+				// Check (by heuristics) if we have a SMARTS as query molecule in form of an RDKit mol cell
+				else if (mol.getNumAtoms() > 0 && mol.getAtomWithIdx(0).hasQuery()) {
 					strQueryMolString = RDKFuncs.MolToSmarts(mol);
 				}
 
@@ -535,6 +641,26 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		m_arrQueriesAsSmiles = null;
 		m_arrResultColumnNames = null;
 		m_dPreProcessingShare = 0;
+	}
+
+	@Override
+	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		super.loadValidatedSettingsFrom(settings);
+
+		// For old nodes we will fill the default column names for later added optional columns
+		try {
+			m_modelCountTotalHitsColumn.loadSettingsFrom(settings);
+		}
+		catch (final InvalidSettingsException excOrig) {
+			m_modelCountTotalHitsColumn.setStringValue(DEFAULT_TOTAL_HITS_COLUMN);
+		}
+		try {
+			m_modelTrackQueryTagsColumn.loadSettingsFrom(settings);
+		}
+		catch (final InvalidSettingsException excOrig) {
+			m_modelTrackQueryTagsColumn.setStringValue(DEFAULT_QUERY_TAGS_COLUMN);
+		}
 	}
 
 	//

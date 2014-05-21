@@ -48,25 +48,235 @@
  */
 package org.rdkit.knime.nodes.moleculesubstructfilter;
 
+import java.awt.GridBagLayout;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.chem.types.SmartsValue;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeModel.MatchingCriteria;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
+import org.rdkit.knime.util.DialogComponentEnumButtonGroup;
+import org.rdkit.knime.util.LayoutUtils;
+import org.rdkit.knime.util.SettingsModelEnumeration;
 
 /**
  * <code>NodeDialog</code> for the "RDKitMoleculeSubstructFilter" Node.
  * 
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+ * creation of a simple dialog with standard components. If you need a more
+ * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
+ * 
  * @author Manuel Schwarze
  */
-public class RDKitMoleculeSubstructFilterNodeDialog extends AbstractRDKitSubstructFilterNodeDialog {
+public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
+
+	//
+	// Constructor
+	//
 
 	/**
-	 * {@inheritDoc}
-	 * This implementation creates a column selector component for an RDKit Mol type.
+	 * Create a new dialog pane with default components to configure an input column,
+	 * the name of a new column, which will contain the calculation results, an option
+	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@Override
 	@SuppressWarnings("unchecked")
-	protected DialogComponentColumnNameSelection createQueryColumnNameSelectionComponent() {
-		return new DialogComponentColumnNameSelection(
+	protected RDKitMoleculeSubstructFilterNodeDialog() {
+		final DialogComponent compInputColumn = add(new DialogComponentColumnNameSelection(
+				createInputColumnNameModel(), "RDKit Mol column: ", 0,
+				RDKitMolValue.class));
+		final Class<? extends DataValue>[] arrClassesQueryType = new Class[] { SmartsValue.class, RDKitMolValue.class };
+		final DialogComponent compQueryColumn = add(new DialogComponentColumnNameSelection(
 				createQueryColumnNameModel(), "Query Mol column: ", 1,
-				RDKitMolValue.class);
+				arrClassesQueryType));
+		final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria =
+				createMatchingCriteriaModel();
+		final DialogComponent compMatchingCriteria = add(new DialogComponentEnumButtonGroup<MatchingCriteria>(
+				modelMatchingCriteria, true, null));
+		final DialogComponent compMinimumMatches = add(new DialogComponentNumber(
+				createMinimumMatchesModel(modelMatchingCriteria), null, 1, 3));
+		final DialogComponent compNewColumnName = add(new DialogComponentString(
+				createNewColumnNameModel(), "New column name for matching substructures: "));
+
+		createNewTab("Advanced");
+		add(new DialogComponentNumber(
+				createFingerprintScreeningThresholdModel(), "Fingerprint screening threshold: ", 1));
+		add(new DialogComponentBoolean(
+				createRowKeyMatchInfoOptionModel(), "Use row keys as substructure match information"));
+
+		// Relayout the components
+		final JPanel panel = (JPanel)getTab("Options");
+		panel.setLayout(new GridBagLayout());
+
+		int iRow = 0;
+		LayoutUtils.constrain(panel, compInputColumn.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, compQueryColumn.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, new JLabel("Match:", SwingConstants.RIGHT),
+				0, iRow, 1, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTHEAST, 1.0d, 0.0d,
+				9, 10, 0, 0);
+		LayoutUtils.constrain(panel, compMatchingCriteria.getComponentPanel(),
+				1, iRow, 1, 1,
+				LayoutUtils.NONE, LayoutUtils.NORTHEAST, 0.0d, 0.0d,
+				0, 10, 7, 0);
+		LayoutUtils.constrain(panel, compMinimumMatches.getComponentPanel(),
+				2, iRow, 1, 1,
+				LayoutUtils.NONE, LayoutUtils.SOUTHWEST, 0.0d, 0.0d,
+				0, 0, 9, 0);
+		LayoutUtils.constrain(panel, new JPanel(),
+				3, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTHWEST, 1.0d, 0.0d,
+				0, 0, 0, 10);
+		LayoutUtils.constrain(panel, compNewColumnName.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+	}
+
+	//
+	// Private Methods
+	//
+
+	private DialogComponent add(final DialogComponent comp) {
+		addDialogComponent(comp);
+		return comp;
+	}
+
+	//
+	// Static Methods
+	//
+
+	/**
+	 * Creates the settings model to be used for the input column.
+	 * 
+	 * @return Settings model for input column selection.
+	 */
+	static final SettingsModelString createInputColumnNameModel() {
+		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model to be used for the query column.
+	 * 
+	 * @return Settings model for query column selection.
+	 */
+	protected static final SettingsModelString createQueryColumnNameModel() {
+		return new SettingsModelString("query_column", null);
+	}
+
+	/**
+	 * Creates the settings model for specifying the matching criteria.
+	 * 
+	 * @return Settings model for the matching criteria.
+	 */
+	static final SettingsModelEnumeration<MatchingCriteria> createMatchingCriteriaModel() {
+		return new SettingsModelEnumeration<RDKitMoleculeSubstructFilterNodeModel.MatchingCriteria>(
+				MatchingCriteria.class, "matching", MatchingCriteria.All);
+	}
+
+	/**
+	 * Creates the settings model for specifying the minimum matching number
+	 * in case that the criteria "At least" was selected. Default is 1.
+	 * The range of numbers goes from 1 to 999.
+	 * 
+	 * @return Settings model for the matching criteria number of "At least".
+	 */
+	static final SettingsModelIntegerBounded createMinimumMatchesModel(
+			final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria) {
+		final SettingsModelIntegerBounded model =
+				new SettingsModelIntegerBounded("minimumMatches", 1, 1, 999) {
+
+			/**
+			 * Backward compatibility handling.
+			 */
+			@Override
+			public void setIntValue(int newValue) {
+				// These values are out of range, but could exist from an old node version.
+				// We correct them here and apply the matching criteria they were expressing.
+				if (newValue == 0) {
+					newValue = 1;
+					modelMatchingCriteria.setValue(MatchingCriteria.All);
+				}
+				else if (newValue == -1) {
+					newValue = 1;
+					modelMatchingCriteria.setValue(MatchingCriteria.Exact);
+				}
+				else if (newValue > 0 && modelMatchingCriteria.wasUndefinedInSettings()) {
+					modelMatchingCriteria.setValue(MatchingCriteria.AtLeast);
+				}
+
+				super.setIntValue(newValue);
+			}
+		};
+
+		// This model will depend on the state of the matching criteria
+		modelMatchingCriteria.addChangeListener(new ChangeListener() {
+
+			/**
+			 * We use this to enable or disable the minimum number
+			 * field, which makes only sense if "At least" is selected.
+			 */
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				model.setEnabled(modelMatchingCriteria.getValue() == MatchingCriteria.AtLeast);
+			}
+		});
+
+		model.setEnabled(modelMatchingCriteria.getValue() == MatchingCriteria.AtLeast);
+
+		return model;
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the new column name.
+	 * 
+	 * @return Settings model for result column name.
+	 */
+	static final SettingsModelString createNewColumnNameModel() {
+		return new SettingsModelString("new_column_name", null);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to switch on the fingerprint screening feature. Used only internally.
+	 * A value of 0 means always disabled. A value of -1 means to use always the current
+	 * default threshold value defined by the node.
+	 * 
+	 * @return Settings model for fingerprint screening threshold.
+	 */
+	static final SettingsModelIntegerBounded createFingerprintScreeningThresholdModel() {
+		return new SettingsModelIntegerBounded("fp_screening_threshold",
+				RDKitMoleculeSubstructFilterNodeModel.DEFAULT_FINGERPRINT_SCREENING_THRESHOLD,
+				-1, Integer.MAX_VALUE);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to use row keys within the substructure match column. If false,
+	 * it will use the row index (1 based).
+	 * 
+	 * @return Settings model for row key match info option.
+	 */
+	static final SettingsModelBoolean createRowKeyMatchInfoOptionModel() {
+		return new SettingsModelBoolean("row_key_match_info", true);
 	}
 }

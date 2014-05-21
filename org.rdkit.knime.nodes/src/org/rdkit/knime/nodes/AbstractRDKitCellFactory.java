@@ -129,7 +129,7 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	 * @param cleaner object to be used for registering RDKit objects for freeing resources. Must not be null.
 	 * @param rowFailurePolicy Defines the policy to be used the calculation
 	 * 		of row values failed during execution of the node.
-	 * @param warningConsolidator Conserves occurring warning messages and consolidates them later. Must not be null.
+	 * @param warningConsolidator Conserves occurring warning messages and consolidates them later. Can be null, if no warnings shall be captured.
 	 * @param arrInputColumnInfo Array with information about input columns. Can be null, if the factory will not merge 1:1.
 	 		This value can also be set later before execution ({@link #setInputDataInfos(InputDataInfo[])}).
 	 * @param outputColumnSpecs Specifications of output columns. Can be empty.
@@ -142,15 +142,14 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 			throw new IllegalArgumentException("RDKitObjectCleaner must not be null.");
 		}
 
-		if (warningConsolidator == null) {
-			throw new IllegalArgumentException("Warning consolidator must not be null.");
-		}
-
 		m_arrInputDataInfo = arrInputColumnInfo;
 		m_cleaner = cleaner;
-		m_warnings = warningConsolidator;
+		m_warnings = (warningConsolidator == null ? new WarningConsolidator() : warningConsolidator);
 		m_rowFailurePolicy = rowFailurePolicy;
 		m_bAllowParallelProcessing = false;
+
+		// Ensure that hard-coded parallel processing settings of a factory are taken into account
+		setAllowParallelProcessing(allowsParallelProcessing());
 	}
 
 	//

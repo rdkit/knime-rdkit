@@ -610,9 +610,8 @@ public enum FingerprintType {
 
 		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-			synchronized (PATTERN_FP_LOCK) {
-				return RDKFuncs.PatternFingerprintMol(mol, settings.getNumBits());
-			}
+			System.out.println(Thread.currentThread().getName());
+			return RDKFuncs.PatternFingerprintMol(mol, settings.getNumBits());
 		}
 
 		@Override
@@ -633,14 +632,6 @@ public enum FingerprintType {
 	 * remove this lock again.
 	 */
 	public static final Object AVALON_FP_LOCK = new Object();
-
-	/**
-	 * This lock prevents two calls at the same time into the Pattern Fingerprint functionality,
-	 * which is currently not thread-safe.
-	 * Once there is a fix implemented in the RDKit (or somewhere else?) we can
-	 * remove this lock again.
-	 */
-	public static final Object PATTERN_FP_LOCK = new Object();
 
 	//
 	// Members

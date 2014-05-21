@@ -101,6 +101,12 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	/** Input data info index for Reaction value. */
 	protected static final int INPUT_COLUMN_REACTION = 0;
 
+	/**
+	 * Constant used to express that there is no reaction result to be processed because the reaction is not part of
+	 * randomized reaction set.
+	 */
+	protected static final DataRow[] NOT_INCLUDED = new DataRow[0];
+
 	//
 	// Members
 	//
@@ -136,6 +142,17 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	@Override
 	protected int getNumberOfReactants() {
 		return 1;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * This implementation returns false.
+	 * 
+	 * @return Always false.
+	 */
+	@Override
+	protected boolean isExpandReactantsMatrix() {
+		return false;
 	}
 
 	/**
@@ -236,8 +253,6 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	@Override
 	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
 			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec) throws Exception {
-		resetProductCounter();
-
 		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
 
 		// Contains the rows with the result columns
@@ -266,32 +281,40 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * 
 				 * @param row Input row.
 				 * @param index Index of row.
+				 * 
+				 * @return Null, if an empty reactant cell was encountered. Empty, if we should ignore the row
+				 * 		(e.g. if randomization is used and the reaction is not calculated). Result row, if
+				 * 		we have a valid reaction to be added to the result table.
 				 */
 				@Override
 				protected DataRow[] compute(final DataRow row, final long index) throws Exception {
-					final int uniqueWaveId = createUniqueCleanupWaveId();
 					List<DataRow> listNewRows = null;
+					final boolean bIncluded = isReactionIncluded(index);
 
-					// Empty cells will result in null items
-					final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT].getROMol(row), uniqueWaveId);
+					if (bIncluded) {
+						final int uniqueWaveId = createUniqueCleanupWaveId();
 
-					try {
-						if (mol != null) {
-							// The reaction takes a vector of reactants. For this
-							// single-component reaction that vector is one long
-							final ROMol_Vect rs = new ROMol_Vect(1);
-							rs.set(0, mol);
+						// Empty cells will result in null items
+						final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT].getROMol(row), uniqueWaveId);
 
-							// Process reaction and create rows
-							listNewRows = processReactionResults(chemicalReaction.get(), rs, null,
-									uniqueWaveId, (int)index);
+						try {
+							if (mol != null) {
+								// The reaction takes a vector of reactants. For this
+								// single-component reaction that vector is one long
+								final ROMol_Vect rs = new ROMol_Vect(1);
+								rs.set(0, mol);
+
+								// Process reaction and create rows
+								listNewRows = processReactionResults(chemicalReaction.get(), rs, null,
+										uniqueWaveId, (int)index);
+							}
+						}
+						finally {
+							cleanupMarkedObjects(uniqueWaveId);
 						}
 					}
-					finally {
-						cleanupMarkedObjects(uniqueWaveId);
-					}
 
-					return (listNewRows == null ? null : listNewRows.toArray(new DataRow[listNewRows.size()]));
+					return (listNewRows == null ? (bIncluded ? null : NOT_INCLUDED) : listNewRows.toArray(new DataRow[listNewRows.size()]));
 				}
 
 				/**
@@ -302,13 +325,17 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 				@Override
 				protected void processFinished(final ComputationTask task)
 						throws ExecutionException, CancellationException, InterruptedException {
-
+					// Null, if an empty reactant cell was encountered.
+					// Empty, if we should ignore the row (e.g. if randomization is used and the reaction is not calculated).
+					// Non-empty, if we have a valid reaction to be added to the result table.
 					final DataRow[] arrResult = task.get();
 
 					// Only consider valid results (which still could be empty)
 					if (arrResult != null) {
-						for (final DataRow row : arrResult) {
-							tableProducts.addRowToTable(row);
+						if (arrResult.length > 0) {
+							for (final DataRow row : arrResult) {
+								tableProducts.addRowToTable(row);
+							}
 						}
 					}
 					else {

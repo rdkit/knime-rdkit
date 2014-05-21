@@ -391,7 +391,7 @@ public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
 	 * @return settings model
 	 */
 	static final SettingsModelIntegerBounded createNumBitsModel() {
-		return new SettingsModelIntegerBounded("num_bits", DEFAULT_NUM_BITS, 32, 9192);
+		return new SettingsModelIntegerBounded("num_bits", DEFAULT_NUM_BITS, 32, Integer.MAX_VALUE);
 	}
 
 	/**

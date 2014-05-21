@@ -112,6 +112,13 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	protected static final List<DataRow> EMPTY_RESULT_DUE_TO_LACK_OF_ROWS =
 			Collections.unmodifiableList(new ArrayList<DataRow>(0));
 
+	/**
+	 * Constant used to express that there is no reaction result to be processed because the reaction is not part of
+	 * randomized reaction set.
+	 */
+	protected static final List<DataRow> NOT_INCLUDED =
+			Collections.unmodifiableList(new ArrayList<DataRow>(0));
+
 	//
 	// Members
 	//
@@ -159,6 +166,11 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	@Override
 	protected int getNumberOfReactants() {
 		return 2;
+	}
+
+	@Override
+	protected boolean isExpandReactantsMatrix() {
+		return m_modelDoMatrixExpansion.getBooleanValue();
 	}
 
 	/**
@@ -282,8 +294,6 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	@Override
 	protected BufferedDataTable[] processing(final BufferedDataTable[] inData,
 			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec) throws Exception {
-		resetProductCounter();
-
 		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
 
 		// Contains the rows with the result columns
@@ -357,43 +367,63 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					final int uniqueWaveId = createUniqueCleanupWaveId();
 					List<DataRow> listNewRows = null;
 
-					// Empty cells will result in null items
-					final ROMol mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(row), uniqueWaveId);
+					boolean bFoundIncluded = false;
+					ROMol mol1 = null;
 
 					try {
-						if (mol1 != null) {
-							final RandomAccessRowIterator rowAccess = rowAccessReactant2.get();
+						final RandomAccessRowIterator rowAccess = rowAccessReactant2.get();
 
-							if (rowAccess != null) {
-								// Iterate through all second reactant rows for each first reactant
-								if (bMatrixExpansion) {
-									rowAccess.resetIterator();
-									final int subUniqueWaveId = createUniqueCleanupWaveId();
-									int index2 = 0;
+						if (rowAccess != null) {
+							// Iterate through all second reactant rows for each first reactant
+							if (bMatrixExpansion) {
+								rowAccess.resetIterator();
+								final int subUniqueWaveId = createUniqueCleanupWaveId();
+								int index2 = 0;
 
-									try {
-										while (rowAccess.hasNext()) {
+								try {
+									while (rowAccess.hasNext()) {
+										if (isReactionIncluded(index, index2)) {
+											bFoundIncluded = true;
+											if (mol1 == null) {
+												mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(row), uniqueWaveId);
+												if (mol1 == null) {
+													// Nothing to calculate, if cell is empty
+													break;
+												}
+											}
 											listNewRows = processWithSecondReactant(mol1, rowAccess.next(),
-													listNewRows, subUniqueWaveId, (int)index, index2++);
+													listNewRows, subUniqueWaveId, (int)index, index2);
 										}
-									}
-									finally {
-										cleanupMarkedObjects(subUniqueWaveId);
+										else {
+											rowAccess.skip(1);
+										}
+										index2++;
 									}
 								}
+								finally {
+									cleanupMarkedObjects(subUniqueWaveId);
+								}
+							}
 
-								// Or: Just take the second reactant with the same row index
-								else {
-									final DataRow row2 = rowAccess.get((int)index);
+							// Or: Just take the second reactant with the same row index
+							else {
+								if (isReactionIncluded(index, index)) {
+									bFoundIncluded = true;
+									if (mol1 == null) {
+										mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(row), uniqueWaveId);
+										if (mol1 != null) {
+											final DataRow row2 = rowAccess.get((int)index);
 
-									if (row2 != null) {
-										listNewRows = processWithSecondReactant(mol1, row2,
-												null, uniqueWaveId, (int)index, (int)index);
-									}
-									else {
-										// Using this as result will cause an CancellationException to be thrown
-										// See process() method
-										listNewRows = EMPTY_RESULT_DUE_TO_LACK_OF_ROWS; // No more rows found
+											if (row2 != null) {
+												listNewRows = processWithSecondReactant(mol1, row2,
+														null, uniqueWaveId, (int)index, (int)index);
+											}
+											else {
+												// Using this as result will cause an CancellationException to be thrown
+												// See process() method
+												listNewRows = EMPTY_RESULT_DUE_TO_LACK_OF_ROWS; // No more rows found
+											}
+										}
 									}
 								}
 							}
@@ -401,6 +431,11 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					}
 					finally {
 						cleanupMarkedObjects(uniqueWaveId);
+					}
+
+					// If we there was no reaction to be included we use a special return value
+					if (listNewRows == null && !bFoundIncluded) {
+						listNewRows = NOT_INCLUDED;
 					}
 
 					return listNewRows;
@@ -440,6 +475,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 						// Process reaction and create rows
 						listNewRows = processReactionResults(chemicalReaction.get(), rs, listToAddTo,
 								wave, indicesReactants);
+
 					}
 
 					return listNewRows;
@@ -467,10 +503,12 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 
 						// Process normal results
 						else {
-							for (final DataRow row : listResults) {
-								tableProducts.addRowToTable(row);
+							if (!listResults.isEmpty()) {
+								for (final DataRow row : listResults) {
+									tableProducts.addRowToTable(row);
+								}
+								aiReactionCounter.addAndGet(listResults.size());
 							}
-							aiReactionCounter.addAndGet(listResults.size());
 						}
 					}
 					else {
@@ -499,17 +537,20 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				multiWorker.run(inData[0]);
 			}
 			catch (final Exception exc) {
-				if (exc instanceof CancellationException && abEarlyDone.get() == true) {
-					getWarningConsolidator().saveWarning("Number of second reactants is lower than number of first reactants.");
-				}
-				else {
+				// Ignore cancellations or early aborts due to too few rows
+				if (exc instanceof CancellationException == false || abEarlyDone.get() == false) {
 					throw exc;
 				}
 			}
 
 			// Check size discrepancy
-			if (bMatrixExpansion == false && iTotalRowCountReactant1 < iTotalRowCountReactant2) {
-				getWarningConsolidator().saveWarning("Number of first reactants is lower than number of second reactants.");
+			if (bMatrixExpansion == false) {
+				if (iTotalRowCountReactant1 < iTotalRowCountReactant2) {
+					getWarningConsolidator().saveWarning("Number of first reactants is lower than number of second reactants.");
+				}
+				else if (iTotalRowCountReactant1 > iTotalRowCountReactant2) {
+					getWarningConsolidator().saveWarning("Number of second reactants is lower than number of first reactants.");
+				}
 			}
 
 			// Check, if user cancelled

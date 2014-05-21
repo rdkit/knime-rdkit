@@ -964,9 +964,26 @@ public class InputDataInfo {
 							"Unable to parse reaction value found in the table (RDKit lib returned null).");
 				}
 			}
+			else if (cell.getType().isCompatible(SmartsValue.class)) {
+				// Read the SMARTS value
+				final String strSmarts = ((SmartsValue)cell).getSmartsValue();
+
+				// Convert the SMARTS value into a ChemicalReaction
+				try {
+					rxn = ChemicalReaction.ReactionFromSmarts(strSmarts);
+				}
+				catch (final Exception exc) {
+					throw new IllegalArgumentException("Unable to parse SMARTS value found in the table.", exc);
+				}
+
+				if (rxn == null) {
+					throw new RuntimeException(
+							"Unable to parse SMARTS value found in the table (RDKit lib returned null).");
+				}
+			}
 			else {
 				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +
-						" is not compatible with a RxnValue. This is usually an implementation error.");
+						" is not compatible with an RxnValue or SmartsValue. This is usually an implementation error.");
 			}
 		}
 

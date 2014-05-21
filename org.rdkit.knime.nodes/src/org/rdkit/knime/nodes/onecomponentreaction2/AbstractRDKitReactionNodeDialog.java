@@ -48,21 +48,23 @@
  */
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
-import java.awt.Component;
-import java.awt.GridBagLayout;
-
-import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.chem.types.RxnValue;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
+import org.rdkit.knime.util.LayoutUtils;
 
 /**
  * <code>NodeDialog</code> for the "RDKitOneComponentReaction" Node.
@@ -102,6 +104,8 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 	public AbstractRDKitReactionNodeDialog(final int iReactionTableIndex) {
 		m_iReactionTableIndex = iReactionTableIndex;
 
+		createNewGroup("Reaction");
+
 		addDialogComponentsBeforeReactionSettings();
 
 		super.addDialogComponent(m_compReactionColumnName = new DialogComponentColumnNameSelection(
@@ -132,17 +136,21 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 		super.addDialogComponent(m_compSmartsReactionField = new DialogComponentString(
 				createOptionalReactionSmartsPatternModel(), "Reaction SMARTS: ", false, 30));
 
+		createNewGroup("Randomization");
+
+		final SettingsModelBoolean modelRandomizeReactants = createRandomizeReactantsOptionModel();
+		super.addDialogComponent(new DialogComponentBoolean(modelRandomizeReactants, "Randomize reactants"));
+		super.addDialogComponent(new DialogComponentNumberEdit(createMaxNumberOfRandomizeReactionsModel(modelRandomizeReactants), "Maximum number of random reactions: ", 5));
+		super.addDialogComponent(new DialogComponentNumberEdit(createRandomSeedModel(modelRandomizeReactants), "Random seed (or -1 to be ignored): ", 15));
+
+		createNewGroup("Other Options");
+
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUniquifyProductsModel(), "Uniquify products"));
 
 		addDialogComponentsAfterReactionSettings();
 
-		// Although we are not using any GridBagLayout constraints, setting this
-		// layout manager makes it look nicer (surprisingly)
-		final Component comp = getTab("Options");
-		if (comp instanceof JPanel) {
-			((JPanel)comp).setLayout(new GridBagLayout());
-		}
+		LayoutUtils.correctKnimeDialogBorders(getPanel());
 	}
 
 	//
@@ -163,13 +171,13 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 
 	/**
 	 * Show or hides reaction based settings based on the input method for
-	 * the reaction (SMARTS text field or table).
+	 * the reaction (SMARTS text field or table with reactions).
 	 * 
-	 * @param bHasSecondTable
+	 * @param bHasReactionTable
 	 */
-	protected void updateVisibilityOfOptionalComponents(final boolean bHasSecondTable) {
-		m_compReactionColumnName.getComponentPanel().setVisible(bHasSecondTable);
-		m_compSmartsReactionField.getComponentPanel().setVisible(!bHasSecondTable);
+	protected void updateVisibilityOfOptionalComponents(final boolean bHasReactionTable) {
+		m_compReactionColumnName.getComponentPanel().setVisible(bHasReactionTable);
+		m_compSmartsReactionField.getComponentPanel().setVisible(!bHasReactionTable);
 	}
 
 	//
@@ -195,13 +203,63 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 	static final SettingsModelString createOptionalReactionSmartsPatternModel() {
 		return new SettingsModelString("reactionSmarts", "");
 	}
+
 	/**
-	 * @return new settings model whether to also compute coordinates
+	 * @return new settings model whether to uniquify products
 	 */
 	static final SettingsModelBoolean createUniquifyProductsModel() {
 		return new SettingsModelBoolean("uniquifyProducts", false);
 	}
 
+	/**
+	 * @return new settings model whether to randomize reactants
+	 */
+	static final SettingsModelBoolean createRandomizeReactantsOptionModel() {
+		return new SettingsModelBoolean("randomizeReactants", false);
+	}
 
+	/**
+	 * @param modelRandomizeReactantsOption Model that determines, if the
+	 * 		this option is enabled or disabled.
+	 * 
+	 * @return new settings model for max number of randomize reactions
+	 */
+	static final SettingsModelIntegerBounded createMaxNumberOfRandomizeReactionsModel(
+			final SettingsModelBoolean modelRandomizeReactantsOption) {
+		final SettingsModelIntegerBounded result = new SettingsModelIntegerBounded("maxNumberOfRandomizedReactions", 100, 1, Integer.MAX_VALUE);
+
+		modelRandomizeReactantsOption.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelRandomizeReactantsOption.getBooleanValue());
+			}
+		});
+
+		result.setEnabled(modelRandomizeReactantsOption.getBooleanValue());
+
+		return result;
+	}
+
+	/**
+	 * @param modelRandomizeReactantsOption Model that determines, if the
+	 * 		this option is enabled or disabled.
+	 * 
+	 * @return new settings model for random seed to be used when randomize reactants option is switched on
+	 */
+	static final SettingsModelLong createRandomSeedModel(
+			final SettingsModelBoolean modelRandomizeReactantsOption) {
+		final SettingsModelLong result = new SettingsModelLong("randomSeed", -1);
+
+		modelRandomizeReactantsOption.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelRandomizeReactantsOption.getBooleanValue());
+			}
+		});
+
+		result.setEnabled(modelRandomizeReactantsOption.getBooleanValue());
+
+		return result;
+	}
 
 }

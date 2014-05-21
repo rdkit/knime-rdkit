@@ -4,28 +4,37 @@
     <name>RDKit Molecule Substructure Filter</name>
 
     <shortDescription>
-        Applies a number of substructure filters to an input RDKit Mol column
+        Applies a number of substructure filters to an input RDKit Mol column.
 	</shortDescription>
 
     <fullDescription>
         <intro>Applies a substructure filter to an input RDKit Mol column. The patterns
-            are given as RDKit molecules in the second input table. You can choose either a minimum number
+            are given as SMARTS, SMILES, SDF or RDKit molecules in the second input table. You can choose either a minimum number
             of patterns to match or to require that all match.
         </intro>
 
         <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>
-        <option name="Query Mol column">Select the column from the second input table that contains the query RDKit molecules</option>
+        <option name="Query Mol column">Select the column from the second input table that contains the query molecules.
+        	Acceptable types are SMARTS, SMILES, SDF and RDKit Mol.</option>
         <option name="Matches">Select the minimum number of patterns that must match for each molecule so that it is
             included in the first output table</option>
         <option name="New column name for matching substructures">Enter here the name of the new column that will contain
-        	a list of all matching substructure indices</option>
+        	a list of all matching substructure row indices</option>
+        <option name="Advanced - Fingerprint screening threshold">Substructure search performance can be improved using fingerprints.
+        	This makes sense when there are many different query molecules and a lot of input molecules. In this case
+        	the node can pre-calculate fingerprints once for all input and query molecules and do some pre-screening for
+        	substructure matching. The fingerprint screening threshold value defines the number of query molecules (table 2) 
+        	that must be present in order to enable fingerprint calculation and pre-screening. 
+        	Set it to 0 to disable fingerprint screening completely for this node. Set it to -1 to always
+        	use the RDKit Nodes default behavior (the standard setting).</option>
+        <option name="Advanced - Use row keys as substructure match information">
+        	The column for matching substructure indices contained (for historic reasons) the row index, which turned out
+        	not to be too useful. Click this flag to use row keys instead, which is today the default for new nodes.</option>
     </fullDescription>
-
-
 
     <ports>
         <inPort index="0" name="Molecules">Table with RDKit molecules</inPort>
-        <inPort index="1" name="Query Molecules">Table with RDKit molecules to use as queries</inPort>
+        <inPort index="1" name="Query Molecules">Table with SMARTS, SMILES, SDF or RDKit Mol molecules to use as queries</inPort>
         <outPort index="0" name="Molecules matching filter">Molecules matching the substructure query</outPort>
         <outPort index="1" name="Molecules not matching filter">Molecules not matching the substructure query</outPort>
     </ports>

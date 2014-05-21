@@ -34,8 +34,7 @@
 
       <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
 	  <node after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" id="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
+      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" id="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
       <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory" id="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/> 
 
       <node category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" id="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>
@@ -47,7 +46,7 @@
 
 	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory" id="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
 
-      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory" id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>   
+      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory" id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>
 </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes using RDKit" icon="icons/category_rdkit.png" level-id="rdkit" name="RDKit" path="/community">

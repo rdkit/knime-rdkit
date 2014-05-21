@@ -48,6 +48,9 @@
  */
 package org.rdkit.knime.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.RDKit.ChemicalReaction;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
@@ -167,13 +170,12 @@ public final class ChemUtils {
 	}
 
 	/**
-	 * Reads an RDKit Chemical Reaction from a the Rxn value provided
+	 * Reads an RDKit Chemical Reaction from a the Rxn or SMARTS value provided
 	 * by the first row of the passed in table.
 	 * After creation it will be validated.
 	 *
 	 * @param table Table with reaction smart.
-	 * @param inputDataInfo Data info to access smarts column.
-	 * 
+	 * @param inputDataInfo Data info to access reaction column.
 	 * @param iRequiredReactantTemplates Number of reactants templates that
 	 * 		are expected to be found in the chemical reaction.
 	 *
@@ -207,9 +209,105 @@ public final class ChemUtils {
 
 		// Validate the found reaction
 		final ChemicalReaction rxn = inputDataInfo.getChemicalReaction(row);
-		validateReaction(rxn, iRequiredReactantsTemplates);
+
+		try {
+			validateReaction(rxn, iRequiredReactantsTemplates);
+		}
+		catch (final InvalidSettingsException exc) {
+			// Delete the reaction if we cannot use it
+			rxn.delete();
+			throw exc;
+		}
 
 		return rxn;
+	}
+
+	/**
+	 * Reads all RDKit Chemical Reactions from Rxn or SMARTS values provided
+	 * by the passed in table. After creation it will be validated.
+	 * If the last parameter is true it will ignore invalid reactions and
+	 * just read on, otherwise it would through an exception.
+	 *
+	 * @param table Table with reaction smart.
+	 * @param inputDataInfo Data info to access reaction column.
+	 * @param iRequiredReactantTemplates Number of reactants templates that
+	 * 		are expected to be found in the chemical reaction.
+	 * @param warnings Optional warning consolidator. If set, invalid reactions
+	 * 		will cause warnings.
+	 * @param warningContext Optional warning context to be used when saving warnings.
+	 *
+	 * @return Array of chemical reaction objects. Never null and never empty.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if no reaction could not
+	 * 		be created from the RXn or SMARTS values of the table.
+	 */
+	public static ChemicalReaction[] readReactionsFromTable(final BufferedDataTable table,
+			final InputDataInfo inputDataInfo, final int iRequiredReactantsTemplates,
+			final WarningConsolidator warnings, final WarningConsolidator.Context warningContext)
+					throws InvalidSettingsException, EmptyCellException {
+
+		// Pre-checks
+		if (table == null) {
+			throw new IllegalArgumentException("No Reaction table found.");
+		}
+
+		if (inputDataInfo == null) {
+			throw new IllegalArgumentException("Input data info must not be null.");
+		}
+
+		final List<ChemicalReaction> listReactions = new ArrayList<ChemicalReaction>(table.getRowCount());
+		final CloseableRowIterator iterator = table.iterator();
+
+		while (iterator.hasNext()) {
+			final DataRow row = iterator.next();
+
+			ChemicalReaction rxn = null;
+
+			// Parse reaction into an RDKit object
+			try {
+				rxn = inputDataInfo.getChemicalReaction(row);
+
+				// Validate the found reaction
+				if (rxn != null) {
+					try {
+						validateReaction(rxn, iRequiredReactantsTemplates);
+						listReactions.add(rxn);
+					}
+					catch (final InvalidSettingsException exc) {
+						// Delete the reaction if we cannot use it
+						rxn.delete();
+						if (warnings != null) {
+							LOGGER.warn("Invalid reaction cell encountered in row '" + row.getKey() + "'. Validation failed.");
+							warnings.saveWarning(warningContext == null ? null : warningContext.getId(),
+									"Invalid reaction cell encountered. Validation failed.");
+						}
+					}
+				}
+				else {
+					if (warnings != null) {
+						LOGGER.warn("Empty reaction cell encountered in row '" + row.getKey() + "'.");
+						warnings.saveWarning(warningContext == null ? null : warningContext.getId(),
+								"Empty reaction cell encountered.");
+					}
+				}
+			}
+			catch (final IllegalArgumentException exc) {
+				if (warnings != null) {
+					LOGGER.warn("Invalid reaction cell encountered in row '" + row.getKey() + "'. Parsing failed.");
+					warnings.saveWarning(warningContext == null ? null : warningContext.getId(),
+							"Invalid reaction cell encountered. Parsing failed.");
+				}
+			}
+		}
+
+		iterator.close();
+
+		if (listReactions.isEmpty()) {
+			throw new InvalidSettingsException(
+					"Reaction table does not have any rows with valid reactions.");
+		}
+
+		return listReactions.toArray(new ChemicalReaction[listReactions.size()]);
 	}
 
 	/**

@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.RDKit.ChemicalReaction;
@@ -67,9 +69,12 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -106,6 +111,9 @@ extends AbstractRDKitNodeModel {
 	/** Input data info index for Reaction value. */
 	protected static final int INPUT_COLUMN_REACTION = 0;
 
+	/** An empty string. */
+	private static String EMPTY = "";
+
 	//
 	// Members
 	//
@@ -119,7 +127,18 @@ extends AbstractRDKitNodeModel {
 			registerSettings(T.createOptionalReactionSmartsPatternModel());
 
 	/** Should products be uniquified? */
-	protected SettingsModelBoolean m_modelUniquifyProducts = registerSettings(T.createUniquifyProductsModel(),true);
+	protected SettingsModelBoolean m_modelUniquifyProducts = registerSettings(T.createUniquifyProductsModel(), true);
+
+	/** Should random reactants be picked? */
+	protected SettingsModelBoolean m_modelRandomizeReactants = registerSettings(T.createRandomizeReactantsOptionModel(), true);
+
+	/** How many random reactions shall be created? */
+	protected SettingsModelIntegerBounded m_modelMaxNumberOfRandomizeReactions = registerSettings(
+			T.createMaxNumberOfRandomizeReactionsModel(m_modelRandomizeReactants), true);
+
+	/** Random seed to be used */
+	protected SettingsModelLong m_modelRandomSeed = registerSettings(
+			T.createRandomSeedModel(m_modelRandomizeReactants), true);
 
 	//
 	// Internals
@@ -129,10 +148,28 @@ extends AbstractRDKitNodeModel {
 	private boolean m_bHadReactionInputTable = false;
 
 	/** Counts all products. */
-	protected AtomicInteger m_aiProductCounter;
+	protected AtomicInteger m_aiProductCounter = new AtomicInteger();
 
 	/** The input port index of the reaction table. */
 	protected int m_iReactionTableIndex;
+
+	/** For performance reasons this flag tells if we do not randomize reactions at all. */
+	protected boolean m_bIncludeAllReactions;
+
+	/**
+	 * Flag to determine, if we will include (true) or exclude (false) the reactions
+	 * that are contained in the set {@link #m_setRandomizedReactions}.
+	 */
+	protected boolean m_bInclusionMode;
+
+	/**
+	 * If we randomize reactions this set contains representations of the reactions
+	 * that shall be included or excluded (based on the flag {@link #m_bInclusionMode}.
+	 * A representation is either a Long object with a row index (for row-by-row reactions),
+	 * or a string in the form n.m, where n and m are numeric row indexes
+	 * of reactants (0 based).
+	 */
+	protected Set<Object> m_setRandomizedReactions;
 
 	//
 	// Constructor
@@ -162,6 +199,126 @@ extends AbstractRDKitNodeModel {
 	 * @return Number of reactants.
 	 */
 	protected abstract int getNumberOfReactants();
+
+	/**
+	 * Returns true, if reactions shall be based on a matrix expansion (makes only sense for more than one reactant).
+	 * 
+	 * @return True, if matrix expansion is desired.
+	 */
+	protected abstract boolean isExpandReactantsMatrix();
+
+	/**
+	 * Initializes randomization of reactions. If randomization is switched on this method
+	 * will initialize a random number generator with the random seed and it will
+	 * pick reactions to be included honoring the maximum number of reactions setting
+	 * of the user. It also determines, if randomization makes sense at all.
+	 * As output it prepares intermediate result variables that are used in
+	 * further processing. This method calls {@link #isExpandReactantsMatrix()} to determine
+	 * if total reactions would be based on the matrix
+	 * of reactants (true) or a reactants processed row by row (false).
+	 * 
+	 * @param inData Data tables with reactants.
+	 * @param bExpandMatrix
+	 */
+	protected void initializeRandomization(final BufferedDataTable[] inData) {
+		// Set defaults for randomization parameters
+		m_bIncludeAllReactions = true;
+
+		if (m_modelRandomizeReactants.getBooleanValue()) {
+			int iTotalNumber = 0;
+			m_bInclusionMode = false;
+			m_setRandomizedReactions = new HashSet<Object>();
+			final int iReactantCount = getNumberOfReactants();
+
+			if (inData != null && inData.length > 0) {
+				// Find out how many reactions there are to calculate based on data input
+				final boolean bIsMatrix = isExpandReactantsMatrix();
+				iTotalNumber = inData[0].getRowCount();
+
+				if (bIsMatrix) {
+					// With matrix expansion the maximum number of reactions depends on the product of table lengths
+					for (int i = 1; i < iReactantCount; i++) {
+						iTotalNumber = iTotalNumber * inData[i].getRowCount();
+					}
+				}
+				else {
+					// Without matrix expansion the maximum number of reactions depends on the smallest table
+					for (int i = 1; i < iReactantCount; i++) {
+						iTotalNumber = Math.min(iTotalNumber, inData[i].getRowCount());
+					}
+
+				}
+
+				// Determine, if we need randomization at all
+				int iTargetNumber = m_modelMaxNumberOfRandomizeReactions.getIntValue();
+				m_bIncludeAllReactions = !m_modelRandomizeReactants.getBooleanValue() || iTotalNumber <= iTargetNumber;
+
+				// Initialize randomization if desired and necessary
+				if (!m_bIncludeAllReactions) {
+					// Determine include or exclude mode based on totally possible reactions and number of desired reactions
+					m_bInclusionMode = (iTargetNumber <= (iTotalNumber / 2));
+					if (!m_bInclusionMode) {
+						// If we are in exclude mode our target number is now turned into the opposite
+						iTargetNumber = iTotalNumber - iTargetNumber;
+					}
+
+					// Calculate randomized reaction ids
+					final long[] arrIndexes = new long[iReactantCount];
+					final long lSeed = m_modelRandomSeed.getLongValue();
+					final Random randomGenerator = (lSeed == -1 ? new Random() : new Random(lSeed));
+					for (int iReaction = 0; iReaction < iTargetNumber; iReaction++) {
+						Object reactionId = null;
+
+						// Find a reaction that is not in the set yet
+						do {
+							// Define random indexes
+							if (bIsMatrix) {
+								// Produce n.m where max(n|m) is the table length of (n|m)
+								arrIndexes[0] = randomGenerator.nextInt(inData[0].getRowCount());
+								for (int jReactant = 1; jReactant < iReactantCount; jReactant++) {
+									arrIndexes[jReactant] = randomGenerator.nextInt(inData[jReactant].getRowCount());
+								}
+							}
+							else {
+								// Just produce n.n where max(n) is the table length of the smalles table (calculated before)
+								arrIndexes[0] = randomGenerator.nextInt(iTotalNumber);
+								for (int jReactant = 1; jReactant < iReactantCount; jReactant++) {
+									arrIndexes[jReactant] = arrIndexes[0];
+								}
+							}
+
+							// We will get n.m for matrix and n.n for non-matrix reactions
+							reactionId = convertReactantCombination(arrIndexes);
+						}
+						while (m_setRandomizedReactions.contains(reactionId));
+
+						m_setRandomizedReactions.add(reactionId);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Determines, if the reaction of the reactants with the passed in row indexes
+	 * shall be included in the calculation. This method is a read only method
+	 * and therefore not synchronized for better performance.
+	 * 
+	 * @param indexes Row indexes of reactants.
+	 * 
+	 * @return True, if reaction should be included. False otherwise.
+	 */
+	protected boolean isReactionIncluded(final long... indexes) {
+		if (m_bIncludeAllReactions) {
+			return true;
+		}
+
+		if (m_bInclusionMode) {
+			return m_setRandomizedReactions.contains(convertReactantCombination(indexes));
+		}
+
+		return !m_setRandomizedReactions.contains(convertReactantCombination(indexes));
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -202,6 +359,13 @@ extends AbstractRDKitNodeModel {
 			ChemUtils.createReactionFromSmarts(
 					m_modelOptionalReactionSmartsPattern.getStringValue(),
 					getNumberOfReactants()).delete();
+		}
+
+		// Warn, if a two high number is set for randomization that may cause out of memory and freezing in KNIME
+		if (m_modelRandomizeReactants.getBooleanValue() && isExpandReactantsMatrix()) {
+			if (m_modelMaxNumberOfRandomizeReactions.getIntValue() > 1000000) {
+				getWarningConsolidator().saveWarning("You picked a very high number of randomized reactions, which can cause memory issues and may freeze KNIME.");
+			}
 		}
 
 		// Generate output specs
@@ -279,11 +443,17 @@ extends AbstractRDKitNodeModel {
 		return map;
 	}
 
-	/**
-	 * Resets the product counter. This should be called when execution of this node is started.
-	 */
-	protected void resetProductCounter() {
-		m_aiProductCounter = new AtomicInteger();
+	@Override
+	protected void preProcessing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
+					throws Exception {
+		exec.setMessage("Picking random reactions to be calculated");
+		initializeRandomization(inData);
+	}
+
+	@Override
+	protected double getPreProcessingPercentage() {
+		return 0.1d;
 	}
 
 	/**
@@ -387,6 +557,53 @@ extends AbstractRDKitNodeModel {
 		}
 
 		return listNewRows;
+	}
+
+	@Override
+	protected void cleanupIntermediateResults() {
+		super.cleanupIntermediateResults();
+		m_aiProductCounter = new AtomicInteger();
+		if (m_setRandomizedReactions != null) {
+			m_setRandomizedReactions.clear();
+		}
+	}
+
+	//
+	// Private Methods
+	//
+
+	/**
+	 * Returns a unified representation of the passed in reactant row indexes.
+	 * The result is based on the result of {@link #isExpandReactantsMatrix()}.
+	 * If this is true, then it returns a string representation, otherwise
+	 * a Long object, which is better for performance.
+	 * 
+	 * @param indexes Array of reactant indexes.
+	 * 
+	 * @return Representation of the indexes.
+	 */
+	private Object convertReactantCombination(final long... indexes) {
+		Object ret;
+
+		if (indexes.length == 0) {
+			ret = EMPTY;
+		}
+
+		// Only create strings for matrix expansion reactions
+		if (isExpandReactantsMatrix()) {
+			final StringBuilder sb = new StringBuilder().append(indexes[0]);
+
+			for (int i = 1; i < indexes.length; i++) {
+				sb.append('.').append(indexes[i]);
+			}
+
+			ret = sb.toString();
+		}
+		else {
+			ret = new Long(indexes[0]);
+		}
+
+		return ret;
 	}
 
 	//

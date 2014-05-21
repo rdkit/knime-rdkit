@@ -51,13 +51,18 @@ package org.rdkit.knime.nodes.substructurecounter;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.chem.types.SmartsValue;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
+import org.rdkit.knime.util.DialogComponentSeparator;
+import org.rdkit.knime.util.LayoutUtils;
 
 /**
  * <code>NodeDialog</code> for the "RDKitSubstructureCounter" Node.
@@ -82,22 +87,48 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	@SuppressWarnings("unchecked")
 	SubstructureCounterNodeDialog() {
+		createNewGroup("Input");
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,
 				RDKitMolValue.class));
+		final Class<? extends DataValue>[] arrClassesQueryType = new Class[] { SmartsValue.class, RDKitMolValue.class };
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createQueryInputModel(), "Input query column: ", 1,
-				RDKitMolValue.class));
+				arrClassesQueryType));
+
+		createNewGroup("Search");
 		super.addDialogComponent(
 				new DialogComponentBoolean(createUniqueMatchesOnlyModel(),
 						"Count unique matches only"));
+
+		createNewGroup("Output");
+		// Add query name option settings
 		final SettingsModelBoolean modelUseQueryNameColumnOption = createUseQueryNameColumnModel();
 		super.addDialogComponent(new DialogComponentBoolean(
-				modelUseQueryNameColumnOption, "Instead of the query molecule use names as result header titles"));
+				modelUseQueryNameColumnOption, "Instead of query molecules use names as result header titles (and tags)"));
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createQueryNameColumnModel(modelUseQueryNameColumnOption), "Column with names for header titles: ", 1,
 				StringValue.class));
+		addDialogComponent(new DialogComponentSeparator());
 
+		// Add total hits option settings
+		final SettingsModelBoolean modelCountTotalHitsOption = createCountTotalHitsOptionModel();
+		super.addDialogComponent(new DialogComponentBoolean(
+				modelCountTotalHitsOption, "Add total hits count column"));
+		super.addDialogComponent(new DialogComponentString(
+				createCountTotalHitsColumnModel(modelCountTotalHitsOption), "New column name for total hits count: ", false,
+				25));
+		addDialogComponent(new DialogComponentSeparator());
+
+		// Add query tags option settings
+		final SettingsModelBoolean modelTrackQueryTagsOption = createTrackQueryTagsOptionModel();
+		super.addDialogComponent(new DialogComponentBoolean(
+				modelTrackQueryTagsOption, "Add column with tags for matching queries"));
+		super.addDialogComponent(new DialogComponentString(
+				createTrackQueryTagsColumnModel(modelTrackQueryTagsOption), "New column name for tags: ", false,
+				25));
+
+		LayoutUtils.correctKnimeDialogBorders(getPanel());
 	}
 
 	//
@@ -164,6 +195,77 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 
 		// Enable this model based on the dependent model's state
 		modelWithDependency.setEnabled(modelUseQueryNameColumnOption.getBooleanValue());
+
+		return modelWithDependency;
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to count the total hits of a substructure.
+	 * 
+	 * @return Settings model for counting total hits.
+	 */
+	static final SettingsModelBoolean createCountTotalHitsOptionModel() {
+		return new SettingsModelBoolean("countTotalHits", false);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the (optional)
+	 * total hit count name column.
+	 * 
+	 * @return Settings model for total hit count column name.
+	 */
+	static final SettingsModelString createCountTotalHitsColumnModel(final SettingsModelBoolean modelCountTotalHitsOption) {
+		final SettingsModelString modelWithDependency = new SettingsModelString("countTotalHitsColumn", null);
+
+		// React on any changes
+		modelCountTotalHitsOption.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				// Enable or disable the model
+				modelWithDependency.setEnabled(modelCountTotalHitsOption.getBooleanValue());
+			}
+		});
+
+		// Enable this model based on the dependent model's state
+		modelWithDependency.setEnabled(modelCountTotalHitsOption.getBooleanValue());
+
+		return modelWithDependency;
+	}
+
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to track query tags for matching substructures.
+	 * 
+	 * @return Settings model for using column names from input table option.
+	 */
+	static final SettingsModelBoolean createTrackQueryTagsOptionModel() {
+		return new SettingsModelBoolean("trackQueryTags", false);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the (optional)
+	 * total hit count name column.
+	 * 
+	 * @return Settings model for optional query name column selection.
+	 */
+	static final SettingsModelString createTrackQueryTagsColumnModel(final SettingsModelBoolean modelTrackQueryTagsOption) {
+		final SettingsModelString modelWithDependency = new SettingsModelString("trackQueryTagsColumn", null);
+
+		// React on any changes
+		modelTrackQueryTagsOption.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				// Enable or disable the model
+				modelWithDependency.setEnabled(modelTrackQueryTagsOption.getBooleanValue());
+			}
+		});
+
+		// Enable this model based on the dependent model's state
+		modelWithDependency.setEnabled(modelTrackQueryTagsOption.getBooleanValue());
 
 		return modelWithDependency;
 	}

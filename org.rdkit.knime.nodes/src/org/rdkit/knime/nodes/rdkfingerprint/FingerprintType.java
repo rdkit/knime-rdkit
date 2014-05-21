@@ -610,7 +610,6 @@ public enum FingerprintType {
 
 		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-			System.out.println(Thread.currentThread().getName());
 			return RDKFuncs.PatternFingerprintMol(mol, settings.getNumBits());
 		}
 

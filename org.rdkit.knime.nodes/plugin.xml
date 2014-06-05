@@ -39,6 +39,7 @@
 
       <node category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" id="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>
       <node after="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory" id="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.chemicaltransformation.RDKitChemicalTransformationNodeFactory" id="org.rdkit.knime.nodes.chemicaltransformation.RDKitChemicalTransformationNodeFactory"/>
 
       <node category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" id="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory"/>
 	  <node after="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" id="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>

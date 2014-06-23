@@ -1,0 +1,1 @@
+instructions.install = ln(targetDir:${artifact.location}/os/macosx/x86_64,linkTarget:libGraphMolWrap.jnilib,linkName:libGraphMolWrap.dylib);

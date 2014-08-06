@@ -13,9 +13,6 @@
  */
 package org.rdkit.knime.nodes;
 
-import java.util.Locale;
-import java.util.Map;
-
 import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
@@ -35,10 +32,4 @@ import org.knime.testing.core.AbstractTestcaseCollector;
  */
 public class RdkitTestCases extends AbstractTestcaseCollector {
 	// Empty by purpose
-    public RdkitTestCases() {
-        System.out.println("Locale: " + Locale.getDefault());
-        for (Map.Entry<String, String> e : System.getenv().entrySet()) {
-            System.out.println(e.getKey() + "=" + e.getValue());
-        }
-    }
 }

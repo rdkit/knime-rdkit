@@ -18,4 +18,8 @@
          </renderer>
       </dataValue>
    </extension>
+   <extension
+         point="org.knime.workbench.ui.startupMessages">
+        <startupMessageProvider class="org.rdkit.knime.RDKitStartupCheck" />
+   </extension>
 </plugin>

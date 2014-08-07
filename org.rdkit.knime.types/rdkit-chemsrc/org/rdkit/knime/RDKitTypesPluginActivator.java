@@ -62,6 +62,7 @@ import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.startup.StartupMessage;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
@@ -132,6 +133,21 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	@Override
 	public void start(final BundleContext context) throws Exception {
 		super.start(context);
+
+		RDKitStartupCheck checker = new RDKitStartupCheck();
+		for (StartupMessage msg : checker.getMessages()) {
+		    switch (msg.getType()) {
+		        case StartupMessage.ERROR:
+		            LOGGER.error(msg.getMessage());
+		            break;
+		        case StartupMessage.WARNING:
+                    LOGGER.warn(msg.getMessage());
+                    break;
+		        case StartupMessage.INFO:
+                    LOGGER.info(msg.getMessage());
+                    break;
+		    }
+		}
 
 		try {
 			g_error = null;

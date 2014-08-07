@@ -20,6 +20,6 @@
    </extension>
    <extension
          point="org.knime.workbench.ui.startupMessages">
-        <startupMessageProvider class="org.rdkit.knime.RDKitStartupCheck" />
+        <startupMessageProvider class="org.rdkit.knime.RDKitStartupMessageProvider" />
    </extension>
 </plugin>

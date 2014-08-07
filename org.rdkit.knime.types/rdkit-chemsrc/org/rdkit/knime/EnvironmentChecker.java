@@ -51,65 +51,51 @@
 package org.rdkit.knime;
 
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
-import org.eclipse.core.runtime.Platform;
-import org.knime.workbench.ui.startup.StartupMessage;
-import org.knime.workbench.ui.startup.StartupMessageProvider;
-import org.osgi.framework.FrameworkUtil;
-
 /**
- * Startup checker that checks whether environment variables are set correctly for the native library.
+ * Checks if environment variable are set correctly for RDKit.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class RDKitStartupCheck implements StartupMessageProvider {
-    private final List<StartupMessage> m_messages = new ArrayList<StartupMessage>();
+class EnvironmentChecker {
 
     /**
-     * Default constructor.
+     * Checks whether the environment variables are set correctly.
+     *
+     * @return <code>null</code> if everything is OK, an error message suitable for the user otherwise
      */
-    public RDKitStartupCheck() {
-        if (Platform.OS_LINUX.equals(Platform.getOS())) {
-            checkEnvironment();
-        }
-    }
-
-    private void checkEnvironment() {
+    public static String checkEnvironment() {
         String lcNumeric = System.getenv("LC_NUMERIC");
         String lcAll = System.getenv("LC_ALL");
         String lang = System.getenv("LANG");
 
         if (lcNumeric != null) {
             if (getDecimalSeparator(lcNumeric) == '.') {
-                return; // OK
+                return null; // OK
             } else {
-                m_messages.add(new StartupMessage("LC_NUMERIC is set to an incompatible value (" + lcNumeric
+                return "LC_NUMERIC is set to an incompatible value (" + lcNumeric
                         + ") which causes RDKit to compute wrong results in some cases. Please "
-                        + " change LC_NUMERIC to an 'en' or 'C' locale.", StartupMessage.ERROR, FrameworkUtil
-                        .getBundle(getClass())));
+                        + " change LC_NUMERIC to an 'en' or 'C' locale.";
             }
         } else if (lcAll != null) {
             if (getDecimalSeparator(lcAll) == '.') {
-                return; // OK
+                return null ; // OK
             } else {
-                m_messages.add(new StartupMessage("LC_ALL is set to an incompatible value (" + lcAll
+                return "LC_ALL is set to an incompatible value (" + lcAll
                         + ") which causes RDKit to compute wrong results in some cases. Please "
-                        + " change LC_ALL to an 'en' or 'C' locale.", StartupMessage.ERROR, FrameworkUtil
-                        .getBundle(getClass())));
+                        + " change LC_ALL to an 'en' or 'C' locale.";
             }
         } else if (lang != null) {
             if (getDecimalSeparator(lang) == '.') {
-                return; // OK
+                return null; // OK
             } else {
-                m_messages.add(new StartupMessage("LANG is set to an incompatible value (" + lang
+                return "LANG is set to an incompatible value (" + lang
                         + ") which causes RDKit to compute wrong results in some cases. Please "
-                        + " change LANG to an 'en' or 'C' locale.", StartupMessage.ERROR, FrameworkUtil
-                        .getBundle(getClass())));
+                        + " change LANG to an 'en' or 'C' locale.";
             }
         }
+        return null;
     }
 
     private static char getDecimalSeparator(String localeString) {
@@ -126,13 +112,5 @@ public class RDKitStartupCheck implements StartupMessageProvider {
 
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
         return symbols.getDecimalSeparator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<StartupMessage> getMessages() {
-        return m_messages;
     }
 }

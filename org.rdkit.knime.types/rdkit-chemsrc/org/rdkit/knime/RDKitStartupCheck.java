@@ -121,7 +121,7 @@ public class RDKitStartupCheck implements StartupMessageProvider {
             String variant = (index2 > 0) ? localeString.substring(index + 1, index2) : localeString.substring(index + 1);
             locale = new Locale(language, variant);
         } else {
-            locale = new Locale(localeString.substring(0, 2));
+            locale = new Locale(localeString);
         }
 
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);

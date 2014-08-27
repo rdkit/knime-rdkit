@@ -92,7 +92,7 @@ public class RDKitMolecule2InChINodeModel extends AbstractRDKitCalculatorNodeMod
 	protected static final int INPUT_COLUMN_MOL = 0;
 
 	/** Lock to prevent access of multiple threads into the InChI calculation as it would crash the Java VM. */
-	private static final Object LOCK = new Object();
+	public static final Object LOCK = new Object();
 
 	/** Postfix for the column name for extra InChI generation information: return value. */
 	public static final String POSTFIX_RETURN_VALUE = " - Return Value";

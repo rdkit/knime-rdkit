@@ -69,6 +69,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeModel;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
@@ -94,7 +95,7 @@ public class RDKitInChI2MoleculeNodeModel extends AbstractRDKitCalculatorNodeMod
 	protected static final int INPUT_COLUMN_MOL = 0;
 
 	/** Lock to prevent access of multiple threads into the InChI conversion as it would crash the Java VM. */
-	private static final Object LOCK = new Object();
+	private static final Object LOCK = RDKitMolecule2InChINodeModel.LOCK;
 
 	/** Postfix for the column name for extra InChI generation information: return value. */
 	public static final String POSTFIX_RETURN_VALUE = " - Return Value";

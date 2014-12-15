@@ -80,7 +80,6 @@ public class RDKitInChI2MoleculeNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitInChI2MoleculeNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "InChI code column: ", 0,

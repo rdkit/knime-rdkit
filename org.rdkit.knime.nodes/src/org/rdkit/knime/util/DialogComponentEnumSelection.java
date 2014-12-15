@@ -85,7 +85,7 @@ public final class DialogComponentEnumSelection<T extends Enum<T>> extends Dialo
 	//
 
 	/** The combobox for value selection. */
-	private final JComboBox m_combobox;
+	private final JComboBox<T> m_combobox;
 
 	/** The label shown at the left side of the combobox. */
 	private final JLabel m_label;
@@ -108,6 +108,7 @@ public final class DialogComponentEnumSelection<T extends Enum<T>> extends Dialo
 	 * @param list List of items for the combobox. If no list or an empty list is provided all
 	 * 		possible values will be taken from the Enumeration used in the settings model.
 	 */
+	@SafeVarargs
 	public DialogComponentEnumSelection(
 			final SettingsModelEnumeration<T> enumModel, final String label,
 			final T... list) {
@@ -162,7 +163,7 @@ public final class DialogComponentEnumSelection<T extends Enum<T>> extends Dialo
 
 		m_label = new JLabel(label);
 		getComponentPanel().add(m_label);
-		m_combobox = new JComboBox();
+		m_combobox = new JComboBox<T>();
 		m_combobox.setRenderer(new StringIconListCellRenderer());
 
 		for (final T enumValue : listEnums) {

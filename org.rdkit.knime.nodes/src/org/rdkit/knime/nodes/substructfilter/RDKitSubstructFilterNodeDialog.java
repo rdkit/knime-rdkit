@@ -81,7 +81,6 @@ public class RDKitSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
 	/**
 	 * Create a new dialog pane with settings components.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitSubstructFilterNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,

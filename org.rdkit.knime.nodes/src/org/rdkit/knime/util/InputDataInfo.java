@@ -229,6 +229,7 @@ public class InputDataInfo {
 	 * @throws InvalidSettingsException Thrown, if something is not set or not compatible
 	 * 		with the data types that are expected.
 	 */
+	@SafeVarargs
 	public InputDataInfo(final DataTableSpec inSpec, final SettingsModelString modelColumnName,
 			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
 			final Class<? extends DataValue>... arrDataValueClasses) throws InvalidSettingsException {
@@ -265,6 +266,7 @@ public class InputDataInfo {
 	 * @throws InvalidSettingsException Thrown, if something is not set or not compatible
 	 * 		with the data types that are expected.
 	 */
+	@SafeVarargs
 	public InputDataInfo(final DataTableSpec inSpec, final String strTableDescription,
 			final SettingsModelString modelColumnName, final String strColumnDescription,
 			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,

@@ -4,11 +4,14 @@
     <name>RDKit Aromatizer</name>
     
     <shortDescription>
-        Aromatizes an RDKit Molecule.
+        Aromatizes an RDKit Molecule. 
     </shortDescription>
     
     <fullDescription>
-        <intro>Aromatizes an RDKit Molecule.
+        <intro>
+        	Aromatizes an RDKit Molecule. Note, although the output molecules are aromatized 
+        	and will be treated as such, the RDKit renderer in the table visualization will still show 
+        	them in kekulized form. However, other molecule renderers may visualize aromaticity differently.
         </intro>
         <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
         <option name="New column name">The name of the new column, which will contain the calculation results.</option>

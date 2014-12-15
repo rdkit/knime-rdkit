@@ -8,8 +8,7 @@
 		<initializer class="org.rdkit.knime.types.preferences.RDKitTypesPreferenceInitializer"/>
    	</extension>
    
-   <extension
-         point="org.knime.core.DataValueRenderer">
+   <extension point="org.knime.core.DataValueRenderer">
       <dataValue
             valueClass="org.rdkit.knime.types.RDKitMolValue">
          <renderer
@@ -18,8 +17,51 @@
          </renderer>
       </dataValue>
    </extension>
-   <extension
-         point="org.knime.workbench.ui.startupMessages">
+   
+   <extension point="org.knime.workbench.ui.startupMessages">
         <startupMessageProvider class="org.rdkit.knime.RDKitStartupMessageProvider" />
+   </extension>
+   
+   <extension point="org.knime.python.typeextension.knimetopython">
+		<type
+            id="org.rdkit.knime.types.rdkitmol.knimetopython"
+            java-serializer-factory="org.rdkit.knime.types.RDKitMolSerializer$Factory"
+            python-deserializer="python/RDKitMolDeserializer.py">
+      	</type>   
+   </extension>
+      
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkitmol.pythontoknime"
+            python-type-identifier="rdkit.Chem.rdchem.Mol"
+            python-serializer="python/RDKitMolSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitMolDeserializer$Factory">
+      	</type>   
+   </extension>
+   
+   <extension point="org.knime.python.typeextension.knimetopython">
+		<type
+            id="org.rdkit.knime.types.rdkitreaction.knimetopython"
+            java-serializer-factory="org.rdkit.knime.types.RDKitReactionSerializer$Factory"
+            python-deserializer="python/RDKitReactionDeserializer.py">
+      	</type>   
+   </extension>
+   
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkitreaction.pythontoknime"
+            python-type-identifier="rdkit.Chem.rdChemReactions.ChemicalReaction"
+            python-serializer="python/RDKitReactionSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitReactionDeserializer$Factory">
+      	</type>   
+   </extension>
+    
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkitfingerprint.pythontoknime"
+            python-type-identifier="rdkit.DataStructs.cDataStructs.ExplicitBitVect"
+            python-serializer="python/RDKitFingerprintSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitFingerprintDeserializer$Factory">
+      	</type>   
    </extension>
 </plugin>

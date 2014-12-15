@@ -91,7 +91,6 @@ public class RDKitDiversityPickerNodeDialog extends DefaultNodeSettingsPane {
 	/**
 	 * Create a new dialog pane with some default components.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitDiversityPickerNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "Molecule or fingerprint column (table 1): ", 0,

@@ -287,7 +287,6 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

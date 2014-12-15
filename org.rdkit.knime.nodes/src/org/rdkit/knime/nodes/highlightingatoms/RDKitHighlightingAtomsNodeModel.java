@@ -216,7 +216,6 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 	 * setting model. {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort,
 			final DataTableSpec inSpec) throws InvalidSettingsException {
 

@@ -229,7 +229,6 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

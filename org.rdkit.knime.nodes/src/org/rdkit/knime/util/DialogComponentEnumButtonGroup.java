@@ -104,6 +104,7 @@ public class DialogComponentEnumButtonGroup<T extends Enum<T>> extends DialogCom
 	 * 		be taken from the toString() result of the values. If no element
 	 * 		is passed, all enumeration values will be shown.
 	 */
+	@SafeVarargs
 	public DialogComponentEnumButtonGroup(final SettingsModelEnumeration<T> enumModel,
 			final boolean vertical, final String label,
 			final T... elements) {
@@ -127,6 +128,7 @@ public class DialogComponentEnumButtonGroup<T extends Enum<T>> extends DialogCom
 	 * 		be taken from the toString() result of the values. If no element
 	 * 		is passed, all enumeration values will be shown.
 	 */
+	@SafeVarargs
 	public DialogComponentEnumButtonGroup(final SettingsModelEnumeration<T> enumModel,
 			final boolean vertical, final String label, final T defaultElement,
 			final T... elements) {

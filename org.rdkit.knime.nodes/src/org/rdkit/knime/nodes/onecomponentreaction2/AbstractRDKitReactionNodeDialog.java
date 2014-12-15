@@ -100,7 +100,6 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	public AbstractRDKitReactionNodeDialog(final int iReactionTableIndex) {
 		m_iReactionTableIndex = iReactionTableIndex;
 

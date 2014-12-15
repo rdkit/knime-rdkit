@@ -61,6 +61,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -116,7 +117,7 @@ public class MultiSelectionListPanel extends JPanel {
 	private SortDirection m_sorting;
 
 	/** The list GUI element. */
-	private final JList m_list;
+	private final JList<String> m_list;
 
 	/** The main panel that includes GUI elements. */
 	private final JPanel m_panelList;
@@ -144,7 +145,7 @@ public class MultiSelectionListPanel extends JPanel {
 	 * @param bSmallGui Set to true to show only a text field with selections
 	 * 		that needs to be clicked to open a popup list.
 	 */
-	public MultiSelectionListPanel(final Object[] arrItems,
+	public MultiSelectionListPanel(final String[] arrItems,
 			final int iVisibleRowCount, final boolean bSmallGui) {
 		this(createDefaultListModel(arrItems), iVisibleRowCount, bSmallGui);
 	}
@@ -162,10 +163,10 @@ public class MultiSelectionListPanel extends JPanel {
 	 * @param bSmallGui Set to true to show only a text field with selections
 	 * 		that needs to be clicked to open a popup list.
 	 */
-	public MultiSelectionListPanel(final DefaultListModel model,
+	public MultiSelectionListPanel(final DefaultListModel<String> model,
 			final int iVisibleRowCount, final boolean bSmallGui) {
 		m_dlgPopup = null;
-		m_list = new JList(model);
+		m_list = new JList<String>(model);
 		m_list.setVisibleRowCount(iVisibleRowCount);
 		m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		final JScrollPane scrollPane = new JScrollPane(m_list,
@@ -181,7 +182,7 @@ public class MultiSelectionListPanel extends JPanel {
 		btnSelectAll.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				final ListModel model = getModel();
+				final ListModel<String> model = getModel();
 				if (model != null && model.getSize() > 0) {
 					m_list.setSelectionInterval(0, model.getSize() - 1);
 				}
@@ -191,7 +192,7 @@ public class MultiSelectionListPanel extends JPanel {
 		btnSelectNone.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				final ListModel model = getModel();
+				final ListModel<String> model = getModel();
 				if (model != null && model.getSize() > 0) {
 					m_list.removeSelectionInterval(0, model.getSize() - 1);
 				}
@@ -275,7 +276,7 @@ public class MultiSelectionListPanel extends JPanel {
 	 * @param sorting Sorting direction to be applied.
 	 */
 	public void setSorting(final SortDirection sorting) {
-		final Object[] arrValues = getValues();
+		final String[] arrValues = getValues();
 		if (sorting != SortDirection.None &&
 				arrValues != null && arrValues.length > 0) {
 			try {
@@ -283,7 +284,7 @@ public class MultiSelectionListPanel extends JPanel {
 				if (sorting == SortDirection.Descending) {
 					final int iLen = arrValues.length;
 					final int iLenHalf = iLen / 2;
-					Object tmp;
+					String tmp;
 					for (int i = 0; i < iLenHalf; i++) {
 						tmp = arrValues[i];
 						arrValues[i] = arrValues[iLen - 1 - i];
@@ -307,9 +308,9 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @return List model.
 	 */
-	public DefaultListModel getModel() {
+	public DefaultListModel<String> getModel() {
 		synchronized (m_list) {
-			return (DefaultListModel)m_list.getModel();
+			return (DefaultListModel<String>)m_list.getModel();
 		}
 	}
 
@@ -319,18 +320,18 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @param arrItems Items to be shown in the list. Can be null.
 	 */
-	public void setValues(final Object[] arrItems) {
+	public void setValues(final String[] arrItems) {
 		synchronized (m_list) {
-			final Object[] arrSelections = m_list.getSelectedValues();
+			final List<String> listSelections = m_list.getSelectedValuesList();
 			final int iFirstVisibleIndex = m_list.getFirstVisibleIndex();
-			final DefaultListModel model = getModel();
+			final DefaultListModel<String> model = getModel();
 			model.removeAllElements();
 			if (arrItems != null) {
-				for (final Object obj : arrItems) {
+				for (final String obj : arrItems) {
 					model.addElement(obj);
 				}
-				if (arrSelections != null) {
-					selectValues(arrSelections);
+				if (listSelections != null) {
+					selectValues(listSelections.toArray(new String[listSelections.size()]));
 				}
 				m_list.ensureIndexIsVisible(iFirstVisibleIndex);
 			}
@@ -350,11 +351,11 @@ public class MultiSelectionListPanel extends JPanel {
 	 */
 	public void setMultiLineTextValues(final String strMultiLineText,
 			final String strSeparators) {
-		Object[] arrItems = null;
+		String[] arrItems = null;
 		if (strMultiLineText != null) {
 			final StringTokenizer st = new StringTokenizer(strMultiLineText,
 					strSeparators == null ? "\n," : strSeparators, false);
-			arrItems = new Object[st.countTokens()];
+			arrItems = new String[st.countTokens()];
 			for (int i = 0; st.hasMoreTokens(); i++) {
 				arrItems[i] = st.nextToken();
 			}
@@ -369,7 +370,7 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 		items will be not added to the list. They are just ignored.
 	 * 		Can be null to unselect everything.
 	 */
-	public void selectValues(final Object[] arrSelections) {
+	public void selectValues(final String[] arrSelections) {
 		final HashSet<Object> setIncludes = new HashSet<Object>();
 		if (arrSelections != null) {
 			for (final Object s : arrSelections) {
@@ -381,7 +382,7 @@ public class MultiSelectionListPanel extends JPanel {
 
 		// build index list of all selected values
 		synchronized (m_list) {
-			final DefaultListModel model = getModel();
+			final DefaultListModel<String> model = getModel();
 			final int iLen = model.getSize();
 			int iCount = 0;
 			final int[] arrSelectedIndex = new int[iLen];
@@ -401,11 +402,11 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @return List values.
 	 */
-	public Object[] getValues() {
+	public String[] getValues() {
 		synchronized (m_list) {
-			final DefaultListModel model = getModel();
+			final DefaultListModel<String> model = getModel();
 			final int iLen = model.getSize();
-			final Object[] arrItems = new Object[iLen];
+			final String[] arrItems = new String[iLen];
 			for (int i = 0; i < iLen; i++) {
 				arrItems[i] = model.get(i);
 			}
@@ -432,10 +433,10 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @return Selected values.
 	 */
-	public Object[] getSelections() {
+	public String[] getSelections() {
 		synchronized (m_list) {
-			final Object[] arrSelections = m_list.getSelectedValues();
-			return arrSelections;
+			final List<String> listSelections = m_list.getSelectedValuesList();
+			return listSelections.toArray(new String[listSelections.size()]);
 		}
 	}
 
@@ -463,7 +464,7 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @return Concatenated string.
 	 */
-	protected String createString(final Object[] arrItems, final String strSeparator) {
+	protected String createString(final String[] arrItems, final String strSeparator) {
 		final StringBuilder sb = new StringBuilder();
 		if (arrItems != null && arrItems.length > 0) {
 			boolean bNotFirst = false;
@@ -474,7 +475,7 @@ public class MultiSelectionListPanel extends JPanel {
 				else {
 					bNotFirst = true;
 				}
-				sb.append(arrItems[i]);
+				sb.append(arrItems[i].toString());
 			}
 		}
 		return sb.toString();
@@ -491,11 +492,11 @@ public class MultiSelectionListPanel extends JPanel {
 	 * 
 	 * @return Default list model containing the specified items. Never null.
 	 */
-	public static DefaultListModel createDefaultListModel(final Object[] arrItems) {
-		final DefaultListModel model = new DefaultListModel();
+	public static DefaultListModel<String> createDefaultListModel(final String[] arrItems) {
+		final DefaultListModel<String> model = new DefaultListModel<String>();
 
 		if (arrItems != null) {
-			for (final Object o : arrItems) {
+			for (final String o : arrItems) {
 				model.addElement(o);
 			}
 		}

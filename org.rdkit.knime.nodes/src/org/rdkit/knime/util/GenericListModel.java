@@ -61,7 +61,7 @@ import javax.swing.AbstractListModel;
  *
  * @param <T> The type of the elements to be stored in this list model.
  */
-public class GenericListModel<T> extends AbstractListModel {
+public class GenericListModel<T> extends AbstractListModel<T> {
 
 	//
 	// Constants
@@ -129,7 +129,7 @@ public class GenericListModel<T> extends AbstractListModel {
 	 * @see #get(int)
 	 */
 	@Override
-	public Object getElementAt(final int index) {
+	public T getElementAt(final int index) {
 		return m_vDelegate.elementAt(index);
 	}
 

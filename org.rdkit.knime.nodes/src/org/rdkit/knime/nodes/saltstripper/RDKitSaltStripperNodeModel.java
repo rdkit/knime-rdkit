@@ -251,7 +251,6 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

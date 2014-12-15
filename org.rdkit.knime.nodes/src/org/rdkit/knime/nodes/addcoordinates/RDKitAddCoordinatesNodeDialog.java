@@ -82,7 +82,6 @@ public class RDKitAddCoordinatesNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitAddCoordinatesNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,

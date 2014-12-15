@@ -85,7 +85,6 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	DescriptorCalculationNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,
@@ -118,7 +117,7 @@ public class DescriptorCalculationNodeDialog extends DefaultNodeSettingsPane {
 			 */
 			@Override
 			public Component getListCellRendererComponent(
-					final JList list, final Object value, final int index,
+					final JList<?> list, final Object value, final int index,
 					final boolean isSelected, final boolean cellHasFocus) {
 				// The super method will reset the icon if we call this method
 				// last. So we let super do its job first and then we take care

@@ -69,241 +69,257 @@ import org.knime.core.data.StringValue;
  * @author Greg Landrum
  */
 public class RDKitMolCell2 extends DataCell implements StringValue,
-        RDKitMolValue, SmilesValue, SdfValue {
+RDKitMolValue, SmilesValue, SdfValue {
 
-    /** Serial number. */
+	/** Serial number. */
 	private static final long serialVersionUID = -5474087790061027859L;
 
 	private static final String SDF_POSTFIX = "\n$$$$\n";
-	
+
 	/**
-     * Convenience access member for
-     * <code>DataType.getType(RDKitMolCell2.class)</code>.
-     *
-     * @see DataType#getType(Class)
-     */
-    static final DataType TYPE = DataType.getType(RDKitMolCell2.class);
+	 * Convenience access member for
+	 * <code>DataType.getType(RDKitMolCell2.class)</code>.
+	 *
+	 * @see DataType#getType(Class)
+	 */
+	static final DataType TYPE = DataType.getType(RDKitMolCell2.class);
 
-    /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return SmilesValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return RDKitMolValue.class;
-    }
+	/**
+	 * Returns the preferred value class of this cell implementation. This
+	 * method is called per reflection to determine which is the preferred
+	 * renderer, comparator, etc.
+	 *
+	 * @return SmilesValue.class
+	 */
+	public static final Class<? extends DataValue> getPreferredValueClass() {
+		return RDKitMolValue.class;
+	}
 
-    private static final RDKitSerializer SERIALIZER =
-            new RDKitSerializer();
+	private static final RDKitSerializer SERIALIZER =
+			new RDKitSerializer();
 
-    /**
-     * Returns the factory to read/write DataCells of this class from/to a
-     * DataInput/DataOutput. This method is called via reflection.
-     *
-     * @return a serializer for reading/writing cells of this kind
-     * @see DataCell
-     */
-    public static final RDKitSerializer getCellSerializer() {
-        return SERIALIZER;
-    }
+	/**
+	 * Returns the factory to read/write DataCells of this class from/to a
+	 * DataInput/DataOutput. This method is called via reflection.
+	 *
+	 * @return a serializer for reading/writing cells of this kind
+	 * @see DataCell
+	 */
+	public static final RDKitSerializer getCellSerializer() {
+		return SERIALIZER;
+	}
 
-    private final String m_smilesString;
-    private final boolean m_smilesIsCanonical;
-    private final byte[] m_byteContent;
+	private final String m_smilesString;
+	private final boolean m_smilesIsCanonical;
+	private final byte[] m_byteContent;
 
-    /** Package scope constructor that wraps the argument molecule.
-     * @param mol The molecule to wrap.
-     * @param smiles smiles for the molecule.
-     */
-    RDKitMolCell2(final ROMol mol, final String smiles) {
-        if(smiles == null || smiles.length() == 0){
-        	m_smilesString = RDKFuncs.MolToSmiles(mol, true);
-        	m_smilesIsCanonical=true;
-        } else {
-        	m_smilesString = smiles;
-        	m_smilesIsCanonical=false;
-        }
-        m_byteContent = toByteArray(mol);
-    }
+	/** Package scope constructor that wraps the argument molecule.
+	 * @param mol The molecule to wrap.
+	 * @param smiles smiles for the molecule.
+	 */
+	RDKitMolCell2(final ROMol mol, final String smiles) {
+		if(smiles == null || smiles.length() == 0){
+			m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+			m_smilesIsCanonical=true;
+		} else {
+			m_smilesString = smiles;
+			m_smilesIsCanonical=false;
+		}
+		m_byteContent = toByteArray(mol);
+	}
 
-    /** Deserialisation constructor.
-     * @param byteContent The byte content
-     * @param smiles smiles for the molecule.
-     */
-    private RDKitMolCell2(final byte[] byteContent, final String smiles,
-    		final boolean smilesIsCanonical) {
-        if (byteContent == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_byteContent = byteContent;
-        if(smiles == null || smiles.length() == 0){
-            ROMol mol = toROMol(byteContent);
-            try {
-                m_smilesString = RDKFuncs.MolToSmiles(mol, true);
-            } finally {
-                mol.delete();
-            }
-            m_smilesIsCanonical=true;
-        } else {
-            m_smilesString = smiles;
-            m_smilesIsCanonical=smilesIsCanonical;
-        }
-    }
+	/** Deserialisation constructor.
+	 * @param byteContent The byte content
+	 * @param smiles smiles for the molecule.
+	 */
+	private RDKitMolCell2(final byte[] byteContent, final String smiles,
+			final boolean smilesIsCanonical) {
+		if (byteContent == null) {
+			throw new NullPointerException("Argument must not be null.");
+		}
+		m_byteContent = byteContent;
+		if(smiles == null || smiles.length() == 0){
+			final ROMol mol = toROMol(byteContent);
+			try {
+				m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+			} finally {
+				mol.delete();
+			}
+			m_smilesIsCanonical=true;
+		} else {
+			m_smilesString = smiles;
+			m_smilesIsCanonical=smilesIsCanonical;
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getStringValue() {
-        return m_smilesString;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getStringValue() {
+		return m_smilesString;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSmilesValue() {
-        return m_smilesString;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSmilesValue() {
+		return m_smilesString;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public String getSdfValue() {
-    	String value;
-    	
-        ROMol mol = readMoleculeValue();
-        
-        try {
-            // Convert to SDF
-        	if(mol.getNumConformers() == 0){
-                mol.compute2DCoords();
-            }
-            
-            value = RDKFuncs.MolToMolBlock(mol);
-            
-            // KNIME SDF type requires string to be terminated
-            // by $$$$ -- see org.knime.chem.types.SdfValue for details
-            if (!value.endsWith(SDF_POSTFIX)) {
-            	value += SDF_POSTFIX;
-            }
-        }
-        catch (Exception exc) {
-        	// Converting the RDKit molecule into Sdf Value failed.
-        	// In that case we return an empty string value.
-        	// Logging something here may swam the log files - not desired.
-        	// Note: Implementing the SdfValue interface actually violates
-        	//       one of the KNIME Development Rules, saying that 
-        	//       a DataCell should only implement Value interfaces, if
-        	//       the representation in that format is "loss-free".
-        	//       E.g. DoubleCell does NOT implement IntValue, because it
-        	//       would loose information. The same happens here now.
-        	value = "";
-        }
-        finally {
-            mol.delete();
-        }
+	/** {@inheritDoc} */
+	@Override
+	public String getSdfValue() {
+		String value;
 
-        return value;
-    }
+		final ROMol mol = readMoleculeValue();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isSmilesCanonical() {
-        return m_smilesIsCanonical;
-    }
+		try {
+			// Convert to SDF
+			if(mol.getNumConformers() == 0){
+				mol.compute2DCoords();
+			}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ROMol readMoleculeValue() {
-        return toROMol(m_byteContent);
-    }
+			value = RDKFuncs.MolToMolBlock(mol);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return getStringValue();
-    }
+			// KNIME SDF type requires string to be terminated
+			// by $$$$ -- see org.knime.chem.types.SdfValue for details
+			if (!value.endsWith(SDF_POSTFIX)) {
+				value += SDF_POSTFIX;
+			}
+		}
+		catch (final Exception exc) {
+			// Converting the RDKit molecule into Sdf Value failed.
+			// In that case we return an empty string value.
+			// Logging something here may swam the log files - not desired.
+			// Note: Implementing the SdfValue interface actually violates
+			//       one of the KNIME Development Rules, saying that
+			//       a DataCell should only implement Value interfaces, if
+			//       the representation in that format is "loss-free".
+			//       E.g. DoubleCell does NOT implement IntValue, because it
+			//       would loose information. The same happens here now.
+			value = "";
+		}
+		finally {
+			mol.delete();
+		}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean equalsDataCell(final DataCell dc) {
-        return m_smilesString.equals(((RDKitMolCell2)dc).m_smilesString);
-    }
+		return value;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return m_smilesString.hashCode();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isSmilesCanonical() {
+		return m_smilesIsCanonical;
+	}
 
-    private static byte[] toByteArray(final ROMol mol) {
-        Int_Vect iv = mol.ToBinary();
-        byte[] bytes = new byte[(int)iv.size()];
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte)iv.get(i);
-        }
-        return bytes;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ROMol readMoleculeValue() {
+		return toROMol(m_byteContent);
+	}
 
-    private static ROMol toROMol(final byte[] bytes) {
-        Int_Vect iv = new Int_Vect(bytes.length);
-        for (int i = 0; i < bytes.length; i++) {
-            iv.set(i, bytes[i]);
-        }
-        return ROMol.MolFromBinary(iv);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString() {
+		return getStringValue();
+	}
 
-    /** Factory for (de-)serializing a RDKitMolCell. */
-    private static class RDKitSerializer implements
-            DataCellSerializer<RDKitMolCell2> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void serialize(final RDKitMolCell2 cell,
-                final DataCellDataOutput output) throws IOException {
-            output.writeInt(-1);
-            output.writeUTF(cell.getSmilesValue());
-            byte[] bytes = cell.m_byteContent;
-            output.writeInt(bytes.length);
-            output.write(bytes);
-            output.writeBoolean(cell.m_smilesIsCanonical);
-        }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean equalsDataCell(final DataCell dc) {
+		return m_smilesString.equals(((RDKitMolCell2)dc).m_smilesString);
+	}
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public RDKitMolCell2 deserialize(final DataCellDataInput input)
-                throws IOException {
-            int length = input.readInt();
-            String smiles = "";
-            if(length < 0) {
-            	smiles = input.readUTF();
-            	length = input.readInt();
-            }
-            byte[] bytes = new byte[length];
-            input.readFully(bytes);
-            boolean isCanonical;
-            try {
-            	isCanonical=input.readBoolean();
-            } catch (IOException e) {
-            	isCanonical=true;
-            }
-            return new RDKitMolCell2(bytes, smiles,isCanonical);
-        }
-    }
+	/**
+	 * Returns a copy of the binary representation of the RDKit Mol value of this cell.
+	 * 
+	 * @return Binary value.
+	 */
+	protected byte[] getBinaryValue() {
+		byte[] arrCopy = null;
+
+		if (m_byteContent != null) {
+			arrCopy = new byte[m_byteContent.length];
+			System.arraycopy(m_byteContent, 0, arrCopy, 0, m_byteContent.length);
+		}
+
+		return arrCopy;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int hashCode() {
+		return m_smilesString.hashCode();
+	}
+
+	protected static byte[] toByteArray(final ROMol mol) {
+		final Int_Vect iv = mol.ToBinary();
+		final byte[] bytes = new byte[(int)iv.size()];
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte)iv.get(i);
+		}
+		return bytes;
+	}
+
+	protected static ROMol toROMol(final byte[] bytes) {
+		final Int_Vect iv = new Int_Vect(bytes.length);
+		for (int i = 0; i < bytes.length; i++) {
+			iv.set(i, bytes[i]);
+		}
+		return ROMol.MolFromBinary(iv);
+	}
+
+	/** Factory for (de-)serializing a RDKitMolCell. */
+	private static class RDKitSerializer implements
+	DataCellSerializer<RDKitMolCell2> {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void serialize(final RDKitMolCell2 cell,
+				final DataCellDataOutput output) throws IOException {
+			output.writeInt(-1);
+			output.writeUTF(cell.getSmilesValue());
+			final byte[] bytes = cell.m_byteContent;
+			output.writeInt(bytes.length);
+			output.write(bytes);
+			output.writeBoolean(cell.m_smilesIsCanonical);
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public RDKitMolCell2 deserialize(final DataCellDataInput input)
+				throws IOException {
+			int length = input.readInt();
+			String smiles = "";
+			if(length < 0) {
+				smiles = input.readUTF();
+				length = input.readInt();
+			}
+			final byte[] bytes = new byte[length];
+			input.readFully(bytes);
+			boolean isCanonical;
+			try {
+				isCanonical=input.readBoolean();
+			} catch (final IOException e) {
+				isCanonical=true;
+			}
+			return new RDKitMolCell2(bytes, smiles,isCanonical);
+		}
+	}
 
 }

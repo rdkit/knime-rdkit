@@ -89,6 +89,7 @@ org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection {
 	 * list
 	 * @param classFilter which classes are available for selection
 	 */
+	@SafeVarargs
 	public DialogComponentColumnNameSelection(final SettingsModelString model,
 			final String label, final int specIndex, final boolean isRequired,
 			final boolean addNoneCol, final Class<? extends DataValue>... classFilter) {
@@ -129,6 +130,7 @@ org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection {
 	 *            case of no available compatible column, false otherwise.
 	 * @param classFilter which classes are available for selection
 	 */
+	@SafeVarargs
 	public DialogComponentColumnNameSelection(final SettingsModelString model,
 			final String label, final int specIndex, final boolean isRequired,
 			final Class<? extends DataValue>... classFilter) {
@@ -167,6 +169,7 @@ org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection {
 	 * @param specIndex index of (input) port listing available columns
 	 * @param classFilter which classes are available for selection
 	 */
+	@SafeVarargs
 	public DialogComponentColumnNameSelection(final SettingsModelString model,
 			final String label, final int specIndex,
 			final Class<? extends DataValue>... classFilter) {

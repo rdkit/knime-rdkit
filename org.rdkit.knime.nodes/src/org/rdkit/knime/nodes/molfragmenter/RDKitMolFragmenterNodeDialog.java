@@ -71,7 +71,6 @@ public class RDKitMolFragmenterNodeDialog extends DefaultNodeSettingsPane {
 	 * Create a new dialog pane with default components to configure an input column
 	 * and some other settings.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitMolFragmenterNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,

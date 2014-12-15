@@ -1,10 +1,10 @@
 /*
- * ------------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
  *
- *  Copyright (C) 2003 - 2014
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ * Copyright (C) 2014
+ * Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -44,9 +44,6 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   07.08.2014 (thor): created
  */
 package org.rdkit.knime;
 
@@ -64,26 +61,26 @@ import org.osgi.framework.FrameworkUtil;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class RDKitStartupMessageProvider implements StartupMessageProvider {
-    private final List<StartupMessage> m_messages = new ArrayList<StartupMessage>();
+	private final List<StartupMessage> m_messages = new ArrayList<StartupMessage>();
 
-    /**
-     * Default constructor.
-     */
-    public RDKitStartupMessageProvider() {
-        if (Platform.OS_LINUX.equals(Platform.getOS())) {
-            String msg = EnvironmentChecker.checkEnvironment();
-            if (msg != null) {
-                m_messages.add(new StartupMessage(msg, StartupMessage.ERROR, FrameworkUtil.getBundle(getClass())));
-            }
-        }
-    }
+	/**
+	 * Default constructor.
+	 */
+	public RDKitStartupMessageProvider() {
+		if (Platform.OS_LINUX.equals(Platform.getOS())) {
+			final String msg = EnvironmentChecker.checkEnvironment();
+			if (msg != null) {
+				m_messages.add(new StartupMessage(msg, StartupMessage.ERROR, FrameworkUtil.getBundle(getClass())));
+			}
+		}
+	}
 
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<StartupMessage> getMessages() {
-        return m_messages;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<StartupMessage> getMessages() {
+		return m_messages;
+	}
 }

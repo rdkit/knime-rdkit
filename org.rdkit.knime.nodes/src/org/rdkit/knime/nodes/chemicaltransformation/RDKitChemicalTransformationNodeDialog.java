@@ -88,7 +88,6 @@ public class RDKitChemicalTransformationNodeDialog extends DefaultNodeSettingsPa
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitChemicalTransformationNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createMolInputColumnNameModel(), "Reactant RDKit Mol column (table 1): ", 0,

@@ -150,7 +150,6 @@ public class FunctionalGroupFilterNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	FunctionalGroupFilterNodeDialog() {
 		// Create models first
 		final SettingsModelString modelInputColumn = createInputColumnNameModel();
@@ -381,7 +380,7 @@ public class FunctionalGroupFilterNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Table cell renderer.
 	 */
 	protected TableCellEditor createQualifierCellEditor() {
-		final JComboBox comboBox = new JComboBox();
+		final JComboBox<Qualifier> comboBox = new JComboBox<Qualifier>();
 		comboBox.setRenderer(new DefaultListCellRenderer());
 		((DefaultListCellRenderer)comboBox.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
 

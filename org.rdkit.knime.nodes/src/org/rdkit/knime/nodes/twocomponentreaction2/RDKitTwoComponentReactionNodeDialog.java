@@ -87,7 +87,6 @@ public class RDKitTwoComponentReactionNodeDialog extends AbstractRDKitReactionNo
 	 * {@inheritDoc}
 	 * This implementation adds the input mol column selection components for the reactants.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void addDialogComponentsBeforeReactionSettings() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(

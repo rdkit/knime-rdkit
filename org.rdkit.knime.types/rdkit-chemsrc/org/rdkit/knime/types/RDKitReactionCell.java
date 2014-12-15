@@ -64,177 +64,194 @@ import org.knime.core.data.StringValue;
  * @author Greg Landrum
  */
 public class RDKitReactionCell extends DataCell implements StringValue,
-        RDKitReactionValue {
-    /**
-     * Convenience access member for
-     * <code>DataType.getType(RDKitMolCell.class)</code>.
-     *
-     * @see DataType#getType(Class)
-     */
-    public static final DataType TYPE = DataType
-            .getType(RDKitReactionCell.class);
+RDKitReactionValue {
+	/**
+	 * Convenience access member for
+	 * <code>DataType.getType(RDKitMolCell.class)</code>.
+	 *
+	 * @see DataType#getType(Class)
+	 */
+	public static final DataType TYPE = DataType
+			.getType(RDKitReactionCell.class);
 
-    private static final long serialVersionUID = 0x1;
+	private static final long serialVersionUID = 0x1;
 
-    /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return SmilesValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return RDKitReactionValue.class;
-    }
+	/**
+	 * Returns the preferred value class of this cell implementation. This
+	 * method is called per reflection to determine which is the preferred
+	 * renderer, comparator, etc.
+	 *
+	 * @return SmilesValue.class
+	 */
+	public static final Class<? extends DataValue> getPreferredValueClass() {
+		return RDKitReactionValue.class;
+	}
 
-    private static final RDKitReactionSerializer SERIALIZER =
-            new RDKitReactionSerializer();
+	private static final RDKitReactionSerializer SERIALIZER =
+			new RDKitReactionSerializer();
 
-    /**
-     * Returns the factory to read/write DataCells of this class from/to a
-     * DataInput/DataOutput. This method is called via reflection.
-     *
-     * @return a serializer for reading/writing cells of this kind
-     * @see DataCell
-     */
-    public static final RDKitReactionSerializer getCellSerializer() {
-        return SERIALIZER;
-    }
+	/**
+	 * Returns the factory to read/write DataCells of this class from/to a
+	 * DataInput/DataOutput. This method is called via reflection.
+	 *
+	 * @return a serializer for reading/writing cells of this kind
+	 * @see DataCell
+	 */
+	public static final RDKitReactionSerializer getCellSerializer() {
+		return SERIALIZER;
+	}
 
-    private final String m_smilesString;
+	private final String m_smilesString;
 
-    private final ChemicalReaction m_rxn;
+	private final ChemicalReaction m_rxn;
 
-    /**
-     * Creates a new Smiles Cell based on the given String value. <br />
-     * <b>Note</b>: The serializing technique writes the given String to a
-     * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
-     * The implementation is limited to string lengths of at most 64kB - (in UTF
-     * format - which may be not equal to the number of characters in the
-     * string).
-     *
-     * @param mol the ROMol value to store
-     * @throws NullPointerException if the given String value is
-     *             <code>null</code>
-     */
-    public RDKitReactionCell(final ChemicalReaction rxn) {
-        if (rxn == null) {
-            throw new NullPointerException("Rxn value must not be null.");
-        }
-        m_rxn = rxn;
-        m_smilesString = ChemicalReaction.ReactionToSmarts(rxn);
-    }
+	/**
+	 * Creates a new Smiles Cell based on the given String value. <br />
+	 * <b>Note</b>: The serializing technique writes the given String to a
+	 * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
+	 * The implementation is limited to string lengths of at most 64kB - (in UTF
+	 * format - which may be not equal to the number of characters in the
+	 * string).
+	 *
+	 * @param mol the ROMol value to store
+	 * @throws NullPointerException if the given String value is
+	 *             <code>null</code>
+	 */
+	public RDKitReactionCell(final ChemicalReaction rxn) {
+		if (rxn == null) {
+			throw new NullPointerException("Rxn value must not be null.");
+		}
+		m_rxn = rxn;
+		m_smilesString = ChemicalReaction.ReactionToSmarts(rxn);
+	}
 
-    /**
-     * Creates a new Smiles Cell based on the given String value. <br />
-     * <b>Note</b>: The serializing technique writes the given String to a
-     * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
-     * The implementation is limited to string lengths of at most 64kB - (in UTF
-     * format - which may be not equal to the number of characters in the
-     * string).
-     *
-     * @param str the String value to store
-     * @throws NullPointerException if the given String value is
-     *             <code>null</code>
-     */
-    public RDKitReactionCell(final String smarts) {
-        if (smarts == null) {
-            throw new NullPointerException("Smarts value must not be null.");
-        }
-        m_rxn = ChemicalReaction.ReactionFromSmarts(smarts);
-        if (m_rxn == null) {
-            throw new NullPointerException("could not process reaction");
-        }
-        m_smilesString = "sorry";
-    }
+	/**
+	 * Creates a new Smiles Cell based on the given String value. <br />
+	 * <b>Note</b>: The serializing technique writes the given String to a
+	 * {@link DataOutput} using the {@link DataOutput#writeUTF(String)} method.
+	 * The implementation is limited to string lengths of at most 64kB - (in UTF
+	 * format - which may be not equal to the number of characters in the
+	 * string).
+	 *
+	 * @param str the String value to store
+	 * @throws NullPointerException if the given String value is
+	 *             <code>null</code>
+	 */
+	public RDKitReactionCell(final String smarts) {
+		if (smarts == null) {
+			throw new NullPointerException("Smarts value must not be null.");
+		}
+		m_rxn = ChemicalReaction.ReactionFromSmarts(smarts);
+		if (m_rxn == null) {
+			throw new NullPointerException("could not process reaction");
+		}
+		m_smilesString = "sorry";
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getStringValue() {
-        return m_smilesString;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getStringValue() {
+		return m_smilesString;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSmilesValue() {
-        return m_smilesString;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSmilesValue() {
+		return m_smilesString;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ChemicalReaction getReactionValue() {
-        return m_rxn;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ChemicalReaction getReactionValue() {
+		return m_rxn;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return getStringValue();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString() {
+		return getStringValue();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean equalsDataCell(final DataCell dc) {
-        return m_smilesString.equals(((RDKitReactionCell)dc).m_smilesString);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean equalsDataCell(final DataCell dc) {
+		return m_smilesString.equals(((RDKitReactionCell)dc).m_smilesString);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return m_smilesString.hashCode();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int hashCode() {
+		return m_smilesString.hashCode();
+	}
 
-    /** Factory for (de-)serializing a RDKitMolCell. */
-    private static class RDKitReactionSerializer implements
-            DataCellSerializer<RDKitReactionCell> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void serialize(final RDKitReactionCell cell,
-                final DataCellDataOutput output) throws IOException {
-            // output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
-            Int_Vect cv = cell.getReactionValue().ToBinary();
-            String pkl = "";
-            for (int i = 0; i < cv.size(); ++i) {
-                pkl += cv.get(i);
-            }
-            output.writeUTF(pkl);
-        }
+	protected static byte[] toByteArray(final ChemicalReaction reaction) {
+		final Int_Vect iv = reaction.ToBinary();
+		final byte[] bytes = new byte[(int)iv.size()];
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte)iv.get(i);
+		}
+		return bytes;
+	}
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public RDKitReactionCell deserialize(final DataCellDataInput input)
-                throws IOException {
-            String s = input.readUTF();
-            Int_Vect cv = new Int_Vect(0);
-            for (int i = 0; i < s.length(); ++i) {
-                char c = s.charAt(i);
-                cv.add(c);
-            }
-            ChemicalReaction rxn = ChemicalReaction.RxnFromBinary(cv);
-            return new RDKitReactionCell(rxn);
-        }
-    }
+	protected static ChemicalReaction toChemicalReaction(final byte[] bytes) {
+		final Int_Vect iv = new Int_Vect(bytes.length);
+		for (int i = 0; i < bytes.length; i++) {
+			iv.set(i, bytes[i]);
+		}
+		return ChemicalReaction.RxnFromBinary(iv);
+	}
 
-    @Override
-    protected void finalize() throws Throwable {
-        m_rxn.delete();
-        super.finalize();
-    }
+	/** Factory for (de-)serializing a RDKitMolCell. */
+	private static class RDKitReactionSerializer implements
+	DataCellSerializer<RDKitReactionCell> {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void serialize(final RDKitReactionCell cell,
+				final DataCellDataOutput output) throws IOException {
+			// output.writeUTF(RDKFuncs.MolToBinary(cell.getMoleculeValue()));
+			final Int_Vect cv = cell.getReactionValue().ToBinary();
+			String pkl = "";
+			for (int i = 0; i < cv.size(); ++i) {
+				pkl += cv.get(i);
+			}
+			output.writeUTF(pkl);
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public RDKitReactionCell deserialize(final DataCellDataInput input)
+				throws IOException {
+			final String s = input.readUTF();
+			final Int_Vect cv = new Int_Vect(0);
+			for (int i = 0; i < s.length(); ++i) {
+				final char c = s.charAt(i);
+				cv.add(c);
+			}
+			final ChemicalReaction rxn = ChemicalReaction.RxnFromBinary(cv);
+			return new RDKitReactionCell(rxn);
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		m_rxn.delete();
+		super.finalize();
+	}
 
 }

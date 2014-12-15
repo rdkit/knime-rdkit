@@ -309,7 +309,6 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 	 * and connects it with the information coming from the appropriate setting model.
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

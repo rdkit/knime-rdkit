@@ -117,7 +117,6 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
 	 * to tell, if the source column shall be removed from the result table and
 	 * an optional salt column (if a second table is connected to the node).
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitSaltStripperNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,

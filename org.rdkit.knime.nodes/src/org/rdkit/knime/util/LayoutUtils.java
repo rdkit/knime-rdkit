@@ -329,7 +329,7 @@ public final class LayoutUtils {
 	 *            Component to set default properties for. Can be
 	 *            <code>null</code>.
 	 */
-	public static void applyDefaultProperties(final JComboBox comp) {
+	public static void applyDefaultProperties(final JComboBox<?> comp) {
 		if (comp == null) {
 			return;
 		}
@@ -405,7 +405,7 @@ public final class LayoutUtils {
 	 *            Component to set default properties for. Can be
 	 *            <code>null</code>.
 	 */
-	public static void applyDefaultProperties(final JList comp) {
+	public static void applyDefaultProperties(final JList<?> comp) {
 		if (comp == null) {
 			return;
 		}

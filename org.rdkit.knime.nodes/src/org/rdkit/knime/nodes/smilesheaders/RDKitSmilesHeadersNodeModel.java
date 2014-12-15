@@ -202,7 +202,6 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

@@ -220,7 +220,6 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

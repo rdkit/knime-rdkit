@@ -127,7 +127,6 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
@@ -175,7 +174,6 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 	 * {@inheritDoc}
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
 

@@ -101,16 +101,16 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	//
 	// Constants
 	//
-	
+
 	/** Add button id. */
 	public static final int BUTTON_ADD = 1;
-	
+
 	/** Add All button id. */
 	public static final int BUTTON_ADD_ALL = 2;
-	
+
 	/** Remove button id. */
 	public static final int BUTTON_REMOVE = 4;
-	
+
 	/** Remove All button id. */
 	public static final int BUTTON_REMOVE_ALL = 8;
 
@@ -133,13 +133,13 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	private JLabel m_lbHeader;
 
 	/** Include list. */
-	private JList m_listInclude;
+	private JList<T> m_listInclude;
 
 	/** Include model. */
 	private GenericListModel<T> m_listModelInclude;
 
 	/** Exclude list. */
-	private JList m_listExclude;
+	private JList<T> m_listExclude;
 
 	/** Exclude model. */
 	private GenericListModel<T> m_listModelExclude;
@@ -338,12 +338,11 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 * Called by the 'remove >>' button to exclude the selected elements from
 	 * the include list.
 	 */
-	@SuppressWarnings("unchecked")
 	private void onRemIt() {
 		// add all selected elements from the include to the exclude list
-		final Object[] o = m_listInclude.getSelectedValues();
-		final HashSet<Object> hash = new HashSet<Object>();
-		hash.addAll(Arrays.asList(o));
+		final List<T> o = m_listInclude.getSelectedValuesList();
+		final HashSet<T> hash = new HashSet<T>();
+		hash.addAll(o);
 
 		for (final Enumeration<T> e = m_listModelExclude.elements(); e.hasMoreElements();) {
 			hash.add(e.nextElement());
@@ -351,8 +350,8 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 
 		boolean changed = false;
 
-		for (int i = 0; i < o.length; i++) {
-			changed |= m_listModelInclude.removeElement((T)o[i]);
+		for (int i = 0; i < o.size(); i++) {
+			changed |= m_listModelInclude.removeElement(o.get(i));
 		}
 
 		m_listModelExclude.removeAllElements();
@@ -394,12 +393,11 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 * Called by the '<< add' button to include the selected elements from the
 	 * exclude list.
 	 */
-	@SuppressWarnings({ "unchecked" })
 	private void onAddIt() {
 		// add all selected elements from the exclude to the include list
-		final Object[] o = m_listExclude.getSelectedValues();
-		final HashSet<Object> hash = new HashSet<Object>();
-		hash.addAll(Arrays.asList(o));
+		final List<T> o = m_listExclude.getSelectedValuesList();
+		final HashSet<T> hash = new HashSet<T>();
+		hash.addAll(o);
 
 		for (final Enumeration<T> e = m_listModelInclude.elements(); e.hasMoreElements();) {
 			hash.add(e.nextElement());
@@ -407,8 +405,8 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 
 		boolean changed = false;
 
-		for (int i = 0; i < o.length; i++) {
-			changed |= m_listModelExclude.removeElement((T)o[i]);
+		for (int i = 0; i < o.size(); i++) {
+			changed |= m_listModelExclude.removeElement(o.get(i));
 		}
 
 		m_listModelInclude.removeAllElements();
@@ -467,13 +465,11 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 *
 	 * @param model The list from which to retrieve the elements.
 	 */
-	private Set<T> getItemSet(final ListModel model) {
+	private Set<T> getItemSet(final ListModel<T> model) {
 		final Set<T> set = new LinkedHashSet<T>();
 
 		for (int i = 0; i < model.getSize(); i++) {
-			@SuppressWarnings("unchecked")
-			final
-			T cell = (T)model.getElementAt(i);
+			final T cell = model.getElementAt(i);
 			set.add(cell);
 		}
 
@@ -493,7 +489,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 *            occurrences of the search text after the current marked list
 	 *            element.
 	 */
-	private void onSearch(final JList list,
+	private void onSearch(final JList<T> list,
 			final GenericListModel<T> model, final JTextField searchField,
 			final boolean markAllHits) {
 
@@ -533,11 +529,11 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	/**
 	 * Finds in the list any occurrence of the argument string (as substring).
 	 */
-	private int searchInList(final JList list, final String str,
+	private int searchInList(final JList<T> list, final String str,
 			final int startIndex) {
 		// this method was (slightly modified) copied from
 		// JList#getNextMatch
-		final ListModel model = list.getModel();
+		final ListModel<T> model = list.getModel();
 		final int max = model.getSize();
 		String prefix = str;
 
@@ -591,9 +587,9 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 *         method returns an empty <code>int[]</code>.
 	 *
 	 */
-	private int[] getAllSearchHits(final JList list, final String str) {
+	private int[] getAllSearchHits(final JList<T> list, final String str) {
 		int[] resultArray = new int[0];
-		final ListModel model = list.getModel();
+		final ListModel<T> model = list.getModel();
 		final int max = model.getSize();
 		final ArrayList<Integer> hits = new ArrayList<Integer>(max);
 		int index = 0;
@@ -630,7 +626,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 * @param renderer the new renderer being used
 	 * @see JList#setCellRenderer(javax.swing.ListCellRenderer)
 	 */
-	public final void setListCellRenderer(final ListCellRenderer renderer) {
+	public final void setListCellRenderer(final ListCellRenderer<Object> renderer) {
 		m_listInclude.setCellRenderer(renderer);
 		m_listExclude.setCellRenderer(renderer);
 	}
@@ -643,6 +639,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	 *
 	 * @param items The items to be hidden.
 	 */
+	@SafeVarargs
 	public final void hideItems(final T... items) {
 		boolean changed = false;
 
@@ -697,7 +694,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 		else {
 			m_borderIncl.setBorder(BorderFactory.createLineBorder(color, 2));
 		}
-	}	
+	}
 
 	/**
 	 * Sets the exclude list border color.
@@ -730,20 +727,20 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 	/**
 	 * Sets the visibility of buttons.
 	 * 
-	 * @param iButtonId One of the following constants: {@link #BUTTON_ADD}, 
+	 * @param iButtonId One of the following constants: {@link #BUTTON_ADD},
 	 * 		{@link #BUTTON_ADD_ALL}, {@link #BUTTON_REMOVE}, {@link #BUTTON_REMOVE_ALL}.
 	 * @param bVisible True to show a button. False to hide it.
 	 */
 	public final void setButtonVisible(final int iButtonId, final boolean bVisible) {
 		JButton btn = null;
-		
+
 		switch (iButtonId) {
 		case BUTTON_ADD: btn = m_btnAdd; break;
 		case BUTTON_ADD_ALL: btn = m_btnAddAll; break;
 		case BUTTON_REMOVE: btn = m_btnRemove; break;
 		case BUTTON_REMOVE_ALL: btn = m_btnRemoveAll; break;
 		}
-		
+
 		if (btn != null) {
 			btn.setVisible(bVisible);
 		}
@@ -968,7 +965,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 		m_listModelExclude = new GenericListModel<T>(model.getEnumerationType());
 
 		// Create list GUI
-		m_listExclude = new JList(m_listModelExclude);
+		m_listExclude = new JList<T>(m_listModelExclude);
 		m_listExclude.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		m_listExclude.addMouseListener(new MouseAdapter() {
 			@Override
@@ -1030,7 +1027,7 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 		m_listModelInclude = new GenericListModel<T>(model.getEnumerationType());
 
 		// Create list GUI
-		m_listInclude = new JList(m_listModelInclude);
+		m_listInclude = new JList<T>(m_listModelInclude);
 		m_listInclude.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		m_listInclude.addMouseListener(new MouseAdapter() {
 			@Override

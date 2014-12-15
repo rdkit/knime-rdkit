@@ -133,9 +133,9 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	public void start(final BundleContext context) throws Exception {
 		super.start(context);
 
-		String msg = EnvironmentChecker.checkEnvironment();
+		final String msg = EnvironmentChecker.checkEnvironment();
 		if (msg != null) {
-		    LOGGER.error(msg);
+			LOGGER.error(msg);
 		}
 
 		try {
@@ -210,9 +210,9 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 
 					// Check version of the binary plugin - it should be in sync with the RDKit Types plugin version
 					final Version versionBinaries = bundle.getVersion();
-                    if (versionTypes == null || (versionTypes.getMajor() != versionBinaries.getMajor())
-                            || (versionTypes.getMinor() != versionBinaries.getMinor())
-                            || (versionTypes.getMicro() != versionBinaries.getMicro())) {
+					if (versionTypes == null || versionBinaries == null || (versionTypes.getMajor() != versionBinaries.getMajor())
+							|| (versionTypes.getMinor() != versionBinaries.getMinor())
+							|| (versionTypes.getMicro() != versionBinaries.getMicro())) {
 						LOGGER.error("The RDKit Binary Plugin " + strBinaryBundleName +
 								" Version (" + versionBinaries + ") is different from the RDKit Types Version (" +
 								versionTypes + "). Please uninstall and reinstall the RDKit Nodes.");
@@ -299,10 +299,10 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 
 	/**
 	 * Returns the path to a library for the specified Bundle, or null if not found.
-	 *
+	 * 
 	 * @param bundleBinary Bundle of the binaries. Can be null.
 	 * @param strLibName Library name (without OS specifics). Can be null.
-	 *
+	 * 
 	 * @return Absolute library path or null, if not found.
 	 */
 	protected String getBundleLibraryPath(final Bundle bundleBinary, final String strLibName) {
@@ -324,9 +324,9 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 
 	/**
 	 * Returns an array of all (known) paths where the system would look for RDKit Libraries.
-	 *
+	 * 
 	 * @param bundleBinary Bundle of the binaries. Can be null.
-	 *
+	 * 
 	 * @return Library paths incl. the paths to the RDKit Binary Plugin.
 	 */
 	protected String[] getLibraryPaths(final Bundle bundleBinary) {
@@ -364,9 +364,9 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	/**
 	 * Tries to determine where the specified library (specific OS dependent name) is getting
 	 * loaded from.
-	 *
+	 * 
 	 * @param strLibFileName Library file name.
-	 *
+	 * 
 	 * @return Full paths if found. Can be more than one, if it is found in more than one path.
 	 * 		That would be suspicious.
 	 */

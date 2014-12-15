@@ -80,7 +80,6 @@ public class RDKit2MoleculeConverterNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKit2MoleculeConverterNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,

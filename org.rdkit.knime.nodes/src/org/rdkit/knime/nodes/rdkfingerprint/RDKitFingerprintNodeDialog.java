@@ -173,7 +173,6 @@ public class RDKitFingerprintNodeDialog extends DefaultNodeSettingsPane {
 	/**
 	 * Create a new dialog pane with some default components.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitFingerprintNodeDialog() {
 		m_listHidableDialogComponents = new ArrayList<DialogComponent>();
 		super.addDialogComponent(new DialogComponentEnumSelection<FingerprintType>(

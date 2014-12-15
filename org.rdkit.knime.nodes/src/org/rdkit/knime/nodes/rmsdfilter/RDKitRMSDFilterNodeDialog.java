@@ -89,7 +89,6 @@ public class RDKitRMSDFilterNodeDialog extends DefaultNodeSettingsPane {
 	 * the name of a new column, which will contain the calculation results, an option
 	 * to tell, if the source column shall be removed from the result table.
 	 */
-	@SuppressWarnings("unchecked")
 	RDKitRMSDFilterNodeDialog() {
 		super.addDialogComponent(new DialogComponentColumnNameSelection(
 				createMoleculeInputColumnNameModel(), "RDKit Mol column with conformers: ", 0,

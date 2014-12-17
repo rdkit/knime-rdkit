@@ -32,7 +32,7 @@
       <node category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
       <node after="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory" id="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
 
-      <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
+	  <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
 	  <node after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
       <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" id="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
       <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory" id="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/> 
@@ -48,6 +48,7 @@
 	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory" id="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
 
       <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory" id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>
+	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory" id="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory"/>
 </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes using RDKit" icon="icons/category_rdkit.png" level-id="rdkit" name="RDKit" path="/community">
@@ -79,11 +80,11 @@
       <splashExtension icon="icons/rdkit_splash.png" icon24="icons/rdkit_splash_24.png" icon32="icons/rdkit_splash_32.png" id="rdkit" tooltip="RDKit">
       </splashExtension>
    </extension>
-   
+
    <extension point="org.eclipse.core.runtime.preferences">
  		<initializer class="org.rdkit.knime.nodes.preferences.RDKitNodesPreferenceInitializer"/>
    </extension>
-  
+
    <extension point="org.rdkit.knime.properties.HeaderPropertyHandler">
 	  <handler class="org.rdkit.knime.properties.SmilesHeaderPropertyHandler" displayName="SMILES Header" id="org.rdkit.knime.properties.SmilesHeaderHandler">
 	    <acceptableProperties>
@@ -116,4 +117,5 @@
 		<dataValue valueClass="org.knime.core.data.StringValue"/>
 		<defaultRepresentation mode="HeaderOnly"/>
 	  </handler>
-   </extension> </plugin>
+   </extension>
+</plugin>

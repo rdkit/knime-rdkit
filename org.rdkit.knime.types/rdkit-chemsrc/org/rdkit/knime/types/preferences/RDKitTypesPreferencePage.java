@@ -132,7 +132,7 @@ implements IWorkbenchPreferencePage {
 	 * 
 	 * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#initializeDefaultPreferences()
 	 */
-	public static void initializeDefaultPreferences() {
+	public static synchronized void initializeDefaultPreferences() {
 		if (!g_bDefaultInitializationDone) {
 			g_bDefaultInitializationDone = true;
 

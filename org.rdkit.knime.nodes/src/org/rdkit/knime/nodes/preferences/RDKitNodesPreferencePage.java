@@ -50,13 +50,17 @@ package org.rdkit.knime.nodes.preferences;
 
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.data.renderer.MultiLineStringValueRenderer;
 import org.knime.core.node.NodeLogger;
 import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.extensions.aggregration.RDKitMcsAggregationPreferencePage;
 import org.rdkit.knime.nodes.RDKitNodePlugin;
 import org.rdkit.knime.properties.FingerprintSettingsHeaderPropertyHandler;
+import org.rdkit.knime.util.EclipseUtils;
 
 /**
  * This is the preference page for the RDKit chemistry type definition. It
@@ -76,6 +80,9 @@ implements IWorkbenchPreferencePage {
 	/** The logger instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(
 			RDKitNodesPreferencePage.class);
+
+	/** The id of this preference page. */
+	public static final String ID = "org.rdkit.knime.nodes.preferences";
 
 	//
 	// Globals
@@ -97,9 +104,21 @@ implements IWorkbenchPreferencePage {
 	public RDKitNodesPreferencePage() {
 		super(GRID);
 
+		setImageDescriptor(new ImageDescriptor() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public ImageData getImageData() {
+				return EclipseUtils.loadImageData(RDKitMcsAggregationPreferencePage.class,
+						"/icons/category_rdkit.png");
+			}
+		});
+
 		// We use the pref store of the UI plugin
 		setPreferenceStore(RDKitNodePlugin.getDefault().getPreferenceStore());
-		setDescription("RDKit Nodes Preferences");
+		setDescription("This section contains sub sections to control preferences for RDKit Nodes.");
 	}
 
 	/** {@inheritDoc} */
@@ -122,7 +141,7 @@ implements IWorkbenchPreferencePage {
 	 * 
 	 * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#initializeDefaultPreferences()
 	 */
-	public static void initializeDefaultPreferences() {
+	public static synchronized void initializeDefaultPreferences() {
 		if (!g_bDefaultInitializationDone) {
 			g_bDefaultInitializationDone = true;
 

@@ -51,6 +51,7 @@ package org.rdkit.knime.nodes;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.rdkit.knime.extensions.aggregration.RDKitMcsAggregationPreferenceInitializer;
 import org.rdkit.knime.nodes.preferences.RDKitNodesPreferenceInitializer;
 
 /**
@@ -133,17 +134,20 @@ public class RDKitNodePlugin extends AbstractUIPlugin {
 	public IPreferenceStore getPreferenceStore() {
 		final IPreferenceStore prefStore = super.getPreferenceStore();
 
-		// Check, if default settings have already been initialized (normally
-		// true when KNIME is started with GUI,
-		// but not done when running regression tests) - If not done yet, do it
-		if (!g_bSettingDefaultPreferencesFinished) {
+		synchronized (PLUGIN_ID) {
+			// Check, if default settings have already been initialized (normally
+			// true when KNIME is started with GUI,
+			// but not done when running regression tests) - If not done yet, do it
+			if (!g_bSettingDefaultPreferencesFinished) {
 
-			// Set to true to prevent endless loop recursion as
-			// getPreferenceStore() is called also from initializers
-			g_bSettingDefaultPreferencesFinished = true;
+				// Set to true to prevent endless loop recursion as
+				// getPreferenceStore() is called also from initializers
+				g_bSettingDefaultPreferencesFinished = true;
 
-			// Call all initializer here manually
-			new RDKitNodesPreferenceInitializer().initializeDefaultPreferences();
+				// Call all initializer here manually
+				new RDKitNodesPreferenceInitializer().initializeDefaultPreferences();
+				new RDKitMcsAggregationPreferenceInitializer().initializeDefaultPreferences();
+			}
 		}
 
 		return prefStore;

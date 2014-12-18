@@ -1911,7 +1911,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * 		while waiting for joining the working thread.
 	 */
 	@SuppressWarnings("deprecation")
-	public void monitorWorkingThreadExecution(final Thread thread, final ExecutionContext exec,
+	public static void monitorWorkingThreadExecution(final Thread thread, final ExecutionContext exec,
 			final int iCheckIntervalInMillis, final boolean bShowPseudoProgress,
 			final boolean bStopWorkingThreadAfterCancellation)
 					throws CanceledExecutionException {

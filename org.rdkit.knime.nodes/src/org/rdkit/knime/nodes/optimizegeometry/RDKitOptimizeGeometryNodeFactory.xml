@@ -4,14 +4,16 @@
     <name>RDKit Optimize Geometry</name>
     
     <shortDescription>
-		Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy.
+		Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol.
     </shortDescription>
     
     <fullDescription>
         <intro>
-			Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy. If the passed
+			Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol. If the passed
 			in molecules have no conformation, it will be calculated. The optimization is based on a particular force field 
-			and a number of iterations. Optionally already available coordinates can be removed. The following force fields are supported:
+			and a number of iterations. It is also possible to turn off optimization completely by iterating 0 times. 
+			Optionally already available coordinates can be removed in order to calculate new ones from scratch. 
+			The following force fields are supported:
 			<ul>
 				<li>UFF: Universal force field is an all atom potential containing parameters for every atom. 
 					The force field parameters are estimated using general rules based only on the element, 
@@ -32,10 +34,11 @@
         <option name="Force field">The force field type that shall be used for optimization.</option>
         <option name="New column name for optimized molecule">The name of the new column, which will contain the optimized molecule.</option>
         <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
-        <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.</option>
-        <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule.</option>
+        <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.
+        	If iterations were set to 0 (no optimization) this value will always be false.</option>
+        <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule in kcal/mol.</option>
         <option name="Advanced - Iterations">Number of iterations to use for optimization. If the number is set too small,
-        	molecules will not be fully converged.
+        	molecules will not be fully converged. Set it to 0 iterations to skip optimizing and only calculate the energy value.
         </option>
         <option name="Advanced - Remove starting coordinates before optimizing the molecule">Set to true to remove coordinates before starting the optimization process.
         	This may affect the results in a positive way.
@@ -44,6 +47,6 @@
     
     <ports>
         <inPort index="0" name="Input table with RDKit Molecules">The molecules to optimize the geometry for</inPort>
-        <outPort index="0" name="Result table">Optimized molecules with converge and energy information</outPort>
+        <outPort index="0" name="Result table">Optimized molecules with converge and energy information (kcal/mol)</outPort>
     </ports>    
 </knimeNode>

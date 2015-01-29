@@ -180,7 +180,7 @@ public class RDKitOptimizeGeometryNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for specifying iterations.
 	 */
 	static final SettingsModelInteger createIterationsModel() {
-		return new SettingsModelIntegerBounded("iterations", DEFAULT_ITERATIONS, 1, Integer.MAX_VALUE);
+		return new SettingsModelIntegerBounded("iterations", DEFAULT_ITERATIONS, 0, Integer.MAX_VALUE);
 	}
 
 	/**

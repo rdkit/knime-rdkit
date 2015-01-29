@@ -311,7 +311,12 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					}
 					else {
 						forceField.initialize();
-						iConverge = forceField.minimize(iIterations);
+						if (iIterations > 0) {
+							iConverge = forceField.minimize(iIterations);
+						}
+						else {
+							iConverge = 1; // Translates to false later on
+						}
 						dEnergy = forceField.calcEnergy();
 					}
 

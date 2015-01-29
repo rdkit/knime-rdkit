@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="fingerprint.png" type="Manipulator">
-	<name>RDKit Fingerprint</name>
+<knimeNode icon="fingerprint_count_based.png" type="Manipulator">
+	<name>RDKit Count-Based Fingerprint</name>
 	
 	<shortDescription>
-	    Generates hashed bit-based fingerprints for an input RDKit Mol column.
+	    Generates hashed count-based fingerprints for an input RDKit Mol column.
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Generates hashed bit-based fingerprints for an input RDKit Mol column and appends
+		<intro>Generates hashed count-based fingerprints for an input RDKit Mol column and appends
 		them to the table. Several fingerprint types are available. Not all settings are used for each type. Settings that
 		are not supported by a fingerprint type will be disabled/hidden and will have no effect. The settings a fingerprint gets
 		generated with are made available as column properties and can be visualized with the RDKit Interactive View Node.</intro>
@@ -18,10 +18,6 @@
 		  <li>FeatMorgan: Circular fingerprint based on the Morgan algorithm and feature invariants (FCFP-like)</li>
 		  <li>AtomPair: Atom-pair fingerprint</li>
 		  <li>Torsion: Topological-torsion fingerprint</li>
-		  <li>RDKit: Daylight-like topological fingerprint</li>
-		  <li>Avalon: Fingerprint from the Avalon toolkit (http://sourceforge.net/p/avalontoolkit/)</li>
-		  <li>Layered: An experimental substructure-matching fingerprint</li>
-		  <li>MACCS: RDKit implementation of the 166 public MACCS keys</li>
 		</ul>
 		</option>
         <option name="RDKit Mol column">The column containing reactant molecules</option>
@@ -44,6 +40,6 @@
 	
 	<ports>
 		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
-		<outPort index="0" name="Output data">Data with fingerprint column</outPort>
+		<outPort index="0" name="Output data">Data with count-based fingerprint column</outPort>
 	</ports>	
 </knimeNode>

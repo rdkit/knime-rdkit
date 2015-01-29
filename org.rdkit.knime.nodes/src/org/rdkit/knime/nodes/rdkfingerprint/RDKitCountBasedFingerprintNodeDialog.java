@@ -52,10 +52,9 @@ package org.rdkit.knime.nodes.rdkfingerprint;
 /**
  * The dialog to configure the RDKit node.
  *
- * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitFingerprintNodeDialog extends AbstractRDKitFingerprintNodeDialog {
+public class RDKitCountBasedFingerprintNodeDialog extends AbstractRDKitFingerprintNodeDialog {
 
 	//
 	// Constructor
@@ -64,7 +63,7 @@ public class RDKitFingerprintNodeDialog extends AbstractRDKitFingerprintNodeDial
 	/**
 	 * Create a new dialog pane with some default components.
 	 */
-	RDKitFingerprintNodeDialog() {
+	RDKitCountBasedFingerprintNodeDialog() {
 		super();
 	}
 
@@ -73,8 +72,8 @@ public class RDKitFingerprintNodeDialog extends AbstractRDKitFingerprintNodeDial
 	//
 
 	@Override
-	protected FingerprintType[] getSupportedFingerprintTypes() {
-		return RDKitFingerprintNodeModel.getBitBasedFingerprintTypes();
+	public FingerprintType[] getSupportedFingerprintTypes() {
+		return RDKitCountBasedFingerprintNodeModel.getCountBasedFingerprintTypes();
 	}
 
 }

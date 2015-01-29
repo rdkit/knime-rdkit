@@ -1,13 +1,24 @@
 package org.rdkit.knime.nodes.rdkfingerprint;
 
 import org.RDKit.ExplicitBitVect;
+import org.RDKit.Int_Pair;
+import org.RDKit.Long_Pair;
+import org.RDKit.Long_Pair_Vect;
+import org.RDKit.Match_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.SparseIntVect32;
+import org.RDKit.SparseIntVect64;
+import org.RDKit.SparseIntVectu32;
+import org.RDKit.UInt_Pair;
+import org.RDKit.UInt_Pair_Vect;
 import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.vector.bitvector.DenseBitVector;
+import org.knime.core.data.vector.bytevector.DenseByteVector;
 import org.knime.core.node.InvalidSettingsException;
 import org.rdkit.knime.util.ChemUtils;
 import org.rdkit.knime.util.SettingsUtils;
@@ -22,7 +33,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -33,7 +44,8 @@ public enum FingerprintType {
 					iRadius,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					bIsCountBased);
 		}
 
 		@Override
@@ -50,6 +62,11 @@ public enum FingerprintType {
 
 		@Override
 		public boolean canCalculateRootedFingerprint() {
+			return true;
+		}
+
+		@Override
+		public boolean canCalculateCountBasedFingerprint() {
 			return true;
 		}
 
@@ -77,6 +94,31 @@ public enum FingerprintType {
 				}
 			}
 		}
+
+		@Override
+		public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
+			return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits()));
+		}
+
+		@Override
+		public DenseByteVector calculateCountBasedRooted(final ROMol mol,
+				UInt_Vect atomList, final FingerprintSettings settings) {
+			UInt_Vect atomListToFree = null;
+
+			try {
+				if (settings.isTreatAtomListAsExcludeList()) {
+					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
+				}
+
+				return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits(),
+						null /* Invariants */, atomList));
+			}
+			finally {
+				if (atomListToFree != null) {
+					atomListToFree.delete();
+				}
+			}
+		}
 	},
 
 	featmorgan("FeatMorgan") {
@@ -85,7 +127,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -96,7 +138,8 @@ public enum FingerprintType {
 					iRadius,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					bIsCountBased);
 		}
 
 		@Override
@@ -113,6 +156,11 @@ public enum FingerprintType {
 
 		@Override
 		public boolean canCalculateRootedFingerprint() {
+			return true;
+		}
+
+		@Override
+		public boolean canCalculateCountBasedFingerprint() {
 			return true;
 		}
 
@@ -151,6 +199,42 @@ public enum FingerprintType {
 				ivs.delete();
 			}
 		}
+
+		@Override
+		public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
+			final UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
+
+			try {
+				RDKFuncs.getFeatureInvariants(mol, ivs);
+				return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits(), ivs));
+			}
+			finally {
+				ivs.delete();
+			}
+		}
+
+		@Override
+		public DenseByteVector calculateCountBasedRooted(final ROMol mol,
+				UInt_Vect atomList, final FingerprintSettings settings) {
+			final UInt_Vect ivs= new UInt_Vect(mol.getNumAtoms());
+			UInt_Vect atomListToFree = null;
+
+			try {
+				if (settings.isTreatAtomListAsExcludeList()) {
+					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
+				}
+
+				RDKFuncs.getFeatureInvariants(mol, ivs);
+				return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits(),
+						ivs, atomList));
+			}
+			finally {
+				if (atomListToFree != null) {
+					atomListToFree.delete();
+				}
+				ivs.delete();
+			}
+		}
 	},
 
 	atompair("AtomPair") {
@@ -159,7 +243,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -170,7 +254,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					bIsCountBased);
 		}
 
 		@Override
@@ -193,6 +278,11 @@ public enum FingerprintType {
 
 		@Override
 		public boolean canCalculateRootedFingerprint() {
+			return true;
+		}
+
+		@Override
+		public boolean canCalculateCountBasedFingerprint() {
 			return true;
 		}
 
@@ -243,6 +333,55 @@ public enum FingerprintType {
 				}
 			}
 		}
+
+
+		@Override
+		public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
+			int iAtomPairMinPath = settings.getAtomPairMinPath();
+			int iAtomPairMaxPath = settings.getAtomPairMaxPath();
+
+			// Use old default values, if the value is undefined
+			if (!settings.isAvailable(iAtomPairMinPath)) {
+				iAtomPairMinPath = 1;
+			}
+			if (!settings.isAvailable(iAtomPairMaxPath)) {
+				iAtomPairMaxPath = ((1 << 5) - 1) - 1;
+			}
+
+			return convertAndDispose(RDKFuncs.getHashedAtomPairFingerprint(mol, settings.getNumBits(),
+					iAtomPairMinPath, iAtomPairMaxPath));
+		}
+
+		@Override
+		public DenseByteVector calculateCountBasedRooted(final ROMol mol,
+				UInt_Vect atomList, final FingerprintSettings settings) {
+			int iAtomPairMinPath = settings.getAtomPairMinPath();
+			int iAtomPairMaxPath = settings.getAtomPairMaxPath();
+
+			// Use old default values, if the value is undefined
+			if (!settings.isAvailable(iAtomPairMinPath)) {
+				iAtomPairMinPath = 1;
+			}
+			if (!settings.isAvailable(iAtomPairMaxPath)) {
+				iAtomPairMaxPath = 30;
+			}
+
+			UInt_Vect atomListToFree = null;
+
+			try {
+				if (settings.isTreatAtomListAsExcludeList()) {
+					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
+				}
+
+				return convertAndDispose(RDKFuncs.getHashedAtomPairFingerprint(mol, settings.getNumBits(),
+						iAtomPairMinPath, iAtomPairMaxPath, atomList));
+			}
+			finally {
+				if (atomListToFree != null) {
+					atomListToFree.delete();
+				}
+			}
+		}
 	},
 
 	torsion("Torsion") {
@@ -251,7 +390,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					iTorsionPathLength,
 					FingerprintSettings.UNAVAILABLE,
@@ -262,7 +401,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					bIsCountBased);
 		}
 
 		@Override
@@ -279,6 +419,11 @@ public enum FingerprintType {
 
 		@Override
 		public boolean canCalculateRootedFingerprint() {
+			return true;
+		}
+
+		@Override
+		public boolean canCalculateCountBasedFingerprint() {
 			return true;
 		}
 
@@ -319,6 +464,44 @@ public enum FingerprintType {
 				}
 			}
 		}
+
+		@Override
+		public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
+			int iTorsionPathLength = settings.getTorsionPathLength();
+
+			// Use old default value, if the value is undefined
+			if (!settings.isAvailable(iTorsionPathLength)) {
+				iTorsionPathLength = 4;
+			}
+
+			return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), iTorsionPathLength));
+		}
+
+		@Override
+		public DenseByteVector calculateCountBasedRooted(final ROMol mol,
+				UInt_Vect atomList, final FingerprintSettings settings) {
+			int iTorsionPathLength = settings.getTorsionPathLength();
+
+			// Use old default value, if the value is undefined
+			if (!settings.isAvailable(iTorsionPathLength)) {
+				iTorsionPathLength = 4;
+			}
+
+			UInt_Vect atomListToFree = null;
+
+			try {
+				if (settings.isTreatAtomListAsExcludeList()) {
+					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
+				}
+
+				return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), iTorsionPathLength, atomList));
+			}
+			finally {
+				if (atomListToFree != null) {
+					atomListToFree.delete();
+				}
+			}
+		}
 	},
 
 	rdkit("RDKit") {
@@ -327,7 +510,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					iMinPath,
@@ -338,7 +521,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					false);
 		}
 
 		@Override
@@ -399,7 +583,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -410,7 +594,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					RDKFuncs.getAvalonSimilarityBits(), // A constant from the RDKit
-					false, null, false);
+					false, null, false,
+					false);
 		}
 
 		@Override
@@ -423,11 +608,6 @@ public enum FingerprintType {
 		}
 
 		@Override
-		public boolean canCalculateRootedFingerprint() {
-			return false;
-		}
-
-		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
 			final int bitNumber = settings.getNumBits();
 			final ExplicitBitVect fingerprint = new ExplicitBitVect(bitNumber);
@@ -435,12 +615,6 @@ public enum FingerprintType {
 				RDKFuncs.getAvalonFP(mol, fingerprint, bitNumber, false, false, settings.getSimilarityBits());
 			}
 			return fingerprint;
-		}
-
-		@Override
-		public ExplicitBitVect calculateRooted(final ROMol mol,
-				final UInt_Vect atomList, final FingerprintSettings settings) {
-			throw new UnsupportedOperationException("Avalon fingerprints cannot be calculated as rooted fingerprints.");
 		}
 	},
 
@@ -450,7 +624,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					iMinPath,
@@ -461,7 +635,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					iLayerFlags,
 					FingerprintSettings.UNAVAILABLE,
-					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
+					false);
 		}
 
 		@Override
@@ -525,7 +700,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -536,7 +711,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					false, null, false);
+					false, null, false,
+					false);
 		}
 
 		@Override
@@ -546,11 +722,6 @@ public enum FingerprintType {
 			if (settings.getNumBits() <= 0) {
 				throw new InvalidSettingsException("Number of bits must be a positive number > 0.");
 			}
-		}
-
-		@Override
-		public boolean canCalculateRootedFingerprint() {
-			return false;
 		}
 
 		/**
@@ -566,12 +737,6 @@ public enum FingerprintType {
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
 			return RDKFuncs.MACCSFingerprintMol(mol);
 		}
-
-		@Override
-		public ExplicitBitVect calculateRooted(final ROMol mol,
-				final UInt_Vect atomList, final FingerprintSettings settings) {
-			throw new UnsupportedOperationException("MACCS fingerprints cannot be calculated as rooted fingerprints.");
-		}
 	},
 
 	pattern("Pattern") {
@@ -580,7 +745,7 @@ public enum FingerprintType {
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
 				final boolean bIsRooted, final String strAtomListColumnName,
-				final boolean bTreatAtomListAsIncludeList) {
+				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
@@ -591,7 +756,8 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
-					false, null, false);
+					false, null, false,
+					false);
 		}
 
 		@Override
@@ -604,19 +770,8 @@ public enum FingerprintType {
 		}
 
 		@Override
-		public boolean canCalculateRootedFingerprint() {
-			return false;
-		}
-
-		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
 			return RDKFuncs.PatternFingerprintMol(mol, settings.getNumBits());
-		}
-
-		@Override
-		public ExplicitBitVect calculateRooted(final ROMol mol,
-				final UInt_Vect atomList, final FingerprintSettings settings) {
-			throw new UnsupportedOperationException("Pattern fingerprints cannot be calculated as rooted fingerprints.");
 		}
 	};
 
@@ -651,6 +806,19 @@ public enum FingerprintType {
 		m_strName = strName;
 	}
 
+	//
+	// Public Methods
+	//
+
+	/**
+	 * Returns a representation name for this fingerprint type.
+	 * 
+	 * @return Name of the fingerprint. Never null.
+	 */
+	public String getName() {
+		return m_strName;
+	}
+
 	/**
 	 * Creates a new fingerprint settings object for a fingerprint type.
 	 * Not all parameters are used for all fingerprints. This method
@@ -672,16 +840,50 @@ public enum FingerprintType {
 	 * @return Specification of the fingerprint based on the passed in
 	 * 		values. Never null.
 	 */
+	public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
+			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
+			final int iNumBits, final int iRadius, final int iLayerFlags,
+			final boolean bIsRooted, final String strAtomListColumn, final boolean bTreatAtomListAsIncludeList) {
+		return getSpecification(iTorsionPathLength, iMinPath,
+				iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
+				iNumBits, iRadius, iLayerFlags,
+				bIsRooted, strAtomListColumn, bTreatAtomListAsIncludeList, false);
+	}
+
+	/**
+	 * Creates a new fingerprint settings object for a fingerprint type.
+	 * Not all parameters are used for all fingerprints. This method
+	 * takes are that only those parameters are included in the
+	 * fingerprint specification, if they are are really used.
+	 * 
+	 * @param iTorsionPathLength Torsion Path Length value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
+	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
+	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
+	 * @param bIsCountBased Flag to set if a count-based fingerprint is desired.
+	 * 
+	 * @return Specification of the fingerprint based on the passed in
+	 * 		values. Never null.
+	 */
 	public abstract FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final boolean bIsRooted, final String strAtomListColumn, final boolean bTreatAtomListAsIncludeList);
+			final boolean bIsRooted, final String strAtomListColumn, final boolean bTreatAtomListAsIncludeList,
+			final boolean bIsCountBased);
 
 	/**
 	 * Validates the passed in settings for a fingerprint type. This basis method checks two things:
 	 * 1. That the setting object is not null, 2. If the fingerprint type can calculate rooted
 	 * fingerprints and a rooted fingerprint is desired, it checks that the atom list column name
-	 * is set and if a table specification is provided it checks if that column exists.
+	 * is set and if a table specification is provided it checks if that column exists. 3. If
+	 * a count-based fingerprint is desired it checks if the fingerprint type supports this.
 	 * 
 	 * @param settings Fingerprint settings to be validated.
 	 * @param tableSpec Table specification that will be used to validate rooted fingerprint settings.
@@ -694,55 +896,165 @@ public enum FingerprintType {
 		if (settings == null) {
 			throw new InvalidSettingsException("No fingerprint settings available.");
 		}
-		if (canCalculateRootedFingerprint() && settings.isRooted()) {
-			final String strAtomListColumnName = settings.getAtomListColumnName();
-			if (StringUtils.isEmptyAfterTrimming(strAtomListColumnName)) {
-				throw new InvalidSettingsException("No atom list column name specified for rooted fingerprint calculation.");
-			}
-			if (tableSpec != null) {
-				final DataColumnSpec colSpec = tableSpec.getColumnSpec(strAtomListColumnName);
-				if (colSpec == null) {
-					throw new InvalidSettingsException("No atom list column found with the name '" + strAtomListColumnName + "'.");
+		if (settings.isRooted()) {
+			if (canCalculateRootedFingerprint()) {
+				final String strAtomListColumnName = settings.getAtomListColumnName();
+				if (StringUtils.isEmptyAfterTrimming(strAtomListColumnName)) {
+					throw new InvalidSettingsException("No atom list column name specified for rooted fingerprint calculation.");
 				}
-				final DataType dataType = colSpec.getType();
-				if ((dataType.isCompatible(IntValue.class) ||
-						(dataType.isCollectionType() && dataType.getCollectionElementType().isCompatible(IntValue.class))) == false) {
-					throw new InvalidSettingsException("Defined atom list column '" + strAtomListColumnName + "' is no integer collection nor an integer column.");
+				if (tableSpec != null) {
+					final DataColumnSpec colSpec = tableSpec.getColumnSpec(strAtomListColumnName);
+					if (colSpec == null) {
+						throw new InvalidSettingsException("No atom list column found with the name '" + strAtomListColumnName + "'.");
+					}
+					final DataType dataType = colSpec.getType();
+					if ((dataType.isCompatible(IntValue.class) ||
+							(dataType.isCollectionType() && dataType.getCollectionElementType().isCompatible(IntValue.class))) == false) {
+						throw new InvalidSettingsException("Defined atom list column '" + strAtomListColumnName + "' is no integer collection nor an integer column.");
+					}
 				}
 			}
+			else {
+				throw new InvalidSettingsException(getName() + " fingerprints cannot be calculated as rooted fingerprints.");
+			}
+		}
+		if (settings.isCountBased() && !canCalculateCountBasedFingerprint()) {
+			throw new InvalidSettingsException(getName() + " fingerprints cannot be calculated as count-based fingerprints.");
 		}
 	}
 
 	/**
-	 * Calculates the fingerprint based on the specified settings. Important:
+	 * Calculates the bit based fingerprint based on the specified settings. Important:
 	 * It is the responsibility of the caller of the function to free memory
 	 * for the returned fingerprint when it is not needed anymore. Call
 	 * the {@link ExplicitBitVect#delete()} for this purpose.
 	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
 	 * @param Fingerprint settings. Must not be null.
 	 * 
 	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of bit-based fingerprints.
 	 */
-	public abstract ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings);
+	public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
+		throw new UnsupportedOperationException(getName() + " fingerprints cannot be calculated as bit-based fingerprints.");
+	}
 
 	/**
-	 * Calculates the fingerprint based on the specified settings. Important:
+	 * Calculates the bit-based rooted fingerprint based on the specified settings. Important:
 	 * It is the responsibility of the caller of the function to free memory
 	 * for the returned fingerprint when it is not needed anymore. Call
 	 * the {@link ExplicitBitVect#delete()} for this purpose.
 	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
+	 * @param atomList Include or exclude list of atoms (depends on settings). Can be null.
 	 * @param Fingerprint settings. Must not be null.
 	 * 
 	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of rooted bit-based fingerprints.
 	 */
-	public abstract ExplicitBitVect calculateRooted(final ROMol mol, final UInt_Vect atomList, final FingerprintSettings settings);
+	public ExplicitBitVect calculateRooted(final ROMol mol, final UInt_Vect atomList, final FingerprintSettings settings) {
+		throw new UnsupportedOperationException(getName() + " fingerprints cannot be calculated as rooted bit-based fingerprints.");
+	}
+
+	/**
+	 * Calculates the bit based fingerprint based on the specified settings. Important:
+	 * It is the responsibility of the caller of the function to free memory
+	 * for the returned fingerprint when it is not needed anymore. Call
+	 * the {@link ExplicitBitVect#delete()} for this purpose.
+	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
+	 * @param Fingerprint settings. Must not be null.
+	 * 
+	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of bit-based fingerprints.
+	 */
+	public DenseBitVector calculateBitBased(final ROMol mol, final FingerprintSettings settings) {
+		return convertAndDispose(calculate(mol, settings));
+	}
+
+	/**
+	 * Calculates the bit-based rooted fingerprint based on the specified settings.
+	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
+	 * @param atomList Include or exclude list of atoms (depends on settings). Can be null.
+	 * @param Fingerprint settings. Must not be null.
+	 * 
+	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of rooted bit-based fingerprints.
+	 */
+	public DenseBitVector calculateBitBasedRooted(final ROMol mol, final UInt_Vect atomList, final FingerprintSettings settings) {
+		return convertAndDispose(calculateRooted(mol, atomList, settings));
+	}
+
+
+	/**
+	 * Calculates the count-based fingerprint based on the specified settings.
+	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
+	 * @param Fingerprint settings. Must not be null.
+	 * 
+	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of count-based fingerprints.
+	 */
+	public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
+		throw new UnsupportedOperationException(getName() + " fingerprints cannot be calculated as count-based fingerprints.");
+	}
+
+	/**
+	 * Calculates the fingerprint based on the specified settings.
+	 * 
+	 * @param mol Molecule to calculate fingerprint for. Must not be null.
+	 * @param atomList Include or exclude list of atoms (depends on settings). Can be null.
+	 * @param Fingerprint settings. Must not be null.
+	 * 
+	 * @return Fingerprint or null.
+	 * 
+	 * @throws UnsupportedOperationException Thrown, if fingerprint type does not support calculation
+	 * 		of rooted count-based fingerprints.
+	 */
+	public DenseByteVector calculateCountBasedRooted(final ROMol mol, final UInt_Vect atomList, final FingerprintSettings settings) {
+		throw new UnsupportedOperationException(getName() + " fingerprints cannot be calculated as rooted count-based fingerprints.");
+	}
 
 	/**
 	 * Determines, if it is possible for a fingerprint type to calculate rooted fingerprints.
+	 * If it is not overwritten by a fingerprint type it returns false by default.
 	 * 
 	 * @return True, if it is possible to calculate rooted fingerprints. False otherwise.
 	 */
-	public abstract boolean canCalculateRootedFingerprint();
+	public boolean canCalculateRootedFingerprint() {
+		return false;
+	}
+
+	/**
+	 * Determines, if it is possible for a fingerprint type to calculate bit-based fingerprints.
+	 * If it is not overwritten by a fingerprint type it returns true by default.
+	 * 
+	 * @return True, if it is possible to calculate bit-based fingerprints. False otherwise.
+	 */
+	public boolean canCalculateBitBasedFingerprint() {
+		return true;
+	}
+
+	/**
+	 * Determines, if it is possible for a fingerprint type to calculate count-based fingerprints.
+	 * If it is not overwritten by a fingerprint type it returns false by default.
+	 * 
+	 * @return True, if it is possible to calculate count-based fingerprints. False otherwise.
+	 */
+	public boolean canCalculateCountBasedFingerprint() {
+		return false;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -810,5 +1122,163 @@ public enum FingerprintType {
 		}
 
 		return bRet;
+	}
+
+	/**
+	 * Converts the passed in RDKit object into a KNIME fingerprint. Afterwards
+	 * it will be disposed (unless null was passed in).
+	 * 
+	 * @param fpRdkit RDKit object. Can be null.
+	 * 
+	 * @return KNIME fingerprint object. Null, if null was passed in.
+	 */
+	public DenseBitVector convertAndDispose(final ExplicitBitVect fpRdkit) {
+		DenseBitVector fp = null;
+
+		if (fpRdkit != null) {
+			try {
+				final int iCount = (int)fpRdkit.getNumBits();
+				fp = new DenseBitVector(iCount);
+				for (int i = 0; i < iCount; i++) {
+					if (fpRdkit.getBit(i)) {
+						fp.set(i);
+					}
+				}
+			}
+			finally {
+				fpRdkit.delete();
+			}
+		}
+
+		return fp;
+	}
+
+	/**
+	 * Converts the passed in RDKit object into a KNIME fingerprint. Afterwards
+	 * it will be disposed (unless null was passed in).
+	 * 
+	 * @param fpRdkit RDKit object. Can be null.
+	 * 
+	 * @return KNIME fingerprint object. Null, if null was passed in.
+	 */
+	public DenseByteVector convertAndDispose(final SparseIntVectu32 fpRdkit) {
+		DenseByteVector fp = null;
+
+		if (fpRdkit != null) {
+			try {
+				fp = new DenseByteVector((int)fpRdkit.getLength());
+				final UInt_Pair_Vect listOfPairs = fpRdkit.getNonzero();
+				if (listOfPairs != null) {
+					try {
+						final int iCount = (int)listOfPairs.size();
+						for (int i = 0; i < iCount; i++) {
+							final UInt_Pair pair = listOfPairs.get(i);
+							if (pair != null) {
+								try {
+									fp.set((int)pair.getFirst(), pair.getSecond());
+								}
+								finally {
+									pair.delete();
+								}
+							}
+						}
+					}
+					finally {
+						listOfPairs.delete();
+					}
+				}
+			}
+			finally {
+				fpRdkit.delete();
+			}
+		}
+
+		return fp;
+	}
+
+	/**
+	 * Converts the passed in RDKit object into a KNIME fingerprint. Afterwards
+	 * it will be disposed (unless null was passed in).
+	 * 
+	 * @param fpRdkit RDKit object. Can be null.
+	 * 
+	 * @return KNIME fingerprint object. Null, if null was passed in.
+	 */
+	public DenseByteVector convertAndDispose(final SparseIntVect32 fpRdkit) {
+		DenseByteVector fp = null;
+
+		if (fpRdkit != null) {
+			try {
+				fp = new DenseByteVector(fpRdkit.getLength());
+				final Match_Vect listOfPairs = fpRdkit.getNonzero();
+				if (listOfPairs != null) {
+					try {
+						final int iCount = (int)listOfPairs.size();
+						for (int i = 0; i < iCount; i++) {
+							final Int_Pair pair = listOfPairs.get(i);
+							if (pair != null) {
+								try {
+									fp.set(pair.getFirst(), pair.getSecond());
+								}
+								finally {
+									pair.delete();
+								}
+							}
+						}
+					}
+					finally {
+						listOfPairs.delete();
+					}
+				}
+			}
+			finally {
+				fpRdkit.delete();
+			}
+		}
+
+		return fp;
+	}
+
+	/**
+	 * Converts the passed in RDKit object into a KNIME fingerprint. Afterwards
+	 * it will be disposed (unless null was passed in).
+	 * 
+	 * @param fpRdkit RDKit object. Can be null.
+	 * 
+	 * @return KNIME fingerprint object. Null, if null was passed in.
+	 */
+	public DenseByteVector convertAndDispose(final SparseIntVect64 fpRdkit) {
+		DenseByteVector fp = null;
+
+		if (fpRdkit != null) {
+			try {
+				fp = new DenseByteVector((int)fpRdkit.getLength());
+				final Long_Pair_Vect listOfPairs = fpRdkit.getNonzero();
+				if (listOfPairs != null) {
+					try {
+						final int iCount = (int)listOfPairs.size();
+						for (int i = 0; i < iCount; i++) {
+							final Long_Pair pair = listOfPairs.get(i);
+							if (pair != null) {
+								try {
+									fp.set((int)pair.getFirst(), pair.getSecond());
+								}
+								finally {
+									pair.delete();
+								}
+							}
+						}
+					}
+					finally {
+						listOfPairs.delete();
+					}
+				}
+			}
+			finally {
+				fpRdkit.delete();
+			}
+		}
+
+		return fp;
 	}
 }

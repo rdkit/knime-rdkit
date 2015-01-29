@@ -151,6 +151,20 @@ public interface FingerprintSettings {
 	boolean isRooted();
 
 	/**
+	 * Returns true, if the fingerprint shall be calculated as bit-based fingerprint.
+	 * 
+	 * @return True or false.
+	 */
+	boolean isBitBased();
+
+	/**
+	 * Returns true, if the fingerprint shall be calculated as count-based fingerprint.
+	 * 
+	 * @return True or false.
+	 */
+	boolean isCountBased();
+
+	/**
 	 * Returns the atom list column name, which must be set if the fingerprint shall be
 	 * calculated as rooted fingerprint.
 	 * 
@@ -258,6 +272,20 @@ public interface FingerprintSettings {
 	 * @param bRooted True to be rooted, false otherwise.
 	 */
 	void setRooted(boolean bRooted);
+
+	/**
+	 * Sets the option to calculate the fingerprint as bit-based fingerprint.
+	 * 
+	 * @param bBitBased True to be bit-based, false otherwise.
+	 */
+	void setBitBased(boolean bBitBased);
+
+	/**
+	 * Sets the option to calculate the fingerprint as count-based fingerprint.
+	 * 
+	 * @param bCountBased True to be count-based, false otherwise.
+	 */
+	void setCountBased(boolean bCountBased);
 
 	/**
 	 * Sets the atom list column name, which must be set if the fingerprint shall be

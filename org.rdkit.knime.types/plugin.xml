@@ -64,4 +64,31 @@
             java-deserializer-factory="org.rdkit.knime.types.RDKitFingerprintDeserializer$Factory">
       	</type>   
    </extension>
-</plugin>
+    
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkituintsparseintvect.pythontoknime"
+            python-type-identifier="rdkit.DataStructs.cDataStructs.UIntSparseIntVect"
+            python-serializer="python/RDKitUIntSparseIntVectSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitCountBasedFingerprintDeserializer$Factory">
+      	</type>   
+   </extension>
+    
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkitintsparseintvect.pythontoknime"
+            python-type-identifier="rdkit.DataStructs.cDataStructs.IntSparseIntVect"
+            python-serializer="python/RDKitIntSparseIntVectSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitCountBasedFingerprintDeserializer$Factory">
+      	</type>   
+   </extension>
+    
+   <extension point="org.knime.python.typeextension.pythontoknime">
+		<type
+            id="org.rdkit.knime.types.rdkitlongsparseintvect.pythontoknime"
+            python-type-identifier="rdkit.DataStructs.cDataStructs.LongSparseIntVect"
+            python-serializer="python/RDKitLongSparseIntVectSerializer.py"
+            java-deserializer-factory="org.rdkit.knime.types.RDKitCountBasedFingerprintDeserializer$Factory">
+      	</type>   
+   </extension>   
+   </plugin>

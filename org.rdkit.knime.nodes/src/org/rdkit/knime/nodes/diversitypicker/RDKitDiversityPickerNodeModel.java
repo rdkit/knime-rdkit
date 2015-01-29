@@ -258,6 +258,11 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 						bCompatible = false;
 					}
 
+					// Incompatible, if fingerprints of table 1 are count-based fingerprints
+					else if (fpSpec1.isCountBased()) {
+						bCompatible = false;
+					}
+
 					// Determine, if fingerprint setting information of table 1 can be used for a new fingerprint
 					else {
 						final FingerprintType fpType = fpSpec1.getRdkitFingerprintType();

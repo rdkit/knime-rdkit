@@ -51,18 +51,17 @@ package org.rdkit.knime.nodes.rdkfingerprint;
 import org.RDKit.ROMol;
 import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.vector.bitvector.DenseBitVector;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bytevector.DenseByteVector;
+import org.knime.core.data.vector.bytevector.DenseByteVectorCell;
+import org.knime.core.data.vector.bytevector.DenseByteVectorCellFactory;
 
 /**
  * This class implements the node model of the "RDKitFingerprint" node
  * providing calculations based on the open source RDKit library.
  * 
- * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel {
+public class RDKitCountBasedFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel {
 
 	//
 	// Constructors
@@ -71,7 +70,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 	/**
 	 * Create new node model with one data in- and one outport.
 	 */
-	RDKitFingerprintNodeModel() {
+	RDKitCountBasedFingerprintNodeModel() {
 		super();
 	}
 
@@ -81,12 +80,12 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 
 	@Override
 	protected FingerprintType[] getSupportedFingerprintTypes() {
-		return RDKitFingerprintNodeModel.getBitBasedFingerprintTypes();
+		return RDKitCountBasedFingerprintNodeModel.getCountBasedFingerprintTypes();
 	}
 
 	@Override
 	protected org.knime.core.data.DataType getFingerprintColumnType() {
-		return DenseBitVectorCell.TYPE;
+		return DenseByteVectorCell.TYPE;
 	}
 
 	@Override
@@ -104,7 +103,7 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 				m_modelRootedOption.getBooleanValue(),
 				m_modelAtomListColumnName.getStringValue(),
 				m_modelAtomListHandlingIncludeOption.getBooleanValue(),
-				false));
+				true));
 		return settings;
 	}
 
@@ -115,10 +114,10 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 		final FingerprintType fpType = settings.getRdkitFingerprintType();
 
 		if (fpType != null) {
-			final DenseBitVector bitVector = settings.getRdkitFingerprintType().calculateBitBased(mol, settings);
+			final DenseByteVector byteVector = settings.getRdkitFingerprintType().calculateCountBased(mol, settings);
 
-			if (bitVector != null) {
-				outputCell = new DenseBitVectorCellFactory(bitVector).createDataCell();
+			if (byteVector != null) {
+				outputCell = new DenseByteVectorCellFactory(byteVector).createDataCell();
 			}
 		}
 
@@ -132,10 +131,10 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 		final FingerprintType fpType = settings.getRdkitFingerprintType();
 
 		if (fpType != null) {
-			final DenseBitVector bitVector = fpType.calculateBitBasedRooted(mol, atomList, settings);
+			final DenseByteVector byteVector = fpType.calculateCountBasedRooted(mol, atomList, settings);
 
-			if (bitVector != null) {
-				outputCell = new DenseBitVectorCellFactory(bitVector).createDataCell();
+			if (byteVector != null) {
+				outputCell = new DenseByteVectorCellFactory(byteVector).createDataCell();
 			}
 		}
 
@@ -147,15 +146,14 @@ public class RDKitFingerprintNodeModel extends AbstractRDKitFingerprintNodeModel
 	//
 
 	/**
-	 * Returns an array of all fingerprint types that support bit-based fingerprint calculation.
+	 * Returns an array of all fingerprint types that support count-based fingerprint calculation.
 	 * 
 	 * @return Array of fingerprint types.
 	 */
-	public static FingerprintType[] getBitBasedFingerprintTypes() {
+	public static FingerprintType[] getCountBasedFingerprintTypes() {
 		return new FingerprintType[] {
 				FingerprintType.morgan, FingerprintType.featmorgan,
-				FingerprintType.atompair, FingerprintType.torsion, FingerprintType.rdkit, FingerprintType.avalon,
-				FingerprintType.layered, FingerprintType.maccs, FingerprintType.pattern
+				FingerprintType.atompair, FingerprintType.torsion
 		};
 	}
 }

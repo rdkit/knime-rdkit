@@ -1632,7 +1632,13 @@ public final class LayoutUtils {
 				final JTabbedPane tabPane = (JTabbedPane)comp;
 				for (int j = 0; j < tabPane.getTabCount(); j++) {
 					final Component compTab = tabPane.getComponentAt(j);
-					if (compTab instanceof JComponent) {
+					if (compTab instanceof JScrollPane) {
+						final Component compInner = ((JScrollPane)compTab).getViewport().getView();
+						if (compTab instanceof JComponent) {
+							correctBorder((JComponent)compInner);
+						}
+					}
+					else if (compTab instanceof JComponent) {
 						correctBorder((JComponent)compTab);
 					}
 				}

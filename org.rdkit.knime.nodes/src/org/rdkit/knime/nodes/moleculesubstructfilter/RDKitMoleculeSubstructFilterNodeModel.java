@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import org.RDKit.ExplicitBitVect;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.chem.types.SmartsValue;
@@ -784,26 +783,8 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 	 * @return Fingerprint or null, if calculation failed.
 	 */
 	protected DenseBitVector createFingerprint(final ROMol mol) {
-		DenseBitVector ret = null;
-		final ExplicitBitVect fingerprint = FINGERPRINT_SETTING.getRdkitFingerprintType().
-				calculate(mol, FINGERPRINT_SETTING);
-
-		// Transfer to bit vector
-		if (fingerprint != null) {
-			final long lBits = fingerprint.getNumBits();
-			final DenseBitVector bitVector = new DenseBitVector(lBits);
-			for (long bit = 0; bit < lBits; bit++) {
-				if (fingerprint.getBit(bit)) {
-					bitVector.set(bit);
-				}
-			}
-			ret = bitVector;
-
-			// Free memory from RDKit immediately
-			fingerprint.delete();
-		}
-
-		return ret;
+		return FINGERPRINT_SETTING.getRdkitFingerprintType().
+				calculateBitBased(mol, FINGERPRINT_SETTING);
 	}
 
 	@Override

@@ -48,33 +48,56 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * The dialog to configure the RDKit node.
+ * <code>NodeFactory</code> for the RDKit based "RDKitCountBasedFingerprint" Node.
  *
- * @author Greg Landrum
  * @author Manuel Schwarze
  */
-public class RDKitFingerprintNodeDialog extends AbstractRDKitFingerprintNodeDialog {
-
-	//
-	// Constructor
-	//
+public class RDKitCountBasedFingerprintNodeFactory extends NodeFactory<RDKitCountBasedFingerprintNodeModel> {
 
 	/**
-	 * Create a new dialog pane with some default components.
+	 * {@inheritDoc}
 	 */
-	RDKitFingerprintNodeDialog() {
-		super();
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new RDKitCountBasedFingerprintNodeDialog();
 	}
 
-	//
-	// Public Methods
-	//
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	protected FingerprintType[] getSupportedFingerprintTypes() {
-		return RDKitFingerprintNodeModel.getBitBasedFingerprintTypes();
+	public RDKitCountBasedFingerprintNodeModel createNodeModel() {
+		return new RDKitCountBasedFingerprintNodeModel();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<RDKitCountBasedFingerprintNodeModel> createNodeView(
+			final int viewIndex, final RDKitCountBasedFingerprintNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return true;
 	}
 
 }

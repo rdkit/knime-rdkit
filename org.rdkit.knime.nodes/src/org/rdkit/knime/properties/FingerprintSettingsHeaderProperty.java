@@ -122,6 +122,9 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	/** The property that holds a fingerprint information that can be handled with this handler. */
 	public static final String VALUE_FP_ATOM_LIST_HANDLING_EXCLUDE = "excluded";
 
+	/** The property that holds a fingerprint information that can be handled with this handler. */
+	public static final String PROPERTY_FP_IS_COUNT_BASED = "rdkit.fingerprint.isCountBased";
+
 	/**
 	 * The properties that are involved in handling Fingerprint specification header properties.
 	 */
@@ -130,7 +133,7 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 		PROPERTY_FP_ATOMPAIR_MIN_PATH, PROPERTY_FP_ATOMPAIR_MAX_PATH,
 		PROPERTY_FP_NUM_BITS, PROPERTY_FP_RADIUS, PROPERTY_FP_LAYER_FLAGS,
 		PROPERTY_FP_SIMILARITY_BITS, PROPERTY_FP_IS_ROOTED,PROPERTY_FP_ATOM_LIST_COLUMN_NAME,
-		PROPERTY_FP_ATOM_LIST_HANDLING
+		PROPERTY_FP_ATOM_LIST_HANDLING, PROPERTY_FP_IS_COUNT_BASED
 	};
 
 	/** String column specification used to find correct renderer. */
@@ -160,7 +163,7 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 			final int iNumBits, final int iRadius, final int iLayerFlags,
 			final int iSimilarityBits) {
 		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false);
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false, false);
 	}
 
 	/**
@@ -185,9 +188,36 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 			final int iNumBits, final int iRadius, final int iLayerFlags,
 			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
 			final boolean bTreatAtomListAsIncludeList) {
+		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList, false);
+	}
+
+	/**
+	 * Creates a new header property object with the specified fingerprint type.
+	 * 
+	 * @param strType Fingerprint type value. Can be null.
+	 * @param iTorsionPathLength Torsion min path values. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMinPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iMaxPath Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMinPath AtomPair Min Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iAtomPairMaxPath AtomPair Max Path value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
+	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
+	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
+	 * @param bIsCountBased Flag to set if a count-based fingerprint is desired.
+	 */
+	public FingerprintSettingsHeaderProperty(final String strType,final int iTorsionPathLength,
+			final int iMinPath, final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
+			final int iNumBits, final int iRadius, final int iLayerFlags,
+			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 		super(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
 				iNumBits, iRadius, iLayerFlags, iSimilarityBits,
-				bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList);
+				bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList, bIsCountBased);
 	}
 
 	/**
@@ -241,6 +271,7 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 			setAtomListColumnName(mapProps.get(PROPERTY_FP_ATOM_LIST_COLUMN_NAME));
 			setTreatAtomListAsIncludeList(VALUE_FP_ATOM_LIST_HANDLING_INCLUDE.
 					equalsIgnoreCase(mapProps.get(PROPERTY_FP_ATOM_LIST_HANDLING)));
+			setCountBased(getBoolean(mapProps, PROPERTY_FP_IS_COUNT_BASED, strColumnName));
 		}
 	}
 
@@ -300,6 +331,10 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 							VALUE_FP_ATOM_LIST_HANDLING_INCLUDE :
 								VALUE_FP_ATOM_LIST_HANDLING_EXCLUDE);
 				}
+			}
+			if (isCountBased()) {
+				listProps.add(PROPERTY_FP_IS_COUNT_BASED);
+				listProps.add("" + true);
 			}
 
 			HeaderPropertyUtils.writeInColumnSpec(colSpecCreator,

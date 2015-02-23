@@ -70,7 +70,6 @@
 <setEntry value="org.rdkit.knime.feature:default"/>
 <setEntry value="org.rdkit.knime.testing.feature:default"/>
 <setEntry value="org.tigris.subversion.clientadapter.feature:default"/>
-<setEntry value="org.tigris.subversion.clientadapter.svnkit.feature:default"/>
 <setEntry value="org.tigris.subversion.subclipse.graph.feature:default"/>
 <setEntry value="org.tigris.subversion.subclipse:default"/>
 <setEntry value="org.tmatesoft.svnkit:default"/>

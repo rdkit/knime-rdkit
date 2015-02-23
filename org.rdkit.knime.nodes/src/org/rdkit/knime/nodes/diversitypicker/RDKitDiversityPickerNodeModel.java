@@ -547,7 +547,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 			warnings.saveWarning("Number of diverse points requested (" + iNumberToPick
 					+ ") is equal to the number of valid fingerprints (" + listIndicesUsed.size() + ") - " +
 					"Output table will contain all rows of table 1 with non-empty input.");
-			intVector = new Int_Vect(iNumberToPick);
+			intVector = new Int_Vect();
 			for (int i = 0; i < iNumberToPick; i++) {
 				intVector.set(i,  i);
 			}

@@ -52,6 +52,8 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -300,7 +302,7 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 			throws InvalidSettingsException {
 		final String fileName = m_textBox.getSelectedFile();
 		if (!fileName.equals("")) {
-			final File file = FilesHistoryPanel.getFile(fileName);
+			final File file = getFile(fileName);
 			settings.addString(FingerprintWriterNodeModel.CFG_TARGET_FILE,
 					file.getAbsolutePath());
 		}
@@ -360,4 +362,27 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 		return bFound;
 	}
 
+	/**
+	 * Return a file object for the given fileName. It makes sure that if the
+	 * fileName is not absolute it will be relative to the user's home dir.
+	 *
+	 * @param fileOrUrl the file name to convert to a file
+	 * @return a file representing fileName
+	 */
+	private static final File getFile(final String fileOrUrl) {
+		String path = fileOrUrl;
+		try {
+			final URL u = new URL(fileOrUrl);
+			if ("file".equals(u.getProtocol())) {
+				path = u.getPath();
+			}
+		} catch (final MalformedURLException ex) {
+		}
+
+		File f = new File(path);
+		if (!f.isAbsolute()) {
+			f = new File(new File(System.getProperty("user.home")), path);
+		}
+		return f;
+	}
 }

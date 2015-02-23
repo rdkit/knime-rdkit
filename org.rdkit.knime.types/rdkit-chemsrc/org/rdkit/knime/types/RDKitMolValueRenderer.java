@@ -185,7 +185,19 @@ implements SvgProvider {
 
 			try {
 				mol = molCell.readMoleculeValue();
-				final String svg = mol.ToSVG(8,50);
+				
+				// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
+				// This is necessary for the RDKit changes in the SVG generation
+				long lConformerId = -1;
+				if (mol.getNumConformers() == 0) {
+					lConformerId = mol.compute2DCoords();
+				}
+				
+				String svg = mol.ToSVG(8,50);
+				
+				if (lConformerId >= 0) {
+					mol.removeConformer(lConformerId);
+				}
 
 				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
 				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);

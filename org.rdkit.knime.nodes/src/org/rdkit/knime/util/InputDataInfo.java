@@ -1170,7 +1170,7 @@ public class InputDataInfo {
 		final List<Integer> listIntegers = getIntegerList(row);
 
 		if (listIntegers != null) {
-			vectInt = new Int_Vect(listIntegers.size());
+			vectInt = new Int_Vect();
 			for (final Integer i : listIntegers) {
 				vectInt.add(i);
 			}

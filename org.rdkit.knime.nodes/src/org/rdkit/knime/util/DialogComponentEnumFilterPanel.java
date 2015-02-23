@@ -85,7 +85,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * This component has similar functionality as the column filter panel. The difference is
@@ -93,8 +92,6 @@ import org.knime.core.node.util.ColumnFilterPanel;
  *
  * @author Dillip K Mohanty
  * @author Manuel Schwarze
- *
- * @see ColumnFilterPanel
  */
 public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogComponent {
 

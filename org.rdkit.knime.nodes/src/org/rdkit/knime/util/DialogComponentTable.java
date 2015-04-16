@@ -277,7 +277,7 @@ public class DialogComponentTable extends DialogComponent {
 
 		for (int i = 0; i < iMinColumnWidths.length && i < iColCount; i++) {
 			if (iMinColumnWidths[i] >= 0) {
-				columnModel.getColumn(i).setWidth(iMinColumnWidths[i]);
+				columnModel.getColumn(i).setMinWidth(iMinColumnWidths[i]);
 			}
 		}
 	}

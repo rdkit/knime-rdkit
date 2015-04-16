@@ -98,13 +98,6 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 	/** Input data info index for Atom List. */
 	protected static final int INPUT_COLUMN_ATOM_LIST = 1;
 
-	/**
-	 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
-	 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
-	 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-	 */
-	private static final Object TO_SVG_LOCK = new Object();
-
 	//
 	// Members
 	//
@@ -277,6 +270,12 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
 					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), iUniqueWaveId);
 
+					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
+					// This is necessary for the RDKit changes in the SVG generation
+					if (mol.getNumConformers() == 0) {
+						mol.compute2DCoords();
+					}
+
 					String xmlSvg = null;
 
 					if (vectInt == null) {
@@ -285,14 +284,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 						vectInt = EMPTY_ATOM_LIST; // This must not be cleaned up, it is a constant
 					}
 
-					/**
-					 * This lock prevents two calls at the same time into the RDKit toSVG functionality,
-					 * which has caused crashes under Windows 7 and Linux before. Once there is a fix
-					 * implemented in the RDKit (or somewhere else?) we can remove this LOCK again.
-					 */
-					synchronized(TO_SVG_LOCK) {
-						xmlSvg = mol.ToSVG(vectInt, 8, 50);
-					}
+					xmlSvg = mol.ToSVG(vectInt, 8, 50);
 
 					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {
 						// Important: Use the factory here, because using the normal SvgCell contructor causes

@@ -94,6 +94,10 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	// Enumeration
 	//
 
+	public enum InputType {
+		SMILES, SDF, SMARTS;
+	}
+
 	/**
 	 * This enumeration defines how erroneous molecules, which cannot be converted
 	 * into RDKit Molecules, shall be handled.
@@ -193,6 +197,10 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 			registerSettings(Molecule2RDKitConverterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
 	// Accepts also old deprecated key
 
+	/** Settings model for the option to treat input molecules as query. */
+	private final SettingsModelBoolean m_modelTreatAsQuery =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createTreatAsQueryOptionModel(), true);
+
 	/** Settings model for the column name of the new column to be added to the output table. */
 	private final SettingsModelString m_modelNewColumnName =
 			registerSettings(Molecule2RDKitConverterNodeDialog.createNewColumnNameModel());
@@ -248,10 +256,16 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	//
 
 	/** This variable is used during execution for performance reasons. */
-	private boolean m_bIsSmiles = false;
+	private InputType m_inputType = null;
 
 	/** This variable is used during execution for performance reasons. */
-	private boolean m_bIsSmarts = false;
+	private boolean m_bTreatAsQuery = false;
+
+	/** This variable is used during execution for performance reasons. */
+	private boolean m_bSanitize = false;
+
+	/** This variable is used during execution for performance reasons. */
+	private boolean m_bRemoveHs = false;
 
 	//
 	// Constructor
@@ -491,9 +505,6 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 		final DataCell missingCell = DataType.getMissingCell();
 
 		// Generate factory
-		final boolean bSanitize = !m_modelQuickAndDirty.getBooleanValue();
-		final boolean bRemoveHs = !m_modelKeepHs.getBooleanValue();
-
 		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 				getWarningConsolidator(), arrInputDataInfos, arrOutputSpec) {
@@ -506,25 +517,30 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 			 */
 			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
 				final DataCell[] arrOutputCells = new DataCell[] { missingCell, missingCell };
-				ROMol mol = null;
+				RWMol mol = null;
+				ROMol molFinal = null;
 				String smiles = null;
 				Exception excCaught = null;
 
 				// As first step try to parse the input molecule format
 				try {
-					if (m_bIsSmiles) {
+					if (m_inputType == InputType.SMILES) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
-						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, bSanitize), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, m_bSanitize && !m_bTreatAsQuery), iUniqueWaveId);
 						smiles = value;
 					}
-					else if (m_bIsSmarts) {
+					else if (m_inputType == InputType.SMARTS) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmarts(row);
 						mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), iUniqueWaveId);
 						smiles = value;
 					}
-					else {
+					else if (m_inputType == InputType.SDF) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-						mol = markForCleanup(RWMol.MolFromMolBlock(value, bSanitize, bRemoveHs), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), iUniqueWaveId);
+					}
+					else {
+						throw new InvalidSettingsException("The molecule input type " + m_inputType +
+								" is invalid or cannot be handled by this node.");
 					}
 				}
 				catch (final EmptyCellException excEmpty) {
@@ -541,38 +557,61 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 				// If we got an RDKit molecule, parsing was successful, now massage it
 				if (mol != null) {
 					try {
-						if (m_bIsSmarts) {
+						switch (m_inputType) {
+						case SMARTS:
 							mol.updatePropertyCache(false);
-						}
-						else if (!bSanitize) {
-							RDKFuncs.cleanUp((RWMol)mol);
-							mol.updatePropertyCache(false);
-							RDKFuncs.symmetrizeSSSR(mol);
+							molFinal = mol;
+							break;
+						case SMILES:
+						case SDF:
+							// Perform partial sanitization only
+							if (!m_bSanitize) {
+								RDKFuncs.cleanUp(mol);
+								mol.updatePropertyCache(false);
+								RDKFuncs.symmetrizeSSSR(mol);
 
-							if (m_modelAromatization.getBooleanValue()) {
-								RDKFuncs.Kekulize((RWMol)mol);
-								RDKFuncs.setAromaticity((RWMol)mol);
+								if (m_modelAromatization.getBooleanValue()) {
+									RDKFuncs.Kekulize(mol);
+									RDKFuncs.setAromaticity(mol);
+								}
+
+								RDKFuncs.setConjugation(mol);
+								RDKFuncs.setHybridization(mol);
+
+								if (m_modelStereoChem.getBooleanValue()) {
+									RDKFuncs.assignStereochemistry(mol, true);
+								}
+
+								if(smiles == null){
+									smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+								}
 							}
 
-							RDKFuncs.setConjugation(mol);
-							RDKFuncs.setHybridization(mol);
+							// Special handling to keep Hs and merge query Hs
+							if (m_bTreatAsQuery) {
+								// For SMILES we did not sanitize in the constructor, need to do it now
+								if (m_inputType == InputType.SMILES) {
+									RDKFuncs.sanitizeMol(mol);
+								}
 
-							if (m_modelStereoChem.getBooleanValue()) {
-								RDKFuncs.assignStereochemistry(mol, true);
+								// Merge Hs if we treat an SDF input molecule as query
+								molFinal = markForCleanup(mol.mergeQueryHs(), iUniqueWaveId);
+								molFinal.updatePropertyCache(false);
+								RDKFuncs.fastFindRings(molFinal);
 							}
-
-							if(smiles == null){
-								smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
+							else {
+								molFinal = mol;
 							}
+							break;
 						}
 
 						if (m_modelGenerateCoordinates.getBooleanValue()) {
-							if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
-								mol.compute2DCoords();
+							if (m_modelForceGenerateCoordinates.getBooleanValue() || molFinal.getNumConformers() == 0) {
+								molFinal.compute2DCoords();
 							}
 						}
 
-						arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(mol, smiles);
+						arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(molFinal, smiles);
 					}
 					catch (final Exception exc) {
 						excCaught = exc;
@@ -580,13 +619,12 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 				}
 
 				// Do error handling depending on user settings
-				if (mol == null || excCaught != null) {
+				if (molFinal == null || excCaught != null) {
 					// Find error message
-					final StringBuilder sbError = new StringBuilder(
-							(m_bIsSmiles ? "SMILES" : (m_bIsSmarts ? "SMARTS" : "SDF")));
+					final StringBuilder sbError = new StringBuilder(m_inputType.toString());
 
 					// Specify error type
-					if (mol == null) {
+					if (molFinal == null) {
 						sbError.append(" Parsing Error (");
 					}
 					else {
@@ -651,8 +689,32 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 		final int iInputIndex = arrInputDataInfo[0][INPUT_COLUMN_MOL].getColumnIndex();
 		final DataType type = inSpec.getColumnSpec(iInputIndex).getType();
 		final boolean bInludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
-		m_bIsSmiles = type.isCompatible(SmilesValue.class);
-		m_bIsSmarts = type.isCompatible(SmartsValue.class);
+
+		// Define what type we will use as input -
+		// if the input column supports more than one type it will use SMILES before SDF before SMARTS
+		if (type.isCompatible(SmilesValue.class)) {
+			m_inputType = InputType.SMILES;
+		}
+		else if (type.isCompatible(SdfValue.class)) {
+			m_inputType = InputType.SDF;
+		}
+		else if (type.isCompatible(SmartsValue.class)) {
+			m_inputType = InputType.SMARTS;
+		}
+
+		// Defines the options and ensure they are valid for the input molecule type we process
+		m_bSanitize = !m_modelQuickAndDirty.getBooleanValue();
+		m_bRemoveHs = !m_modelKeepHs.getBooleanValue();
+
+		m_bTreatAsQuery = (m_modelTreatAsQuery.getBooleanValue() &&
+				(m_inputType == InputType.SMILES || m_inputType == InputType.SDF));
+
+		// Special behavior when treating input as query
+		if (m_modelTreatAsQuery.getBooleanValue()) {
+			// Always sanitize (no partial sanitization only)
+			m_bSanitize = true;
+			m_bRemoveHs = false;
+		}
 
 		final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
 				.equals(m_modelSeparateFails.getStringValue());

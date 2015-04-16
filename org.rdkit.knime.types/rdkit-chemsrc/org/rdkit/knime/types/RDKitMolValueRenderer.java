@@ -185,16 +185,16 @@ implements SvgProvider {
 
 			try {
 				mol = molCell.readMoleculeValue();
-				
+
 				// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 				// This is necessary for the RDKit changes in the SVG generation
 				long lConformerId = -1;
 				if (mol.getNumConformers() == 0) {
 					lConformerId = mol.compute2DCoords();
 				}
-				
-				String svg = mol.ToSVG(8,50);
-				
+
+				final String svg = mol.ToSVG(8,50);
+
 				if (lConformerId >= 0) {
 					mol.removeConformer(lConformerId);
 				}
@@ -274,7 +274,10 @@ implements SvgProvider {
 			try {
 				SvgValueRenderer.paint(m_svgDocument, (Graphics2D)g, getBounds(), true);
 			}
-			catch (final Exception excPainting) {
+			catch (final Throwable excPainting) {
+				if (excPainting instanceof ThreadDeath) {
+					throw (ThreadDeath)excPainting;
+				}
 				g.setFont(NO_SVG_FONT);
 				drawString(g, "Painting failed for", 2, 14);
 				g.setFont(SMILES_FONT);

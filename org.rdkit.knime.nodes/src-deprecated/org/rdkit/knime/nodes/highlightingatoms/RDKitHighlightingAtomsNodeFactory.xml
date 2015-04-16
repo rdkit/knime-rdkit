@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
-    <name>RDKit Highlighting Atoms</name>
+<knimeNode icon="./default.png" type="Manipulator" deprecated="true">
+    <name>RDKit Highlighting Atoms (deprecated)</name>
     
     <shortDescription>
         Creates a SVG column showing a molecule with highlighted atoms based on information in the input table. 
         A molecule column as well as a column with a list of the atoms to be highlighted needs to be provided.
+        Note: This node has been replaced with the RDKit Molecule Highlighting node.
     </shortDescription>
     
     <fullDescription>
         <intro>
         	Creates a SVG column showing a molecule with highlighted atoms based on information in the input table. 
    		    A molecule column as well as a column with a list of the atoms to be highlighted needs to be provided.
+	        Note: This node has been replaced with the RDKit Molecule Highlighting node.
         </intro>
    
         <option name="RDKit Mol column">The input column with RDKit Molecules.</option>

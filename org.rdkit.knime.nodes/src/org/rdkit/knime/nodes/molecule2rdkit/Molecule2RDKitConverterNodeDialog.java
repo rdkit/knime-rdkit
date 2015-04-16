@@ -79,8 +79,20 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	// Members
 	//
 
+	/** The model for the option to treat SMILES input as query (only valid for SMILES input). */
+	private SettingsModelBoolean m_modelTreatAsQuery;
+
 	/** The model for the option to keep hydrogens (only valid for SDF input). */
 	private SettingsModelBoolean m_modelKeepHs;
+
+	/** The model for the option to perform partial sanitization. */
+	private final SettingsModelBoolean m_modelPartialSanitization;
+
+	/** The model for the option to control aromatization sanitization. */
+	private final SettingsModelBoolean m_modelAromatization;
+
+	/** The model for the option to control stereo chemistry sanitization. */
+	private final SettingsModelBoolean m_modelStereoChemistry;
 
 	/** The dialog component for picking input columns. */
 	private DialogComponentColumnNameSelection m_compInputColumn;
@@ -95,16 +107,24 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	 * to tell, if the source column shall be removed from the result table.
 	 */
 	Molecule2RDKitConverterNodeDialog() {
-		final SettingsModelString modelInputColumn = createInputColumnNameModel();
-		super.addDialogComponent(m_compInputColumn = new DialogComponentColumnNameSelection(
-				modelInputColumn, "Molecule column: ", 0,
-				SmilesValue.class, SmartsValue.class, SdfValue.class));
-		modelInputColumn.addChangeListener(new ChangeListener() {
+		// This change listener will update options based on certain settings
+		final ChangeListener changeListener = new ChangeListener() {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
 				updateOptionsAvailability();
 			}
-		});
+		};
+
+		super.setHorizontalPlacement(true);
+		final SettingsModelString modelInputColumn = createInputColumnNameModel();
+		super.addDialogComponent(m_compInputColumn = new DialogComponentColumnNameSelection(
+				modelInputColumn, "Molecule column: ", 0,
+				SmilesValue.class, SmartsValue.class, SdfValue.class));
+		modelInputColumn.addChangeListener(changeListener);
+		super.addDialogComponent(new DialogComponentBoolean(
+				m_modelTreatAsQuery = createTreatAsQueryOptionModel(), "Treat as query"));
+		m_modelTreatAsQuery.addChangeListener(changeListener);
+		super.setHorizontalPlacement(false);
 
 		super.addDialogComponent(new DialogComponentString(
 				createNewColumnNameModel(), "New column name: "));
@@ -135,16 +155,16 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 		super.closeCurrentGroup();
 
 		super.createNewTab("Advanced");
-		final SettingsModelBoolean quickAndDirtyModel = createQuickAndDirtyModel();
+		m_modelPartialSanitization = createQuickAndDirtyModel();
 		super.addDialogComponent(new DialogComponentBoolean(
 				m_modelKeepHs = createKeepHsOptionModel(), "Keep Hydrogens"));
 		super.addDialogComponent(new DialogComponentBoolean(
-				quickAndDirtyModel, "Partial Sanitization"));
+				m_modelPartialSanitization, "Partial Sanitization"));
 		super.createNewGroup("Partial Sanitization Options");
 		super.addDialogComponent(new DialogComponentBoolean(
-				createAromatizationModel(quickAndDirtyModel), "Reperceive Aromaticity"));
+				m_modelAromatization = createAromatizationModel(m_modelPartialSanitization), "Reperceive Aromaticity"));
 		super.addDialogComponent(new DialogComponentBoolean(
-				createStereochemistryModel(quickAndDirtyModel), "Correct Stereochemistry"));
+				m_modelStereoChemistry = createStereochemistryModel(m_modelPartialSanitization), "Correct Stereochemistry"));
 		super.addDialogComponent(new DialogComponentLabel(""));
 		super.closeCurrentGroup();
 	}
@@ -163,10 +183,33 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	/**
 	 * Enables or disables the Keep Hydrogens option based on the selected input column.
 	 * Only for SDF compatible input columns the Keep Hydrogens option will be selected.
+	 * Show or hides also the Treat as Query option based on selected input column.
 	 */
 	protected void updateOptionsAvailability() {
 		final DataColumnSpec specInput = m_compInputColumn.getSelectedAsSpec();
-		m_modelKeepHs.setEnabled(specInput != null && specInput.getType().isCompatible(SdfValue.class));
+
+		// Determine core options availability based on input type
+		final boolean bEnableTreatAsQuery = specInput != null &&
+				(specInput.getType().isCompatible(SmilesValue.class) ||
+						specInput.getType().isCompatible(SdfValue.class));
+		final boolean bEnableSanitizationOption = (specInput != null &&
+				(specInput.getType().isCompatible(SmilesValue.class) ||
+						specInput.getType().isCompatible(SdfValue.class))) &&
+						(!bEnableTreatAsQuery || !m_modelTreatAsQuery.getBooleanValue());
+		final boolean bEnableKeepHsOption = (specInput != null &&
+				specInput.getType().isCompatible(SdfValue.class)) &&
+				(!bEnableTreatAsQuery || !m_modelTreatAsQuery.getBooleanValue());
+
+		// Enable Treat as Query option only for SMILES and SDF input
+		m_modelTreatAsQuery.setEnabled(bEnableTreatAsQuery);
+
+		// Enable all Partly Sanitization options only, if Treat as Query option is disabled
+		m_modelPartialSanitization.setEnabled(bEnableSanitizationOption);
+		m_modelAromatization.setEnabled(bEnableSanitizationOption);
+		m_modelStereoChemistry.setEnabled(bEnableSanitizationOption);
+
+		// Enable Keep Hs option only for SDF input and only, if Treat as Query option is disabled
+		m_modelKeepHs.setEnabled(bEnableKeepHsOption);
 	}
 
 	//
@@ -180,6 +223,15 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelString createInputColumnNameModel() {
 		return new SettingsModelString("input_column", null);
+	}
+
+	/**
+	 * Creates the settings model for the option to treat input molecules as query.
+	 * 
+	 * @return Settings model for option to treat input molecules as query.
+	 */
+	static final SettingsModelBoolean createTreatAsQueryOptionModel() {
+		return new SettingsModelBoolean("treat_as_query", false);
 	}
 
 	/**

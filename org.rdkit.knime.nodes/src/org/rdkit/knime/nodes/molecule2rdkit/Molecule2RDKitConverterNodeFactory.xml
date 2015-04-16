@@ -4,14 +4,22 @@
     <name>RDKit From Molecule</name>
     
     <shortDescription>
-        Generates RDKit molecules from a string representation (SDF or Smiles).
+        Generates RDKit molecules from a molecule string representation (SMILES, SDF or SMARTS).
     </shortDescription>
     
     <fullDescription>
-        <intro>Generates RDKit molecule column from a string representation 
-        (SDF or Smiles) and appends it to the table.</intro>
+        <intro>Generates RDKit molecule column from a molecule string representation 
+        (SMILES, SDF or SMARTS) and appends it to the table. Depending on the input format of the
+        molecule the usage of some options is not possible. All grayed out options are not
+        taken into account when the RDKit molecule gets generated, regardless if flagged or not.
+        </intro>
         <option name="Molecule column">
-            The column that contains the molecules (SDF or Smiles type column).
+            The column that contains the molecules (SMILES, SDF or SMARTS type column). If the input column type supports multiple 
+            molecule types, the node will take SMILES before SDF before SMARTS.
+        </option>
+        <option name="Treat as query">
+            Flag that can be used for SMILES and SDF input columns. Select it to prepare the resulting RDKit molecules as queries.
+            This forces a full sanitization, keeps hydrogens in the molecule and merges query hydrogens.
         </option>
         <option name="New column name">
             Name of the new column in the output table.

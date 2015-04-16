@@ -45,7 +45,7 @@
 
       <node category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" id="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory"/>
 	  <node after="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" id="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory" id="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlighting.RDKitHighlightingNodeFactory" id="org.rdkit.knime.nodes.highlighting.RDKitHighlightingNodeFactory"/>
 
 	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory" id="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
 

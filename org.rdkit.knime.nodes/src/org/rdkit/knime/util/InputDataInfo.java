@@ -1093,8 +1093,8 @@ public class InputDataInfo {
 
 	/**
 	 * Convenience method that converts the result of {@link #getCell(DataRow)} into an integer list.
-	 * If the cell contains a collection, but some of the values are not compatible with an integer,
-	 * these values will be ignored and a warning is logged.
+	 * If the cell contains a collection, but some of the values are not compatible with an integer
+	 * or double (which will be casted to int), these values will be ignored and a warning is logged.
 	 * 
 	 * @param row The data row with concrete data cells. This data row must
 	 * 		belong to the table, which spec was used in the constructor.
@@ -1126,6 +1126,9 @@ public class InputDataInfo {
 					if (!listElement.isMissing()) {
 						if (listElement.getType().isCompatible(IntValue.class)) {
 							listIntegers.add(((IntValue)listElement).getIntValue());
+						}
+						else if (listElement.getType().isCompatible(DoubleValue.class)) {
+							listIntegers.add((int)((DoubleValue)listElement).getDoubleValue());
 						}
 						else {
 							bIncompatibleValuesFound = true;

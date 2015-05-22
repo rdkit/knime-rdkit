@@ -94,10 +94,10 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 
 	/** We define here what libraries are necessary to run the RDKit for the different supported platforms. */
 	static {
-		LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86, new String[] { "boost_system-vc100-mt-1_51", "GraphMolWrap" });
-		LIBRARIES.put(Platform.OS_WIN32 + "." +  Platform.ARCH_X86_64, new String[] { "boost_system-vc100-mt-1_51", "GraphMolWrap" });
+		LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86, new String[] {"boost_system-vc100-mt-1_56", "boost_chrono-vc100-mt-1_56", "boost_thread-vc100-mt-1_56", "GraphMolWrap" });
+		LIBRARIES.put(Platform.OS_WIN32 + "." +  Platform.ARCH_X86_64, new String[] { "boost_system-vc100-mt-1_56", "boost_chrono-vc100-mt-1_56", "boost_thread-vc100-mt-1_56", "GraphMolWrap" });
 		LIBRARIES.put(Platform.OS_LINUX + "." +  Platform.ARCH_X86, new String[] { "GraphMolWrap" });
-		LIBRARIES.put(Platform.OS_LINUX + "." +  Platform.ARCH_X86_64, new String[] { "GraphMolWrap" });
+		LIBRARIES.put(Platform.OS_LINUX + "." +  Platform.ARCH_X86_64, new String[] { "boost_system.1.48.0", "boost_thread.1.48.0", "GraphMolWrap" });
 		LIBRARIES.put(Platform.OS_MACOSX + "." +  Platform.ARCH_X86_64, new String[] { "GraphMolWrap" });
 	}
 

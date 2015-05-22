@@ -120,6 +120,7 @@ public final class MCSUtils {
 						mcs = RDKFuncs.findMCS(mols, true,
 								dThreshold, iTimeout, false,
 								bMatchValencesOption, bRingMatchesRingOnly, bCompleteRingsOnly,
+								false /* Match Chiral Tag */,
 								atomComparison.getRDKitComparator(), bondComparison.getRDKitComparator());
 						if (mcs != null) {
 							mapResult.put("MCS", mcs.getSmartsString());

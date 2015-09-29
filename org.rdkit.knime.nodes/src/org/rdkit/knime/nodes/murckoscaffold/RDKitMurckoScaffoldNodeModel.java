@@ -235,7 +235,7 @@ public class RDKitMurckoScaffoldNodeModel extends AbstractRDKitCalculatorNodeMod
 							for (int aidx=0; aidx<temp2.getNumAtoms(); aidx++){
 								temp2.getAtomWithIdx(aidx).setAtomicNum(6);
 								temp2.getAtomWithIdx(aidx).setIsAromatic(false);
-								temp2.getAtomWithIdx(aidx).setIsotope(12);
+								temp2.getAtomWithIdx(aidx).setIsotope(0);
 								temp2.getAtomWithIdx(aidx).setNoImplicit(false);
 							}
 

@@ -69,11 +69,11 @@ public interface SplitCondition {
 	 * out completely.
 	 * 
 	 * @param iInPort The input port of the data in focus. Rather an informal value.
-	 * @param iRowIndex The row index of the row being processed.
+	 * @param lRowIndex The row index of the row being processed.
 	 * @param row The complete data row in focus. Normally a decision is made based on information in this row.
 	 * @param arrInputDataInfo Input data information about all important input columns of
 	 * 		the table at the input port.
-	 * @param iUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
+	 * @param lUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
 	 * 		objects will be cleaned up automatically at the end of this call. If this is not wanted,
 	 * 		the objects should either not be marked for cleanup or they should be marked without an id,
 	 * 		which would lead to a cleanup at the end of the entire execution process.
@@ -84,9 +84,9 @@ public interface SplitCondition {
 	 * 		in the input column, and if the empty cell handling policy in the InputDataInfo object is set
 	 * 		accordingly. This exception will be caught and handled properly in the processing method.
 	 */
-	int determineTargetTable(int iInPort, int iRowIndex,
+	int determineTargetTable(int iInPort, long lRowIndex,
 			DataRow row, InputDataInfo[] arrInputDataInfo,
-			int iUniqueWaveId) throws InputDataInfo.EmptyCellException;
+			long lUniqueWaveId) throws InputDataInfo.EmptyCellException;
 
 	/**
 	 * For convenience reasons this splitter is provided to split rows
@@ -127,11 +127,11 @@ public interface SplitCondition {
 		 * or 0 otherwise.
 		 * 
 		 * @param iInPort The input port of the data in focus. Rather an informal value.
-		 * @param iRowIndex The row index of the row being processed.
+		 * @param lRowIndex The row index of the row being processed.
 		 * @param row The complete data row in focus. Normally a decision is made based on information in this row.
 		 * @param arrInputDataInfo Input data information about all important input columns of
 		 * 		the table at the input port.
-		 * @param iUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
+		 * @param lUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
 		 * 		objects will be cleaned up automatically at the end of this call. If this is not wanted,
 		 * 		the objects should either not be marked for cleanup or they should be marked without an id,
 		 * 		which would lead to a cleanup at the end of the entire execution process.
@@ -141,9 +141,9 @@ public interface SplitCondition {
 		 * @throws org.rdkit.knime.util.InputDataInfo.EmptyCellException Not thrown in this implementation.
 		 */
 		@Override
-		public int determineTargetTable(final int iInPort, final int iRowIndex,
+		public int determineTargetTable(final int iInPort, final long lRowIndex,
 				final DataRow row, final InputDataInfo[] arrInputDataInfo,
-				final int iUniqueWaveId) throws InputDataInfo.EmptyCellException {
+				final long lUniqueWaveId) throws InputDataInfo.EmptyCellException {
 			// Determine target table port (1 for missing cells, 0 otherwise)
 			return (row.getCell(m_iColIndex).isMissing() ? 1 : 0);
 		}

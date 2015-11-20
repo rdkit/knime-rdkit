@@ -54,10 +54,11 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 
 /** Factory creating {@link RDKitMolValue} compatible {@link DataCell} objects.
- * It's currently using {@link RDKitMolCell}; future versions may return
+ * It's currently using {@link RDKitMolCell2}; future versions may return
  * different implementations (e.g. blobs).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Manuel Schwarze, NIBR
  */
 public final class RDKitMolCellFactory {
 
@@ -117,6 +118,54 @@ public final class RDKitMolCellFactory {
         }
     }
 
+    /**
+     * Creates a new RDKit Adapter Cell with an RDKit Mol Cell 
+     * based on the given molecule. The argument
+     * can (and should) be {@link ROMol#delete() deleted} after this method
+     * returns.
+     * @param mol the ROMol value to store
+     * @return A data cell implementing RDKitMolValue interface. Currently this
+     * is a {@link RDKitAdapterCell} but this may change in future versions.
+     * @throws NullPointerException if argument is <code>null</code>
+     */
+    public static DataCell createRDKitAdapterCell(final ROMol mol) {
+        if (mol == null) {
+            throw new NullPointerException("Mol value must not be null.");
+        }
+        return new RDKitAdapterCell(new RDKitMolCell2(mol, RDKFuncs.MolToSmiles(mol, true)));
+    }
 
+    /**
+     * Creates a new RDKit Adapter Cell with an RDKit Mol Cell 
+     * based on the given molecule and SMILES. The argument
+     * can (and should) be {@link ROMol#delete() deleted} after this method
+     * returns.
+     * @param mol the ROMol value to store
+     * @param smiles canonical SMILES for the molecule
+     * @return A data cell implementing RDKitMolValue interface. Currently this
+     * is a {@link RDKitAdapterCell} but this may change in future versions.
+     * @throws NullPointerException if argument is <code>null</code>
+     */
+    public static DataCell createRDKitAdapterCell(final ROMol mol,final String smiles) {
+        if (mol == null) {
+            throw new NullPointerException("Mol value must not be null.");
+        }
+        return new RDKitAdapterCell(new RDKitMolCell2(mol, smiles));
+    }
 
+    /**
+     * Creates a new RDKit Adapter Cell based on the given molecule and discards the
+     * argument using the {@link ROMol#delete()} method.
+     * @param mol the ROMol value to store
+     * @return A data cell implementing RDKitMolValue interface. Currently this
+     * is a {@link RDKitAdapterCell} but this may change in future versions.
+     * @throws NullPointerException if argument is <code>null</code>
+     */
+    public static DataCell createRDKitAdapterCellAndDelete(final ROMol mol) {
+        try {
+            return createRDKitAdapterCell(mol);
+        } finally {
+            mol.delete();
+        }
+    }
 }

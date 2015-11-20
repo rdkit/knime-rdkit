@@ -63,8 +63,8 @@ import org.knime.core.data.StringValue;
  *
  * @author Greg Landrum
  */
-public class RDKitReactionCell extends DataCell implements StringValue,
-RDKitReactionValue {
+public class RDKitReactionCell extends DataCell implements RDKitReactionValue, StringValue
+{
 	/**
 	 * Convenience access member for
 	 * <code>DataType.getType(RDKitMolCell.class)</code>.
@@ -76,17 +76,8 @@ RDKitReactionValue {
 
 	private static final long serialVersionUID = 0x1;
 
-	/**
-	 * Returns the preferred value class of this cell implementation. This
-	 * method is called per reflection to determine which is the preferred
-	 * renderer, comparator, etc.
-	 *
-	 * @return SmilesValue.class
-	 */
-	public static final Class<? extends DataValue> getPreferredValueClass() {
-		return RDKitReactionValue.class;
-	}
-
+   /** The serializer instance. */
+   @Deprecated
 	private static final RDKitReactionSerializer SERIALIZER =
 			new RDKitReactionSerializer();
 
@@ -96,6 +87,8 @@ RDKitReactionValue {
 	 *
 	 * @return a serializer for reading/writing cells of this kind
 	 * @see DataCell
+    * @deprecated As of KNIME 3.0 data types are registered via extension point. This method
+    *     is not used anymore. The serializer is made known in the extension point configuration.
 	 */
 	public static final RDKitReactionSerializer getCellSerializer() {
 		return SERIALIZER;
@@ -180,6 +173,12 @@ RDKitReactionValue {
 		return getStringValue();
 	}
 
+   @Override
+   protected void finalize() throws Throwable {
+      m_rxn.delete();
+      super.finalize();
+   }
+   
 	/**
 	 * {@inheritDoc}
 	 */
@@ -188,6 +187,11 @@ RDKitReactionValue {
 		return m_smilesString.equals(((RDKitReactionCell)dc).m_smilesString);
 	}
 
+   @Override
+   protected boolean equalContent(DataValue otherValue) {
+      return RDKitReactionValue.equals(this, (RDKitReactionValue)otherValue);
+   }
+   
 	/**
 	 * {@inheritDoc}
 	 */
@@ -214,7 +218,7 @@ RDKitReactionValue {
 	}
 
 	/** Factory for (de-)serializing a RDKitMolCell. */
-	private static class RDKitReactionSerializer implements
+	public static class RDKitReactionSerializer implements
 	DataCellSerializer<RDKitReactionCell> {
 		/**
 		 * {@inheritDoc}
@@ -247,11 +251,4 @@ RDKitReactionValue {
 			return new RDKitReactionCell(rxn);
 		}
 	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		m_rxn.delete();
-		super.finalize();
-	}
-
 }

@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Greg Landrum
  */
+@Deprecated
 public class RDKitTwoComponentReactionNodeFactory extends NodeFactory<RDKitTwoComponentReactionNodeModel> {
 
 	/**

@@ -71,6 +71,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -174,6 +175,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 	 */
 	RDKitOpen3DAlignmentNodeModel() {
 		super(2, 1);
+      registerInputTablesWithSizeLimits(0, 1); // Both input tables support only limited size
 	}
 
 	//
@@ -330,7 +332,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[4]; // We have four output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewAlignedColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewAlignedColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 			arrOutputSpec[1] = new DataColumnSpecCreator(
 					m_modelNewRefIdColumnName.getStringValue(), StringCell.TYPE)
@@ -359,7 +361,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputAlignedMolecule = missingCell;
 					DataCell outputRefId = missingCell;
 					DataCell outputRmsd = missingCell;
@@ -378,7 +380,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 					if (m_itReferenceRows != null) {
 						if (m_itReferenceRows.hasNext()) {
 							final DataRow rowReference = m_itReferenceRows.next();
-							molReference = markForCleanup(m_inputDataReference.getROMol(rowReference), iUniqueWaveId);
+							molReference = markForCleanup(m_inputDataReference.getROMol(rowReference), lUniqueWaveId);
 							cellRefId = new StringCell(rowReference.getKey().getString());
 						}
 					}
@@ -390,7 +392,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 
 					if (molReference != null) {
 						// Align the molecule based on the found reference
-						final ROMol molQuery = markForCleanup(arrInputDataInfo[QUERY_INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+						final ROMol molQuery = markForCleanup(arrInputDataInfo[QUERY_INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 						try {
 							// Check if atom properties are set
@@ -417,7 +419,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 
 								final Double_Pair result = markForCleanup(
 										molQuery.O3AAlignMol(molReference, -1, -1, bAllowReflection, iMaxIterations, iAccuracy),
-										iUniqueWaveId);
+										lUniqueWaveId);
 								dRMSD = result.getFirst();
 								dScore = result.getSecond();
 
@@ -425,7 +427,7 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 								bNonEmpty = (molQuery.getNumAtoms() > 0);
 
 								if (bNonEmpty) {
-									outputAlignedMolecule = RDKitMolCellFactory.createRDKitMolCell(molQuery);
+									outputAlignedMolecule = RDKitMolCellFactory.createRDKitAdapterCell(molQuery);
 									outputRefId = cellRefId;
 									outputRmsd = new DoubleCell(dRMSD);
 									outputScore = new DoubleCell(dScore);
@@ -486,8 +488,8 @@ public class RDKitOpen3DAlignmentNodeModel extends AbstractRDKitCalculatorNodeMo
 			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
 					throws Exception {
 		// Determine how to access the reference molecule during alignment processing
-		final int iQueryMolCount = inData[0].getRowCount();
-		final int iRefMolCount = inData[1].getRowCount();
+		final int iQueryMolCount = (int)inData[0].size();
+		final int iRefMolCount = (int)inData[1].size();
 
 		// Only perform checks, if we have at least one query molecule (otherwise the result table is empty anyway)
 		if (iQueryMolCount > 0) {

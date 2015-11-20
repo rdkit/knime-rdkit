@@ -71,6 +71,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -239,7 +240,7 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
     			// Define output table
     	        listSpecs = new ArrayList<DataColumnSpec>();
     	        listSpecs.add(new DataColumnSpecCreator("An Integer Result", IntCell.TYPE).createSpec());
-    	        listSpecs.add(new DataColumnSpecCreator("An RDKit Mol Result", RDKitMolCellFactory.TYPE).createSpec());
+    	        listSpecs.add(new DataColumnSpecCreator("An RDKit Mol Result", RDKitAdapterCell.RAW_TYPE).createSpec());
     	        listSpecs.add(new DataColumnSpecCreator("A String Result", StringCell.TYPE).createSpec());
 
     	        spec = new DataTableSpec("Output 0", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
@@ -277,7 +278,7 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
 			DataRow row = i.next();
 
 	        // Get a unique wave id to mark RDKit Objects for cleanup
-	        int iUniqueWaveId = createUniqueCleanupWaveId();
+	        long lUniqueWaveId = createUniqueCleanupWaveId();
 
 			try {
 				///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,15 +289,15 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
 		    	
 		    	// Calculate a mol cell - this gets a mol value from the input table and does something with it
 		    	DataCell molCell = null;
-		    	ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId); 
+		    	ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId); 
 		    	
 		    	// We use only cells, which are not missing (see also createInputDataInfos(...) )
 		    	if (mol != null) {
-			    	RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+			    	RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
 			        
 			        if (temp.getNumAtoms() > 0) {
 			        	RDKFuncs.sanitizeMol(temp);
-			        	molCell = RDKitMolCellFactory.createRDKitMolCell(temp);
+			        	molCell = RDKitMolCellFactory.createRDKitAdapterCell(temp);
 			        }
 			        else {
 			        	molCell = DataType.getMissingCell();
@@ -326,7 +327,7 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
 			}
 			finally {
 				// Cleanup RDKit Objects
-				cleanupMarkedObjects(iUniqueWaveId);
+				cleanupMarkedObjects(lUniqueWaveId);
 			}			    
 		};
 		

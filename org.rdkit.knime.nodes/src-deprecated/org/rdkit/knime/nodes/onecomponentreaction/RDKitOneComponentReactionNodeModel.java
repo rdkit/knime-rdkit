@@ -83,6 +83,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -119,7 +120,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 	private DataTableSpec[] createOutSpecs() {
 		final Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
 		DataColumnSpecCreator crea =
-				new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE);
+				new DataColumnSpecCreator("Product", RDKitAdapterCell.RAW_TYPE);
 		cSpec.add(crea.createSpec());
 		crea = new DataColumnSpecCreator("Product Index", IntCell.TYPE);
 		cSpec.add(crea.createSpec());
@@ -127,7 +128,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 				IntCell.TYPE);
 		cSpec.add(crea.createSpec());
 		crea = new DataColumnSpecCreator("Reactant 1",
-				RDKitMolCellFactory.TYPE);
+				RDKitAdapterCell.RAW_TYPE);
 		cSpec.add(crea.createSpec());
 		final DataTableSpec tSpec =
 				new DataTableSpec("output",
@@ -330,7 +331,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 									cells[2] = new IntCell(count - 1);
 									final ROMol temp = rs.get(0);
 									cells[3] =
-											RDKitMolCellFactory.createRDKitMolCell(
+											RDKitMolCellFactory.createRDKitAdapterCell(
 													temp);
 									temp.delete();
 									final DataRow drow =

@@ -58,6 +58,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Manuel Schwarze
  */
+@Deprecated
 public class RDKitHighlightingAtomsNodeFactory extends NodeFactory<RDKitHighlightingAtomsNodeModel> {
 
 	/**

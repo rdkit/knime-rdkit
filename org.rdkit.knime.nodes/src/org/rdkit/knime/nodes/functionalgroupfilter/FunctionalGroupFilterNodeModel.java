@@ -262,9 +262,9 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 		}
 
 		// Consolidate all warnings and make them available to the user
-		final Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
+		final Map<String, Long> mapContextOccurrences = new HashMap<String, Long>();
 		mapContextOccurrences.put(FunctionalGroupDefinitions.LINE_CONTEXT.getId(),
-				definitions.getReadFunctionalGroupLines());
+				(long)definitions.getReadFunctionalGroupLines());
 		generateWarnings(mapContextOccurrences);
 
 		// Generate output specs
@@ -360,16 +360,16 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				String strNonMatchPattern = null;
-				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 				if (mol != null) {
 					for (int i = 0; i < iCount; i++) {
 						try {
 							// Find substructure matches
 							final Match_Vect_Vect mvvMatches =
-									markForCleanup(mol.getSubstructMatches(m_arrMolSmarts[i].get()), iUniqueWaveId);
+									markForCleanup(mol.getSubstructMatches(m_arrMolSmarts[i].get()), lUniqueWaveId);
 							int iFoundMatches = 0;
 							if (mvvMatches != null) {
 								iFoundMatches = (int)mvvMatches.size();
@@ -567,7 +567,7 @@ public class FunctionalGroupFilterNodeModel extends AbstractRDKitNodeModel {
 
 			// Runs the multiple threads to do the work
 			try {
-				new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].getRowCount(),
+				new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].size(),
 						getWarningConsolidator(), exec).run(inData[0]);
 			}
 			catch (final Exception e) {

@@ -54,7 +54,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.chem.types.SmilesCell;
+import org.knime.chem.types.SmilesAdapterCell;
+import org.knime.chem.types.SmilesCellFactory;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -73,6 +74,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.rdkit.knime.headers.HeaderPropertyUtils;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.TableViewSupport;
@@ -146,12 +148,13 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 	RDKitSmilesHeadersNodeModel() {
 		super(new PortType[] {
 				// Input ports (2nd port is optional)
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
 				new PortType[] {
 				// Output ports
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false) });
+						PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
+						PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false) 
+				});
 	}
 
 	//
@@ -320,16 +323,16 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 
 		// Build second table with information about column names and assigned SMILES
 		final BufferedDataContainer contSmilesHeaders = exec.createDataContainer(getOutputTableSpec(1, null));
-		int iRowCount = 0;
+		long lRowCount = 0;
 		for (int i = 0; i < arrSpecs.length; i++) {
 			if (HeaderPropertyUtils.existOneProperty(arrSpecs[i],
 					SmilesHeaderProperty.PROPERTIES_SMILES)) {
 				final SmilesHeaderProperty p = new SmilesHeaderProperty(arrSpecs[i]);
-				final DataRow row = new DefaultRow("Row" + (++iRowCount),
+				final DataRow row = new DefaultRow("Row" + (++lRowCount),
 						new StringCell(arrSpecs[i].getName()),
 						(p.getSmiles() == null || p.getSmiles().isEmpty() ?
 								DataType.getMissingCell() :
-									new SmilesCell(p.getSmiles())));
+									SmilesCellFactory.createAdapterCell(p.getSmiles())));
 				contSmilesHeaders.addRowToTable(row);
 			}
 		}
@@ -356,7 +359,7 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 		case 1:
 			spec = new DataTableSpec("Smiles Headers",
 					new DataColumnSpecCreator("Column", StringCell.TYPE).createSpec(),
-					new DataColumnSpecCreator(ADD_HEADER_INFO_SMILES_TYPE, SmilesCell.TYPE).createSpec());
+					new DataColumnSpecCreator(ADD_HEADER_INFO_SMILES_TYPE, SmilesAdapterCell.RAW_TYPE).createSpec());
 		}
 
 		return spec;
@@ -367,14 +370,14 @@ public class RDKitSmilesHeadersNodeModel extends AbstractRDKitNodeModel implemen
 	 * This implementation works with the row context on table 2 instead of table 1.
 	 */
 	@Override
-	protected Map<String, Integer> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
+	protected Map<String, Long> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
 			final InputDataInfo[][] arrInputDataInfo, final BufferedDataTable[] resultData) {
 
-		final Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
+		final Map<String, Long> mapContextOccurrences = new HashMap<String, Long>();
 
 		// Generate context occurrences only, if we have a second input table connected
 		if (inData != null && inData.length >= 2 && inData[1] != null) {
-			mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[1].getRowCount());
+			mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[1].size());
 		}
 
 		return mapContextOccurrences;

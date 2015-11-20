@@ -91,7 +91,7 @@ import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintType;
 import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeModel;
-import org.rdkit.knime.types.RDKitMolCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.RDKitObjectCleaner;
@@ -276,6 +276,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 	 */
 	protected RDKitMoleculeSubstructFilterNodeModel() {
 		super(2, 2);
+      registerInputTablesWithSizeLimits(1); // Query table supports only limited size
 	}
 
 	//
@@ -420,7 +421,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 		// Generate column specs for the output table columns produced by this factory
 		final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 		arrOutputSpec[0] = new DataColumnSpecCreator(
-				m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+				m_modelNewColumnName.getStringValue().trim(), RDKitAdapterCell.RAW_TYPE)
 		.createSpec();
 		final int iTotalPatternCount = m_arrQueryMols.length - m_iTotalEmptyPatternCells;
 		final int iMinimumMatches = m_modelMinimumMatches.getIntValue();
@@ -438,7 +439,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				DataCell outputCell = null;
 				final List<DataCell> listQueryRefs = new ArrayList<DataCell>();
 
@@ -474,7 +475,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 							// Get the molecule only if we really need it (this saves execution time)
 							// Note, that this will throw an exception for empty cells, which will be handled by the factory
 							if (mol == null) {
-								mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+								mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 							}
 
 							if (mol.hasSubstructMatch(molPattern)) {
@@ -577,8 +578,8 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 		}
 
 		int i = 0;
-		final int iMolRowCount = inData[0].getRowCount();
-		final int iQueryRowCount = inData[1].getRowCount();
+		final long lMolRowCount = inData[0].size();
+		final int iQueryRowCount = (int)inData[1].size();
 		final FingerprintType fpType = (iFingerprintThreshold != FINGERPRINT_SCREENING_OFF && iQueryRowCount >= iFingerprintThreshold ?
 				FINGERPRINT_SETTING.getRdkitFingerprintType() : null);
 		final String[] arrRowKeys = new String[iQueryRowCount];
@@ -592,8 +593,8 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 
 		// Prepare two execution contexts if we pre-process also the molecule table
 		if (fpType != null) {
-			execQueryTable = exec.createSubExecutionContext((double)iQueryRowCount / (double)(iMolRowCount + iQueryRowCount));
-			execMolTable = exec.createSubExecutionContext((double)iMolRowCount / (double)(iMolRowCount + iQueryRowCount));
+			execQueryTable = exec.createSubExecutionContext((double)iQueryRowCount / (double)(lMolRowCount + iQueryRowCount));
+			execMolTable = exec.createSubExecutionContext((double)lMolRowCount / (double)(lMolRowCount + iQueryRowCount));
 		}
 
 		// PHASE 1: Evaluate query molecules and pre-calculate fingerprints for them
@@ -659,8 +660,8 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 
 				@Override
 				public DataCell[] process(final InputDataInfo[] arrInputDataInfos, final DataRow row,
-						final int iUniqueWaveId) throws Exception {
-					final ROMol mol = markForCleanup(arrInputDataInfos[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+						final long lUniqueWaveId) throws Exception {
+					final ROMol mol = markForCleanup(arrInputDataInfos[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					return new DataCell[] { new DenseBitVectorCellFactory(createFingerprint(mol)).createDataCell() };
 				}
 
@@ -745,7 +746,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 
 		// Runs the multiple threads to do the work
 		try {
-			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].getRowCount(),
+			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, inData[0].size(),
 					getWarningConsolidator(), exec).run(inData[0]);
 		}
 		catch (final Exception e) {

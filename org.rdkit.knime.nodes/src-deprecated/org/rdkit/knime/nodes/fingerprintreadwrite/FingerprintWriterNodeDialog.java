@@ -92,6 +92,7 @@ import org.rdkit.knime.types.RDKitMolCell2;
  * 
  * @author Dillip K Mohanty
  */
+@Deprecated
 public class FingerprintWriterNodeDialog extends NodeDialogPane {
 
 	//
@@ -108,10 +109,8 @@ public class FingerprintWriterNodeDialog extends NodeDialogPane {
 	 * contains such DataTypes (classes that extend DataCell), which will be
 	 * filtered out when offering the user to choose fingerprint Id column.
 	 */
-	@SuppressWarnings("deprecation")
 	public static final Class<?>[] IGNORE_STRING_COMPATIBILITY_FOR_DATATYPES = new Class<?>[] {
-		org.rdkit.knime.types.RDKitMolCell.class, RDKitMolCell2.class,
-		SmilesCell.class, SmilesValue.class, SdfCell.class, SdfValue.class // Only
+		RDKitMolCell2.class, SmilesCell.class, SmilesValue.class, SdfCell.class, SdfValue.class // Only
 		// add
 		// classes
 		// that

@@ -58,6 +58,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Sudip Ghosh
  */
+@Deprecated
 public class FingerprintReaderNodeFactory extends NodeFactory<FingerprintReaderNodeModel> {
 
 	//

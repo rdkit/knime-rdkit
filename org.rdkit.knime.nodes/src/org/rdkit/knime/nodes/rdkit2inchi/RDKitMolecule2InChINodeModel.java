@@ -419,12 +419,12 @@ public class RDKitMolecule2InChINodeModel extends AbstractRDKitCalculatorNodeMod
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					final List<DataCell> listOutput = new ArrayList<DataCell>(3);
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					final ExtraInchiReturnValues extraInfo = markForCleanup(new ExtraInchiReturnValues(), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					final ExtraInchiReturnValues extraInfo = markForCleanup(new ExtraInchiReturnValues(), lUniqueWaveId);
 					String strInChICode;
 
 					// Generate InChI Code

@@ -298,11 +298,11 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					try {
 						// Calculate rooted fingerprint
@@ -316,14 +316,14 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 								// Need to check for empty cells specially as it would return 0, which is also a valud atom index
 								if (!arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].isMissing(row)) {
 									final int iAtomIndex = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getInt(row);
-									atomList = markForCleanup(new UInt_Vect(1), iUniqueWaveId);
+									atomList = markForCleanup(new UInt_Vect(1), lUniqueWaveId);
 									atomList.add(iAtomIndex);
 								}
 							}
 
 							// We have a collection column
 							else {
-								atomList = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitUIntegerVector(row), iUniqueWaveId);
+								atomList = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitUIntegerVector(row), lUniqueWaveId);
 							}
 
 							if (atomList == null) {

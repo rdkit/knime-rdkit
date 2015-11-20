@@ -324,11 +324,11 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				DataCell outputCell = DataType.getMissingCell();
 
 				// Calculate the new cells
-				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 				// Get a thread-save instance of the pattern
 				final ROMol molPattern = m_pattern.get();
@@ -437,7 +437,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		final BufferedDataContainer mismatchTable = exec.createDataContainer(arrOutSpecs[1]);
 
 		// Get settings and define data specific behavior
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 		final MatchHandling matchHandling = m_modelMatchHandling.getValue();
 
 		// Construct an RDKit molecule from the SMARTS pattern - make it available as member variable
@@ -482,7 +482,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 
 		// Runs the multiple threads to do the work
 		try {
-			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount,
+			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, lTotalRowCount,
 					getWarningConsolidator(), exec).run(inData[0]);
 		}
 		catch (final Exception e) {

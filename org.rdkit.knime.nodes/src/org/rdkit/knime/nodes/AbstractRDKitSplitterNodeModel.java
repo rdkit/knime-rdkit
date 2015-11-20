@@ -138,6 +138,6 @@ public abstract class AbstractRDKitSplitterNodeModel extends AbstractRDKitNodeMo
 	 * {@inheritDoc}
 	 */
 	@Override
-	public abstract int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo,
-			int iUniqueWaveId) throws InputDataInfo.EmptyCellException;
+	public abstract int determineTargetTable(int iInPort, long lRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo,
+			long lUniqueWaveId) throws InputDataInfo.EmptyCellException;
 }

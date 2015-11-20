@@ -181,7 +181,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 	private HashMap<String, List<IncludedConformer>> m_mapReferenceToIncludedList;
 
 	/** Maps reference values to a unique wave id used for cleaning up RDKit objects that are not needed anymore. */
-	private HashMap<String, Integer> m_mapReferenceToUniqueWaveId;
+	private HashMap<String, Long> m_mapReferenceToUniqueWaveId;
 
 	//
 	// Constructor
@@ -323,13 +323,13 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		m_mapReferenceToTotalCount = new LinkedHashMap<String, Integer>();
 		m_mapReferenceToProcessedCount = new LinkedHashMap<String, Integer>();
 		m_mapReferenceToIncludedList = new LinkedHashMap<String, List<IncludedConformer>>();
-		m_mapReferenceToUniqueWaveId = new LinkedHashMap<String, Integer>();
+		m_mapReferenceToUniqueWaveId = new LinkedHashMap<String, Long>();
 
 		// Walk through the input table and find out how many different groups are defined and how many rows belong to the group
-		final int iTotalRowCount = inData[0].getRowCount();
-		int rowInputIndex = 0;
+		final long lTotalRowCount = inData[0].size();
+		long rowInputIndex = 0;
 
-		AbstractRDKitNodeModel.reportProgress(exec, 0, iTotalRowCount, null, " - Evaluating input");
+		AbstractRDKitNodeModel.reportProgress(exec, 0, lTotalRowCount, null, " - Evaluating input");
 
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowInputIndex++) {
 			final DataRow row = i.next();
@@ -349,7 +349,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 
 			// Every 20 iterations check cancellation status and report progress
 			if (rowInputIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, iTotalRowCount, row, " - Evaluating input and detecting groups of conformer molecules");
+				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, lTotalRowCount, row, " - Evaluating input and detecting groups of conformer molecules");
 			}
 		}
 	}
@@ -375,7 +375,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		final BufferedDataContainer port1 = exec.createDataContainer(arrOutSpecs[1]);
 
 		// Get settings and define data specific behavior
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
 		// Get threshold to be used for splitting
 		final double dThreshold = m_modelRmsdThreshold.getDoubleValue();
@@ -384,7 +384,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 		final boolean bIgnoreHs = m_modelIgnoreHsOption.getBooleanValue();
 
 		// Iterate through all input rows and calculate results
-		int rowInputIndex = 0;
+		long rowInputIndex = 0;
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowInputIndex++) {
 			final DataRow row = i.next();
 
@@ -399,16 +399,16 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 					final String strRef = getStringValue(refCell);
 
 					// Get the unique wave id that was assigned to the group for RDKit object cleanup
-					final int iUniqueWaveId = m_mapReferenceToUniqueWaveId.get(strRef);
+					final long lUniqueWaveId = m_mapReferenceToUniqueWaveId.get(strRef);
 
 					// Get the conformers molecule
-					ROMol molProbe = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					ROMol molProbe = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// We use only cells that could be resolved into an RDKit molecule (normal case)
 					if (molProbe != null) {
 						// Remove Hs, if set as option
 						if (bIgnoreHs) {
-							molProbe = markForCleanup(molProbe.removeHs(false), iUniqueWaveId);
+							molProbe = markForCleanup(molProbe.removeHs(false), lUniqueWaveId);
 						}
 
 						final int iProcessedCount = setOrIncreaseCount(m_mapReferenceToProcessedCount, strRef);
@@ -454,7 +454,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 							m_mapReferenceToTotalCount.remove(strRef);
 							m_mapReferenceToIncludedList.remove(strRef);
 							m_mapReferenceToUniqueWaveId.remove(strRef);
-							cleanupMarkedObjects(iUniqueWaveId);
+							cleanupMarkedObjects(lUniqueWaveId);
 						}
 					}
 					else {
@@ -474,7 +474,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 
 			// Every 20 iterations check cancellation status and report progress
 			if (rowInputIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, iTotalRowCount, row, " - Calculating best RMSD values and filtering (found already " +
+				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, lTotalRowCount, row, " - Calculating best RMSD values and filtering (found already " +
 						port0.size() + " matching)");
 			}
 		}

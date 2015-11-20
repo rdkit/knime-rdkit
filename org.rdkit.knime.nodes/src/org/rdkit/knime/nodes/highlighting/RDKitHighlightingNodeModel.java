@@ -300,11 +300,11 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
@@ -326,7 +326,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 						if (arrInputDataInfo[i + 1] != null) {
 							final HighlightingDefinition def = arrDefs[i];
 							final DrawColour col = def.getRdkitColor();
-							final Int_Vect vectInt  = markForCleanup(arrInputDataInfo[i + 1].getRDKitIntegerVector(row), iUniqueWaveId);
+							final Int_Vect vectInt  = markForCleanup(arrInputDataInfo[i + 1].getRDKitIntegerVector(row), lUniqueWaveId);
 							bAppliedHighlighting = true;
 							if (vectInt != null) {
 								final int iCount = (int)vectInt.size();
@@ -345,7 +345,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 										// Figure out which bonds to highlight between atoms, if neighborhood is included
 										if (def.isNeighborhoodIncluded()) {
 											if (listBonds == null) {
-												listBonds = getBondList(mol, iUniqueWaveId);
+												listBonds = getBondList(mol, lUniqueWaveId);
 											}
 											for (final Bond bond : listBonds) {
 												final int iBeginAtom = (int)bond.getBeginAtomIdx();
@@ -369,7 +369,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 
 											// Figure out which atoms to highlight around bonds, if neighborhood is included
 											if (def.isNeighborhoodIncluded() && indexBond < iBondCount) {
-												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond), iUniqueWaveId);
+												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond), lUniqueWaveId);
 												final int iBeginAtom = (int)bond.getBeginAtomIdx();
 												final int iEndAtom = (int)bond.getEndAtomIdx();
 												setAtoms.add(iBeginAtom);
@@ -409,7 +409,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 						}
 					}
 
-					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), iUniqueWaveId);
+					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
 					molDrawing.drawMolecule(mol, ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 
@@ -457,17 +457,17 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	 * Generates a Java list of bonds for the specified molecule.
 	 * 
 	 * @param mol RDKit Molecule to traverse. Can be null.
-	 * @param iUniqueWaveId A unique wave ID used for cleanup processes.
+	 * @param lUniqueWaveId A unique wave ID used for cleanup processes.
 	 * 
 	 * @return List of bonds. Empty, if null was passed in. Never null.
 	 */
-	private List<Bond> getBondList(final ROMol mol, final int iUniqueWaveId) {
+	private List<Bond> getBondList(final ROMol mol, final long lUniqueWaveId) {
 		// Get bond list for the first time, reuse it afterwards
 		final List<Bond> listBonds = new ArrayList<Bond>(20);
 		if (mol != null) {
 			BondIterator it = mol.beginBonds();
 			while (it.ne(mol.endBonds())) {
-				listBonds.add(markForCleanup(it.getBond(), iUniqueWaveId));
+				listBonds.add(markForCleanup(it.getBond(), lUniqueWaveId));
 				it = it.next();
 			}
 		}

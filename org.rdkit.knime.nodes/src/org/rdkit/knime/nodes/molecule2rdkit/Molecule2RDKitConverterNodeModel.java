@@ -74,6 +74,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
@@ -415,7 +416,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 			// Append result column
 			newColSpecs.add(new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue().trim(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec());
 
 			// Add the optional error information column
@@ -484,7 +485,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 		// Add the always existing RDKit Molecule column
 		listOutputSpecs.add(new DataColumnSpecCreator(
-				m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+				m_modelNewColumnName.getStringValue().trim(), RDKitAdapterCell.RAW_TYPE)
 		.createSpec());
 
 		// Add the optional error information column (is possibly filtered out later)
@@ -515,7 +516,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				final DataCell[] arrOutputCells = new DataCell[] { missingCell, missingCell };
 				RWMol mol = null;
 				ROMol molFinal = null;
@@ -526,17 +527,17 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 				try {
 					if (m_inputType == InputType.SMILES) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
-						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, m_bSanitize && !m_bTreatAsQuery), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, m_bSanitize && !m_bTreatAsQuery), lUniqueWaveId);
 						smiles = value;
 					}
 					else if (m_inputType == InputType.SMARTS) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmarts(row);
-						mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), lUniqueWaveId);
 						smiles = value;
 					}
 					else if (m_inputType == InputType.SDF) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-						mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), iUniqueWaveId);
+						mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), lUniqueWaveId);
 					}
 					else {
 						throw new InvalidSettingsException("The molecule input type " + m_inputType +
@@ -595,7 +596,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 								}
 
 								// Merge Hs if we treat an SDF input molecule as query
-								molFinal = markForCleanup(mol.mergeQueryHs(), iUniqueWaveId);
+								molFinal = markForCleanup(mol.mergeQueryHs(), lUniqueWaveId);
 								molFinal.updatePropertyCache(false);
 								RDKFuncs.fastFindRings(molFinal);
 							}
@@ -611,7 +612,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 							}
 						}
 
-						arrOutputCells[0] = RDKitMolCellFactory.createRDKitMolCell(molFinal, smiles);
+						arrOutputCells[0] = RDKitMolCellFactory.createRDKitAdapterCell(molFinal, smiles);
 					}
 					catch (final Exception exc) {
 						excCaught = exc;
@@ -718,7 +719,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 		final boolean bSplitBadRowsToPort1 = ParseErrorPolicy.SPLIT_ROWS.getActionCommand()
 				.equals(m_modelSeparateFails.getStringValue());
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
 		// Setup main factory
 		final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
@@ -783,7 +784,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 		// Runs the multiple threads to do the work
 		try {
-			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount,
+			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, lTotalRowCount,
 					getWarningConsolidator(), exec).run(inData[0]);
 		}
 		catch (final Exception e) {

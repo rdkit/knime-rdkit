@@ -79,6 +79,7 @@ import org.rdkit.knime.util.WarningConsolidator;
  * 
  * @author Manuel Schwarze
  */
+@Deprecated
 public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	//
@@ -263,12 +264,12 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation

@@ -83,6 +83,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.RDKitTypesPluginActivator;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 
@@ -90,6 +91,7 @@ import org.rdkit.knime.types.RDKitMolValue;
  *
  * @author Greg Landrum
  */
+@Deprecated
 public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 
 	private final SettingsModelString m_reactant1Col =
@@ -126,7 +128,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 	 private DataTableSpec[] createOutSpecs() {
 		 final Vector<DataColumnSpec> cSpec = new Vector<DataColumnSpec>();
 		 DataColumnSpecCreator crea =
-				 new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE);
+				 new DataColumnSpecCreator("Product", RDKitAdapterCell.RAW_TYPE);
 		 cSpec.add(crea.createSpec());
 		 crea = new DataColumnSpecCreator("Product Index", IntCell.TYPE);
 		 cSpec.add(crea.createSpec());
@@ -134,13 +136,13 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 				 "Reactant 1 sequence index", IntCell.TYPE);
 		 cSpec.add(crea.createSpec());
 		 crea = new DataColumnSpecCreator(
-				 "Reactant 1", RDKitMolCellFactory.TYPE);
+				 "Reactant 1", RDKitAdapterCell.RAW_TYPE);
 		 cSpec.add(crea.createSpec());
 		 crea = new DataColumnSpecCreator(
 				 "Reactant 2 sequence index", IntCell.TYPE);
 		 cSpec.add(crea.createSpec());
 		 crea = new DataColumnSpecCreator(
-				 "Reactant 2", RDKitMolCellFactory.TYPE);
+				 "Reactant 2", RDKitAdapterCell.RAW_TYPE);
 		 cSpec.add(crea.createSpec());
 		 final DataTableSpec tSpec = new DataTableSpec(
 				 "output", cSpec.toArray(new DataColumnSpec[cSpec.size()]));

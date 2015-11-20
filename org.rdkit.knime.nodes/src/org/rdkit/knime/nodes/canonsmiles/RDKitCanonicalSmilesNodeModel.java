@@ -53,7 +53,8 @@ import java.util.Arrays;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
-import org.knime.chem.types.SmilesCell;
+import org.knime.chem.types.SmilesAdapterCell;
+import org.knime.chem.types.SmilesCellFactory;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -209,7 +210,7 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), SmilesCell.TYPE)
+					m_modelNewColumnName.getStringValue(), SmilesAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			// Generate factory
@@ -222,19 +223,19 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = DataType.getMissingCell(); // Default value, if something fails
 
 					// Get the ROMol object for the cell
-					if (arrInputDataInfo[INPUT_COLUMN_MOL].isCompatible(RDKitMolValue.class)) {
-						ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					if (arrInputDataInfo[INPUT_COLUMN_MOL].isCompatibleOrAdaptable(RDKitMolValue.class)) {
+						ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 						// Always recalculate the canonical SMILES form as the underlying
 						// algorithm, platform, etc. may have changed, which could lead to other results
 						try {
-							mol = markForCleanup(new RWMol(mol), iUniqueWaveId);
+							mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
 							RDKFuncs.sanitizeMol((RWMol)mol);
-							outputCell = new SmilesCell(RDKFuncs.MolToSmiles(mol, true));
+							outputCell = SmilesCellFactory.createAdapterCell(RDKFuncs.MolToSmiles(mol, true));
 						}
 						catch (final Exception e) {
 							final String strMsg = "Could not sanitize molecule. Result cell will be empty.";
@@ -243,10 +244,10 @@ public class RDKitCanonicalSmilesNodeModel extends AbstractRDKitCalculatorNodeMo
 					}
 					else { // It must be a SMILES compatible value
 						final ROMol mol = markForCleanup(RWMol.MolFromSmiles(
-								arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row)), iUniqueWaveId);
+								arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row)), lUniqueWaveId);
 
 						if (mol != null) {
-							outputCell = new SmilesCell(RDKFuncs.MolToSmiles(mol, true));
+							outputCell = SmilesCellFactory.createAdapterCell(RDKFuncs.MolToSmiles(mol, true));
 						}
 						else {
 							final String strMsg = "Error parsing SMILES. Result cell will be empty.";

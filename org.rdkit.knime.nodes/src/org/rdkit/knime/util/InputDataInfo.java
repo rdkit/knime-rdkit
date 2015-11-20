@@ -484,6 +484,24 @@ public class InputDataInfo {
 
 	/**
 	 * Determines the cell of the passed in row that is specified by this
+	 * input data info object. It returns the cell as is without converting it
+	 * into a datatype. Empty cell policy is not applied when calling
+	 * this method. This means an empty cell can be returned, which may
+	 * contain an error message from auto-conversion.
+	 * 
+	 * @param row The data row with concrete data cells. This data row must
+	 * 		belong to the table, which spec was used in the constructor.
+	 * 		Otherwise the behavior is undefined and will probably cause an
+	 * 		undefined Exception. Must not be null.
+	 * 
+	 * @return The original cell.
+	 */
+	public DataCell getOriginalCell(final DataRow row) {
+		return row.getCell(getColumnIndex());
+	}
+
+	/**
+	 * Determines the cell of the passed in row that is specified by this
 	 * input data info object. When an empty cell is encountered, it applies
 	 * the defined empty cell policy. An explicit type check is not performed
 	 * anymore at this point, because it was done already when this input data info
@@ -531,6 +549,8 @@ public class InputDataInfo {
 					throw new EmptyCellException("An empty cell has been encountered in ('" +
 							getColumnSpec().getName() + "', '" + row.getKey() + "'). Execution failed.",
 							this, row.getKey());
+				case Custom:
+					break;
 				}
 			}
 		}
@@ -562,7 +582,10 @@ public class InputDataInfo {
 	/**
 	 * Convenience method to check, if the column is compatible with the specified
 	 * value class. It does not look at a particular cell, but at the column
-	 * specification. For performance reasons we cache the result.
+	 * specification. For performance reasons we cache the result. 
+	 * The method takes the isCompatible() information for the cell's
+	 * datatype into account. It basically determines, if a cell can be cast to 
+	 * the valueClass.
 	 * 
 	 * @param valueClass Value class for compatibility check. Can be null.
 	 * 
@@ -572,21 +595,62 @@ public class InputDataInfo {
 	public boolean isCompatible(final Class<? extends DataValue> valueClass) {
 		Boolean bRet = false;
 
-		if (!isRowKey()) {
+		if (isRowKey()) {
+         bRet = getDataType().isCompatible(valueClass);
+		}
+		else {
 			bRet = m_mapCompatibilityCache.get(valueClass);
 
 			if (bRet == null) {
-				bRet = (valueClass == null ? false :
-					getTableSpec().getColumnSpec(getColumnIndex()).getType().isCompatible(valueClass));
+				bRet = false;
+				
+				if (valueClass != null) {
+					   DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
+					   bRet = type.isCompatible(valueClass);
+				}
+				
 				m_mapCompatibilityCache.put(valueClass, bRet);
 			}
-		}
-		else {
-			bRet = getDataType().isCompatible(valueClass);
 		}
 
 		return bRet;
 	}
+	
+	  /**
+    * Convenience method to check, if the column is compatible with the specified
+    * value class. It does not look at a particular cell, but at the column
+    * specification. For performance reasons we cache the result. 
+    * The method takes the isCompatible() and isAdaptable() information for the cell's
+    * datatype into account, so it works with normal cells as well as with adapter cells.
+    * 
+    * @param valueClass Value class for compatibility check. Can be null.
+    * 
+    * @return True, if column type is compatible with specified value class.
+    *       False otherwise. Also false, if null was passed in.
+    */
+   public boolean isCompatibleOrAdaptable(final Class<? extends DataValue> valueClass) {
+      Boolean bRet = false;
+
+      if (isRowKey()) {
+         bRet = getDataType().isCompatible(valueClass);
+      }
+      else {
+         bRet = m_mapCompatibilityCache.get(valueClass);
+
+         if (bRet == null) {
+            bRet = false;
+            
+            if (valueClass != null) {
+                  DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
+                  bRet = type.isCompatible(valueClass) || type.isAdaptable(valueClass);
+            }
+            
+            m_mapCompatibilityCache.put(valueClass, bRet);
+         }
+      }
+
+      return bRet;
+   }
 
 	/**
 	 * Determines, if the cell of the passed in row that is specified by this

@@ -64,6 +64,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
@@ -221,7 +222,7 @@ public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			// Create instance of OPSIN library
@@ -247,7 +248,7 @@ public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
@@ -263,12 +264,12 @@ public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel
 					if (strSmiles != null) {
 						// Create the RDKit Molecule with default settings
 						try {
-							final RWMol mol = markForCleanup(RWMol.MolFromSmiles(strSmiles), iUniqueWaveId);
+							final RWMol mol = markForCleanup(RWMol.MolFromSmiles(strSmiles), lUniqueWaveId);
 
 							try {
 								// Note: The SMILES that we include is the one delivered from OPSIN.
 								//       It is not canonicalized.
-								outputCell = RDKitMolCellFactory.createRDKitMolCell(mol, strSmiles);
+								outputCell = RDKitMolCellFactory.createRDKitAdapterCell(mol, strSmiles);
 							}
 							catch (final Exception exc) {
 								strErrorMsg = exc.getClass().getSimpleName() +
@@ -333,8 +334,8 @@ public class RDKitIUPACToRDKitNodeModel extends AbstractRDKitCalculatorNodeModel
 								findColumnIndex(strNewColumnName)));
 
 		// Check for total failure
-		if (arrSplitTables[0].getRowCount() == 0 &&
-				arrSplitTables[1].getRowCount() > 0) {
+		if (arrSplitTables[0].size() == 0 &&
+				arrSplitTables[1].size() > 0) {
 			throw new Exception("Failed to process UIPAC names for all rows. Please check, if the correct column was selected.");
 		}
 

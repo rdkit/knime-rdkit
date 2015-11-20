@@ -70,6 +70,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -244,7 +245,7 @@ public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 		for (int i = 0; i < arrOutputSpec.length; i++) {
 			m_aiFilledCellCounter[i] = new AtomicInteger();
 			arrOutputSpec[i] = new DataColumnSpecCreator("R" + (i + 1),
-					RDKitMolCellFactory.TYPE).createSpec();
+					RDKitAdapterCell.RAW_TYPE).createSpec();
 		}
 
 		// Generate factory
@@ -257,17 +258,17 @@ public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				// Calculate the new cells
 				final DataCell[] outputCells = createEmptyCells(iCoreAtomNumber);
-				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 				try {
 					// Get the molecule with replaced core
-					final ROMol chains = markForCleanup(RDKFuncs.replaceCore(mol, core.get(), true, true), iUniqueWaveId);
+					final ROMol chains = markForCleanup(RDKFuncs.replaceCore(mol, core.get(), true, true), lUniqueWaveId);
 
 					if (chains != null) {
-						final ROMol_Vect frags = markForCleanup(RDKFuncs.getMolFrags(chains), iUniqueWaveId);
+						final ROMol_Vect frags = markForCleanup(RDKFuncs.getMolFrags(chains), lUniqueWaveId);
 						final int iFragsSize = (int)frags.size();
 
 						// Iterate through all fragments
@@ -285,7 +286,7 @@ public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 									// Dummies are labeled by the zero-based atom index they're attached to.
 									// To make things clearer to the user, increment these.
 									atom.setIsotope(iso + 1);
-									outputCells[iso] = RDKitMolCellFactory.createRDKitMolCell(frag);
+									outputCells[iso] = RDKitMolCellFactory.createRDKitAdapterCell(frag);
 									m_aiFilledCellCounter[iso].incrementAndGet();
 									found=true;
 									break;
@@ -354,11 +355,11 @@ public class RDKitRGroupsNodeModel extends AbstractRDKitNodeModel {
 		};
 
 		// Get settings and define data specific behavior
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
 		// Runs the multiple threads to do the work
 		try {
-			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, iTotalRowCount,
+			new AbstractRDKitNodeModel.ParallelProcessor(factory, resultProcessor, lTotalRowCount,
 					getWarningConsolidator(), exec).run(inData[0]);
 		}
 		catch (final Exception e) {

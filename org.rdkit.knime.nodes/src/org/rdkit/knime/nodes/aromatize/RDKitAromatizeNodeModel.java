@@ -64,6 +64,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -205,7 +206,7 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			// Generate factory
@@ -218,17 +219,17 @@ public class RDKitAromatizeNodeModel extends AbstractRDKitCalculatorNodeModel {
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					final RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					final RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
 
 					if (RDKFuncs.setAromaticity(temp) != 0) { // Success
 						RDKFuncs.adjustHs(temp);
 						final String strSmiles = temp.MolToSmiles(true);
-						outputCell = RDKitMolCellFactory.createRDKitMolCell(temp, strSmiles);
+						outputCell = RDKitMolCellFactory.createRDKitAdapterCell(temp, strSmiles);
 					}
 					else {
 						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Unable to aromatize molecule. Producing empty cell.");

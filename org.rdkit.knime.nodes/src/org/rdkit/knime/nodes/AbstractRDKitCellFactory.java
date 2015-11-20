@@ -247,7 +247,7 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	public DataCell[] getCells(final DataRow row) {
 		DataCell[] arrOutputCells = null;
 
-		final int iUniqueWaveId = m_cleaner.createUniqueCleanupWaveId();
+		final long iUniqueWaveId = m_cleaner.createUniqueCleanupWaveId();
 
 		try {
 			arrOutputCells = process(m_arrInputDataInfo, row, iUniqueWaveId);
@@ -370,5 +370,5 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	 * 
 	 * @throws Exception Thrown, if processing failed.
 	 */
-	public abstract DataCell[] process(InputDataInfo[] arrInputDataInfos, DataRow row, int iUniqueWaveId) throws Exception;
+	public abstract DataCell[] process(InputDataInfo[] arrInputDataInfos, DataRow row, long iUniqueWaveId) throws Exception;
 }

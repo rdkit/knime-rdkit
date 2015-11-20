@@ -70,6 +70,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
@@ -339,7 +340,7 @@ public class RDKitInChI2MoleculeNodeModel extends AbstractRDKitCalculatorNodeMod
 
 			// Mandatory column
 			listOutputSpec.add(new DataColumnSpecCreator(
-					m_modelNewMolColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewMolColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec());
 
 			// Optional columns
@@ -371,17 +372,17 @@ public class RDKitInChI2MoleculeNodeModel extends AbstractRDKitCalculatorNodeMod
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					final List<DataCell> listOutput = new ArrayList<DataCell>(3);
 
 					// Calculate the new cells
 					final String strInChI = arrInputDataInfo[INPUT_COLUMN_MOL].getString(row);
-					final ExtraInchiReturnValues extraInfo = markForCleanup(new ExtraInchiReturnValues(), iUniqueWaveId);
+					final ExtraInchiReturnValues extraInfo = markForCleanup(new ExtraInchiReturnValues(), lUniqueWaveId);
 					ROMol mol = null;
 
 					// Generate RDKit molecule from InChI Code
 					synchronized (LOCK) {
-						mol = markForCleanup(RDKFuncs.InchiToMol(strInChI, extraInfo, bSanitize, bRemoveHydrogens), iUniqueWaveId);
+						mol = markForCleanup(RDKFuncs.InchiToMol(strInChI, extraInfo, bSanitize, bRemoveHydrogens), lUniqueWaveId);
 					}
 
 					if (mol == null) {
@@ -390,7 +391,7 @@ public class RDKitInChI2MoleculeNodeModel extends AbstractRDKitCalculatorNodeMod
 								"Unable to create RDKit Molecule");
 					}
 					else {
-						listOutput.add(RDKitMolCellFactory.createRDKitMolCell(mol));
+						listOutput.add(RDKitMolCellFactory.createRDKitAdapterCell(mol));
 					}
 
 					// Generate Extra Information

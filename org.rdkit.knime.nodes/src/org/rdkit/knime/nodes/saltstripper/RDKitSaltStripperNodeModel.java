@@ -73,8 +73,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -162,11 +164,11 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 	RDKitSaltStripperNodeModel() {
 		super(new PortType[] {
 				// Input ports (2nd port is optional)
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
 				new PortType[] {
 				// Output ports
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false) });
+						PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false) });
 
 		getWarningConsolidator().registerContext(SALT_CONTEXT);
 	}
@@ -323,7 +325,7 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			final int iSaltCount = (m_listSalts == null || m_listSalts.isEmpty() ? 0 : m_listSalts.size());
@@ -338,7 +340,7 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Case 1: If we don't have any salts defined, reuse the input cell without any conversion
@@ -349,18 +351,18 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 					// Case 2: Do the salt stripping
 					else {
 						// Calculate the new cells
-						final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+						final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 						ROMol molStripping = mol;
 
 						// Iterate over the salt patterns for each molecule
 						for (int i = 0; i < iSaltCount; i++) {
 
 							// Is there still a molecule with fragments to strip?
-							if (markForCleanup(RDKFuncs.getMolFrags(molStripping), iUniqueWaveId).size() > 1) {
+							if (markForCleanup(RDKFuncs.getMolFrags(molStripping), lUniqueWaveId).size() > 1) {
 
 								// Try to strip off the next salt in the list
 								final ROMol molStripped = markForCleanup(RDKFuncs.deleteSubstructs(
-										molStripping, m_listSalts.get(i), true), iUniqueWaveId);
+										molStripping, m_listSalts.get(i), true), lUniqueWaveId);
 
 								// If stripped structure is not empty, apply further stripping,
 								// otherwise keep the last structure, even if it still contains a salt now
@@ -375,11 +377,11 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 						}
 
 						// Sanitize the result molecule
-						final RWMol molResult = markForCleanup(new RWMol(molStripping), iUniqueWaveId);
+						final RWMol molResult = markForCleanup(new RWMol(molStripping), lUniqueWaveId);
 
 						try {
 							RDKFuncs.sanitizeMol(molResult);
-							outputCell = RDKitMolCellFactory.createRDKitMolCell(molResult);
+							outputCell = RDKitMolCellFactory.createRDKitAdapterCell(molResult);
 						}
 						catch (final Exception e) { // Sanitizing
 							LOGGER.debug("Sanitizing failed for molecule in row '" + row.getKey() + "'. " +
@@ -451,7 +453,7 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 				m_modelOptionalSaltColumnName.getStringValue() != null) {
 
 			m_listSalts = new ArrayList<ROMol>(100);
-			m_iProcessedSaltCount = inData[1].getRowCount();
+			m_iProcessedSaltCount = (int)inData[1].size();
 
 			for (final DataRow row : inData[1]) {
 				final ROMol molSalt = markForCleanup(arrInputDataInfo[1][INPUT_COLUMN_SALT].getROMol(row));
@@ -500,12 +502,12 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 	 * This implementation considers the number of processed salts.
 	 */
 	@Override
-	protected Map<String, Integer> createWarningContextOccurrencesMap(
+	protected Map<String, Long> createWarningContextOccurrencesMap(
 			final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final BufferedDataTable[] resultData) {
-		final Map<String, Integer> map =  super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
+		final Map<String, Long> map =  super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
 				resultData);
-		map.put(SALT_CONTEXT.getId(), m_iProcessedSaltCount);
+		map.put(SALT_CONTEXT.getId(), (long)m_iProcessedSaltCount);
 
 		return map;
 	}

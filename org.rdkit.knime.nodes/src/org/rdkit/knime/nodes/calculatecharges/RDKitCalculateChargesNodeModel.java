@@ -207,15 +207,15 @@ public class RDKitCalculateChargesNodeModel extends AbstractRDKitCalculatorNodeM
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Calculate charges
 					final int iAtomCount = (int)mol.getNumAtoms();
-					final Double_Vect listCharges = markForCleanup(new Double_Vect(iAtomCount), iUniqueWaveId);
+					final Double_Vect listCharges = markForCleanup(new Double_Vect(iAtomCount), lUniqueWaveId);
 					mol.computeGasteigerCharges(mol, listCharges);
 
 					// Convert charges into KNIME Double Cells

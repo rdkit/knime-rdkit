@@ -273,7 +273,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 		final File fileOutput = FileUtils.convertToFile(m_modelOutputFile.getStringValue(), false, true);
 		final boolean bUseRowIds = m_modelIdColumnName.useRowID();
 		final boolean bSuppressTime = m_modelSuppressTimeOption.getIntValue() != 0;
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 		int iDefinedNumBits = -1; // Undefined
 
 		// Create missing directories
@@ -301,8 +301,8 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 			}
 
 			// Iterate through all input rows and write out fingerprints
-			int rowIndex = 0;
-			int iWrittenFingerprints = 0;
+			long rowIndex = 0;
+			long lWrittenFingerprints = 0;
 
 			for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
 				final DataRow row = i.next();
@@ -329,7 +329,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 
 					// Write out header in the very beginning
 					final int iNumBits = (int)dbvFingerprint.length();
-					if (iWrittenFingerprints == 0) {
+					if (lWrittenFingerprints == 0) {
 						// Determine fingerprint length
 						iDefinedNumBits = (int)dbvFingerprint.length();
 
@@ -356,7 +356,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 						writer.write("\t");
 						writer.write(strId);
 						writer.newLine();
-						iWrittenFingerprints++;
+						lWrittenFingerprints++;
 					}
 					catch (final IOException excIo) {
 						throw excIo;
@@ -375,7 +375,7 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 
 				// Every 20 iterations check cancellation status and report progress
 				if (rowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, rowIndex, iTotalRowCount, row, " - Writing fingerprints");
+					AbstractRDKitNodeModel.reportProgress(exec, rowIndex, lTotalRowCount, row, " - Writing fingerprints");
 				}
 			};
 		}

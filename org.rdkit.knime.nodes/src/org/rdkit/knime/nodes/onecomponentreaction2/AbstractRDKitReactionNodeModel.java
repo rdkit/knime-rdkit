@@ -233,18 +233,18 @@ extends AbstractRDKitNodeModel {
 			if (inData != null && inData.length > 0) {
 				// Find out how many reactions there are to calculate based on data input
 				final boolean bIsMatrix = isExpandReactantsMatrix();
-				iTotalNumber = inData[0].getRowCount();
+				iTotalNumber = (int)inData[0].size();
 
 				if (bIsMatrix) {
 					// With matrix expansion the maximum number of reactions depends on the product of table lengths
 					for (int i = 1; i < iReactantCount; i++) {
-						iTotalNumber = iTotalNumber * inData[i].getRowCount();
+						iTotalNumber = iTotalNumber * (int)inData[i].size();
 					}
 				}
 				else {
 					// Without matrix expansion the maximum number of reactions depends on the smallest table
 					for (int i = 1; i < iReactantCount; i++) {
-						iTotalNumber = Math.min(iTotalNumber, inData[i].getRowCount());
+						iTotalNumber = Math.min(iTotalNumber, (int)inData[i].size());
 					}
 
 				}
@@ -274,9 +274,9 @@ extends AbstractRDKitNodeModel {
 							// Define random indexes
 							if (bIsMatrix) {
 								// Produce n.m where max(n|m) is the table length of (n|m)
-								arrIndexes[0] = randomGenerator.nextInt(inData[0].getRowCount());
+								arrIndexes[0] = randomGenerator.nextInt((int)inData[0].size());
 								for (int jReactant = 1; jReactant < iReactantCount; jReactant++) {
-									arrIndexes[jReactant] = randomGenerator.nextInt(inData[jReactant].getRowCount());
+									arrIndexes[jReactant] = randomGenerator.nextInt((int)inData[jReactant].size());
 								}
 							}
 							else {
@@ -432,12 +432,12 @@ extends AbstractRDKitNodeModel {
 	 * This implementation considers the number of processed products.
 	 */
 	@Override
-	protected Map<String, Integer> createWarningContextOccurrencesMap(
+	protected Map<String, Long> createWarningContextOccurrencesMap(
 			final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final BufferedDataTable[] resultData) {
-		final Map<String, Integer> map =  super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
+		final Map<String, Long> map =  super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
 				resultData);
-		map.put(PRODUCT_CONTEXT.getId(), m_aiProductCounter.get());
+		map.put(PRODUCT_CONTEXT.getId(), (long)m_aiProductCounter.get());
 
 		return map;
 	}
@@ -473,7 +473,7 @@ extends AbstractRDKitNodeModel {
 	 * 		Can be empty, but never null.
 	 */
 	protected List<DataRow> processReactionResults(final ChemicalReaction reaction, final ROMol_Vect reactants,
-			final List<DataRow> listToAddTo, final int uniqueWaveId, final int... indicesReactants) {
+			final List<DataRow> listToAddTo, final long uniqueWaveId, final int... indicesReactants) {
 		final List<DataRow> listNewRows =  (listToAddTo == null ? new ArrayList<DataRow>(20) : listToAddTo);
 		final boolean bUniquifyProducts = m_modelUniquifyProducts.getBooleanValue();
 
@@ -517,7 +517,7 @@ extends AbstractRDKitNodeModel {
 							final List<DataCell> listCells = new ArrayList<DataCell>(2 + indicesReactants.length * 2);
 
 							// Add product information to row
-							listCells.add(RDKitMolCellFactory.createRDKitMolCell(prod));
+							listCells.add(RDKitMolCellFactory.createRDKitAdapterCell(prod));
 							listCells.add(new IntCell(j));
 
 							// Add reactant information to row
@@ -525,7 +525,7 @@ extends AbstractRDKitNodeModel {
 								final int indexReactants = indicesReactants[index];
 								sbRowKey.append(indexReactants).append('_');
 								listCells.add(new IntCell(indexReactants));
-								listCells.add(RDKitMolCellFactory.createRDKitMolCell(
+								listCells.add(RDKitMolCellFactory.createRDKitAdapterCell(
 										markForCleanup(reactants.get(index), uniqueWaveId)));
 							}
 

@@ -67,6 +67,7 @@ import org.rdkit.knime.util.DialogComponentColumnNameSelection;
  * 
  * @author Manuel Schwarze
  */
+@Deprecated
 public class RDKitHighlightingAtomsNodeDialog extends DefaultNodeSettingsPane {
 
 	//

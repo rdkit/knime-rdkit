@@ -63,7 +63,7 @@ public class RDKitMolDeserializer implements Deserializer {
 			ROMol mol = null;
 			try {
 				mol = RDKitMolCell2.toROMol(bytes);
-				cell = new RDKitMolCell2(mol, null);
+				cell = RDKitMolCellFactory.createRDKitAdapterCell(mol, null);
 			}
 			catch (final Exception exc) {
 				LOGGER.debug(exc);

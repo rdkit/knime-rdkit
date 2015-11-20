@@ -58,6 +58,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Dillip K Mohanty
  */
+@Deprecated
 public class FingerprintWriterNodeFactory extends
 NodeFactory<FingerprintWriterNodeModel> {
 

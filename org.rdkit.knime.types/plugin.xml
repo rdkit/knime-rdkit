@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.4"?>
+<?eclipse version="4.5"?>
 <plugin>
+
+   <extension point="org.knime.core.DataType">
+   	   <DataType cellClass="org.rdkit.knime.types.RDKitMolCell2">
+          <serializer
+                cellClass="org.rdkit.knime.types.RDKitMolCell2"
+                serializerClass="org.rdkit.knime.types.RDKitMolCell2$RDKitSerializer">
+          </serializer>
+   	   	  <serializer 
+   	   	  		cellClass="org.rdkit.knime.types.RDKitAdapterCell" 
+   	   	  		serializerClass="org.rdkit.knime.types.RDKitAdapterCell$RDKitAdapterCellSerializer">
+          </serializer>
+      </DataType>
+   </extension>
+   
+   <extension point="org.knime.core.DataType">
+   	   <DataType cellClass="org.rdkit.knime.types.RDKitReactionCell">
+          <serializer
+                cellClass="org.rdkit.knime.types.RDKitReactionCell"
+                serializerClass="org.rdkit.knime.types.RDKitReactionCell$RDKitReactionSerializer">
+          </serializer>
+   	   </DataType>
+   </extension>
+   
    <extension-point id="org.rdkit.knime.properties.HeaderPropertyHandler" 
    	name="Header Property Handler" schema="schema/org.rdkit.knime.properties.headerpropertyhandler.exsd"/>
 

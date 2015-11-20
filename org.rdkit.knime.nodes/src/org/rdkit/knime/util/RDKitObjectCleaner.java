@@ -63,7 +63,7 @@ public interface RDKitObjectCleaner {
 	 * 
 	 * @return Unique wave id.
 	 */
-	int createUniqueCleanupWaveId();
+	long createUniqueCleanupWaveId();
 
 	/**
 	 * Registers an RDKit based object, which must have a delete() method implemented
@@ -95,7 +95,7 @@ public interface RDKitObjectCleaner {
 	 * 
 	 * @see #markForCleanup(Object)
 	 */
-	<T extends Object> T markForCleanup(T rdkitObject, int wave);
+	<T extends Object> T markForCleanup(T rdkitObject, long wave);
 
 	/**
 	 * Frees resources for all objects that have been registered prior to this last
@@ -109,6 +109,6 @@ public interface RDKitObjectCleaner {
 	 * 
 	 * @param wave A number that identifies objects registered for a certain "wave".
 	 */
-	void cleanupMarkedObjects(int wave);
+	void cleanupMarkedObjects(long wave);
 
 }

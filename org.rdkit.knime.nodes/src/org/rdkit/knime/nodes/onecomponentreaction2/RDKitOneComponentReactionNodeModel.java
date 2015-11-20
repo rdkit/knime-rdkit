@@ -69,9 +69,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.util.MultiThreadWorker;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
-import org.rdkit.knime.types.RDKitMolCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SafeGuardedResource;
@@ -124,7 +125,7 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	 * Create new node model with two in- and one out-port.
 	 */
 	RDKitOneComponentReactionNodeModel() {
-		super(new PortType[] { BufferedDataTable.TYPE, new PortType(BufferedDataTable.class, true)},
+		super(new PortType[] { BufferedDataTable.TYPE, PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class, true)},
 				new PortType[] { BufferedDataTable.TYPE },
 				1);
 	}
@@ -234,10 +235,10 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 		case 0:
 			// Define output table
 			listSpecs = new ArrayList<DataColumnSpec>();
-			listSpecs.add(new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Product", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Product Index", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 1 sequence index", IntCell.TYPE).createSpec());
-			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitAdapterCell.RAW_TYPE).createSpec());
 
 			spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
 			break;
@@ -257,9 +258,9 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 		// Contains the rows with the result columns
 		final BufferedDataContainer tableProducts = exec.createDataContainer(arrOutSpecs[0]);
 
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
-		if (iTotalRowCount == 0) {
+		if (lTotalRowCount == 0) {
 			getWarningConsolidator().saveWarning("Input table 1 is empty - there are no reactants to process.");
 		}
 		else {
@@ -291,7 +292,7 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 					final boolean bIncluded = isReactionIncluded(index);
 
 					if (bIncluded) {
-						final int uniqueWaveId = createUniqueCleanupWaveId();
+						final long uniqueWaveId = createUniqueCleanupWaveId();
 
 						// Empty cells will result in null items
 						final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT].getROMol(row), uniqueWaveId);
@@ -347,7 +348,7 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 					if (task.getIndex() % 20 == 0) {
 						try {
 							AbstractRDKitNodeModel.reportProgress(exec, (int)task.getIndex(),
-									iTotalRowCount, task.getInput(),
+									lTotalRowCount, task.getInput(),
 									new StringBuilder(" to calculate reactions [").append(getActiveCount()).append(" active, ")
 									.append(getFinishedTaskCount()).append(" pending]").toString());
 						}

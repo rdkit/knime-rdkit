@@ -2,15 +2,15 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes for Knime
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
-Bundle-Version: 2.5.0.qualifier
+Bundle-Version: 3.0.0.qualifier
 Bundle-Vendor: NIBR
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.ui;bundle-version="[3.7.0,4.0.0)",
- org.knime.base;bundle-version="[2.8.0,3.0.0)",
- org.knime.chem.types;bundle-version="[2.8.0,3.0.0)",
- org.knime.workbench.repository;bundle-version="[2.8.0,3.0.0)",
- org.rdkit.knime.types;bundle-version="[2.5.0,3.0.0)",
- org.knime.ext.svg;bundle-version="[2.8.0,3.0.0)" 
+ org.knime.base;bundle-version="[3.0.0,4.0.0)",
+ org.knime.chem.types;bundle-version="[3.0.0,4.0.0)",
+ org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
+ org.rdkit.knime.types;bundle-version="[3.0.0,4.0.0)",
+ org.knime.ext.svg;bundle-version="[3.0.0,4.0.0)" 
 Export-Package: org.RDKit,
  org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.addconformers,
@@ -26,11 +26,13 @@ Export-Package: org.RDKit,
  org.rdkit.knime.nodes.fingerprintreadwrite,
  org.rdkit.knime.nodes.fingerprintwriter,
  org.rdkit.knime.nodes.functionalgroupfilter,
+ org.rdkit.knime.nodes.highlighting,
  org.rdkit.knime.nodes.highlightingatoms,
  org.rdkit.knime.nodes.inchi2rdkit,
  org.rdkit.knime.nodes.interactivetable,
  org.rdkit.knime.nodes.iupac2rdkit,
  org.rdkit.knime.nodes.kekulize,
+ org.rdkit.knime.nodes.mcs,
  org.rdkit.knime.nodes.molecule2rdkit,
  org.rdkit.knime.nodes.moleculesubstructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.molfragmenter,
@@ -48,6 +50,7 @@ Export-Package: org.RDKit,
  org.rdkit.knime.nodes.saltstripper,
  org.rdkit.knime.nodes.sdfdifferencechecker,
  org.rdkit.knime.nodes.smilesheaders,
+ org.rdkit.knime.nodes.structurenormalizer,
  org.rdkit.knime.nodes.substructfilter;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.substructurecounter,
  org.rdkit.knime.nodes.twocomponentreaction2;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",

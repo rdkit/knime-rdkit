@@ -59,7 +59,7 @@ import java.util.List;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.StringInt_Pair;
-import org.knime.chem.types.SdfCell;
+import org.knime.chem.types.SdfAdapterCell;
 import org.knime.chem.types.SdfCellFactory;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmilesValue;
@@ -428,7 +428,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 			// Append result column(s)
 			if (outPort == 0) {
-				newColSpecs.add(new DataColumnSpecCreator(m_modelCorrectedStructureColumnName.getStringValue(), SdfCell.TYPE).createSpec());
+				newColSpecs.add(new DataColumnSpecCreator(m_modelCorrectedStructureColumnName.getStringValue(), SdfAdapterCell.RAW_TYPE).createSpec());
 				newColSpecs.add(new DataColumnSpecCreator(m_modelPassedFlagsColumnName.getStringValue(), IntCell.TYPE).createSpec());
 				newColSpecs.add(new DataColumnSpecCreator(m_modelPassedWarningMessagesColumnName.getStringValue(),
 						ListCell.getCollectionType(StringCell.TYPE)).createSpec());
@@ -460,7 +460,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 			throws InvalidSettingsException {
 		// Generate column specs for the output table columns produced by this factory
 		final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[4]; // We have four output columns, which will be reduced later to three
-		arrOutputSpec[COL_ID_CORRECTED_STRUCTURE] = new DataColumnSpecCreator("Corrected Structure", SdfCell.TYPE).createSpec();
+		arrOutputSpec[COL_ID_CORRECTED_STRUCTURE] = new DataColumnSpecCreator("Corrected Structure", SdfAdapterCell.RAW_TYPE).createSpec();
 		arrOutputSpec[COL_ID_FLAGS] = new DataColumnSpecCreator("Flags", IntCell.TYPE).createSpec();
 		arrOutputSpec[COL_ID_WARNINGS] = new DataColumnSpecCreator("Warning Messages",
 				CollectionCellFactory.getElementType(new DataType[] { StringCell.TYPE })).createSpec();
@@ -484,7 +484,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 				String strMol = null;
 				String strData = null;
 
@@ -513,7 +513,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 				}
 
 				final StringInt_Pair results = markForCleanup(
-						RDKFuncs.checkMolString(strMol, m_inputType == Input.SMILES), iUniqueWaveId);
+						RDKFuncs.checkMolString(strMol, m_inputType == Input.SMILES), lUniqueWaveId);
 
 				// Read corrected structure and add back properties
 				String strCorrectedStructure = results.getFirst();
@@ -582,13 +582,13 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 			m_inputType = determineStructureCheckerInputType(arrInputDataInfo[0][INPUT_COLUMN_MOL].getDataType());
 
 			// Get settings and define data specific behavior
-			final int iTotalRowCount = inData[0].getRowCount();
+			final long lTotalRowCount = inData[0].size();
 
 			// Setup main factory
 			final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
 
 			// Iterate through all input rows, calculate results and split the output
-			int rowIndex = 0;
+			long rowIndex = 0;
 			for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
 				final DataRow row = i.next();
 				final DataCell[] arrResults = factory.getCells(row);
@@ -613,7 +613,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 				// Every 20 iterations check cancellation status and report progress
 				if (rowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, rowIndex, iTotalRowCount, row);
+					AbstractRDKitNodeModel.reportProgress(exec, rowIndex, lTotalRowCount, row);
 				}
 			};
 
@@ -750,7 +750,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	 * 
 	 * @param strSdfValue The SDF string value to be transformed into an SDF cell. Can be null.
 	 * 
-	 * @return Data cell, either SdfCell or a missing cell, if null was passed in.
+	 * @return Data cell, either SdfAdapterCell or a missing cell, if null was passed in.
 	 */
 	protected DataCell createSdfCell(String strSdfValue) {
 		DataCell cellRet;
@@ -765,7 +765,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 				strSdfValue += SDF_POSTFIX;
 			}
 
-			cellRet = SdfCellFactory.create(strSdfValue);
+			cellRet = SdfCellFactory.createAdapterCell(strSdfValue);
 		}
 
 		return cellRet;

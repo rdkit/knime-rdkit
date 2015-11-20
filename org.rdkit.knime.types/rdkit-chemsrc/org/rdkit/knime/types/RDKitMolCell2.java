@@ -62,14 +62,12 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 
 /**
- * Default implementation of a Smiles Cell. This cell stores only the Smiles
- * string but does not do any checks or interpretation of the contained
- * information.
+ * Implementation of an RDKit Molecule Cell. 
  *
  * @author Greg Landrum
  */
-public class RDKitMolCell2 extends DataCell implements StringValue,
-RDKitMolValue, SmilesValue, SdfValue {
+public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
+ SmilesValue, SdfValue, StringValue {
 
 	/** Serial number. */
 	private static final long serialVersionUID = -5474087790061027859L;
@@ -84,17 +82,8 @@ RDKitMolValue, SmilesValue, SdfValue {
 	 */
 	static final DataType TYPE = DataType.getType(RDKitMolCell2.class);
 
-	/**
-	 * Returns the preferred value class of this cell implementation. This
-	 * method is called per reflection to determine which is the preferred
-	 * renderer, comparator, etc.
-	 *
-	 * @return SmilesValue.class
-	 */
-	public static final Class<? extends DataValue> getPreferredValueClass() {
-		return RDKitMolValue.class;
-	}
-
+   /** The serializer instance. */
+   @Deprecated
 	private static final RDKitSerializer SERIALIZER =
 			new RDKitSerializer();
 
@@ -104,6 +93,8 @@ RDKitMolValue, SmilesValue, SdfValue {
 	 *
 	 * @return a serializer for reading/writing cells of this kind
 	 * @see DataCell
+	 * @deprecated As of KNIME 3.0 data types are registered via extension point. This method
+	 *     is not used anymore. The serializer is made known in the extension point configuration.
 	 */
 	public static final RDKitSerializer getCellSerializer() {
 		return SERIALIZER;
@@ -241,6 +232,14 @@ RDKitMolValue, SmilesValue, SdfValue {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean equalContent(DataValue otherValue) { 
+		return RDKitMolValue.equals(this, (RDKitMolValue)otherValue);
+	}
+	
+	/**
 	 * Returns a copy of the binary representation of the RDKit Mol value of this cell.
 	 * 
 	 * @return Binary value.
@@ -282,7 +281,7 @@ RDKitMolValue, SmilesValue, SdfValue {
 	}
 
 	/** Factory for (de-)serializing a RDKitMolCell. */
-	private static class RDKitSerializer implements
+	public static class RDKitSerializer implements
 	DataCellSerializer<RDKitMolCell2> {
 		/**
 		 * {@inheritDoc}

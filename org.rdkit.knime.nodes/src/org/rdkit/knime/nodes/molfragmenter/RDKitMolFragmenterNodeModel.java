@@ -76,6 +76,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -230,7 +231,7 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 			// Define output table
 			listSpecs = new ArrayList<DataColumnSpec>();
 			listSpecs.add(new DataColumnSpecCreator("Fragment Index", IntCell.TYPE).createSpec());
-			listSpecs.add(new DataColumnSpecCreator("Fragment", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Fragment", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Fragment SMILES", StringCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Fragment Size", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Count", IntCell.TYPE).createSpec());
@@ -280,8 +281,8 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 				 * the input made available in the first (and second) parameter.
 				 */
 				@Override
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					final List<IntCell> fragsHere = new ArrayList<IntCell>();
 
 					// Only for non-missing cells we do the calculations
@@ -415,7 +416,7 @@ public class RDKitMolFragmenterNodeModel extends AbstractRDKitCalculatorNodeMode
 			// Create the row
 			final DataCell[] cells = new DataCell[iColumnNumber];
 			cells[0] = new IntCell(i + 1);
-			cells[1] = RDKitMolCellFactory.createRDKitMolCell(molFragment, m_listSmiles.get(i));
+			cells[1] = RDKitMolCellFactory.createRDKitAdapterCell(molFragment, m_listSmiles.get(i));
 			cells[2] = new StringCell(m_listSmiles.get(i));
 			cells[3] = new IntCell((int)molFragment.getNumBonds());
 			cells[4] = new IntCell(m_listFragCounts.get(i));

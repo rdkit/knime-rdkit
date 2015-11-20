@@ -71,6 +71,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitSplitterNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
@@ -155,13 +156,14 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 	RDKitDiversityPickerNodeModel() {
 		super(new PortType[] {
 				// Input ports (2nd port is optional)
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false),
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), true) },
 				new PortType[] {
 				// Output ports
-				new PortType(BufferedDataTable.TYPE.getPortObjectClass(), false) }
-				);
+						PortTypeRegistry.getInstance().getPortType(BufferedDataTable.TYPE.getPortObjectClass(), false) 
+				});
 
+		registerInputTablesWithSizeLimits(0, 1); // As we pre-calculate fingerprints and store them in a collection we cannot support large tables
 		getWarningConsolidator().registerContext(ROW_CONTEXT_TABLE_2);
 	}
 
@@ -366,7 +368,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 		final ExecutionContext subExecCheckDiversity = exec.createSubExecutionContext(0.25d);
 		final ExecutionContext subExecProcessingDiversity = exec.createSubExecutionContext(0.25d);
 
-		final int iInputRowCount = inData[0].getRowCount();
+		final long lInputRowCount = inData[0].size();
 		final List<Integer> listIndicesUsed = new ArrayList<Integer>();
 		final EBV_Vect vFingerprints = markForCleanup(new EBV_Vect());
 		Int_Vect firstPicks = null;
@@ -374,7 +376,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 
 		// 1. Get all fingerprints in a form that we can process further
 		final InputDataInfo inputDataInfo1 = arrInputDataInfo[0][INPUT_COLUMN_MAIN];
-		final boolean bNeedsCalculation1 = inputDataInfo1.isCompatible(RDKitMolValue.class);
+		final boolean bNeedsCalculation1 = inputDataInfo1.isCompatibleOrAdaptable(RDKitMolValue.class);
 		String strInfoForProgress = (bNeedsCalculation1 ? " - Calculating fingerprints" : " - Reading fingerprints");
 		final FingerprintSettingsHeaderProperty fpSpec1 = (bNeedsCalculation1 ?
 				new FingerprintSettingsHeaderProperty(DEFAULT_FINGERPRINT_SETTINGS) :
@@ -434,7 +436,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 
 			// Every 20 iterations report progress and check for cancel
 			if (iRowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, iRowIndex, iInputRowCount, row, " - Reading fingerprints");
+				AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, iRowIndex, lInputRowCount, row, " - Reading fingerprints");
 			}
 
 			iRowIndex++;
@@ -454,14 +456,14 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 		if (!bKeepAll && hasAdditionalInputTable(getInputTableSpecs(inData)) && arrInputDataInfo[1].length > 0) {
 			final InputDataInfo inputDataInfo2 = arrInputDataInfo[1][INPUT_COLUMN_ADDITIONAL];
 
-			if (inputDataInfo2.isCompatible(BitVectorValue.class) || inputDataInfo2.isCompatible(RDKitMolValue.class)) {
-				final boolean bNeedsCalculation2 = inputDataInfo2.isCompatible(RDKitMolValue.class);
+			if (inputDataInfo2.isCompatible(BitVectorValue.class) || inputDataInfo2.isCompatibleOrAdaptable(RDKitMolValue.class)) {
+				final boolean bNeedsCalculation2 = inputDataInfo2.isCompatibleOrAdaptable(RDKitMolValue.class);
 				final FingerprintType fpType = fpSpec1.getRdkitFingerprintType(); // The configure() method ensures that this is not null
 				firstPicks = new Int_Vect();
 				final RowIterator it2 = inData[1].iterator();
 				int iAdditionalRowIndex = 0;
 				int iBiasAwayIndex = (int)vFingerprints.size();
-				final int iAdditionalRowCount = inData[1].getRowCount();
+				final long lAdditionalRowCount = inData[1].size();
 				strInfoForProgress = (bNeedsCalculation2 ? " - Calculating additional fingerprints" : " - Reading additional fingerprints");
 
 				if (!bNeedsCalculation2) {
@@ -529,7 +531,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 
 					// Every 20 iterations report progress and check for cancel
 					if (iAdditionalRowIndex % 20 == 0) {
-						AbstractRDKitNodeModel.reportProgress(subExecReadingAdditionalFingerprints, iAdditionalRowIndex, iAdditionalRowCount, row, strInfoForProgress);
+						AbstractRDKitNodeModel.reportProgress(subExecReadingAdditionalFingerprints, iAdditionalRowIndex, lAdditionalRowCount, row, strInfoForProgress);
 					}
 
 					iAdditionalRowIndex++;
@@ -565,13 +567,13 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 		subExecCheckDiversity.checkCanceled();
 
 		// 3. Store, what rows to keep
-		m_ebvRowsToKeep = markForCleanup(new ExplicitBitVect(iInputRowCount));
+		m_ebvRowsToKeep = markForCleanup(new ExplicitBitVect(lInputRowCount));
 		final int iDiversityCount = (int)intVector.size();
 		for(int i = 0; i < iDiversityCount; i++) {
 			final int pickedFingerprintIndex = intVector.get(i);
 			if (pickedFingerprintIndex < listIndicesUsed.size()) {
 				final int pickedRowIndex = listIndicesUsed.get(pickedFingerprintIndex);
-				if (pickedRowIndex < iInputRowCount) {
+				if (pickedRowIndex < lInputRowCount) {
 					m_ebvRowsToKeep.setBit(pickedRowIndex);
 				}
 			}
@@ -595,15 +597,15 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 	}
 
 	@Override
-	protected Map<String, Integer> createWarningContextOccurrencesMap(
+	protected Map<String, Long> createWarningContextOccurrencesMap(
 			final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final BufferedDataTable[] resultData) {
 
-		final Map<String, Integer> mapContextOccurrences = super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
+		final Map<String, Long> mapContextOccurrences = super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
 				resultData);
 
 		if (hasAdditionalInputTable(getInputTableSpecs(inData))) {
-			mapContextOccurrences.put(ROW_CONTEXT_TABLE_2.getId(), inData[1].getRowCount());
+			mapContextOccurrences.put(ROW_CONTEXT_TABLE_2.getId(), inData[1].size());
 		}
 
 		return mapContextOccurrences;
@@ -616,7 +618,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 
 	 * @param arrInputDataInfo Input data information about all columns of the table at the input port. Not used
 	 * 		in this implementation.
-	 * @param iUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
+	 * @param lUniqueWaveId A unique id that should be used for marking RDKit objects for cleanup. Marked
 	 * 		objects will be cleaned up automatically at the end of this call. If this is not wanted,
 	 * 		the objects should either not be marked for cleanup or they should be marked without an id,
 	 * 		which would lead to a cleanup at the end of the entire execution process. Not used in this implementation.
@@ -624,8 +626,8 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 	 * @return 0 to keep the row, or -1 if row shall be filtered out completely.
 	 */
 	@Override
-	public int determineTargetTable(final int iInPort, final int iRowIndex, final DataRow row, final InputDataInfo[] arrInputDataInfo, final int iUniqueWaveId) {
-		return (m_ebvRowsToKeep.getBit(iRowIndex) ? 0 : -1);
+	public int determineTargetTable(final int iInPort, final long lRowIndex, final DataRow row, final InputDataInfo[] arrInputDataInfo, final long lUniqueWaveId) {
+		return (m_ebvRowsToKeep.getBit(lRowIndex) ? 0 : -1);
 	}
 
 	//

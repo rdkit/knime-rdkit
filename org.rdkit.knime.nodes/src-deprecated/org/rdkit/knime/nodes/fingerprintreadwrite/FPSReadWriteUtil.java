@@ -72,7 +72,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Sudip Ghosh
  */
-
+@Deprecated
 public class FPSReadWriteUtil {
 
 	//

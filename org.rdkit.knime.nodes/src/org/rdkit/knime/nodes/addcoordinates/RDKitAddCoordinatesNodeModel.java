@@ -64,6 +64,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -282,7 +283,7 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			// Generate factory
@@ -295,12 +296,12 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
-					mol = markForCleanup(new ROMol(mol), iUniqueWaveId); // Create a copy
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					mol = markForCleanup(new ROMol(mol), lUniqueWaveId); // Create a copy
 
 					// Calculate 2D Coordinates
 					if (m_modelDimension.getValue() == CoordinateDimension.Coord_2D) {
@@ -318,7 +319,7 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 					}
 
 					// Generate output cell
-					outputCell = RDKitMolCellFactory.createRDKitMolCell(mol);
+					outputCell = RDKitMolCellFactory.createRDKitAdapterCell(mol);
 
 					return new DataCell[] { outputCell };
 				}

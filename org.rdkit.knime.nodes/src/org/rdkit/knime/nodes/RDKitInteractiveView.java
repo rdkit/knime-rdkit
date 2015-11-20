@@ -74,9 +74,9 @@ import org.knime.base.node.io.csvwriter.CSVFilesHistoryPanel;
 import org.knime.base.node.io.csvwriter.CSVWriter;
 import org.knime.base.node.io.csvwriter.FileWriterSettings;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.AbstractRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -672,7 +672,7 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 	 *
 	 * @author Bernd Wiswedel, University of Konstanz
 	 */
-	private static final class RowHiliteFilter extends RowFilter {
+	private static final class RowHiliteFilter extends AbstractRowFilter {
 
 		private final HiLiteHandler m_handler;
 		private final TableContentFilter m_filter;
@@ -706,7 +706,7 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 		}
 
 		@Override
-		public boolean matches(final DataRow row, final int rowIndex)
+		public boolean matches(final DataRow row, final long rowIndex)
 				throws EndOfTableException, IncludeFromNowOn {
 			return m_filter.matches(m_handler.isHiLit(row.getKey()));
 		}

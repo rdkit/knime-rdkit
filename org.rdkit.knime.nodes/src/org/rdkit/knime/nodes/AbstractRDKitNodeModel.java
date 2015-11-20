@@ -63,7 +63,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellTypeConverter;
@@ -160,11 +160,14 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	//
 
 	/** Increasing thread-safe counter wave id assignment used in the context of cleaning of RDKit objects. */
-	private static AtomicInteger g_nextUniqueWaveId = new AtomicInteger(1);
+	private static AtomicLong g_nextUniqueWaveId = new AtomicLong(Long.MIN_VALUE);
 
 	//
 	// Members
 	//
+	
+	/** Stores the indexes of all input tables that cannot be handled when they have more than Integer.MAX_VALUE rows. */
+	private int[] m_arrInputTableIndexesWithSizeLimit = new int[0];
 
 	/** List to register setting models. It's important to initialize this first. */
 	private final List<SettingsModel> m_listRegisteredSettings = new ArrayList<SettingsModel>();
@@ -246,13 +249,22 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
 			final PortType[] outPortTypes) {
 		super(inPortTypes, outPortTypes);
-		initializeContentTableModels(inPortTypes.length, outPortTypes.length);
+      initializeContentTableModels(inPortTypes.length, outPortTypes.length);
 	}
 
 	//
-	// Public Methods (baiscally interface implementations)
+	// Public Methods (basically interface implementations)
 	//
 
+	public void registerInputTablesWithSizeLimits(int... indexes) {
+	   if (indexes != null && indexes.length > 0) {
+	      m_arrInputTableIndexesWithSizeLimit = indexes;
+	   }
+	   else {
+	      m_arrInputTableIndexesWithSizeLimit = new int[0];
+	   }
+	}
+	
 	/**
 	 * Creates a new wave id. This id must be unique in the context of the overall runtime
 	 * of the Java VM, at least in the context of the same class loader and memory area.
@@ -260,8 +272,14 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @return Unique wave id.
 	 */
 	@Override
-	public int createUniqueCleanupWaveId() {
-		return g_nextUniqueWaveId.getAndIncrement();
+	public long createUniqueCleanupWaveId() {
+		long waveId = g_nextUniqueWaveId.getAndIncrement();
+		
+		if (waveId == Long.MAX_VALUE - 1) {
+		   g_nextUniqueWaveId.set(Long.MIN_VALUE);
+		}
+		
+		return waveId;
 	}
 
 	/**
@@ -333,7 +351,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @return The same object that was passed in. Null, if null was passed in.
 	 */
 	@Override
-	public <T extends Object> T markForCleanup(final T rdkitObject, final int wave) {
+	public <T extends Object> T markForCleanup(final T rdkitObject, final long wave) {
 		return markForCleanup(rdkitObject, wave, false);
 	}
 
@@ -360,7 +378,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @return The same object that was passed in. Null, if null was passed in.
 	 */
-	public <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
+	public <T extends Object> T markForCleanup(final T rdkitObject, final long wave, final boolean bRemoveFromOtherWave) {
 		return m_rdkitCleanupTracker.markForCleanup(rdkitObject, wave, bRemoveFromOtherWave);
 	}
 
@@ -380,7 +398,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param wave A number that identifies objects registered for a certain "wave".
 	 */
 	@Override
-	public void cleanupMarkedObjects(final int wave) {
+	public void cleanupMarkedObjects(final long wave) {
 		m_rdkitCleanupTracker.cleanupMarkedObjects(wave);
 	}
 
@@ -744,6 +762,20 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	@Override
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
+	   // Check table size limitations
+	   if (inData != null) {
+   	   for (int i = 0; i < m_arrInputTableIndexesWithSizeLimit.length; i++) {
+   	      if (m_arrInputTableIndexesWithSizeLimit[i] < inData.length) {
+   	         if (inData[m_arrInputTableIndexesWithSizeLimit[i]] != null && 
+   	               inData[m_arrInputTableIndexesWithSizeLimit[i]].size() > Integer.MAX_VALUE) {
+   	            throw new UnsupportedOperationException(
+   	                "This RDKit Node does not support more than " + Integer.MAX_VALUE + " rows for the " 
+   	                   + (m_arrInputTableIndexesWithSizeLimit[i] + 1) + ". input table.");
+   	         }
+   	      }
+   	   }   
+	   }
+	   
 		m_lExecutionStartTs = System.currentTimeMillis();
 		BufferedDataTable[] arrConvertedTables = null;
 		BufferedDataTable[] arrResultTables = null;
@@ -873,7 +905,6 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	protected BufferedDataTable[] convertInputTables(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
 		BufferedDataTable[] arrConvertedTables = null;
-		final WarningConsolidator warnings = getWarningConsolidator();
 
 		if (inData != null) {
 			arrConvertedTables = new BufferedDataTable[inData.length];
@@ -924,11 +955,13 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 										if (cellConverted instanceof MissingCell) {
 											final String strError = ((MissingCell)cellConverted).getError();
 											if (strError != null) {
-												warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-														"Auto conversion in column '" +
-																listConversionColumns.get(i).getColumnSpec().getName() +
-																"' failed: " + createShortError(strError) +
-														" - Using empty cell.");
+												try {
+													generateAutoConversionError(listConversionColumns.get(i), createShortError(strError));
+												}
+												catch (final Exception exc) {
+													LOGGER.error(exc);
+													// Ignore it as this would lead to a deadlock in KNIME's rearranger handling
+												}
 											}
 										}
 									}
@@ -979,6 +1012,20 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 		exec.setProgress(1.0d);
 		return arrConvertedTables;
+	}
+
+	/**
+	 * This method gets called when the auto conversion of a SMILES or SDF cell fails and no RDKit cell
+	 * could be generated. Overwriting this method gives a node the opportunity to handle the warning
+	 * differently than normal, e.g. to suppress it or to change the wording.
+	 * 
+	 * @param inputDataInfo Input data info for the column that failed a cell conversion.
+	 * @param strError Short error for logging.
+	 */
+	protected void generateAutoConversionError(final InputDataInfo inputDataInfo, final String strError) {
+		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Auto conversion in column '" +
+				inputDataInfo.getColumnSpec().getName() +
+				"' failed: " + strError + " - Using empty cell.");
 	}
 
 	/**
@@ -1172,11 +1219,11 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @see #getWarningConsolidator()
 	 */
-	protected Map<String, Integer> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
+	protected Map<String, Long> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
 			final InputDataInfo[][] arrInputDataInfo, final BufferedDataTable[] resultData) {
 
-		final Map<String, Integer> mapContextOccurrences = new HashMap<String, Integer>();
-		mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[0].getRowCount());
+		final Map<String, Long> mapContextOccurrences = new HashMap<String, Long>();
+		mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[0].size());
 
 		return mapContextOccurrences;
 	}
@@ -1400,8 +1447,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		BufferedDataTable resultTable = inData; // Default
 
 		if (filter != null) {
-			final int iRowCount = inData.getRowCount();
-			int iRowIndex = 0;
+			final long lRowCount = inData.size();
+			long lRowIndex = 0;
 			final RowIterator it = inData.iterator();
 
 			final BufferedDataContainer resultTableData = exec.createDataContainer(inData.getDataTableSpec());
@@ -1409,10 +1456,10 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			// Filter the rows
 			while (it.hasNext()) {
 				final DataRow row = it.next();
-				final int iUniqueWaveId = createUniqueCleanupWaveId();
+				final long lUniqueWaveId = createUniqueCleanupWaveId();
 
 				try {
-					if (filter.include(0, iRowIndex, row, arrInputDataInfo, iUniqueWaveId)) {
+					if (filter.include(0, lRowIndex, row, arrInputDataInfo, lUniqueWaveId)) {
 						resultTableData.addRowToTable(row);
 					}
 				}
@@ -1429,15 +1476,15 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					}
 				}
 				finally {
-					cleanupMarkedObjects(iUniqueWaveId);
+					cleanupMarkedObjects(lUniqueWaveId);
 				}
 
 				// Every 20 iterations report progress and check for cancel
-				if (iRowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, strProgressMessage);
+				if (lRowIndex % 20 == 0) {
+					AbstractRDKitNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, strProgressMessage);
 				}
 
-				iRowIndex++;
+				lRowIndex++;
 			}
 
 			// Create table
@@ -1482,19 +1529,19 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			arrPort[iPort] = exec.createDataContainer(inData.getDataTableSpec());
 		}
 
-		final int iRowCount = inData.getRowCount();
-		int iRowIndex = 0;
+		final long lRowCount = inData.size();
+		long lRowIndex = 0;
 		final RowIterator it = inData.iterator();
 
 		// Filter the rows
 		while (it.hasNext()) {
 			final DataRow row = it.next();
 			int iTargetTable = -1;
-			final int iUniqueWaveId = createUniqueCleanupWaveId();
+			final long lUniqueWaveId = createUniqueCleanupWaveId();
 
 			try {
-				iTargetTable = splitter.determineTargetTable(0, iRowIndex, row,
-						arrInputDataInfo, iUniqueWaveId);
+				iTargetTable = splitter.determineTargetTable(0, lRowIndex, row,
+						arrInputDataInfo, lUniqueWaveId);
 			}
 			catch (final InputDataInfo.EmptyCellException exc) {
 				LOGGER.warn(exc.getMessage());
@@ -1509,7 +1556,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				}
 			}
 			finally {
-				cleanupMarkedObjects(iUniqueWaveId);
+				cleanupMarkedObjects(lUniqueWaveId);
 			}
 
 			if (iTargetTable >= 0) {
@@ -1517,11 +1564,11 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			}
 
 			// Every 20 iterations report progress and check for cancel
-			if (iRowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(exec, iRowIndex, iRowCount, row, " - Splitting");
+			if (lRowIndex % 20 == 0) {
+				AbstractRDKitNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, " - Splitting");
 			}
 
-			iRowIndex++;
+			lRowIndex++;
 		}
 
 		exec.setProgress(1.0d, "Finished Splitting");
@@ -1737,7 +1784,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param mapContextOccurrences Maps context ids to number of occurrences (e.g. number of rows).
 	 * 		Can be null.
 	 */
-	protected void generateWarnings(final Map<String, Integer> mapContextOccurrences) {
+	protected void generateWarnings(final Map<String, Long> mapContextOccurrences) {
 		setWarningMessage(getWarningConsolidator().getWarnings(mapContextOccurrences));
 	}
 
@@ -1856,21 +1903,21 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @param exec Execution context to use for checks and reporting. Can be null
 	 * 		to do nothing.
-	 * @param rowIndex Index of currently processed row.
-	 * @param iTotalRowCount Total number of rows to be processed.
+	 * @param lRowIndex Index of currently processed row.
+	 * @param lTotalRowCount Total number of rows to be processed.
 	 * @param row Currently processed row to get row key from. Can be null to
 	 * 		suppress this information.
 	 * @param textToAppend Additional text(s) to append directly at the end. Optional.
 	 *
 	 * @throws CanceledExecutionException Thrown, if the user canceled execution.
 	 */
-	public static void reportProgress(final ExecutionContext exec, final int rowIndex, final int iTotalRowCount,
+	public static void reportProgress(final ExecutionContext exec, final long lRowIndex, final long lTotalRowCount,
 			final DataRow row, final String... textToAppend) throws CanceledExecutionException {
 		if (exec != null) {
 			exec.checkCanceled();
 
 			final StringBuilder m = new StringBuilder("Processed row ")
-			.append(rowIndex).append('/').append(iTotalRowCount);
+			.append(lRowIndex).append('/').append(lTotalRowCount);
 
 			if (row != null) {
 				m.append(" (\"").append(row.getKey()).append("\")");
@@ -1882,7 +1929,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				}
 			}
 
-			exec.setProgress(rowIndex / (double)iTotalRowCount, m.toString());
+			exec.setProgress(lRowIndex / (double)lTotalRowCount, m.toString());
 		}
 	}
 
@@ -2084,7 +2131,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * The total number of rows that are subject of processing. This is used
 		 * for progress reporting.
 		 */
-		private  final int m_iTotalRowCount;
+		private  final long m_lTotalRowCount;
 
 		/**
 		 * The output factories to be used to compute the results based on an input row.
@@ -2145,7 +2192,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * @param factory The factory implementation to perform the calculations. Must not be null.
 		 * @param resultProcessor The result processor implementation, which could distribute the results
 		 * 		to different tables, if desired. Must not be null.
-		 * @param iRowCount Row count of the input table in focus of this parallel processing. This
+		 * @param lRowCount Row count of the input table in focus of this parallel processing. This
 		 * 		value is used to determine the correct progress percentage.
 		 * @param warningConsolidator Warning consolidator to be used to save warning messages and
 		 * 		its statistics (how often they occurred). Must not be null.
@@ -2153,9 +2200,9 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 *
 		 */
 		public ParallelProcessor(final AbstractRDKitCellFactory factory,
-				final ResultProcessor resultProcessor, final int iRowCount,
+				final ResultProcessor resultProcessor, final long lRowCount,
 				final WarningConsolidator warningConsolidator, final ExecutionContext exec) {
-			this(new AbstractRDKitCellFactory[] { factory }, resultProcessor, iRowCount,
+			this(new AbstractRDKitCellFactory[] { factory }, resultProcessor, lRowCount,
 					warningConsolidator, exec);
 		}
 
@@ -2172,7 +2219,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * @param arrFactory Multiple factory implementations to perform the calculations. Must not be null.
 		 * @param resultProcessor The result processor implementation, which could distribute the results
 		 * 		to different tables, if desired. Must not be null.
-		 * @param iRowCount Row count of the input table in focus of this parallel processing. This
+		 * @param lRowCount Row count of the input table in focus of this parallel processing. This
 		 * 		value is used to determine the correct progress percentage.
 		 * @param warningConsolidator Warning consolidator to be used to save warning messages and
 		 * 		its statistics (how often they occurred). Must not be null.
@@ -2180,7 +2227,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 *
 		 */
 		public ParallelProcessor(final AbstractRDKitCellFactory[] arrFactory,
-				final ResultProcessor resultProcessor, final int iRowCount,
+				final ResultProcessor resultProcessor, final long lRowCount,
 				final WarningConsolidator warningConsolidator, final ExecutionContext exec) {
 
 			super(getQueueSize(), getMaxParallelWorkers());
@@ -2206,7 +2253,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 			m_arrFactory = arrFactory;
 			m_resultProcessor = resultProcessor;
-			m_iTotalRowCount = iRowCount;
+			m_lTotalRowCount = lRowCount;
 			m_warningConsolidator = warningConsolidator;
 			m_exec = exec;
 
@@ -2384,7 +2431,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			if (rowIndex % 20 == 0) {
 				try {
 					AbstractRDKitNodeModel.reportProgress(m_exec, (int)rowIndex,
-							m_iTotalRowCount, row,
+							m_lTotalRowCount, row,
 							new StringBuilder(" [").append(getActiveCount()).append(" active, ")
 							.append(getFinishedTaskCount()).append(" pending]").toString());
 				}
@@ -2403,7 +2450,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @author Manuel Schwarze
 	 */
-	static class RDKitCleanupTracker extends HashMap<Integer, List<Object>> {
+	static class RDKitCleanupTracker extends HashMap<Long, List<Object>> {
 
 		//
 		// Constants
@@ -2482,7 +2529,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 *
 		 * @return The same object that was passed in. Null, if null was passed in.
 		 */
-		public synchronized <T extends Object> T markForCleanup(final T rdkitObject, final int wave, final boolean bRemoveFromOtherWave) {
+		public synchronized <T extends Object> T markForCleanup(final T rdkitObject, final long wave, final boolean bRemoveFromOtherWave) {
 			if (rdkitObject != null)  {
 
 				// Remove object from any other list, if desired (cost performance!)
@@ -2490,7 +2537,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 					// Loop through all waves to find the rdkitObject - we create a copy here, because
 					// we may remove empty wave lists which may blow up out iterator
-					for (final int waveExisting : new HashSet<Integer>(keySet())) {
+					for (final long waveExisting : new HashSet<Long>(keySet())) {
 						final List<Object> list = get(waveExisting);
 						if (list.remove(rdkitObject) && list.isEmpty()) {
 							remove(waveExisting);
@@ -2523,7 +2570,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		public synchronized void cleanupMarkedObjects() {
 			// Loop through all waves for cleanup - we create a copy here, because
 			// the cleanupMarkedObjects method will remove items from our map
-			for (final int wave : new HashSet<Integer>(keySet())) {
+			for (final long wave : new HashSet<Long>(keySet())) {
 				cleanupMarkedObjects(wave);
 			}
 		}
@@ -2534,7 +2581,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 *
 		 * @param wave A number that identifies objects registered for a certain "wave".
 		 */
-		public synchronized void cleanupMarkedObjects(final int wave) {
+		public synchronized void cleanupMarkedObjects(final long wave) {
 			// Find the right wave list, if not found yet
 			final List<Object> list = get(wave);
 

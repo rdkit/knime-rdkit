@@ -51,7 +51,7 @@ package org.rdkit.knime.nodes.sdfdifferencechecker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.knime.chem.types.SdfValue;
 import org.knime.core.data.DataRow;
@@ -125,7 +125,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 
 	// Intermediate results
 
-	private AtomicInteger m_diffRowCounter = null;
+	private AtomicLong m_diffRowCounter = null;
 
 	/** The first encountered row of table 1 that showed a difference. */
 	private DataRow m_errorRow1 = null;
@@ -262,17 +262,17 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 		// Get settings and define data specific behavior
 		final boolean bFailOnFirstDifference = m_modelFailOnFirstDifferenceOption.getBooleanValue();
 		final double dTolerance = m_modelTolerance.getDoubleValue();
-		final int iTotalRowCount1 = inData[0].getRowCount();
-		final int iTotalRowCount2 = inData[1].getRowCount();
-		m_diffRowCounter = new AtomicInteger(0);
+		final long lTotalRowCount1 = inData[0].size();
+		final long lTotalRowCount2 = inData[1].size();
+		m_diffRowCounter = new AtomicLong(0);
 
-		if (iTotalRowCount1 != iTotalRowCount2) {
-			throw new InvalidInputException("Columns have a different number of rows: Table 1 has " + iTotalRowCount1 +
-					" row and Table 2 has " + iTotalRowCount2 + " rows.");
+		if (lTotalRowCount1 != lTotalRowCount2) {
+			throw new InvalidInputException("Columns have a different number of rows: Table 1 has " + lTotalRowCount1 +
+					" row and Table 2 has " + lTotalRowCount2 + " rows.");
 		}
 
 		// Iterate through all input rows and calculate results
-		int rowInputIndex = 0;
+		long rowInputIndex = 0;
 		final CloseableRowIterator i1 = inData[0].iterator();
 		final CloseableRowIterator i2 = inData[1].iterator();
 
@@ -339,7 +339,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 
 			// Every 20 iterations check cancellation status and report progress
 			if (rowInputIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, iTotalRowCount1, row1, " - Comparing SDF strings");
+				AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, lTotalRowCount1, row1, " - Comparing SDF strings");
 			}
 		}
 

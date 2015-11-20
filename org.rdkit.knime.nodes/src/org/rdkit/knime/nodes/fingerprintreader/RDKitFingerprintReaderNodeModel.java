@@ -120,7 +120,7 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 	// Internals
 	//
 
-	private int m_iReadFingerprintLines = 0;
+	private long m_lReadFingerprintLines = 0;
 
 	//
 	// Constructor
@@ -221,7 +221,7 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 
 		// Read from input file
 		final int iFileLength = (int)fileFps.length();
-		m_iReadFingerprintLines = 0;
+		m_lReadFingerprintLines = 0;
 		BufferedReader reader = null;
 		InputStream inFile = null;
 
@@ -274,7 +274,7 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 
 				// Read normal line and add it to the table
 				else {
-					m_iReadFingerprintLines++;
+					m_lReadFingerprintLines++;
 					final StringTokenizer st = new StringTokenizer(strLine, "\t", false);
 
 					if (st.countTokens() > 1) {
@@ -326,8 +326,8 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 							exec.checkCanceled();
 
 							final StringBuilder sbMsg = new StringBuilder("Processed ")
-							.append(m_iReadFingerprintLines).append(" fingerprints ('")
-							.append(iAddedFingerprints - m_iReadFingerprintLines)
+							.append(m_lReadFingerprintLines).append(" fingerprints ('")
+							.append(iAddedFingerprints - m_lReadFingerprintLines)
 							.append(" of them are invalid)");
 
 							exec.setProgress(iLineNumber / (double)iFileLength / strLine.length(),
@@ -363,13 +363,13 @@ public class RDKitFingerprintReaderNodeModel extends AbstractRDKitNodeModel {
 	 * This implementation considers the number of processed fingerprints.
 	 */
 	@Override
-	protected Map<String, Integer> createWarningContextOccurrencesMap(
+	protected Map<String, Long> createWarningContextOccurrencesMap(
 			final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final BufferedDataTable[] resultData) {
 		// We do not call super here, because it would fail due to missing
 		// input tables in this node
-		final Map<String, Integer> map =  new HashMap<String, Integer>();
-		map.put(FP_CONTEXT.getId(), m_iReadFingerprintLines);
+		final Map<String, Long> map =  new HashMap<String, Long>();
+		map.put(FP_CONTEXT.getId(), m_lReadFingerprintLines);
 
 		return map;
 	}

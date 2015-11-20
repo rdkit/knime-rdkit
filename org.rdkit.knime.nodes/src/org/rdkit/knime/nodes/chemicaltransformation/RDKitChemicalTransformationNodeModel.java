@@ -75,6 +75,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.ChemUtils;
@@ -151,9 +152,9 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 	 */
 	RDKitChemicalTransformationNodeModel() {
 		super(2, 1);
-
+		registerInputTablesWithSizeLimits(1); // Reaction table supports only limited size
+		
 		m_arrReactions = null;
-
 		getWarningConsolidator().registerContext(REACTION_CONTEXT);
 	}
 
@@ -295,7 +296,7 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 
 			// Create the chemical reactions to be applied as safe guarded resource to avoid corruption
@@ -314,11 +315,11 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = DataType.getMissingCell();
 
 					// Calculate the new cells
-					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					final String strSmiles = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
 
 					int iReaction = 0;
@@ -356,7 +357,7 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 
 												// Take the very first product only and free the others immediately
 												if (i == 0 && j == 0) {
-													molProduct = markForCleanup(vProds.get(j), iUniqueWaveId);
+													molProduct = markForCleanup(vProds.get(j), lUniqueWaveId);
 												}
 												else {
 													final ROMol molProductToIgnore = vProds.get(j);
@@ -399,12 +400,12 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 
 					// Use final product as result, but check it for validity sanitizing it
 					if (mol != null) {
-						final RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+						final RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
 
 						if (temp.getNumAtoms() > 0) {
 							try {
 								RDKFuncs.sanitizeMol(temp);
-								outputCell = RDKitMolCellFactory.createRDKitMolCell(temp);
+								outputCell = RDKitMolCellFactory.createRDKitAdapterCell(temp);
 							}
 							catch (final Exception exc) {
 								warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),

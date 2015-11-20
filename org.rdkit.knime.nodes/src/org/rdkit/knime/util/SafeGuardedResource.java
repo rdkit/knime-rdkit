@@ -173,6 +173,8 @@ public abstract class SafeGuardedResource<T> {
 			case Created:
 				resource = m_resource;
 				break;
+			case Disposed:
+				break;
 			}
 		}
 		else {
@@ -189,6 +191,8 @@ public abstract class SafeGuardedResource<T> {
 						m_hResourceAccess.put(Thread.currentThread(), resource);
 					}
 				}
+				break;
+			case Disposed:
 				break;
 			}
 		}

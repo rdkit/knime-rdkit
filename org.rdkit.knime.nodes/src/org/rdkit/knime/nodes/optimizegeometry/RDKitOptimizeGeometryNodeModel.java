@@ -67,6 +67,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -257,7 +258,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[3]; // We have three output columns
 			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewMoleculeColumnName.getStringValue(), RDKitMolCellFactory.TYPE)
+					m_modelNewMoleculeColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE)
 			.createSpec();
 			arrOutputSpec[1] = new DataColumnSpecCreator(
 					m_modelNewConvergeColumnName.getStringValue(), BooleanCell.TYPE)
@@ -282,13 +283,13 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputMolCell = null;
 					DataCell outputConvergeCell = null;
 					DataCell outputEnergyCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Remove starting coordinates, if desired
 					if (bRemoveCoordinates) {
@@ -304,7 +305,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					int iConverge = -1;
 					double dEnergy = 0.0d;
 
-					final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), iUniqueWaveId);
+					final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), lUniqueWaveId);
 
 					if (forceField == null) {
 						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
@@ -328,7 +329,7 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					}
 					else {
 						if (mol.getNumAtoms() > 0) {
-							outputMolCell = RDKitMolCellFactory.createRDKitMolCell(mol);
+							outputMolCell = RDKitMolCellFactory.createRDKitAdapterCell(mol);
 						}
 						else {
 							outputMolCell = missingCell;

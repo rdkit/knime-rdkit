@@ -46,9 +46,12 @@
  */
 package org.rdkit.knime.types;
 
+import java.util.Arrays;
+
 import org.RDKit.ChemicalReaction;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Smiles Data Value interface. (Only a wrapper for the underlying string)
@@ -56,6 +59,14 @@ import org.knime.core.data.DataValueComparator;
  * @author Greg Landrum
  */
 public interface RDKitReactionValue extends DataValue {
+
+   //
+   // Constants
+   //
+   
+   /** The logger instance. */
+   static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitMolValue.class);
+
     /**
      * Meta information to this value type.
      *
@@ -77,6 +88,56 @@ public interface RDKitReactionValue extends DataValue {
      */
     String getSmilesValue();
 
+    /**
+     * Checks, if the passed in reactions are the same.
+     * 
+     * @param reaction1
+     *            Reaction 1 to check. Can be null.
+     * @param reaction2
+     *            Reaction 1 to check. Can be null.
+     * 
+     * @return True, if binary representations of the reactions is exactly the
+     *         same. Also true, if null was passed in for both reactions. False
+     *         otherwise.
+     */
+    public static boolean equals(RDKitReactionValue reaction1, RDKitReactionValue reaction2) {
+       boolean bSame = false;
+
+       if (reaction1 == null && reaction2 == null) {
+          bSame = true;
+       } 
+       else if (reaction1 != null && reaction2 != null) {
+          ChemicalReaction reactionRDKit1 = null;
+          ChemicalReaction reactionRDKit2 = null;
+          byte[] byteContent1, byteContent2;
+
+          try {
+             reactionRDKit1 = reaction1.getReactionValue();
+             byteContent1 =  RDKitReactionCell.toByteArray(reactionRDKit1);
+             reactionRDKit2 = reaction2.getReactionValue();
+             byteContent2 = RDKitReactionCell.toByteArray(reactionRDKit2);
+             bSame = Arrays.equals(byteContent1, byteContent2);
+          } 
+          catch (Exception exc) {
+             // If something goes wrong the reactions are considered NOT equal
+             LOGGER.error("Unable to compare two RDKit reactions.", exc);
+          } 
+          finally {
+             /* The current implementation of the RDKitReactionCell holds reactions in memory and frees them in finalize()
+                Hence we must not delete the value here!
+             if (reactionRDKit1 != null) {
+                reactionRDKit1.delete();
+             }
+             if (reactionRDKit2 != null) {
+                reactionRDKit2.delete();
+             }
+             */
+          }
+       }
+
+       return bSame;
+    }
+    
     /** Implementations of the meta information of this value class. */
     public static class RDKUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */

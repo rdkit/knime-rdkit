@@ -89,6 +89,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Sudip Ghosh
  */
+@Deprecated
 public class FingerprintReaderNodeModel extends NodeModel {
 
 	//
@@ -214,98 +215,105 @@ public class FingerprintReaderNodeModel extends NodeModel {
 		}
 		// To calculate the number of line in the file for progress status.
 		final LineNumberReader lnr = new LineNumberReader(new FileReader(f));
-		lnr.skip(f.length() - 1);
-		final int nLines = lnr.getLineNumber();
-
-		String str;
-		int iCount = 1;
-		int iFingCount = 0;
-		final Map<String, String> mapFpsHeaders = new LinkedHashMap<String, String>();
-		final Set<String> setIdentifier = new HashSet<String>();
-		while ((str = in.readLine()) != null) {
-
-			if (!str.trim().equals(BLANK)) {
-				if (iCount == 1 && (!str.contains(DELIMA))) {
-					mapFpsHeaders.put("version", "FPS1");
-				}
-
-				// code to read key value pairs of the FPS headers
-				if (str.charAt(0) == '#') {
-					final StringTokenizer st = new StringTokenizer(str, DELIMA);
-					if (st.hasMoreTokens() && st.countTokens() > 1) {
-						final String strKey = st.nextToken();
-						final String strVal = st.nextToken();
-						if (strKey != null && !strKey.trim().equals(BLANK)) {
-							mapFpsHeaders.put(
-									strKey.trim().substring(1,
-											strKey.trim().length()),
-											strVal.trim());
-						}
+		
+		try {
+			lnr.skip(f.length() - 1);
+			final int nLines = lnr.getLineNumber();
+	
+			String str;
+			int iCount = 1;
+			int iFingCount = 0;
+			final Map<String, String> mapFpsHeaders = new LinkedHashMap<String, String>();
+			final Set<String> setIdentifier = new HashSet<String>();
+			while ((str = in.readLine()) != null) {
+	
+				if (!str.trim().equals(BLANK)) {
+					if (iCount == 1 && (!str.contains(DELIMA))) {
+						mapFpsHeaders.put("version", "FPS1");
 					}
-				} else {// code to read fingerprint records
-
-					if (FPSReadWriteUtil.fingerprintValidator(str,
-							mapFpsHeaders, setId, setIdentifier)) {
-
-						final StringTokenizer st = new StringTokenizer(str, DELIMB);
+	
+					// code to read key value pairs of the FPS headers
+					if (str.charAt(0) == '#') {
+						final StringTokenizer st = new StringTokenizer(str, DELIMA);
 						if (st.hasMoreTokens() && st.countTokens() > 1) {
-							final String strVal = st.nextToken();
 							final String strKey = st.nextToken();
-							final long[] arrBinBits = FPSReadWriteUtil
-									.convertBinaryFingerprintsFromHex(strVal
-											.trim());
-							DataCell[] cells = null;
-
-							cells = new DataCell[2];
-							cells[1] = new StringCell(strKey);
-
-							final DenseBitVector bitVector = new DenseBitVector(
-									Integer.parseInt(mapFpsHeaders
-											.get("num_bits")));
-
-							final int iLastPos = arrBinBits.length - 1;
-							for (int i = 0; i <= iLastPos; i++) {
-								if (arrBinBits[i] == 0) {
-									bitVector.set(iLastPos - i, false);
-								} else {
-									bitVector.set(iLastPos - i, true);
-								}
-
+							final String strVal = st.nextToken();
+							if (strKey != null && !strKey.trim().equals(BLANK)) {
+								mapFpsHeaders.put(
+										strKey.trim().substring(1,
+												strKey.trim().length()),
+												strVal.trim());
 							}
-							final DenseBitVectorCellFactory fact = new DenseBitVectorCellFactory(
-									bitVector);
-							cells[0] = fact.createDataCell();
-
-							if (setId) {
-								cont.addRowToTable(new DefaultRow(strKey, cells));
-							} else {
-								cont.addRowToTable(new DefaultRow(new RowKey(
-										"Row" + iFingCount), cells));
-							}
-
-							iFingCount++;
 						}
-					} else {
-						LOGGER.error("Fingerprint record format is not correct.");
-						throw new InvalidSettingsException(
-								"Fingerprint record format is not correct.");
+					} else {// code to read fingerprint records
+	
+						if (FPSReadWriteUtil.fingerprintValidator(str,
+								mapFpsHeaders, setId, setIdentifier)) {
+	
+							final StringTokenizer st = new StringTokenizer(str, DELIMB);
+							if (st.hasMoreTokens() && st.countTokens() > 1) {
+								final String strVal = st.nextToken();
+								final String strKey = st.nextToken();
+								final long[] arrBinBits = FPSReadWriteUtil
+										.convertBinaryFingerprintsFromHex(strVal
+												.trim());
+								DataCell[] cells = null;
+	
+								cells = new DataCell[2];
+								cells[1] = new StringCell(strKey);
+	
+								final DenseBitVector bitVector = new DenseBitVector(
+										Integer.parseInt(mapFpsHeaders
+												.get("num_bits")));
+	
+								final int iLastPos = arrBinBits.length - 1;
+								for (int i = 0; i <= iLastPos; i++) {
+									if (arrBinBits[i] == 0) {
+										bitVector.set(iLastPos - i, false);
+									} else {
+										bitVector.set(iLastPos - i, true);
+									}
+	
+								}
+								final DenseBitVectorCellFactory fact = new DenseBitVectorCellFactory(
+										bitVector);
+								cells[0] = fact.createDataCell();
+	
+								if (setId) {
+									cont.addRowToTable(new DefaultRow(strKey, cells));
+								} else {
+									cont.addRowToTable(new DefaultRow(new RowKey(
+											"Row" + iFingCount), cells));
+								}
+	
+								iFingCount++;
+							}
+						} else {
+							LOGGER.error("Fingerprint record format is not correct.");
+							throw new InvalidSettingsException(
+									"Fingerprint record format is not correct.");
+						}
 					}
 				}
+				exec.checkCanceled();
+				exec.setProgress(iCount / (double) nLines, "Parsing FPS file row "
+						+ iCount + " of " + nLines);
+				iCount++;
+	
 			}
-			exec.checkCanceled();
-			exec.setProgress(iCount / (double) nLines, "Parsing FPS file row "
-					+ iCount + " of " + nLines);
-			iCount++;
-
+	
+			cont.close();
+			in.close();
+			
+			if (iFingCount == 0) {
+				throw new InvalidSettingsException(
+						"No fingerprint records present in the File");
+			}
+		}
+		finally {
+			lnr.close();
 		}
 
-		cont.close();
-		in.close();
-		lnr.close();
-		if (iFingCount == 0) {
-			throw new InvalidSettingsException(
-					"No fingerprint records present in the File");
-		}
 		LOGGER.debug("Exit Execute: reading fingerprints....");
 		return new BufferedDataTable[] { cont.getTable() };
 	}

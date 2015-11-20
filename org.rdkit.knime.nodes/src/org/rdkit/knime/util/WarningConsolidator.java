@@ -51,6 +51,8 @@ package org.rdkit.knime.util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * This class gathers warnings from different situations and produces on request
@@ -366,7 +368,7 @@ public class WarningConsolidator {
 	 * 
 	 * @return Warnings or null, if no warnings occurred.
 	 */
-	public String getWarnings(final Map<String, Integer> mapContextOccurrences) {
+	public String getWarnings(final Map<String, Long> mapContextOccurrences) {
 		return getWarnings(mapContextOccurrences, null, null);
 	}
 
@@ -390,7 +392,7 @@ public class WarningConsolidator {
 	 * 
 	 * @return Warnings or null, if no (non-suppressed) warnings occurred.
 	 */
-	public String getWarnings(final Map<String, Integer> mapContextOccurrences, final List<String> listSuppressWarnings,
+	public String getWarnings(final Map<String, Long> mapContextOccurrences, final List<String> listSuppressWarnings,
 			final List<String> listSuppressContexts) {
 		final StringBuilder sbSummary = new StringBuilder();
 		final StringBuilder sbWarnings = new StringBuilder();
@@ -412,11 +414,14 @@ public class WarningConsolidator {
 			final Map<String, Integer> m_hWarningOccurrencesInContext = m_hWarningOccurrences.get(contextId);
 
 			// Determine, if we want to suppress the warning based on a passed in context id
-			if (m_hWarningOccurrencesInContext != null &&
+			if (m_hWarningOccurrencesInContext != null && !m_hWarningOccurrencesInContext.isEmpty() &&
 					(listSuppressContexts == null || !listSuppressContexts.contains(contextId))) {
 
-				// Process all warnings of the context
-				for (final String warning : m_hWarningOccurrencesInContext.keySet()) {
+				// Sort all warnings alphabetically
+				SortedSet<String> setContextWarnings = new TreeSet<String>(m_hWarningOccurrencesInContext.keySet());
+								
+				// Process all sorted warnings
+				for (final String warning : setContextWarnings) {
 
 					// Determine, if we want to suppress the warning based on a passed in search criteria
 					if (shouldWarningBeIncluded(warning, listSuppressWarnings)) {
@@ -425,13 +430,13 @@ public class WarningConsolidator {
 						}
 
 						// Find out how many times a warning occurred within a context
-						int processed = -1; // Default is unknown
-						final int occurred = m_hWarningOccurrencesInContext.get(warning);
+						long processed = -1; // Default is unknown
+						final long occurred = m_hWarningOccurrencesInContext.get(warning);
 
 						if (mapContextOccurrences != null) {
-							final Integer intProcessed = mapContextOccurrences.get(contextId);
-							if (intProcessed != null) {
-								processed = intProcessed.intValue();
+							final Long longProcessed = mapContextOccurrences.get(contextId);
+							if (longProcessed != null) {
+								processed = longProcessed.longValue();
 							}
 						}
 

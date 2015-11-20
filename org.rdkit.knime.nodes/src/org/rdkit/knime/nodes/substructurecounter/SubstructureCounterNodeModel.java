@@ -189,6 +189,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	 */
 	SubstructureCounterNodeModel() {
 		super(2, 1);
+      registerInputTablesWithSizeLimits(1); // Query table supports only limited size
 	}
 
 	//
@@ -350,8 +351,8 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
 		// Calculate pre-processing share based on overall rows
-		m_dPreProcessingShare = inData[1].getRowCount() /
-				(inData[0].getRowCount() + inData[1].getRowCount() + 1.0d);
+		m_dPreProcessingShare = inData[1].size() /
+				(inData[0].size() + inData[1].size() + 1.0d);
 
 		// Perform normalized execution
 		return super.execute(inData, exec);
@@ -414,12 +415,12 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 				 * the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					final DataCell[] arrOutputCells = createEmptyCells(iTotalColumnCount);
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row),
-							iUniqueWaveId);
+							lUniqueWaveId);
 
 					final List<StringCell> listTags = (bTrackQueryTags ? new ArrayList<StringCell>() : null);
 					int iTotalHitsCount = 0;
@@ -428,7 +429,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 						final ROMol query = m_arrQueriesAsRDKitMols[iColIndex];
 						if (mol != null && query != null) {
 							final Match_Vect_Vect ms = markForCleanup(
-									mol.getSubstructMatches(query, bUniqueMatchesOnly), iUniqueWaveId);
+									mol.getSubstructMatches(query, bUniqueMatchesOnly), lUniqueWaveId);
 							final int iHits = (int)ms.size();
 							arrOutputCells[iColIndex] = new IntCell(iHits);
 							iTotalHitsCount += iHits;
@@ -494,7 +495,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 			final ExecutionContext exec) throws Exception {
 		final boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
 		final boolean bIsSmarts = arrInputDataInfo[1][INPUT_COLUMN_QUERY].getDataType().isCompatible(SmartsValue.class);
-		final int iQueryRowCount = inData[1].getRowCount();
+		final int iQueryRowCount = (int)inData[1].size();
 		final List<String> listColumnNames = new ArrayList<String>(iQueryRowCount);
 		final List<String> listQueriesAsSmiles = new ArrayList<String>(iQueryRowCount);
 		final List<ROMol> listQueriesAsRDKitMols = new ArrayList<ROMol>(iQueryRowCount);
@@ -546,7 +547,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 					strQueryMolString = RDKFuncs.MolToSmarts(mol);
 				}
 
-				// Or a SMILES (or SMARTS convertion failed)
+				// Or a SMILES (or SMARTS conversion failed)
 				if (strQueryMolString == null) {
 					strQueryMolString = mol.MolToSmiles(true);
 				}

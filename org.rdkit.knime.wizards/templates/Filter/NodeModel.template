@@ -159,7 +159,7 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitSplitterNodeModel {
      */
     @Override
     public int determineTargetTable(int iInPort, int iRowIndex, DataRow row, InputDataInfo[] arrInputDataInfo, 
-    	int iUniqueWaveId) throws InputDataInfo.EmptyCellException {
+    	long lUniqueWaveId) throws InputDataInfo.EmptyCellException {
     	boolean bRemove = true;
 
     	///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,9 +170,9 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitSplitterNodeModel {
     	///////////////////////////////////////////////////////////////////////////////////////////////////
 	    	
     	// Check the input cell for the condition
-    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    
+    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);    
     	if (mol != null) {
-    		RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+    		RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
 	        if (temp.getNumAtoms() > 0) {
 	        	bRemove = false;
 	        }

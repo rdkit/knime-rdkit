@@ -251,10 +251,10 @@ public class RDKitMCSNodeModel extends AbstractRDKitNodeModel {
 		final BufferedDataContainer newTableData = exec.createDataContainer(arrOutSpecs[0]);
 
 		// Get settings and define data specific behavior
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
 		// Get all molecules to be used as input
-		int rowIndex = 0;
+		long rowIndex = 0;
 		final ROMol_Vect mols = new ROMol_Vect();
 		final ExecutionContext execSub1 = exec.createSubExecutionContext(0.02d);
 
@@ -270,7 +270,7 @@ public class RDKitMCSNodeModel extends AbstractRDKitNodeModel {
 
 			// Every 20 iterations check cancellation status and report progress
 			if (rowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(execSub1, rowIndex, iTotalRowCount, row, " - Gathering molecules");
+				AbstractRDKitNodeModel.reportProgress(execSub1, rowIndex, lTotalRowCount, row, " - Gathering molecules");
 			}
 		}
 

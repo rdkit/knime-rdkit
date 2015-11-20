@@ -283,6 +283,10 @@ public class HeaderPropertyHandlerRegistry {
 					}
 					sb.append(handler.getId());
 					break;
+	
+				case Disabled:
+				case TooltipOnly:
+					break;
 				}
 			}
 		}
@@ -323,6 +327,10 @@ public class HeaderPropertyHandlerRegistry {
 					}
 					sb.append(handler.getId());
 					break;
+					
+				case Disabled:
+				case HeaderOnly:
+					break;
 				}
 			}
 		}
@@ -361,6 +369,11 @@ public class HeaderPropertyHandlerRegistry {
 						sb.append(";");
 					}
 					sb.append(handler.getId());
+					break;
+					
+				case HeaderAndTooltip:
+				case HeaderOnly:
+				case TooltipOnly:
 					break;
 				}
 			}

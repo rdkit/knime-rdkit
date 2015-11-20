@@ -78,7 +78,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	private CloseableRowIterator m_iterator;
 
 	/** Stores the next row index that gets delivered when calling next(). -1, if there is no more row. */
-	private int m_iNextRowIndex;
+	private long m_lNextRowIndex;
 
 	/** Table to iterate over. */
 	private final BufferedDataTable m_table;
@@ -102,7 +102,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 		m_table = table;
 		m_bClosed = false;
 		m_iterator = null;
-		m_iNextRowIndex = -1;
+		m_lNextRowIndex = -1;
 
 		resetIterator();
 	}
@@ -136,10 +136,10 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 			m_iterator = m_table.iterator();
 
 			if (m_iterator != null && m_iterator.hasNext()) {
-				m_iNextRowIndex = 0;
+				m_lNextRowIndex = 0;
 			}
 			else { // No rows available at all
-				m_iNextRowIndex = -1;
+				m_lNextRowIndex = -1;
 			}
 		}
 	}
@@ -150,7 +150,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	@Override
 	public void close() {
 		m_bClosed = true;
-		m_iNextRowIndex = -1;
+		m_lNextRowIndex = -1;
 
 		if (m_iterator != null) {
 			m_iterator.close();
@@ -163,7 +163,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 */
 	@Override
 	public boolean hasNext() {
-		return !m_bClosed && m_iNextRowIndex >= 0 &&
+		return !m_bClosed && m_lNextRowIndex >= 0 &&
 				m_iterator != null && m_iterator.hasNext();
 	}
 
@@ -175,16 +175,16 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 * @return Data row at the specified row index (zero-based) or null, if
 	 * 		the requested position does not exist.
 	 */
-	public DataRow get(final int rowIndex) {
+	public DataRow get(final long rowIndex) {
 		DataRow row = null;
 
 		try {
 			if (rowIndex >= 0) {
-				if (m_iNextRowIndex == rowIndex) {
+				if (m_lNextRowIndex == rowIndex) {
 					row = next();
 				}
-				else if (m_iNextRowIndex < rowIndex) {
-					skip(rowIndex - m_iNextRowIndex);
+				else if (m_lNextRowIndex < rowIndex) {
+					skip(rowIndex - m_lNextRowIndex);
 					row = next();
 				}
 				else {
@@ -215,10 +215,10 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 
 		if (hasNext()) {
 			dataRow = m_iterator.next();
-			m_iNextRowIndex++;
+			m_lNextRowIndex++;
 		}
 		else {
-			m_iNextRowIndex = -1;
+			m_lNextRowIndex = -1;
 			throw new NoSuchElementException("The table does not contain any more data rows.");
 		}
 
@@ -230,24 +230,24 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 * left for iteration is smaller than the specified number of rows,
 	 * this method will eventually throw a NoSuchElementException.
 	 *
-	 * @param iNumberOfRows 	Number of rows to skip.
+	 * @param lNumberOfRows 	Number of rows to skip.
 	 *
 	 * @throws NoSuchElementException Thrown, if the table has not enough rows to iterate over.
 	 */
-	public void skip(final int iNumberOfRows) {
+	public void skip(final long lNumberOfRows) {
 		if (m_iterator == null) {
-			m_iNextRowIndex = -1;
+			m_lNextRowIndex = -1;
 			throw new NoSuchElementException("Iterator not usable. Cannot skip rows.");
 		}
 
 		try {
-			for (int i = 0; i < iNumberOfRows; i++) {
+			for (long i = 0; i < lNumberOfRows; i++) {
 				m_iterator.next();
-				m_iNextRowIndex++;
+				m_lNextRowIndex++;
 			}
 		}
 		catch (final NoSuchElementException exc) {
-			m_iNextRowIndex = -1;
+			m_lNextRowIndex = -1;
 			throw exc;
 		}
 
@@ -258,8 +258,8 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	 *
 	 * @return Index of the next row. -1, if there is no next row.
 	 */
-	public int getNextRowIndex() {
-		return m_iNextRowIndex;
+	public long getNextRowIndex() {
+		return m_lNextRowIndex;
 	}
 
 	/**
@@ -270,7 +270,7 @@ public class RandomAccessRowIterator extends CloseableRowIterator {
 	@Override
 	public String toString() {
 		final StringBuilder sbRet = new StringBuilder("AbsoluteRowIterator { ");
-		sbRet.append("nextRowIndex=").append(m_iNextRowIndex).
+		sbRet.append("nextRowIndex=").append(m_lNextRowIndex).
 		append(" }");
 
 		return sbRet.toString();

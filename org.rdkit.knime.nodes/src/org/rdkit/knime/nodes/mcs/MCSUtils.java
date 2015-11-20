@@ -7,10 +7,10 @@ import org.RDKit.MCSResult;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
-import org.knime.chem.types.SmartsCell;
+import org.knime.chem.types.SmartsCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -100,10 +100,10 @@ public final class MCSUtils {
 				arrResults[TIMED_OUT_INDEX] = DataType.getMissingCell();
 			}
 			else {
-				arrResults[SMARTS_INDEX] = new SmartsCell(strMcsSmarts);
+				arrResults[SMARTS_INDEX] = SmartsCellFactory.create(strMcsSmarts);
 				arrResults[ATOM_NUMBER_INDEX] = new IntCell((int)molMcs.getNumAtoms());
 				arrResults[BOND_NUMBER_INDEX] = new IntCell((int)molMcs.getNumBonds());
-				arrResults[TIMED_OUT_INDEX] = BooleanCell.get(false);
+				arrResults[TIMED_OUT_INDEX] = BooleanCellFactory.create(false);
 			}
 		}
 
@@ -189,7 +189,7 @@ public final class MCSUtils {
 
 			// Process MCS results
 			arrResults[SMARTS_INDEX] = mapResult.containsKey("MCS") ?
-					new SmartsCell((String)mapResult.get("MCS")) :
+					SmartsCellFactory.create((String)mapResult.get("MCS")) :
 						DataType.getMissingCell();
 					arrResults[ATOM_NUMBER_INDEX] = mapResult.containsKey("NumAtoms") ?
 							new IntCell(((Integer)mapResult.get("NumAtoms")).intValue()) :
@@ -198,7 +198,7 @@ public final class MCSUtils {
 									new IntCell(((Integer)mapResult.get("NumBonds")).intValue()) :
 										DataType.getMissingCell();
 									arrResults[TIMED_OUT_INDEX] = mapResult.containsKey("Canceled") ?
-											BooleanCell.get(((Boolean)mapResult.get("Canceled")).booleanValue()) :
+											BooleanCellFactory.create(((Boolean)mapResult.get("Canceled")).booleanValue()) :
 												DataType.getMissingCell();
 		}
 

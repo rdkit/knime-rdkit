@@ -198,7 +198,7 @@ public final class ChemUtils {
 			throw new IllegalArgumentException("Input data info must not be null.");
 		}
 
-		if (table.getRowCount() < 1) {
+		if (table.size() < 1) {
 			throw new IllegalArgumentException(
 					"Reaction table does not have any rows.");
 		}
@@ -255,7 +255,7 @@ public final class ChemUtils {
 			throw new IllegalArgumentException("Input data info must not be null.");
 		}
 
-		final List<ChemicalReaction> listReactions = new ArrayList<ChemicalReaction>(table.getRowCount());
+		final List<ChemicalReaction> listReactions = new ArrayList<ChemicalReaction>((int)table.size());
 		final CloseableRowIterator iterator = table.iterator();
 
 		while (iterator.hasNext()) {

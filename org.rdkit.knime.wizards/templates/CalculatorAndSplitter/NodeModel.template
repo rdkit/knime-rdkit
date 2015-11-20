@@ -72,6 +72,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -261,7 +262,7 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
 		// Generate column specs for the output table columns produced by this factory
 		DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
 		arrOutputSpec[0] = new DataColumnSpecCreator(
-				m_modelNewColumnName.getStringValue().trim(), RDKitMolCellFactory.TYPE)
+				m_modelNewColumnName.getStringValue().trim(), RDKitAdapterCell.RAW_TYPE)
 				.createSpec();
 	    	
 		// Generate factory 
@@ -275,11 +276,11 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
    		     * the input made available in the first (and second) parameter.
    		     * {@inheritDoc}
    		     */
-   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, int iUniqueWaveId) throws Exception {
+   		    public DataCell[] process(InputDataInfo[] arrInputDataInfo, DataRow row, long lUniqueWaveId) throws Exception {
    		    	DataCell outputCell = null;
    		    	
    		    	// Calculate the new cells
-   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);    	
+   		    	ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);    	
    		    	
    		    	///////////////////////////////////////////////////////////////////////////////////////////////////
    		    	// TODO: Replace the following sample line(s) to perform the calculation of your choice. You may
@@ -287,11 +288,11 @@ public class __NODE_NAME__NodeModel extends AbstractRDKitNodeModel {
    		    	//       above.
    		    	///////////////////////////////////////////////////////////////////////////////////////////////////
 		    		
-   		    	RWMol temp = markForCleanup(new RWMol(mol), iUniqueWaveId);
+   		    	RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
    		        
    		        if (temp.getNumAtoms() > 0) {
    		        	RDKFuncs.sanitizeMol(temp);
-   		        	outputCell = RDKitMolCellFactory.createRDKitMolCell(temp);
+   		        	outputCell = RDKitMolCellFactory.createRDKitAdapterCell(temp);
    		        }
    		        else {
    		        	outputCell = DataType.getMissingCell();

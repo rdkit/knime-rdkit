@@ -80,6 +80,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Dillip K Mohanty
  */
+@Deprecated
 public class FingerprintWriterNodeModel extends NodeModel {
 
 	//
@@ -264,7 +265,7 @@ public class FingerprintWriterNodeModel extends NodeModel {
 		final BufferedDataTable in = inData[0];
 		final int colIndexFps = in.getDataTableSpec().findColumnIndex(m_fpsColumn);
 		final int colIndexId = in.getDataTableSpec().findColumnIndex(m_idColumn);
-		final double count = in.getRowCount();
+		final double count = in.size();
 		int i = 0;
 		int readCount = 0;
 		String id = "";

@@ -78,6 +78,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -274,7 +275,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 			// Define output table
 			listSpecs = new ArrayList<DataColumnSpec>();
 			final InputDataInfo[] inputDataInfo = createInputDataInfos(0, inSpecs[0]);
-			listSpecs.add(new DataColumnSpecCreator(m_modelMoleculeOutputColumnName.getStringValue(), RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator(m_modelMoleculeOutputColumnName.getStringValue(), RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator(m_modelReferenceOutputColumnName.getStringValue(), inputDataInfo[INPUT_COLUMN_REFERENCE].getDataType()).createSpec());
 
 			spec = new DataTableSpec("Conformers", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
@@ -297,7 +298,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 		final BufferedDataContainer newTableData = exec.createDataContainer(arrOutSpecs[0]);
 
 		// Get settings and define data specific behavior
-		final int iTotalRowCount = inData[0].getRowCount();
+		final long lTotalRowCount = inData[0].size();
 
 		// Get calculation parameters
 		final int iNumberOfConformers = m_modelNumberOfConformers.getIntValue();
@@ -309,26 +310,26 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 		final boolean bCleanup = m_modelCleanupOption.getBooleanValue();
 
 		// Iterate through all input rows and calculate results
-		int rowInputIndex = 0;
-		int rowOutputIndex = 0;
+		long rowInputIndex = 0;
+		long rowOutputIndex = 0;
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowInputIndex++) {
 			final DataRow row = i.next();
 
 			// Get a unique wave id to mark RDKit Objects for cleanup
-			final int iUniqueWaveId = createUniqueCleanupWaveId();
+			final long lUniqueWaveId = createUniqueCleanupWaveId();
 
 			try {
 				DataCell molCell = null;
-				final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+				final ROMol mol = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 				final DataCell refCell = arrInputDataInfo[0][INPUT_COLUMN_REFERENCE].getCell(row);
 
 				// We use only cells, which are not missing (see also createInputDataInfos(...) )
 				if (mol != null) {
-					final ROMol molTemp = markForCleanup(new ROMol(mol), iUniqueWaveId);
+					final ROMol molTemp = markForCleanup(new ROMol(mol), lUniqueWaveId);
 					final Int_Vect listConformerIds;
 					listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, iMaxIterations, iRandomSeed,
 							true /* clearConfs */, bUseRandomCoordinates, dBoxSizeMultiplier,
-							true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold), iUniqueWaveId);
+							true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold), lUniqueWaveId);
 
 					// Note: There will be no output row, if there are no conformers at all, only a warning
 					if (listConformerIds != null) {
@@ -338,7 +339,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 						for (int indexTarget = 0; indexTarget < iSize; indexTarget++) {
 
 							// Make a copy of the calculated molecule that still contains all conformers
-							final ROMol output = markForCleanup(new ROMol(molTemp), iUniqueWaveId);
+							final ROMol output = markForCleanup(new ROMol(molTemp), lUniqueWaveId);
 							final int iTargetConformerId = listConformerIds.get(indexTarget);
 
 							// Remove all conformers that are out of focus
@@ -357,7 +358,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 									ForceField.UFFOptimizeMolecule(output);
 								}
 
-								molCell = RDKitMolCellFactory.createRDKitMolCell(output);
+								molCell = RDKitMolCellFactory.createRDKitAdapterCell(output);
 								final DataRow rowNew = new DefaultRow(RowKey.createRowKey(rowOutputIndex++),
 										new DataCell[] { molCell, refCell });
 								newTableData.addRowToTable(rowNew);
@@ -374,12 +375,12 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 
 				// Every 20 iterations check cancellation status and report progress
 				if (rowInputIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, iTotalRowCount, row, " - Calculating conformers");
+					AbstractRDKitNodeModel.reportProgress(exec, rowInputIndex, lTotalRowCount, row, " - Calculating conformers");
 				}
 			}
 			finally {
 				// Cleanup RDKit Objects
-				cleanupMarkedObjects(iUniqueWaveId);
+				cleanupMarkedObjects(lUniqueWaveId);
 			}
 		};
 

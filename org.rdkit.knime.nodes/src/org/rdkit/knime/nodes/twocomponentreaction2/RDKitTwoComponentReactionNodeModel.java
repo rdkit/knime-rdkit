@@ -73,10 +73,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.util.MultiThreadWorker;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.onecomponentreaction2.AbstractRDKitReactionNodeModel;
-import org.rdkit.knime.types.RDKitMolCellFactory;
+import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
@@ -148,9 +149,10 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		super(new PortType[] {
 				BufferedDataTable.TYPE,
 				BufferedDataTable.TYPE,
-				new PortType(BufferedDataTable.class, true)},
+				PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class, true)},
 				new PortType[]{BufferedDataTable.TYPE},
 				2);
+		registerInputTablesWithSizeLimits(0, 1); // We do not support too many components
 	}
 
 	//
@@ -272,12 +274,12 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		case 0:
 			// Define output table
 			listSpecs = new ArrayList<DataColumnSpec>();
-			listSpecs.add(new DataColumnSpecCreator("Product", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Product", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Product Index", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 1 sequence index", IntCell.TYPE).createSpec());
-			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 2 sequence index", IntCell.TYPE).createSpec());
-			listSpecs.add(new DataColumnSpecCreator("Reactant 2", RDKitMolCellFactory.TYPE).createSpec());
+			listSpecs.add(new DataColumnSpecCreator("Reactant 2", RDKitAdapterCell.RAW_TYPE).createSpec());
 
 			spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
 			break;
@@ -298,8 +300,8 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		// Contains the rows with the result columns
 		final BufferedDataContainer tableProducts = exec.createDataContainer(arrOutSpecs[0]);
 
-		final int iTotalRowCountReactant1 = inData[0].getRowCount();
-		final int iTotalRowCountReactant2 = inData[1].getRowCount();
+		final int iTotalRowCountReactant1 = (int)inData[0].size();
+		final int iTotalRowCountReactant2 = (int)inData[1].size();
 
 		if (iTotalRowCountReactant1 == 0) {
 			getWarningConsolidator().saveWarning("Input table 1 is empty - there are no reactants to process.");
@@ -363,7 +365,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 */
 				@Override
 				protected List<DataRow> compute(final DataRow row, final long index) throws Exception {
-					final int uniqueWaveId = createUniqueCleanupWaveId();
+					final long uniqueWaveId = createUniqueCleanupWaveId();
 					List<DataRow> listNewRows = null;
 
 					boolean bFoundIncluded = false;
@@ -376,7 +378,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 							// Iterate through all second reactant rows for each first reactant
 							if (bMatrixExpansion) {
 								rowAccess.resetIterator();
-								final int subUniqueWaveId = createUniqueCleanupWaveId();
+								final long subUniqueWaveId = createUniqueCleanupWaveId();
 								int index2 = 0;
 
 								try {
@@ -456,7 +458,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * 		for retrieval of reactant 2 data.
 				 */
 				private List<DataRow> processWithSecondReactant(final ROMol mol1, final DataRow row2,
-						final List<DataRow> listToAddTo, final int wave, final int... indicesReactants)
+						final List<DataRow> listToAddTo, final long wave, final int... indicesReactants)
 								throws EmptyCellException {
 					List<DataRow> listNewRows = listToAddTo;
 

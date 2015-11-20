@@ -48,6 +48,7 @@
 package org.rdkit.knime.types;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.RDKit.ROMol;
 import org.knime.chem.types.SdfValue;
@@ -58,8 +59,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.NodeLogger;
 
 /**
  * An RDKit Adapter Cell combines multiple chemical molecule value representations in
@@ -68,11 +69,15 @@ import org.knime.core.data.StringValue;
  * @author Thorsten Meinl, University of Konstanz
  * @author Manuel Schwarze, Novartis
  */
-public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, SmilesValue, StringValue, SdfValue {
+public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, SdfValue, SmilesValue, StringValue {
 
 	//
 	// Constants
 	//
+
+	/** The logger instance. */
+	private static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RDKitAdapterCell.class);
 
 	/** The serial number. */
 	private static final long serialVersionUID = -994027050919072740L;
@@ -84,13 +89,9 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	public static final DataType RAW_TYPE = DataType.getType(RDKitAdapterCell.class);
 
 	/** The serializer instance. */
-	private static final AdapterCellSerializer<RDKitAdapterCell> SERIALIZER =
-			new AdapterCellSerializer<RDKitAdapterCell>() {
-		@Override
-		public RDKitAdapterCell deserialize(final DataCellDataInput input) throws IOException {
-			return new RDKitAdapterCell(input);
-		}
-	};
+	@Deprecated
+	private static final RDKitAdapterCellSerializer SERIALIZER =
+			new RDKitAdapterCellSerializer();
 
 	//
 	// Constructors
@@ -133,7 +134,7 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	//
 	// Public Methods
 	//
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -146,7 +147,7 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 		}
 		catch (final IllegalArgumentException exc) {
 			// Rethrow a better error message, which appears as warning in the node
-			throw new IllegalArgumentException("Unable to access SDF value after auto-conversion to an RDKit Molecule.", exc);
+			throw new IllegalArgumentException("Unable to access SDF value in RDKit Adapter Cell.", exc);
 		}
 
 		return sdf.getSdfValue();
@@ -164,7 +165,7 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 		}
 		catch (final IllegalArgumentException exc) {
 			// Rethrow a better error message, which appears as warning in the node
-			throw new IllegalArgumentException("Unable to access string value after auto-conversion to an RDKit Molecule.", exc);
+			throw new IllegalArgumentException("Unable to access string value in RDKit Adapter Cell.", exc);
 		}
 
 		return strValue.getStringValue();
@@ -182,7 +183,7 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 		}
 		catch (final IllegalArgumentException exc) {
 			// Rethrow a better error message, which appears as warning in the node
-			throw new IllegalArgumentException("Unable to auto-convert input molecule to an RDKit Molecule.", exc);
+			throw new IllegalArgumentException("Unable to access RDKit Mol value in RDKit Adapter Cell.", exc);
 		}
 
 		return rdkitValue.readMoleculeValue();
@@ -193,14 +194,14 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 */
 	@Override
 	public String getSmilesValue() {
-		SmilesValue smiles = null;
+	   SmilesValue smiles= null;
 
 		try {
-			smiles = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
+		   smiles = (SmilesValue)lookupFromAdapterMap(SmilesValue.class);
 		}
 		catch (final IllegalArgumentException exc) {
 			// Rethrow a better error message, which appears as warning in the node
-			throw new IllegalArgumentException("Unable to access SMILES value after auto-conversion to an RDKit Molecule.", exc);
+			throw new IllegalArgumentException("Unable to access SMILES value in RDKit Adapter Cell.", exc);
 		}
 
 		return smiles.getSmilesValue();
@@ -300,17 +301,44 @@ public class RDKitAdapterCell extends AdapterCell implements RDKitMolValue, Smil
 	 * Returns the cell serializer for RDKit Adapter Cells.
 	 * 
 	 * @return Singleton serializer instance. Never null.
+	 * 
+    * @deprecated As of KNIME 3.0 data types are registered via extension point. This method
+    *     is not used anymore. The serializer is made known in the extension point configuration.
 	 */
 	public static DataCellSerializer<RDKitAdapterCell> getCellSerializer() {
 		return SERIALIZER;
 	}
 
-	/**
-	 * See {@link DataCell} description for details.
-	 * 
-	 * @return RDKitMolValue.class
-	 */
-	public static final Class<? extends DataValue> getPreferredValueClass() {
-		return RDKitMolValue.class;
+	@Override
+	protected boolean equalsDataCell(DataCell dc) {
+	   return Objects.equals(getSmilesValue(), (((RDKitAdapterCell)dc).getSmilesValue()));
 	}
+
+	@Override
+	public int hashCode() {
+		int result = 1;
+		
+		try {
+		   final int prime = 31;
+			result = prime * result + ((RDKitMolValue)getAdapterMap().get(RDKitMolValue.class)).getSmilesValue().hashCode();
+		}
+		catch (Exception exc) {
+			LOGGER.error("Unable to calculate hash code for RDKit molecule.", exc);
+		}
+		
+		return result;
+	}
+	
+   /**
+    * Serializer for {@link RDKitAdapterCell}s.
+    *
+    * @noreference This class is not intended to be referenced by clients.
+    * @since 3.0
+    */
+   public static final class RDKitAdapterCellSerializer extends AdapterCellSerializer<RDKitAdapterCell> {
+       @Override
+       public RDKitAdapterCell deserialize(final DataCellDataInput input) throws IOException {
+           return new RDKitAdapterCell(input);
+       }
+   }
 }

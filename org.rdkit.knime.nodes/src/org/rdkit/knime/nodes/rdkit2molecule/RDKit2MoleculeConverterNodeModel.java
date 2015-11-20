@@ -50,9 +50,12 @@ package org.rdkit.knime.nodes.rdkit2molecule;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.knime.chem.types.SdfAdapterCell;
 import org.knime.chem.types.SdfCellFactory;
 import org.knime.chem.types.SmartsCell;
-import org.knime.chem.types.SmilesCell;
+import org.knime.chem.types.SmartsCellFactory;
+import org.knime.chem.types.SmilesAdapterCell;
+import org.knime.chem.types.SmilesCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -89,12 +92,12 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 		Smiles {
 			@Override
 			public DataType getDataType() {
-				return SmilesCell.TYPE;
+				return SmilesAdapterCell.RAW_TYPE;
 			}
 
 			@Override
 			public DataCell convertRdkitMolecule(final ROMol mol) {
-				return new SmilesCell(RDKFuncs.MolToSmiles(mol, true));
+				return SmilesCellFactory.createAdapterCell(RDKFuncs.MolToSmiles(mol, true));
 			}
 		},
 
@@ -106,14 +109,14 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 
 			@Override
 			public DataCell convertRdkitMolecule(final ROMol mol) {
-				return new SmartsCell(RDKFuncs.MolToSmarts(mol, false)); // Do not include stereo chemistry
+				return SmartsCellFactory.create(RDKFuncs.MolToSmarts(mol, false)); // Do not include stereo chemistry
 			}
 		},
 
 		SDF {
 			@Override
 			public DataType getDataType() {
-				return SdfCellFactory.TYPE;
+				return SdfAdapterCell.RAW_TYPE;
 			}
 
 			@Override
@@ -132,7 +135,7 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 				}
 
 				// Create the SDF cell
-				return SdfCellFactory.create(strSdf);
+				return SdfCellFactory.createAdapterCell(strSdf);
 			}
 		};
 
@@ -308,11 +311,11 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 				 * {@inheritDoc}
 				 */
 				@Override
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final int iUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), iUniqueWaveId);
+					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					outputCell = destType.convertRdkitMolecule(mol);
 
 					return new DataCell[] { outputCell };

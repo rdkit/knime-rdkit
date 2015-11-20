@@ -46,12 +46,15 @@
  */
 package org.rdkit.knime.types;
 
+import java.util.Arrays;
+
 import javax.swing.Icon;
 
 import org.RDKit.ROMol;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Smiles Data Value interface. (Only a wrapper for the underlying string)
@@ -59,6 +62,14 @@ import org.knime.core.data.ExtensibleUtilityFactory;
  * @author Greg Landrum
  */
 public interface RDKitMolValue extends DataValue {
+
+	//
+	// Constants
+	//
+
+	/** The logger instance. */
+	static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitMolValue.class);
+
 	/**
 	 * Meta information to this value type.
 	 *
@@ -67,9 +78,9 @@ public interface RDKitMolValue extends DataValue {
 	public static final UtilityFactory UTILITY = new RDKUtilityFactory();
 
 	/**
-	 * Reads and returns the ROMol object represented by this value.
-	 * It's the callers responsibility to call the {@link ROMol#delete()}
-	 * method when done!
+	 * Reads and returns the ROMol object represented by this value. It's the
+	 * callers responsibility to call the {@link ROMol#delete()} method when
+	 * done!
 	 *
 	 * @return a newly created {@link ROMol} object.
 	 */
@@ -89,29 +100,94 @@ public interface RDKitMolValue extends DataValue {
 	 */
 	boolean isSmilesCanonical();
 
+	/**
+	 * Checks, if the passed in molecules are the same.
+	 * 
+	 * @param mol1
+	 *            Molecule 1 to check. Can be null.
+	 * @param mol2
+	 *            Molecule 1 to check. Can be null.
+	 * 
+	 * @return True, if binary representations of the molecules is exactly the
+	 *         same. Also true, if null was passed in for both molecules. False
+	 *         otherwise.
+	 */
+	public static boolean equals(RDKitMolValue mol1, RDKitMolValue mol2) {
+		boolean bSame = false;
+
+		if (mol1 == null && mol2 == null) {
+			bSame = true;
+		} 
+		else if (mol1 != null && mol2 != null) {
+			ROMol molRDKit1 = null;
+			ROMol molRDKit2 = null;
+			byte[] byteContent1, byteContent2;
+
+			try {
+
+				if (mol1 instanceof RDKitMolCell2) {
+					// Shortcut to get byte array representation (without
+					// conversion to ROMol before
+					byteContent1 = ((RDKitMolCell2) mol1).getBinaryValue();
+				} 
+				else {
+					// Do it the "official" way
+					molRDKit1 = ((RDKitMolValue) mol1).readMoleculeValue();
+					byteContent1 = RDKitMolCell2.toByteArray(molRDKit1);
+				}
+
+				if (mol2 instanceof RDKitMolCell2) {
+					// Shortcut to get byte array representation (without
+					// conversion to ROMol before
+					byteContent2 = ((RDKitMolCell2) mol2).getBinaryValue();
+				} 
+				else {
+					// Do it the "official" way
+					molRDKit2 = ((RDKitMolValue) mol2).readMoleculeValue();
+					byteContent2 = RDKitMolCell2.toByteArray(molRDKit2);
+				}
+
+				bSame = Arrays.equals(byteContent1, byteContent2);
+			} 
+			catch (Exception exc) {
+				// If something goes wrong the molecules are considered NOT equal
+				LOGGER.error("Unable to compare two RDKit molecules.", exc);
+			} 
+			finally {
+				if (molRDKit1 != null) {
+					molRDKit1.delete();
+				}
+				if (molRDKit2 != null) {
+					molRDKit2.delete();
+				}
+			}
+		}
+
+		return bSame;
+	}
+
 	/** Implementations of the meta information of this value class. */
 	public static class RDKUtilityFactory extends ExtensibleUtilityFactory {
 		/** Singleton icon to be used to display this cell type. */
-		private static final Icon ICON = loadIcon(RDKitMolValue.class,
-				"/rdkit_type.png");
+		private static final Icon ICON = loadIcon(RDKitMolValue.class, "/rdkit_type.png");
 
-		private static final DataValueComparator COMPARATOR =
-				new DataValueComparator() {
+		private static final DataValueComparator COMPARATOR = new DataValueComparator() {
 			@Override
-			protected int compareDataValues(final DataValue v1,
-					final DataValue v2) {
+			protected int compareDataValues(final DataValue v1, final DataValue v2) {
 				int atomCount1;
 				int atomCount2;
-				final ROMol mol1 = ((RDKitMolValue)v1).readMoleculeValue();
+				final ROMol mol1 = ((RDKitMolValue) v1).readMoleculeValue();
 				try {
-					atomCount1 = (int)mol1.getNumAtoms();
-				} finally {
+					atomCount1 = (int) mol1.getNumAtoms();
+				} 
+				finally {
 					mol1.delete();
 				}
-				final ROMol mol2 = ((RDKitMolValue)v2).readMoleculeValue();
+				final ROMol mol2 = ((RDKitMolValue) v2).readMoleculeValue();
 				try {
-					atomCount2 = (int)mol2.getNumAtoms();
-				} finally {
+					atomCount2 = (int) mol2.getNumAtoms();
+				} 
+				finally {
 					mol2.delete();
 				}
 				return atomCount1 - atomCount2;

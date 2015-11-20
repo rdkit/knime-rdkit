@@ -61,6 +61,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Sudip Ghosh
  */
+@Deprecated
 public class FingerprintReaderNodeDialog extends DefaultNodeSettingsPane {
 
 	//

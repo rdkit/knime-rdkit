@@ -201,6 +201,10 @@ public class InputDataInfo {
 	private final Map<Class<? extends DataValue>, Boolean> m_mapCompatibilityCache =
 			new HashMap<Class<? extends DataValue>, Boolean>();
 
+   /** For performance reasons we store here results of compatibility tests. */
+   private final Map<Class<? extends DataValue>, Boolean> m_mapCompatibilityAndAdaptibilityCache =
+         new HashMap<Class<? extends DataValue>, Boolean>();
+
 	//
 	// Constructor
 	//
@@ -317,7 +321,7 @@ public class InputDataInfo {
 			if (!listPreferredValueClasses.isEmpty()) {
 				// Look first for preferred value classes
 				for (final Class<? extends DataValue> valueClass : listPreferredValueClasses) {
-					if (m_dataType.isCompatible(valueClass)) {
+					if (m_dataType.isCompatible(valueClass) || m_dataType.isAdaptable(valueClass)) {
 						compatiblePreferredValueClass = valueClass;
 						break;
 					}
@@ -599,18 +603,20 @@ public class InputDataInfo {
          bRet = getDataType().isCompatible(valueClass);
 		}
 		else {
-			bRet = m_mapCompatibilityCache.get(valueClass);
-
-			if (bRet == null) {
-				bRet = false;
-				
-				if (valueClass != null) {
-					   DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
-					   bRet = type.isCompatible(valueClass);
-				}
-				
-				m_mapCompatibilityCache.put(valueClass, bRet);
-			}
+		   synchronized (m_mapCompatibilityCache) {
+   			bRet = m_mapCompatibilityCache.get(valueClass);
+   
+   			if (bRet == null) {
+   				bRet = false;
+   				
+   				if (valueClass != null) {
+   					   DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
+   					   bRet = type.isCompatible(valueClass);
+   				}
+   				
+   				m_mapCompatibilityCache.put(valueClass, bRet);
+   			}
+		   }
 		}
 
 		return bRet;
@@ -635,17 +641,19 @@ public class InputDataInfo {
          bRet = getDataType().isCompatible(valueClass);
       }
       else {
-         bRet = m_mapCompatibilityCache.get(valueClass);
-
-         if (bRet == null) {
-            bRet = false;
-            
-            if (valueClass != null) {
-                  DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
-                  bRet = type.isCompatible(valueClass) || type.isAdaptable(valueClass);
+         synchronized (m_mapCompatibilityAndAdaptibilityCache) {
+            bRet = m_mapCompatibilityAndAdaptibilityCache.get(valueClass);
+   
+            if (bRet == null) {
+               bRet = false;
+               
+               if (valueClass != null) {
+                     DataType type = getTableSpec().getColumnSpec(getColumnIndex()).getType();
+                     bRet = type.isCompatible(valueClass) || type.isAdaptable(valueClass);
+               }
+               
+               m_mapCompatibilityAndAdaptibilityCache.put(valueClass, bRet);
             }
-            
-            m_mapCompatibilityCache.put(valueClass, bRet);
          }
       }
 
@@ -1030,10 +1038,17 @@ public class InputDataInfo {
 							"Unable to parse reaction value found in the table (RDKit lib returned null).");
 				}
 			}
-			else if (cell.getType().isCompatible(SmartsValue.class)) {
+			else if (cell.getType().isCompatible(SmartsValue.class) || cell.getType().isAdaptable(SmartsValue.class)) {
 				// Read the SMARTS value
-				final String strSmarts = ((SmartsValue)cell).getSmartsValue();
-
+				String strSmarts = null;
+				
+				if (cell.getType().isCompatible(SmartsValue.class)) {
+				   strSmarts = ((SmartsValue)cell).getSmartsValue();
+				}
+				else {
+				   strSmarts = ((AdapterValue)cell).getAdapter(SmartsValue.class).getSmartsValue();
+				}
+				
 				// Convert the SMARTS value into a ChemicalReaction
 				try {
 					rxn = ChemicalReaction.ReactionFromSmarts(strSmarts);
@@ -1080,6 +1095,9 @@ public class InputDataInfo {
 			if (cell.getType().isCompatible(SmilesValue.class)) {
 				strSmiles = ((SmilesValue)cell).getSmilesValue();
 			}
+         else if (cell.getType().isAdaptable(SmilesValue.class)) {
+            strSmiles = ((AdapterValue)cell).getAdapter(SmilesValue.class).getSmilesValue();
+         }
 			else {
 				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +
 						" is not compatible with a SmilesValue. This is usually an implementation error.");
@@ -1145,6 +1163,9 @@ public class InputDataInfo {
 		if (cell != null) {
 			if (cell.getType().isCompatible(SdfValue.class)) {
 				strSdfValue = ((SdfValue)cell).getSdfValue();
+			}
+			else if (cell.getType().isAdaptable(SdfValue.class)) {
+			   strSdfValue = ((AdapterValue)cell).getAdapter(SdfValue.class).getSdfValue();
 			}
 			else {
 				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +

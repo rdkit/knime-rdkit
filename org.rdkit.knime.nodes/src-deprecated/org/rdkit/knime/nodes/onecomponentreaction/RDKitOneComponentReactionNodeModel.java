@@ -60,6 +60,7 @@ import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
 import org.RDKit.RWMol;
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -149,7 +150,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 		if (null == m_first.getStringValue()) {
 			final List<String> compatibleCols = new ArrayList<String>();
 			for (final DataColumnSpec c : inSpecs[0]) {
-				if (c.getType().isCompatible(RDKitMolValue.class)) {
+				if (c.getType().isCompatible(RDKitMolValue.class) || c.getType().isAdaptable(RDKitMolValue.class)) {
 					compatibleCols.add(c.getName());
 				}
 			}
@@ -237,7 +238,7 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 					"No such column in input table: " + first);
 		}
 		final DataType firstType = spec.getColumnSpec(firstIndex).getType();
-		if (!firstType.isCompatible(RDKitMolValue.class)) {
+		if (!firstType.isCompatible(RDKitMolValue.class) && !firstType.isAdaptable(RDKitMolValue.class)) {
 			throw new InvalidSettingsException("Column '" + first
 					+ "' does not contain SMILES");
 		}
@@ -278,7 +279,11 @@ public class RDKitOneComponentReactionNodeModel extends NodeModel {
 					ROMol mol = null;
 					if (firstType.isCompatible(RDKitMolValue.class)) {
 						mol = ((RDKitMolValue)firstCell).readMoleculeValue();
-					} else {
+					} 
+					else if (firstType.isAdaptable(RDKitMolValue.class)) {
+                  mol = ((AdapterValue)firstCell).getAdapter(RDKitMolValue.class).readMoleculeValue();
+               } 
+               else{
 						final String smiles = ((StringValue)firstCell).toString();
 						mol = RWMol.MolFromSmiles(smiles);
 						if (mol == null) {

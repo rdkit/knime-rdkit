@@ -480,7 +480,7 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 	@Override
 	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
-		m_bIsSmartsInput = arrInputDataInfo[1][INPUT_COLUMN_REACTION].getDataType().isCompatible(SmartsValue.class);
+		m_bIsSmartsInput = arrInputDataInfo[1][INPUT_COLUMN_REACTION].isCompatibleOrAdaptable(SmartsValue.class);
 		m_arrReactions = ChemUtils.readReactionsFromTable(inData[1], arrInputDataInfo[1][INPUT_COLUMN_REACTION], 1, getWarningConsolidator(), REACTION_CONTEXT);
 
 		// Register reactions for later cleanup

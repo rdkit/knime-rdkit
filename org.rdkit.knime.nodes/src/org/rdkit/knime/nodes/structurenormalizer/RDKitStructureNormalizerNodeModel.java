@@ -84,7 +84,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
-import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.FileUtils;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumerationArray;
@@ -854,27 +853,15 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 		Input ret = null;
 
 		if (type != null) {
-			// 1. We find an RDKit Adapter Cell ...
-			if (type.isAdaptable(RDKitMolValue.class)) {
-				// ... with a separate SDF inside - we will use the SDF
-				if (type.isAdaptable(SdfValue.class)) {
-					ret = Input.SDF;
-				}
-				// ... with no separate SDF inside - we will use SMILES
-				else {
-					ret = Input.SMILES;
-				}
-			}
-
-			// 2. We find an SDF Cell ...
-			else if (type.isCompatible(SdfValue.class)) {
+		   // 1. We find an SDF cell
+         if (type.isCompatible(SdfValue.class) || type.isAdaptable(SdfValue.class)) {
 				ret = Input.SDF;
 			}
 
-			// 3. We find a SMILES cell ...
-			else if (type.isCompatible(SmilesValue.class)) {
+			// 2. We find a SMILES cell ...
+			else if (type.isCompatible(SmilesValue.class) || type.isAdaptable(SmilesValue.class)) {
 				ret = Input.SMILES;
-			}
+			}			
 		}
 
 		return ret;

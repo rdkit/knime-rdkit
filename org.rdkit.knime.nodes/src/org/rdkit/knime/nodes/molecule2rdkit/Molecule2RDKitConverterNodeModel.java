@@ -525,7 +525,11 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 				// As first step try to parse the input molecule format
 				try {
-					if (m_inputType == InputType.SMILES) {
+				   if (m_inputType == InputType.SDF) {
+                  final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
+                  mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), lUniqueWaveId);
+               }
+				   else if (m_inputType == InputType.SMILES) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
 						mol = markForCleanup(RWMol.MolFromSmiles(value, 0, m_bSanitize && !m_bTreatAsQuery), lUniqueWaveId);
 						smiles = value;
@@ -534,10 +538,6 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmarts(row);
 						mol = markForCleanup(RWMol.MolFromSmarts(value, 0, true), lUniqueWaveId);
 						smiles = value;
-					}
-					else if (m_inputType == InputType.SDF) {
-						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-						mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), lUniqueWaveId);
 					}
 					else {
 						throw new InvalidSettingsException("The molecule input type " + m_inputType +
@@ -692,16 +692,28 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 		final boolean bInludeErrorInfo = m_modelGenerateErrorInformation.getBooleanValue();
 
 		// Define what type we will use as input -
-		// if the input column supports more than one type it will use SMILES before SDF before SMARTS
-		if (type.isCompatible(SmilesValue.class)) {
+		// if the input column supports more than one type it will use SDF over SMILES over SMARTS
+		// Even more important: Use first - if possible - the original format, e.g. a SMILES over
+		// a later attached/converted SDF representation of that SMILES. Therefore, check isCompatible()
+		// first for all possible formats, and afterwards isAdaptable().
+		if (type.isCompatible(SdfValue.class)) {
+         m_inputType = InputType.SDF;
+      }
+		else if (type.isCompatible(SmilesValue.class)) {
 			m_inputType = InputType.SMILES;
-		}
-		else if (type.isCompatible(SdfValue.class)) {
-			m_inputType = InputType.SDF;
 		}
 		else if (type.isCompatible(SmartsValue.class)) {
 			m_inputType = InputType.SMARTS;
 		}
+		else if (type.isAdaptable(SdfValue.class)) {
+         m_inputType = InputType.SDF;
+      }
+      else if (type.isAdaptable(SmilesValue.class)) {
+         m_inputType = InputType.SMILES;
+      }
+      else if (type.isAdaptable(SmartsValue.class)) {
+         m_inputType = InputType.SMARTS;
+      }
 
 		// Defines the options and ensure they are valid for the input molecule type we process
 		m_bSanitize = !m_modelQuickAndDirty.getBooleanValue();

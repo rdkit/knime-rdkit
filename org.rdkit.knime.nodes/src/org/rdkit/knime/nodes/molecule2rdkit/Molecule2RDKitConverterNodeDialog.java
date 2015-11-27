@@ -55,6 +55,7 @@ import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -187,17 +188,18 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	protected void updateOptionsAvailability() {
 		final DataColumnSpec specInput = m_compInputColumn.getSelectedAsSpec();
-
+		final DataType dataType = specInput != null ? specInput.getType() : null;
+		
 		// Determine core options availability based on input type
 		final boolean bEnableTreatAsQuery = specInput != null &&
-				(specInput.getType().isCompatible(SmilesValue.class) ||
-						specInput.getType().isCompatible(SdfValue.class));
+				(dataType.isCompatible(SmilesValue.class) || dataType.isAdaptable(SmilesValue.class) ||
+				      dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class));
 		final boolean bEnableSanitizationOption = (specInput != null &&
-				(specInput.getType().isCompatible(SmilesValue.class) ||
-						specInput.getType().isCompatible(SdfValue.class))) &&
+				(dataType.isCompatible(SmilesValue.class) || dataType.isAdaptable(SmilesValue.class) ||
+				      dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class))) &&
 						(!bEnableTreatAsQuery || !m_modelTreatAsQuery.getBooleanValue());
 		final boolean bEnableKeepHsOption = (specInput != null &&
-				specInput.getType().isCompatible(SdfValue.class)) &&
+		      (dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class))) &&
 				(!bEnableTreatAsQuery || !m_modelTreatAsQuery.getBooleanValue());
 
 		// Enable Treat as Query option only for SMILES and SDF input

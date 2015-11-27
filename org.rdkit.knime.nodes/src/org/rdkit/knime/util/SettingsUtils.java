@@ -274,7 +274,7 @@ public class SettingsUtils {
 			final LinkedHashSet<String> setCompatibleCols = new LinkedHashSet<String>();
 			for (final Class<? extends DataValue> valueClass : RDKitAdapterCellSupport.expandByAdaptableTypes(listValueClasses)) {
 				for (final DataColumnSpec colSpec : inSpec) {
-					if (colSpec.getType().isCompatible(valueClass)) {
+					if (colSpec.getType().isCompatible(valueClass) || colSpec.getType().isAdaptable(valueClass)) {
 						setCompatibleCols.add(colSpec.getName());
 						break;
 					}
@@ -415,7 +415,8 @@ public class SettingsUtils {
 				// Perform an additional type check, if requested
 				if (listValueClasses != null && !listValueClasses.isEmpty()) {
 					for (final Class<? extends DataValue> valueClass : RDKitAdapterCellSupport.expandByAdaptableTypes(listValueClasses)) {
-						if (inSpec.getColumnSpec(strColumnName).getType().isCompatible(valueClass)) {
+						if (inSpec.getColumnSpec(strColumnName).getType().isCompatible(valueClass) ||
+						      inSpec.getColumnSpec(strColumnName).getType().isAdaptable(valueClass) ) {
 							bRet = true;
 							break;
 						}

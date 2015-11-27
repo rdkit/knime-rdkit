@@ -60,6 +60,7 @@ import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
 import org.RDKit.ROMol_Vect_Vect;
 import org.RDKit.RWMol;
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -162,7 +163,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 		 if (null == m_reactant1Col.getStringValue()) {
 			 final List<String> compatibleCols = new ArrayList<String>();
 			 for (final DataColumnSpec c : inSpecs[0]) {
-				 if (c.getType().isCompatible(RDKitMolValue.class)) {
+				 if (c.getType().isCompatible(RDKitMolValue.class) || c.getType().isAdaptable(RDKitMolValue.class)) {
 					 compatibleCols.add(c.getName());
 				 }
 			 }
@@ -184,7 +185,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 		 if (null == m_reactant2Col.getStringValue()) {
 			 final List<String> compatibleCols = new ArrayList<String>();
 			 for (final DataColumnSpec c : inSpecs[0]) {
-				 if (c.getType().isCompatible(RDKitMolValue.class)) {
+				 if (c.getType().isCompatible(RDKitMolValue.class) || c.getType().isAdaptable(RDKitMolValue.class)) {
 					 compatibleCols.add(c.getName());
 				 }
 			 }
@@ -273,7 +274,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 					 "No such column in first input table: " + first);
 		 }
 		 final DataType firstType = specs[0].getColumnSpec(firstIndex).getType();
-		 if (!firstType.isCompatible(RDKitMolValue.class)) {
+		 if (!firstType.isCompatible(RDKitMolValue.class) && !firstType.isAdaptable(RDKitMolValue.class)) {
 			 throw new InvalidSettingsException("Column '" + first
 					 + "' does not contain an RDKit molecule");
 		 }
@@ -287,7 +288,7 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 					 "No such column in second input table: " + second);
 		 }
 		 final DataType secondType = specs[1].getColumnSpec(secondIndex).getType();
-		 if (!secondType.isCompatible(RDKitMolValue.class)) {
+		 if (!secondType.isCompatible(RDKitMolValue.class) && !secondType.isAdaptable(RDKitMolValue.class)) {
 			 throw new InvalidSettingsException("Column '" + second
 					 + "' does not contain an RDKit molecule");
 		 }
@@ -354,7 +355,11 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 					 if (inSpec1.getColumnSpec(indices[0]).getType()
 							 .isCompatible(RDKitMolValue.class)) {
 						 mol1 = ((RDKitMolValue)r1Cell).readMoleculeValue();
-					 } else {
+					 } 
+					 else if (inSpec1.getColumnSpec(indices[0]).getType()
+                      .isAdaptable(RDKitMolValue.class)) {
+                   mol1 = ((AdapterValue)r1Cell).getAdapter(RDKitMolValue.class).readMoleculeValue();
+                }  {
 						 final String smiles = ((StringValue)r1Cell).toString();
 						 mol1 = RWMol.MolFromSmiles(smiles);
 					 }
@@ -389,7 +394,10 @@ public class RDKitTwoComponentReactionNodeModel extends NodeModel {
 						 if (inSpec2.getColumnSpec(indices[1]).getType()
 								 .isCompatible(RDKitMolValue.class)) {
 							 mol2 = ((RDKitMolValue)r2Cell).readMoleculeValue();
-						 } else {
+						 } else if (inSpec2.getColumnSpec(indices[1]).getType()
+                         .isAdaptable(RDKitMolValue.class)) {
+                      mol2 = ((AdapterValue)r2Cell).getAdapter(RDKitMolValue.class).readMoleculeValue();
+                   } else{
 							 final String smiles = ((StringValue)r2Cell).toString();
 							 mol2 = RWMol.MolFromSmiles(smiles);
 						 }

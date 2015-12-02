@@ -33,7 +33,8 @@
       <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory" id="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory"/>
       <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory" id="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory"/>
 
-	  <node category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
+	  <node category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory" id="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
       <node after="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory" id="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
 
 	  <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory" id="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory"/>

@@ -21,6 +21,9 @@
         	The name of the column in the optional second table containing 
         	RDKit molecules as salt definitions (generated usually from SMARTS). This only applies, if a second table is connected.
         </option>
+        <option name="Keep only largest fragment after salt stripping">Option to reduce the salt stripping outcome even more
+        	keeping only the largest fragment of all remaining fragments. If there are multiple fragments with the same
+        	number of atoms identified as largest fragments, it will keep only the first one it encounters.</option>
     </fullDescription>
     
     <ports>

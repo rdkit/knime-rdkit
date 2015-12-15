@@ -155,6 +155,8 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
 				updateVisibilityOfOptionalComponents(bHasReactionTable);
 			}
 		});
+      super.addDialogComponent(new DialogComponentBoolean(
+            createKeepOnlyLargestFragmentOptionModel(), "Keep only largest fragment after salt stripping"));
 
 		// Configure the button to show dialog with salt definitions to the user
 		m_compButtonShowPredefinedSalts.addActionListener(new ActionListener() {
@@ -271,4 +273,14 @@ public class RDKitSaltStripperNodeDialog extends DefaultNodeSettingsPane {
 	static final SettingsModelBoolean createRemoveSourceColumnsOptionModel() {
 		return new SettingsModelBoolean("remove_source_columns", false);
 	}
+
+   /**
+    * Creates the settings model to be used to specify the option to
+    * keep only the largest fragment after salt stripping.
+    * 
+    * @return Settings model for special option.
+    */
+   static final SettingsModelBoolean createKeepOnlyLargestFragmentOptionModel() {
+      return new SettingsModelBoolean("keep_only_largest_fragment", false);
+   }
 }

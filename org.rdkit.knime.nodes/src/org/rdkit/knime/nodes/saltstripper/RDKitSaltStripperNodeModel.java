@@ -58,6 +58,7 @@ import java.util.Map;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.ROMol_Vect;
 import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -139,7 +140,11 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 	/** Settings model for the column name of the salt column. */
 	private final SettingsModelString m_modelOptionalSaltColumnName =
 			registerSettings(RDKitSaltStripperNodeDialog.createOptionalSaltColumnNameModel(), "salt_column", "salt_input");
-	// Accept also deprecated keys
+   // Accept also deprecated keys
+
+   /** Settings model for the option to keep only the largest fragment after salt stripping. */
+   private final SettingsModelBoolean m_modelKeepOnlyLargestFragmentOption =
+         registerSettings(RDKitSaltStripperNodeDialog.createKeepOnlyLargestFragmentOptionModel(), true);
 
 	//
 	// Internals
@@ -329,6 +334,7 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 			.createSpec();
 
 			final int iSaltCount = (m_listSalts == null || m_listSalts.isEmpty() ? 0 : m_listSalts.size());
+			final boolean bKeepOnlyLargest = m_modelKeepOnlyLargestFragmentOption.getBooleanValue();
 
 			// Generate factory
 			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
@@ -374,6 +380,23 @@ public class RDKitSaltStripperNodeModel extends AbstractRDKitCalculatorNodeModel
 							else {
 								break;
 							}
+						}
+						
+						// Apply special option to strip all minor components after all salts have been split
+						if (bKeepOnlyLargest) {
+						   ROMol_Vect listFrags = markForCleanup(RDKFuncs.getMolFrags(molStripping), lUniqueWaveId);
+						   if (listFrags != null && listFrags.size() > 1) {
+						      int iCount = (int)listFrags.size(); 
+						      int iMaxAtomCount = 0;
+						      for (int i = 0; i < iCount; i++) {
+						         ROMol frag = listFrags.get(i);
+						         int iAtomCount = (int)frag.getNumAtoms();
+						         if (iAtomCount > iMaxAtomCount) {
+						            iMaxAtomCount = iAtomCount;
+						            molStripping = frag;
+						         }
+						      }
+						   }
 						}
 
 						// Sanitize the result molecule

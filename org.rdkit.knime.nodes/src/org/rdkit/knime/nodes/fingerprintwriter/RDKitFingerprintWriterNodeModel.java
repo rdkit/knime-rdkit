@@ -55,7 +55,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
@@ -107,10 +109,10 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 	protected static final char[] HEX = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 	/** Formatting the date/time using a custom FPS format: yyyy-MM-dd'T'HH:mm:ss */
-	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("GMT"));
 
 	/** Formatting the date/time using a custom FPS format: yyyy-MM-dd'T'00:00:00 */
-	private static final SimpleDateFormat DATE_FORMATTER_WITH_SUPPRESSED_TIME = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00");
+	private static final DateTimeFormatter DATE_FORMATTER_WITH_SUPPRESSED_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'00:00:00").withZone(ZoneId.of("GMT"));
 
 	//
 	// Members
@@ -339,9 +341,8 @@ public class RDKitFingerprintWriterNodeModel extends AbstractRDKitNodeModel {
 						writer.newLine();
 						writer.write("#software=Knime/" + KNIMEConstants.VERSION );
 						writer.newLine();
-						writer.write("#date=" + (bSuppressTime ?
-								formatDate(DATE_FORMATTER_WITH_SUPPRESSED_TIME, new Date()) :
-									formatDate(DATE_FORMATTER, new Date())));
+						writer.write("#date=" + LocalDateTime.now().format(bSuppressTime ? 
+								DATE_FORMATTER_WITH_SUPPRESSED_TIME : DATE_FORMATTER));
 						writer.newLine();
 					}
 

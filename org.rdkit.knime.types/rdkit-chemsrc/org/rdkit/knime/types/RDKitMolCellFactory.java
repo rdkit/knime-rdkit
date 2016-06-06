@@ -120,7 +120,8 @@ public final class RDKitMolCellFactory {
 
     /**
      * Creates a new RDKit Adapter Cell with an RDKit Mol Cell 
-     * based on the given molecule. The argument
+     * based on the given molecule. A canonicalized SMILES will be
+     * created as part of the inner RDKit Cell. The argument
      * can (and should) be {@link ROMol#delete() deleted} after this method
      * returns.
      * @param mol the ROMol value to store
@@ -132,7 +133,7 @@ public final class RDKitMolCellFactory {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
-        return new RDKitAdapterCell(new RDKitMolCell2(mol, RDKFuncs.MolToSmiles(mol, true)));
+        return new RDKitAdapterCell(new RDKitMolCell2(mol, null)); // This forces the generation of a canonicalized SMILES
     }
 
     /**
@@ -141,7 +142,8 @@ public final class RDKitMolCellFactory {
      * can (and should) be {@link ROMol#delete() deleted} after this method
      * returns.
      * @param mol the ROMol value to store
-     * @param smiles canonical SMILES for the molecule
+     * @param smiles SMILES for the molecule. This SMILES will be taken as is and flagged as non-canonical
+     *      in the inner RDKit Cell.
      * @return A data cell implementing RDKitMolValue interface. Currently this
      * is a {@link RDKitAdapterCell} but this may change in future versions.
      * @throws NullPointerException if argument is <code>null</code>
@@ -150,12 +152,13 @@ public final class RDKitMolCellFactory {
         if (mol == null) {
             throw new NullPointerException("Mol value must not be null.");
         }
-        return new RDKitAdapterCell(new RDKitMolCell2(mol, smiles));
+        return new RDKitAdapterCell(new RDKitMolCell2(mol, smiles)); 
     }
 
     /**
      * Creates a new RDKit Adapter Cell based on the given molecule and discards the
-     * argument using the {@link ROMol#delete()} method.
+     * argument using the {@link ROMol#delete()} method. A canonicalized SMILES will be
+     * created as part of the inner RDKit Cell.
      * @param mol the ROMol value to store
      * @return A data cell implementing RDKitMolValue interface. Currently this
      * is a {@link RDKitAdapterCell} but this may change in future versions.

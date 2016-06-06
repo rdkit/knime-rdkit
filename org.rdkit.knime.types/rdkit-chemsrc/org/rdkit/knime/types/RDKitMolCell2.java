@@ -109,12 +109,19 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 	 * @param smiles smiles for the molecule.
 	 */
 	RDKitMolCell2(final ROMol mol, final String smiles) {
-		if(smiles == null || smiles.length() == 0){
-			m_smilesString = RDKFuncs.MolToSmiles(mol, true);
-			m_smilesIsCanonical=true;
-		} else {
+		if(smiles == null || smiles.length() == 0) {
+		   // For empty molecules we create an empty SMILES and still set the canonical flag
+		   if (mol.getNumAtoms() > 0) {
+		      m_smilesString = RDKFuncs.MolToSmiles(mol, true);
+		   }
+		   else {
+		      m_smilesString = "";
+		   }
+		   m_smilesIsCanonical = true;
+		} 
+		else {
 			m_smilesString = smiles;
-			m_smilesIsCanonical=false;
+			m_smilesIsCanonical = false;
 		}
 		m_byteContent = toByteArray(mol);
 	}

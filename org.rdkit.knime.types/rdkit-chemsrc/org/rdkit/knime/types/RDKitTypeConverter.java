@@ -50,7 +50,6 @@ package org.rdkit.knime.types;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.chem.types.SdfAdapterCell;
@@ -378,15 +377,11 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 					excCaught = exc;
 				}
 
-				// If we got an RDKit molecule, parsing was successful, now create the SMILES from it and the cell
+				// If we got an RDKit molecule, parsing was successful, now create the RDKit Cell from it 
+				// and inside it a canonicalized SMILES value
 				if (mol != null) {
 					try {
-						// RDKit cell will not have a canonical SMILES set
-						String smiles = "";
-						if (mol.getNumAtoms() > 0) {
-							smiles = RDKFuncs.MolToSmiles(mol, false, false, 0, false);
-						}
-						cell = RDKitMolCellFactory.createRDKitAdapterCell(mol, smiles);
+						cell = RDKitMolCellFactory.createRDKitAdapterCell(mol);
 					}
 					catch (final Exception exc) {
 						excCaught = exc;
@@ -463,10 +458,11 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 					excCaught = exc;
 				}
 
-				// If we got an RDKit molecule, parsing was successful, now create the cell
+				// If we got an RDKit molecule, parsing was successful, now create the cell,
+				// which will contain a canonicalized SMILES in the inner RDKit Cell.
 				if (mol != null) {
 					try {
-						cell = RDKitMolCellFactory.createRDKitAdapterCell(mol, strSmiles);
+						cell = RDKitMolCellFactory.createRDKitAdapterCell(mol);
 					}
 					catch (final Exception exc) {
 						excCaught = exc;

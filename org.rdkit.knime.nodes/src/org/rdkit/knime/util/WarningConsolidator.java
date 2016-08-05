@@ -48,11 +48,23 @@
  */
 package org.rdkit.knime.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import javax.swing.tree.TreeNode;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.Config;
+import org.rdkit.knime.internals.RDKitInternals;
 
 /**
  * This class gathers warnings from different situations and produces on request
@@ -65,9 +77,9 @@ import java.util.TreeSet;
  * 
  * @author Manuel Schwarze
  */
-public class WarningConsolidator {
+public class WarningConsolidator implements RDKitInternals<WarningConsolidator> {
 
-	/**
+   /**
 	 * A context consists of an id, a name (e.g. row) and a plural name (e.g. rows)
 	 * and is used to separate warnings and assign them to specific contexts, e.g.
 	 * rows and batches.
@@ -76,7 +88,7 @@ public class WarningConsolidator {
 	 */
 	public static class Context {
 
-		//
+      //
 		// Members
 		//
 
@@ -101,6 +113,16 @@ public class WarningConsolidator {
 		//
 		// Constructor
 		//
+		
+		protected Context() {
+		   // Used when class is deserialized
+         m_id = null;
+         m_name = null;
+         m_pluralName = null;
+         m_bShowAlsoIfJustSingle = false;
+
+         m_iHashCode = (m_id + m_name + m_pluralName + m_bShowAlsoIfJustSingle).hashCode();
+		}
 
 		/**
 		 * Creates a new context.
@@ -121,7 +143,7 @@ public class WarningConsolidator {
 			m_pluralName = contextNamePlural;
 			m_bShowAlsoIfJustSingle = bShowAlsoIfJustSingle;
 
-			m_iHashCode = (m_id + m_name + m_pluralName).hashCode();
+			m_iHashCode = (m_id + m_name + m_pluralName + m_bShowAlsoIfJustSingle).hashCode();
 		}
 
 		//
@@ -191,6 +213,9 @@ public class WarningConsolidator {
 	//
 	// Constants
 	//
+	
+	/** The logging instance. */
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(WarningConsolidator.class);
 
 	/** Pre-defined context for rows. */
 	private static final Context NO_CONTEXT = new Context("noContext", "", "", true);
@@ -218,12 +243,12 @@ public class WarningConsolidator {
 	/**
 	 * List of all registered context, mapped from Context ID to Context object.
 	 */
-	private transient Map<String, Context> m_mapContexts;
+	private Map<String, Context> m_mapContexts;
 
 	/**
 	 * Stores warnings and how often they occurred in a certain context.
 	 */
-	private transient Map<String, Map<String, Integer>> m_hWarningOccurrences;
+	private Map<String, Map<String, Integer>> m_hWarningOccurrences;
 
 	//
 	// Constructors
@@ -262,7 +287,7 @@ public class WarningConsolidator {
 	 * @param consolidators Arbitrary list of warning consolidators.
 	 */
 	public WarningConsolidator(final WarningConsolidator... consolidators) {
-		super();
+		this();
 
 		for (final WarningConsolidator wc : consolidators) {
 			for (final Context context : wc.getContexts()) {
@@ -529,6 +554,96 @@ public class WarningConsolidator {
 
 		return bInclude;
 	}
+	
+	//
+	// Streaming Operator Internal API 
+	//
+	
+	/**
+	 * Loads internal content from a KNIME setting object and 
+	 * restores the state of the internal object fully.
+	 * 
+	 * @param settings Settings to read internal content from.
+	 *      Can be null to do reset the internal content without restoring it.
+	 */
+   public void load(Config settings) {
+      if (settings != null) {
+         m_hWarningOccurrences = new HashMap<>();
+         m_mapContexts = new HashMap<>();
+         
+         try {
+            Config contexts = settings.getConfig("contextMap");
+            for (Enumeration<TreeNode> e = contexts.children(); e.hasMoreElements(); ) {
+               Config context = (Config)e.nextElement();
+               String strId = context.getKey();
+               String strName = context.getString("name");
+               String strPluralName = context.getString("pluralName");
+               boolean bShownAlsoIfJustSingle = context.getBoolean("shownAlsoIfJustSingle");
+               m_mapContexts.put(strId, new Context(strId, strName, strPluralName, bShownAlsoIfJustSingle));
+            }
+            
+            Config warnings = settings.getConfig("warningsMap");
+            for (Enumeration<TreeNode> e1 = warnings.children(); e1.hasMoreElements(); ) {
+               Config context = (Config)e1.nextElement();
+               String contextId = context.getKey();
+               for (Enumeration<TreeNode> e2 = context.children(); e2.hasMoreElements(); ) {
+                  Config warning = (Config)e2.nextElement();
+                  String strWarning = warning.getString("warning");
+                  int iOccurrences = warning.getInt("occurrences");
+                  Map<String, Integer> mapWarnings = m_hWarningOccurrences.get(contextId);
+                  if (mapWarnings == null) {
+                     mapWarnings = new HashMap<>();
+                     m_hWarningOccurrences.put(contextId, mapWarnings);
+                  }
+                  mapWarnings.put(strWarning, iOccurrences);
+               }
+            }
+         }
+         catch (InvalidSettingsException exc) {
+            LOGGER.debug("Unable to load all WarningConsolidator settings from Internals object.");
+         }
+      }
+      else { // Use defaults
+         m_hWarningOccurrences = new HashMap<>();
+         m_mapContexts = new HashMap<>();
+      }
+   }
+	
+   /**
+    * Saves the full state of internal content into a KNIME setting object.
+    * Calling {@link #load(Config)} with the setting object will restore the full state.
+    * 
+    * @param settings Settings to store the internal content into. Can be null to do nothing.
+    */
+	public void save(Config settings) {
+      if (settings != null) {
+         Config warnings = settings.addConfig("warningsMap");
+         for (String strContextId : m_hWarningOccurrences.keySet()) {
+            Map<String, Integer> mapWarningsInContext = m_hWarningOccurrences.get(strContextId);
+            Config warningMap = warnings.addConfig(strContextId);
+            int iCount = 0;
+            for (String strWarning : mapWarningsInContext.keySet()) {
+               Config warningItem = warningMap.addConfig("warning_" + (iCount++));
+               warningItem.addString("warning", strWarning);
+               warningItem.addInt("occurrences", mapWarningsInContext.get(strWarning));
+            }
+         }         
+         Config contexts = settings.addConfig("contextMap");
+         for (String strKey : m_mapContexts.keySet()) {
+            Context context = m_mapContexts.get(strKey);
+            Config contextItem = contexts.addConfig(context.getId());
+            contextItem.addString("name", context.getName());
+            contextItem.addString("pluralName", context.getPluralName());
+            contextItem.addBoolean("shownAlsoIfJustSingle", context.isShownAlsoIfJustSingle());
+         }
+      }
+	}
+	
+	@Override
+	public WarningConsolidator merge(List<WarningConsolidator> internals) {
+	   WarningConsolidator merged = new WarningConsolidator(internals.toArray(new WarningConsolidator[0]));
+	   return merged;
+	}
 
 	//
 	// Private Methods
@@ -591,4 +706,29 @@ public class WarningConsolidator {
 			}
 		}
 	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+      WarningConsolidator w1 = new WarningConsolidator(new WarningConsolidator.Context("Rows", "Row", "Rows", true),
+            new WarningConsolidator.Context("Columns", "Column", "Columns", true));
+      w1.saveWarning("Rows", "This is a row test warning");
+      w1.saveWarning("Rows", "This is a row test warning");
+      w1.saveWarning("Columns", "This is a column test warning");
+      w1.saveWarning("Columns", "This is a column test warning");
+      w1.saveWarning("Just a simple general test warning");
+      
+      Config config = new NodeSettings("Test");
+      w1.save(config);
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      config.saveToXML(out);
+      out.close();
+      byte[] arrSaved = out.toByteArray();
+      
+      ByteArrayInputStream in = new ByteArrayInputStream(arrSaved);
+      Config config2 = new NodeSettings("Test");
+      config2.load(in);
+      WarningConsolidator w2 = new WarningConsolidator();
+      w2.load(config2);
+      
+      System.out.println(w2);
+   }
 }

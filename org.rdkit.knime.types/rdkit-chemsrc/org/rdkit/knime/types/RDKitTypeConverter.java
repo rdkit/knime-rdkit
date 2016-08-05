@@ -66,6 +66,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RWAdapterValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.NodeLogger;
+import org.rdkit.knime.util.InputDataInfo;
 
 /**
  * Converter for RDKit that converts Smiles or SDF cells into an adapter cell that contains RDKit cells.
@@ -73,11 +75,14 @@ import org.knime.core.data.StringValue;
  * @author Thorsten Meinl, University of Konstanz
  * @author Manuel Schwarze, Novartis
  */
-public abstract class RDKitTypeConverter extends DataCellTypeConverter {
+public abstract class RDKitTypeConverter extends DataCellTypeConverter implements RDKitTypeConversionErrorProvider {
 
 	//
 	// Constants
 	//
+   
+   /** The logging instance. */
+   private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitTypeConverter.class);
 
 	/** Array with the value classes that can be handled by an RDKit Adapter. */
 	@SuppressWarnings("unchecked")
@@ -87,9 +92,15 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 	//
 	// Members
 	//
+	
+	/** Information about the column that is subject of conversion. */
+	private InputDataInfo m_inputDataInfo;
 
 	/** The output type of the converter instance. */
 	private final DataType m_outputType;
+   
+	/** The list of registered listeners. */
+   private final List<RDKitTypeConversionErrorListener> m_listListeners;
 
 	//
 	// Constructors
@@ -102,12 +113,32 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 	 */
 	private RDKitTypeConverter(final DataType outputType) {
 		super(true); // True means that parallel processing of conversion is allowed
+		m_inputDataInfo = null;
 		m_outputType = outputType;
+		m_listListeners = new ArrayList<>();
 	}
 
 	//
 	// Public Methods
 	//
+	
+	/**
+	 * Attaches information about the input column that is subject of conversion.
+	 * 
+	 * @param inputDataInfo Input data info. Can be null.
+	 */
+	public void setInputDataInfo(InputDataInfo inputDataInfo) {
+	   m_inputDataInfo = inputDataInfo;
+	}
+	
+	/**
+	 * Returns information about the column that is subject of conversion. 
+	 * 
+	 * @return Input data info. Can be null.
+	 */
+	public InputDataInfo getInputDataInfo() {
+	   return m_inputDataInfo;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -116,6 +147,68 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 	public DataType getOutputType() {
 		return m_outputType;
 	}
+	
+	@Override
+	public void onConvertException(DataCell source, Exception e) {
+	   super.onConvertException(source, e);
+	   onFireConversionErrorEvent(source, e);
+	}
+	
+	@Override
+	public void addTypeConversionErrorListener(RDKitTypeConversionErrorListener l) {
+      if (l != null) {
+         synchronized (m_listListeners) {
+            if (!m_listListeners.contains(l)) {
+               m_listListeners.add(l);
+            }
+         }
+      }
+	}
+	
+	@Override
+	public void removeTypeConversionErrorListener(RDKitTypeConversionErrorListener l) {
+      if (l != null) {
+         synchronized (m_listListeners) {
+            m_listListeners.remove(l);
+         }
+      }
+	}
+	
+	//
+	// Protected Methods
+	//
+	
+	/**
+    * Notifies all registered listeners that a conversion error occurred.
+    * 
+    * @param source Data cell that failed conversion.
+    * @param exc Exception that occurred.
+    */
+   protected void onFireConversionErrorEvent(final DataCell source, final Exception exc) {
+      // Get copy of list
+      List<RDKitTypeConversionErrorListener> listCopy = null;
+
+      // Make a copy of the listener list
+      synchronized (m_listListeners) {
+         listCopy = new ArrayList<RDKitTypeConversionErrorListener>(m_listListeners.size());
+         for (final RDKitTypeConversionErrorListener l : m_listListeners) {
+            listCopy.add(l);
+         }
+      }
+
+      final InputDataInfo inputDataInfo = getInputDataInfo(); // Can be null
+      
+      // Notify listeners
+      for (final RDKitTypeConversionErrorListener l : listCopy) {
+         try {
+            l.onTypeConversionError(inputDataInfo, source, exc);
+         }
+         catch (final Exception notificationFailed) {
+            LOGGER.debug("Listener notification on conversion error failed.", notificationFailed);
+         }
+      }
+   }
+	
 
 	//
 	// Public Static Methods
@@ -132,7 +225,8 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter {
 	 */
 	public static RDKitTypeConverter createConverter(final DataTableSpec tableSpec, final int columnIndex) {
 		final DataType type = tableSpec.getColumnSpec(columnIndex).getType();
-		return createConverter(type);
+		RDKitTypeConverter converter = createConverter(type);
+		return converter;
 	}
 
 	/**

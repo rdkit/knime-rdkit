@@ -62,6 +62,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitAdapterCell;
@@ -162,11 +165,29 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 	 */
 	RDKitAddCoordinatesNodeModel() {
 		super(1, 1);
+		enableDistributionAndStreaming();
 	}
 
 	//
 	// Protected Methods
 	//
+	
+   /**
+    * Enable distribution and streaming for this node.
+    * {@inheritDoc}
+    */
+   @Override
+   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      try {
+         preProcessing(null, null, null);
+      }
+      catch (Exception exc) {
+         throw new InvalidSettingsException("Invalid SMARTS pattern - Please check.", exc);
+      }
+      
+      return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
+   }
 
 	/**
 	 * {@inheritDoc}
@@ -237,31 +258,21 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 
 		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 * For this node it returns 0.01d (1%).
-	 */
+	
 	@Override
 	protected double getPreProcessingPercentage() {
-		return 0.01d;
+	   return 0.01d;
 	}
-
-	/**
-	 * Creates a SMARTS pattern from the specified template.
-	 * {@inheritDoc}
-	 */
+	
 	@Override
-	protected void preProcessing(final BufferedDataTable[] inData,
-			final InputDataInfo[][] arrInputDataInfo, final ExecutionContext exec)
-					throws Exception {
-
-		// Construct an RDKit molecule from the SMARTS pattern - Marked for cleanup at the end
-		m_smartsPattern = markForCleanup(generatedSmartsPattern(m_modelDimension.getValue(),
-				m_modelSmartsTemplate.getStringValue()));
-		if (m_smartsPattern != null) {
-			m_smartsPattern.compute2DCoords();
-		}
+	protected void preProcessing(BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
+	      throws Exception {
+      // Construct an RDKit molecule from the SMARTS pattern - Marked for cleanup at the end
+      m_smartsPattern = markForCleanup(generatedSmartsPattern(m_modelDimension.getValue(),
+            m_modelSmartsTemplate.getStringValue()));
+      if (m_smartsPattern != null) {
+         m_smartsPattern.compute2DCoords();
+      }
 	}
 
 	/**
@@ -270,7 +281,6 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 	@Override
 	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
-
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
 
 		// Specify output of table 1
@@ -330,6 +340,12 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 		}
 
 		return (arrOutputFactories == null ? new AbstractRDKitCellFactory[0] : arrOutputFactories);
+	}
+	
+	@Override
+	protected void cleanupIntermediateResults() {
+      cleanupMarkedObjects();
+	   m_smartsPattern = null;
 	}
 
 	/**

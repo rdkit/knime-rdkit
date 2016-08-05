@@ -12,7 +12,7 @@
 <booleanAttribute key="clearws" value="false"/>
 <booleanAttribute key="clearwslog" value="false"/>
 <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/RDKIT KNIME JUNIT TEST (AUTOMATICALLY NON-GUI)"/>
-<booleanAttribute key="default" value="false"/>
+<booleanAttribute key="default" value="true"/>
 <stringAttribute key="deselected_workspace_plugins" value="com.novartis.nibr.knime,com.novartis.nibr.knime.testing"/>
 <stringAttribute key="featureDefaultLocation" value="workspace"/>
 <stringAttribute key="featurePluginResolution" value="workspace"/>
@@ -22,9 +22,10 @@
 <listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
 <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
 </listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -xmlResultDir &quot;${workspace_loc:org.rdkit.knime.testing/junit-tests}/test-results&quot;"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx384m -XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dknime.enable.fastload=true -Dknime.user.env=dev"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx1200m -XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dknime.enable.fastload=true -Dknime.user.env=dev"/>
 <stringAttribute key="pde.version" value="3.3"/>
 <stringAttribute key="product" value="org.eclipse.sdk.ide"/>
 <setAttribute key="selected_features">
@@ -55,7 +56,6 @@
 <setEntry value="org.eclipse.platform.source:default"/>
 <setEntry value="org.eclipse.platform:default"/>
 <setEntry value="org.eclipse.rcp.source:default"/>
-<setEntry value="org.eclipse.rcp.swt_patch:default"/>
 <setEntry value="org.eclipse.rcp:default"/>
 <setEntry value="org.eclipse.sdk:default"/>
 <setEntry value="org.knime.binary.jre.win32.win32.x86_64:default"/>
@@ -79,7 +79,7 @@
 <booleanAttribute key="show_selected_only" value="false"/>
 <stringAttribute key="templateConfig" value="${target_home}\configuration\config.ini"/>
 <booleanAttribute key="tracing" value="false"/>
-<booleanAttribute key="useCustomFeatures" value="true"/>
+<booleanAttribute key="useCustomFeatures" value="false"/>
 <booleanAttribute key="useDefaultConfig" value="true"/>
 <booleanAttribute key="useDefaultConfigArea" value="true"/>
 <booleanAttribute key="useProduct" value="false"/>

@@ -455,14 +455,16 @@ public class RDKitMoleculeExtractorNodeModel extends AbstractRDKitNodeModel {
 	 * Special error handling for auto converted cells that failed conversion. The behavior
 	 * is based on the error handling settings defined in this node.
 	 * 
-	 * @param inputDataInfo Input data info for the column that failed a cell conversion.
+	 * @param inputDataInfo Input data info for the column that failed a cell conversion. Can be null.
 	 * @param strError Short error for logging.
 	 */
 	@Override
 	protected void generateAutoConversionError(final InputDataInfo inputDataInfo,
 			final String strError) {
 		final ErrorHandling errorHandling = m_modelErrorHandlingOption.getValue();
-		String strMessage = "Auto conversion in column '" + inputDataInfo.getColumnSpec().getName() + "' failed: " + strError;
+		 String strColumnInfo = (inputDataInfo == null ? "unknown column" : 
+	         "column '" + inputDataInfo.getColumnSpec().getName() + "'");
+		String strMessage = "Auto conversion in " + strColumnInfo + " failed: " + strError;
 		if (errorHandling == ErrorHandling.MissingCellWithWarning || errorHandling == ErrorHandling.SkipWithWarning) {
 			if (errorHandling == ErrorHandling.MissingCellWithWarning) {
 				strMessage += " - Using empty cell.";

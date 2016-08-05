@@ -60,8 +60,12 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.types.RDKitTypeConversionErrorProvider;
 import org.rdkit.knime.types.RDKitTypeConverter;
 
 /**
@@ -78,7 +82,7 @@ public final class RDKitAdapterCellSupport {
 	//
 
 	/**
-	 * Interface to be implemented when converts register for adapter cell support.
+	 * Interface to be implemented when converters register for adapter cell support.
 	 * 
 	 * @author Manuel Schwarze
 	 */
@@ -98,6 +102,9 @@ public final class RDKitAdapterCellSupport {
 	//
 	// Constants
 	//
+	
+	/** The logging instance. */
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitAdapterCellSupport.class);
 
 	private static final Map<Class<? extends DataValue>, Class<? extends DataValue>[]>
 	REGISTERED_ADAPTABLE_VALUE_CLASSES = new HashMap<Class<? extends DataValue>, Class<? extends DataValue>[]>();
@@ -138,7 +145,7 @@ public final class RDKitAdapterCellSupport {
 	 * 
 	 * @return Converter factory or null, if not found.
 	 */
-	public static final DataCellTypeConverterFactory getConverteFactory(final Class<? extends DataValue> targetValueClass) {
+	public static final DataCellTypeConverterFactory getConverterFactory(final Class<? extends DataValue> targetValueClass) {
 		return REGISTERED_CONVERTER_FACTORY.get(targetValueClass);
 	}
 
@@ -208,10 +215,57 @@ public final class RDKitAdapterCellSupport {
 		return bConvertable;
 	}
 
+   /**
+    * Creates a new converter for a specific column in a table. The output type and the specific converter that is
+    * used is determined automatically from the input type.
+    *
+    * @param inputDataInfo Input data info that describes the column that is subject of conversion.
+    * 
+    * @return A new converter or null, if no converter available.
+    * 
+    * @see RDKitAdapterCellSupport#createConverter(DataType, Class)
+    */
+   public static DataCellTypeConverter createConverter(InputDataInfo inputDataInfo,
+         final Class<? extends DataValue> targetValueClass) {
+      return createConverter(inputDataInfo, inputDataInfo.getTableSpec(), inputDataInfo.getColumnIndex(), targetValueClass);
+   }
+
+   /**
+    * Creates a new converter for a specific column in a table. The output type and the specific converter that is
+    * used is determined automatically from the input type.
+    *
+    * @param tableSpec the input table's spec
+    * @param columnIndex the index of the column that should be converted.
+    * 
+    * @return A new converter or null, if no converter available.
+    * 
+    * @see RDKitAdapterCellSupport#createConverter(DataType, Class)
+    */
+   public static DataCellTypeConverter createConverter(final DataTableSpec tableSpec, final int columnIndex,
+         final Class<? extends DataValue> targetValueClass) {
+      DataCellTypeConverter converter = null;
+      InputDataInfo inputDataInfo = null;
+      
+      try {
+         inputDataInfo = new InputDataInfo(tableSpec, new SettingsModelString("columnName", 
+                  tableSpec.getColumnSpec(columnIndex).getName()));
+      }
+      catch (InvalidSettingsException exc) {
+         // Should not happen - this would be an implementation error
+         LOGGER.warn("Unable to create input data info object for "
+               + "table specification and column index " + columnIndex);
+      }
+      
+      converter = createConverter(inputDataInfo, tableSpec, columnIndex, targetValueClass);
+      
+      return converter;
+   }
+   
 	/**
 	 * Creates a new converter for a specific column in a table. The output type and the specific converter that is
 	 * used is determined automatically from the input type.
 	 *
+    * @param inputDataInfo Input data info that describes the column that is subject of conversion. Can be null.
 	 * @param tableSpec the input table's spec
 	 * @param columnIndex the index of the column that should be converted.
 	 * 
@@ -219,13 +273,18 @@ public final class RDKitAdapterCellSupport {
 	 * 
 	 * @see RDKitAdapterCellSupport#createConverter(DataType, Class)
 	 */
-	public static DataCellTypeConverter createConverter(final DataTableSpec tableSpec, final int columnIndex,
+	private static DataCellTypeConverter createConverter(InputDataInfo inputDataInfo, 
+	      final DataTableSpec tableSpec, final int columnIndex,
 			final Class<? extends DataValue> targetValueClass) {
 		DataCellTypeConverter converter = null;
 
-		if (targetValueClass != null && tableSpec != null && columnIndex >= 0 && columnIndex < tableSpec.getNumColumns()) {
+		if (targetValueClass != null && tableSpec != null && 
+		      columnIndex >= 0 && columnIndex < tableSpec.getNumColumns()) {
 			final DataType type = tableSpec.getColumnSpec(columnIndex).getType();
 			converter = createConverter(type, targetValueClass);
+			if (converter instanceof RDKitTypeConversionErrorProvider) {
+			   ((RDKitTypeConversionErrorProvider) converter).setInputDataInfo(inputDataInfo);
+			}
 		}
 
 		return converter;

@@ -67,6 +67,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeModel;
@@ -165,6 +168,16 @@ public class RDKitInChI2MoleculeNodeModel extends AbstractRDKitCalculatorNodeMod
 	//
 	// Protected Methods
 	//
+
+   /**
+    * Enable distribution and streaming for this node.
+    * {@inheritDoc}
+    */
+   @Override
+   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
+   }
 
 	/**
 	 * {@inheritDoc}

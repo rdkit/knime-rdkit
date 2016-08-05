@@ -195,7 +195,120 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	//
 	// Protected Methods
 	//
+	
+	/**
+   //
+   // Streaming API
+   //
+   
+   @Override
+   public InputPortRole[] getInputPortRoles() {
+      return new InputPortRole[] { InputPortRole.DISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE };
+   }
+   
+   @Override
+   public OutputPortRole[] getOutputPortRoles() {
+      return new OutputPortRole[] { OutputPortRole.DISTRIBUTED };
+   }
+   
+   @Override
+   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      // Make the table specs of the input table available
+      final DataTableSpec[] tableSpec = new DataTableSpec[inSpecs.length];
+      for (int i = 0; i < inSpecs.length; i++) {
+         tableSpec[i] = (inSpecs[i] instanceof DataTableSpec ? (DataTableSpec)inSpecs[i] : null);
+      }
+      final InputDataInfo[][] arrInputDataInfos = createInputDataInfos(tableSpec);
+      
+      return new StreamableOperator() {
+         @Override
+         public void runFinal(PortInput[] inputs, PortOutput[] outputs, ExecutionContext exec) throws Exception {
+            preProcessing(inputs, arrInputDataInfos, exec);
+            ColumnRearranger rearranger = createColumnRearranger(0, tableSpec[0]);
+            StreamableFunction func = rearranger.createStreamableFunction();
+            func.runFinal(inputs, outputs, exec);
+         }
+      };
+   }
+   
+   @Override
+   public MergeOperator createMergeOperator() {
+      return super.createMergeOperator(); // Null
+   }
+   
+   @Override
+   public void finishStreamableExecution(StreamableOperatorInternals internals, ExecutionContext exec,
+         PortOutput[] output) throws Exception {
+      super.finishStreamableExecution(internals, exec, output);
+   }
+   
+   @Override
+   public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+      return super.createInitialStreamableOperatorInternals();
+   }
+   
+   @Override
+   public boolean iterate(StreamableOperatorInternals internals) {
+      return super.iterate(internals);
+   }
+   
+   @Override
+   public PortObjectSpec[] computeFinalOutputSpecs(StreamableOperatorInternals internals, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      return super.computeFinalOutputSpecs(internals, inSpecs);
+   }
+   
+   */
+	
+   /**
+    * Converts the passed in data to BufferedDataTable inputs where appropriate.
+    * Input that are not BufferedDataTables will be converted to null.
+    * Afterwards it calls the regular {@link #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext) } 
+    * in the model.
+    *
+    * @param inData The input data of the node.
+    * @param arrInputDataInfo Information about all columns of the input tables.
+    * @param exec The execution context.
+    *
+    * @throws Exception Thrown, if pre-processing fails.
+    *
+    * @see #m_arrResultColumnNames
+    * @see #m_arrQueriesAsSmiles
+    * @see #m_arrQueriesAsRDKitMols
+    */
+	/*
+   protected void preProcessing(final PortInput[] inData, final InputDataInfo[][] arrInputDataInfo,
+         final ExecutionContext exec) throws Exception {
+      if (inData != null) {
+         // Get and cast input - if possible to BufferedDataTable objects for normal pre-processing
+         BufferedDataTable[] arrConvertedInData = new BufferedDataTable[inData.length];
+         for (int i = 0; i < inData.length; i++) {
+            if (inData[i] != null && inData[i] instanceof PortObjectInput &&
+                  ((PortObjectInput)inData[i]).getPortObject() instanceof BufferedDataTable) {
+               arrConvertedInData[i] = (BufferedDataTable)((PortObjectInput)inData[i]).getPortObject();
+            }
+            else {
+               arrConvertedInData[i] = null;
+            }
+         }
 
+         // Conversion of input data to adapter cells if required and recreate input data info afterwards
+         BufferedDataTable[] arrConvertedTables = convertInputTables(arrConvertedInData, 
+               arrInputDataInfo, exec.createSubExecutionContext(0.05d));
+         InputDataInfo[][] arrUpdatedInputDataInfo = createInputDataInfos(getInputTableSpecs(arrConvertedTables));
+         
+         // Pre-process normally, which will create intermediate results for the running node
+         // In distributed computing the intermediate results will be created on all partitioned instances
+         preProcessing(arrConvertedInData, arrUpdatedInputDataInfo, exec);
+      }
+      else {
+         // This is probably not useful, if we do not have any input data to process
+         preProcessing((BufferedDataTable[])null, arrInputDataInfo, exec);
+      }
+   }
+   */
+   
 	/**
 	 * {@inheritDoc}
 	 */
@@ -290,21 +403,21 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 		switch (inPort) {
 		case 0: // First table with molecule column
 			arrDataInfo = new InputDataInfo[1]; // We have only one input mol column
-			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
+			arrDataInfo[INPUT_COLUMN_MOL] = (inSpec == null ? null : new InputDataInfo(inSpec, m_modelInputColumnName,
 					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-					RDKitMolValue.class);
+					RDKitMolValue.class));
 			break;
 
 		case 1: // Second table with query molecule column and optional name column
 			final boolean bUseNameColumn = m_modelUseQueryNameColumn.getBooleanValue();
 			arrDataInfo = new InputDataInfo[bUseNameColumn ? 2 : 1];
-			arrDataInfo[INPUT_COLUMN_QUERY] = new InputDataInfo(inSpec, m_modelQueryColumnName,
+			arrDataInfo[INPUT_COLUMN_QUERY] = (inSpec == null ? null : new InputDataInfo(inSpec, m_modelQueryColumnName,
 					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-					SmartsValue.class, RDKitMolValue.class);
+					SmartsValue.class, RDKitMolValue.class));
 			if (bUseNameColumn) {
-				arrDataInfo[INPUT_COLUMN_NAME] = new InputDataInfo(inSpec, m_modelQueryNameColumn,
+				arrDataInfo[INPUT_COLUMN_NAME] = (inSpec == null ? null : new InputDataInfo(inSpec, m_modelQueryNameColumn,
 						InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
-						StringValue.class);
+						StringValue.class));
 			}
 			break;
 		}

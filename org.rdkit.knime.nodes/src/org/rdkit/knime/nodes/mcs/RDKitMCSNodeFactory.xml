@@ -31,7 +31,7 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="RDKit Molecules">Input table with RDKit Molecules">Input table with RDKit Molecules</inPort>
+        <inPort index="0" name="RDKit Molecules">Input table with RDKit Molecules</inPort>
         <outPort index="0" name="MCS of the input structures">Table containing a single row with the MCS as a SMARTS value
         	and additional information (atom count, bond count and if calculation timed out).</outPort>
     </ports>    

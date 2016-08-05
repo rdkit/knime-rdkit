@@ -57,6 +57,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.node.NodeLogger;
+import org.rdkit.knime.internals.ContextStatistics;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.RDKitObjectCleaner;
 import org.rdkit.knime.util.WarningConsolidator;
@@ -118,6 +119,12 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 
 	/** Conserves occurring warning messages and consolidates them later. */
 	private final WarningConsolidator m_warnings;
+	
+	/** 
+	 * Context statistics for warning consolidator to keep track what has been processed. 
+	 * Optional, used only for streaming.  
+	 */
+	private ContextStatistics m_contextStatistics = null;
 
 	//
 	// Constructor
@@ -134,7 +141,8 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	 		This value can also be set later before execution ({@link #setInputDataInfos(InputDataInfo[])}).
 	 * @param outputColumnSpecs Specifications of output columns. Can be empty.
 	 */
-	public AbstractRDKitCellFactory(final RDKitObjectCleaner cleaner, final RowFailurePolicy rowFailurePolicy, final WarningConsolidator warningConsolidator,
+	public AbstractRDKitCellFactory(final RDKitObjectCleaner cleaner, final RowFailurePolicy rowFailurePolicy, 
+	      final WarningConsolidator warningConsolidator, 
 			final InputDataInfo[] arrInputColumnInfo, final DataColumnSpec... outputColumnSpecs) {
 		super(outputColumnSpecs);
 
@@ -227,6 +235,16 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	public void setInputDataInfos(final InputDataInfo[] arrInputColumnInfo) {
 		m_arrInputDataInfo = arrInputColumnInfo;
 	}
+	
+	/**
+	 * Sets the context statistics object used to track what has been processed when
+	 * performing streaming. Otherwise it is not used.
+	 * 
+	 * @param contextStatistics Context statistics. Can be null.
+	 */
+	public void setContextStatistics(final ContextStatistics contextStatistics) {
+	   m_contextStatistics = contextStatistics;
+	}
 
 	/**
 	 * Returns the array of input data info objects describing the input data for this factory.
@@ -237,6 +255,22 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	public InputDataInfo[] getInputDataInfos() {
 		return m_arrInputDataInfo;
 	}
+	
+	/**
+	 * Returns the context object that this factory should use for counting rows
+	 * in the context statistics object. The default implementation returns
+	 * {@link WarningConsolidator#ROW_CONTEXT}, which is fine for most cases - 
+	 * it counts input rows. However, if there are for instance multiple tables
+	 * it is not clear at the end what it refers to, in that case if a factory
+	 * would work on data coming from a second input table, the warning consolidator
+	 * should have a context added for ROWS_OF_SECOND_TABLE, and this factory method
+	 * could be overwritten to return it for correct counting.
+	 * 
+	 * @return The context to be used for counting processed rows. Can be null.
+	 */
+	public WarningConsolidator.Context getContextForRowCounting() {
+	   return WarningConsolidator.ROW_CONTEXT;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -246,10 +280,16 @@ public abstract class AbstractRDKitCellFactory extends AbstractCellFactory {
 	@Override
 	public DataCell[] getCells(final DataRow row) {
 		DataCell[] arrOutputCells = null;
-
+		
 		final long iUniqueWaveId = m_cleaner.createUniqueCleanupWaveId();
 
 		try {
+		   // Count input rows for later consolidation of warnings
+		   WarningConsolidator.Context contextToCount = getContextForRowCounting();
+		   if (m_contextStatistics != null && contextToCount != null) {
+		      m_contextStatistics.countItem(contextToCount.getId());
+		   }
+		   
 			arrOutputCells = process(m_arrInputDataInfo, row, iUniqueWaveId);
 
 			// Check for null cells and replace them by missing cells

@@ -99,6 +99,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.util.MultiThreadWorker;
 import org.rdkit.knime.RDKitTypesPluginActivator;
@@ -224,6 +226,12 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * Timestamp when execution started.
 	 */
 	private long m_lExecutionStartTs;
+   
+   /** Defines input port roles to express distribution and streaming capabilities, if set. */
+   private InputPortRole[] m_arrInputPortRoles = null;
+   
+   /** Defines output port roles to express distribution and streaming capabilities, if set. */
+   private OutputPortRole[] m_arrOutputPortRoles = null;   
 
 	//
 	// Constructors
@@ -252,6 +260,42 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
       initializeContentTableModels(inPortTypes.length, outPortTypes.length);
 	}
 
+   /**
+    * Creates a new node model with the specified number of input and output ports.
+    * 
+    * @param nrInDataPorts Number of input ports. Must be 0 .. n.
+    * @param nrOutDataPorts Number of output ports. Must be 0 .. m.
+    * @param arrInputPortRoles Roles for input ports or null to use default. 
+    *    The number must match the specified number of input data ports.
+    * @param arrOutputPortRoles Roles for output ports or null to use default. 
+    *    The number must match the specified number of output data ports.
+    */
+   protected AbstractRDKitNodeModel(final int nrInDataPorts,
+         final int nrOutDataPorts, final InputPortRole[] arrInputPortRoles,
+         final OutputPortRole[] arrOutputPortRoles) {
+      this(nrInDataPorts, nrOutDataPorts);
+      
+      setPortRoles(arrInputPortRoles, arrOutputPortRoles);
+   }
+
+   /**
+    * Creates a new node model with the specified input and output ports.
+    * 
+    * @param inPortTypes Input port definitions. Must not be null.
+    * @param outPortTypes  Output port definitions. Must not be null.
+    * @param arrInputPortRoles Roles for input ports. The number must match the specified
+    *    number of input data ports.
+    * @param arrOutputPortRoles Roles for output ports. The number must match the specified
+    *    number of output data ports.
+    */
+   protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
+         final PortType[] outPortTypes, final InputPortRole[] arrInputPortRoles,
+         final OutputPortRole[] arrOutputPortRoles) {
+      this(inPortTypes, outPortTypes);
+      
+      setPortRoles(arrInputPortRoles, arrOutputPortRoles);
+   }
+   
 	//
 	// Public Methods (basically interface implementations)
 	//
@@ -571,10 +615,61 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			}
 		}
 	}
-
+   
+   //
+   // Streaming API
+   //
+   
+   /**
+    * This implementation returns RDKit node specific roles for input ports, if set for the node in the constructor
+    * or by calling {@link AbstractRDKitNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
+    * Otherwise it returns the default from KNIME.
+    * {@inheritDoc}
+    */
+   @Override
+   public InputPortRole[] getInputPortRoles() {
+      return m_arrInputPortRoles == null ? super.getInputPortRoles() : m_arrInputPortRoles;
+   }
+   
+   /**
+    * This implementation returns RDKit node specific roles for output ports, if set for the node in the constructor
+    * or by calling {@link AbstractRDKitNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
+    * Otherwise it returns the default from KNIME.
+    * {@inheritDoc}
+    */
+   @Override
+   public OutputPortRole[] getOutputPortRoles() {
+      return m_arrOutputPortRoles == null ? super.getOutputPortRoles() : m_arrOutputPortRoles;
+   }
+   
 	//
 	// Protected Methods
 	//
+   
+   protected void setPortRoles(InputPortRole[] arrInputPortRoles, OutputPortRole[] arrOutputPortRoles) {
+      // Check arguments
+      if (arrInputPortRoles != null) {
+         int nrInDataPorts = getNrInPorts();
+         if ((nrInDataPorts == 0 && arrInputPortRoles.length > 0) ||
+             (nrInDataPorts > 0 && nrInDataPorts != arrInputPortRoles.length)) {
+            throw new IllegalArgumentException("Input port roles array must have " + nrInDataPorts + 
+                  " elements, the same number as specified input ports.");
+         }
+      }
+      
+      if (arrOutputPortRoles != null) {
+         int nrOutDataPorts = getNrOutPorts();
+         if ((nrOutDataPorts == 0 && arrOutputPortRoles.length > 0) ||
+             (nrOutDataPorts > 0 && nrOutDataPorts != arrOutputPortRoles.length)) {
+            throw new IllegalArgumentException("Output port roles array must have " + nrOutDataPorts + 
+                  " elements, the same number as specified output ports.");
+         }
+      }      
+
+      m_arrInputPortRoles = arrInputPortRoles;
+      m_arrOutputPortRoles = arrOutputPortRoles;
+   }
+
 
 	/**
 	 * Determines, if received internal tables conform with what this node can handle.
@@ -956,7 +1051,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 											final String strError = ((MissingCell)cellConverted).getError();
 											if (strError != null) {
 												try {
-													generateAutoConversionError(listConversionColumns.get(i), createShortError(strError));
+													generateAutoConversionError(listConversionColumns.get(i), 
+													      normalizeAutoConversionErrorMessage(strError));
 												}
 												catch (final Exception exc) {
 													LOGGER.error(exc);
@@ -968,20 +1064,6 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 								}
 
 								return EMPTY_CELLS;
-							}
-
-							private String createShortError(final String strError) {
-								String strRet = (strError == null || strError.trim().isEmpty() ? "Unknown error." : strError);
-								int iIndex = strRet.indexOf("\n");
-								if (iIndex >= 0) {
-									strRet = strRet.substring(0, iIndex);
-									iIndex = strRet.lastIndexOf(" for");
-									if (iIndex >= 0) {
-										strRet = strRet.substring(0, iIndex);
-									}
-								}
-
-								return strRet;
 							}
 						});
 
@@ -1023,10 +1105,35 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param strError Short error for logging.
 	 */
 	protected void generateAutoConversionError(final InputDataInfo inputDataInfo, final String strError) {
-		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Auto conversion in column '" +
-				inputDataInfo.getColumnSpec().getName() +
-				"' failed: " + strError + " - Using empty cell.");
+	   String strColumnInfo = (inputDataInfo == null ? "unknown column" : 
+	      "column '" + inputDataInfo.getColumnSpec().getName() + "'");
+		getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Auto conversion in "
+		      + strColumnInfo + " failed: " + strError + " - Using empty cell.");
 	}
+	
+	/**
+	 * A normal auto conversion error message contains information about the failed molecule, which
+	 * is for consolidated warning messages not useful. This method normalizes such a message and gets
+	 * rid of dynamic parts.
+	 * 
+	 * @param strError The full error message received from the conversion exception. Can be null.
+	 * 
+	 * @return Shortened message without molecule information.
+	 */
+	protected String normalizeAutoConversionErrorMessage(final String strError) {
+      String strRet = (strError == null || strError.trim().isEmpty() ? "Unknown error." : strError);
+      int iIndex = strRet.indexOf("\n");
+      if (iIndex >= 0) {
+         strRet = strRet.substring(0, iIndex);
+         iIndex = strRet.lastIndexOf(" for");
+         if (iIndex >= 0) {
+            strRet = strRet.substring(0, iIndex);
+         }
+      }
+
+      return strRet;
+   }
+
 
 	/**
 	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
@@ -1785,8 +1892,26 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * 		Can be null.
 	 */
 	protected void generateWarnings(final Map<String, Long> mapContextOccurrences) {
-		setWarningMessage(getWarningConsolidator().getWarnings(mapContextOccurrences));
+	   generateWarnings(getWarningConsolidator(), mapContextOccurrences);
 	}
+
+   /**
+    * The default implementation of this method consolidates all saved warning messages
+    * from the passed in Warning Consolidator 
+    * and sets them as one warning message for the node. Based on the passed in map
+    * it will show, how many contexts (e.g. rows) have been processed for each context-based
+    * warning, e.g. "Empty rows encountered [4 of 10 rows]". In this example the 10 comes
+    * from the passed in map. The 4 comes from 4 calls of the same warning during execution.
+    * You may call {@link #generateWarnings()} if total number of rows or other contexts are
+    * not available.
+    *
+    * @param warnings Warning consolidator to use.
+    * @param mapContextOccurrences Maps context ids to number of occurrences (e.g. number of rows).
+    *       Can be null.
+    */
+   protected void generateWarnings(WarningConsolidator warnings, final Map<String, Long> mapContextOccurrences) {
+      setWarningMessage(warnings.getWarnings(mapContextOccurrences));
+   }
 
 	/**
 	 * This method generates InputDataInfo objects for all tables specified in
@@ -2299,7 +2424,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 * @deprecated This method is not used anymore and will be removed in the future.
 		 */
 		@Deprecated
-		public ColumnRearranger createColumnRearranger(final DataTableSpec inSpec,
+		protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec,
 				final AbstractRDKitCellFactory[] arrFactories,
 				final BlockingQueue<DataCell[]> blockingQueue,
 				final ExecutionContext exec) {

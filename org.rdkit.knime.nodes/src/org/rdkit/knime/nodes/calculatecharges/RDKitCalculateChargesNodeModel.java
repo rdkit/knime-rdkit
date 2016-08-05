@@ -63,6 +63,9 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
@@ -115,6 +118,16 @@ public class RDKitCalculateChargesNodeModel extends AbstractRDKitCalculatorNodeM
 	//
 	// Protected Methods
 	//
+
+   /**
+    * Enable distribution and streaming for this node.
+    * {@inheritDoc}
+    */
+   @Override
+   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
+   }
 
 	/**
 	 * {@inheritDoc}

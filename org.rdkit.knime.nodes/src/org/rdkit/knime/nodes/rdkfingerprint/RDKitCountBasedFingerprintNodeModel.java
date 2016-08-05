@@ -54,6 +54,10 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.vector.bytevector.DenseByteVector;
 import org.knime.core.data.vector.bytevector.DenseByteVectorCell;
 import org.knime.core.data.vector.bytevector.DenseByteVectorCellFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * This class implements the node model of the "RDKitFingerprint" node
@@ -77,6 +81,16 @@ public class RDKitCountBasedFingerprintNodeModel extends AbstractRDKitFingerprin
 	//
 	// Protected Methods
 	//
+
+   /**
+    * Enable distribution and streaming for this node.
+    * {@inheritDoc}
+    */
+   @Override
+   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+         throws InvalidSettingsException {
+      return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
+   }
 
 	@Override
 	protected FingerprintType[] getSupportedFingerprintTypes() {

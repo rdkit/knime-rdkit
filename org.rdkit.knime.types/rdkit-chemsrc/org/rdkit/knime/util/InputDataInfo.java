@@ -209,6 +209,23 @@ public class InputDataInfo {
 	// Constructor
 	//
 
+   /**
+    * Creates a new input data info object based on a concrete table spec and
+    * a column name within a setting model object. As empty cell policy TreatAsNull
+    * is assigned. 
+    * 
+    * @param inSpec Table specification. Can be null to throw an InvalidSettingsException.
+    * @param modelColumnName Column model, which act as container for the column name
+    *       and afterwards as unique id to distinguish between different data info objects.
+    *       Must not be null.
+    * 
+    * @throws InvalidSettingsException Thrown, if something is not set.
+    */
+   public InputDataInfo(final DataTableSpec inSpec, final SettingsModelString modelColumnName) 
+         throws InvalidSettingsException {
+      this(inSpec, null, modelColumnName, null, EmptyCellPolicy.TreatAsNull, null);
+   }
+
 	/**
 	 * Creates a new input data info object based on a concrete table spec,
 	 * a column name within a setting model object as well as a data value class
@@ -305,6 +322,14 @@ public class InputDataInfo {
 					m_tableSpec.getName() + "': " + m_strColumnName);
 		}
 
+      // Set empty cell policy
+      m_emptyCellPolicy = emptyCellPolicy;
+      m_defaultCell = defaultCell;
+      if (m_emptyCellPolicy == EmptyCellPolicy.UseDefault && defaultCell == null) {
+         throw new IllegalArgumentException("If the empty cell policy is set to " +
+               "UseDefault, the default cell value must not be null.");
+      }
+
 		// Perform compatibility check
 		if (m_bUseRowKey) {
 			m_dataType = StringCell.TYPE;
@@ -334,8 +359,7 @@ public class InputDataInfo {
 							RDKitAdapterCellSupport.expandByAdaptableTypes(valueClass)) {
 							if (m_dataType.isCompatible(valueClassCompatible)) {
 								compatiblePreferredValueClass = valueClass;
-								m_converter = RDKitAdapterCellSupport.createConverter(
-										getTableSpec(), getColumnIndex(), compatiblePreferredValueClass);
+								m_converter = RDKitAdapterCellSupport.createConverter(this, compatiblePreferredValueClass);
 								break;
 							}
 						}
@@ -357,14 +381,6 @@ public class InputDataInfo {
 					}
 				}
 			}
-		}
-
-		// Set empty cell policy
-		m_emptyCellPolicy = emptyCellPolicy;
-		m_defaultCell = defaultCell;
-		if (m_emptyCellPolicy == EmptyCellPolicy.UseDefault && defaultCell == null) {
-			throw new IllegalArgumentException("If the empty cell policy is set to " +
-					"UseDefault, the default cell value must not be null.");
 		}
 	}
 
@@ -1311,7 +1327,7 @@ public class InputDataInfo {
 	 * @return Table identification. Never null.
 	 */
 	protected String getTableIdentification() {
-		return (!StringUtils.isEmptyAfterTrimming(m_strColumnDescription) ?
+		return (!isEmptyAfterTrimming(m_strColumnDescription) ?
 				m_strColumnDescription + " table" : "input table");
 	}
 
@@ -1323,9 +1339,42 @@ public class InputDataInfo {
 	 * @return Table identification. Never null.
 	 */
 	protected String getColumnIdentification() {
-		return (!StringUtils.isEmptyAfterTrimming(m_strColumnDescription) ?
+		return (!isEmptyAfterTrimming(m_strColumnDescription) ?
 				m_strColumnDescription + " column" : "input column");
 	}
+	
+	//
+	// Private Methods
+	//
+
+   /**
+    * Determines, if the specified string would be empty (size = 0) after
+    * removing leading and trailing whitespaces (trimming).
+    * 
+    * @param str String to check. Can be null.
+    * 
+    * @return True, if string is logically empty. False otherwise.
+    *       Returns true, if null was passed in.
+    */
+   private boolean isEmptyAfterTrimming(final String str) {
+      boolean bEmpty = true;
+
+      if (str != null) {
+         final int len = str.length();
+         for (int i = 0; i < len; i++) {
+            if (!Character.isWhitespace(str.charAt(i))) {
+               bEmpty = false;
+               break;
+            }
+         }
+      }
+
+      return bEmpty;
+   }
+   
+   //
+   // Other Classes
+   //	
 
 	/**
 	 * This exception is thrown, when an empty cell was encountered during processing,

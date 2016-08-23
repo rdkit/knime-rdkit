@@ -325,7 +325,8 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 
 					// Calculate 3D Coordinates
 					else {
-						DistanceGeom.EmbedMolecule(mol, 0, 42);
+						DistanceGeom.EmbedMolecule(mol, 0, 42, true, false, 2.0,
+								true, -1, null, 1e-3, false, true, true, true);
 					}
 
 					// Generate output cell

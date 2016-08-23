@@ -71,6 +71,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
@@ -138,6 +139,18 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 	/** Settings model for the option to use random coordinates. */
 	private final SettingsModelBoolean m_modelUseRandomCoordinatesOption =
 			registerSettings(RDKitAddConformersNodeDialog.createUseRandomCoordinatesOptionModel());
+
+	/** Settings model for the option to enforce chirality. */
+	private final SettingsModelBoolean m_modelEnforceChiralityOption =
+			registerSettings(RDKitAddConformersNodeDialog.createEnforceChiralityOptionModel(),true);
+
+	/** Settings model for the option to use experimental torsion angles. */
+	private final SettingsModelBoolean m_modelUseExpTorsionAnglesOption =
+			registerSettings(RDKitAddConformersNodeDialog.createUseExpTorsionAnglesOptionModel(),true);
+
+	/** Settings model for the option to use random coordinates. */
+	private final SettingsModelBoolean m_modelUseBasicKnowledgeOption =
+			registerSettings(RDKitAddConformersNodeDialog.createUseBasicKnowledgeOptionModel(),true);
 
 	/** Settings model for the box size multiplier. */
 	private final SettingsModelDoubleBounded m_modelBoxSizeMultiplier =
@@ -285,6 +298,28 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 		return spec;
 	}
 
+	@Override
+	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		super.loadValidatedSettingsFrom(settings);
+
+		// Exception: For old nodes we will treat the row key match info option as "false", for new nodes as "true"
+		try {
+			m_modelUseExpTorsionAnglesOption.loadSettingsFrom(settings);
+		}
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseExpTorsionAnglesOption.setBooleanValue(false);
+		}
+		try {
+			m_modelUseBasicKnowledgeOption.loadSettingsFrom(settings);
+		}
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseBasicKnowledgeOption.setBooleanValue(false);
+		}
+	}
+	
+	
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -306,6 +341,9 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 		final int iRandomSeed = m_modelRandomSeed.getIntValue();
 		final double dPruneRmsThreshold = m_modelPruneRmsThreshold.getDoubleValue();
 		final boolean bUseRandomCoordinates = m_modelUseRandomCoordinatesOption.getBooleanValue();
+		final boolean bEnforceChirality = m_modelEnforceChiralityOption.getBooleanValue();
+		final boolean bUseExpTorsionAngles = m_modelUseExpTorsionAnglesOption.getBooleanValue();
+		final boolean bUseBasicKnowldge = m_modelUseBasicKnowledgeOption.getBooleanValue();
 		final double dBoxSizeMultiplier = m_modelBoxSizeMultiplier.getDoubleValue();
 		final boolean bCleanup = m_modelCleanupOption.getBooleanValue();
 
@@ -327,9 +365,13 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 				if (mol != null) {
 					final ROMol molTemp = markForCleanup(new ROMol(mol), lUniqueWaveId);
 					final Int_Vect listConformerIds;
-					listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, iMaxIterations, iRandomSeed,
+					listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, 
+							iMaxIterations, iRandomSeed,
 							true /* clearConfs */, bUseRandomCoordinates, dBoxSizeMultiplier,
-							true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold), lUniqueWaveId);
+							true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold, 
+							null /* coordMap */, 1e-3 /* optmizerForceTol */,
+							false /* ignoreSmoothingFailures */,
+							bEnforceChirality,bUseExpTorsionAngles,bUseBasicKnowldge), lUniqueWaveId);
 
 					// Note: There will be no output row, if there are no conformers at all, only a warning
 					if (listConformerIds != null) {

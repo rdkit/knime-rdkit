@@ -99,6 +99,15 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	/** Default value to be used as box size multiplier. */
 	public static final double DEFAULT_BOX_SIZE_MULTIPLIER = 2.0d;
 
+	/** Default value to be used as option to enforce chirality. */
+	public static final boolean DEFAULT_ENFORCE_CHIRALITY = true;
+	
+	/** Default value to be used as option to use experimental torsional angle terms. */
+	public static final boolean DEFAULT_USE_EXP_TORSION_ANGLES = true;
+
+	/** Default value to be used as option to use basic knowledge terms. */
+	public static final boolean DEFAULT_USE_BASIC_KNOWLEDGE = true;
+
 	/** Default value to be used as cleanup option. */
 	public static final boolean DEFAULT_CLEANUP = false;
 
@@ -138,6 +147,13 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 
 		createNewTab("Advanced");
 		createNewGroup("Advanced Conformer Calculation Options");
+		super.addDialogComponent(new DialogComponentBoolean(
+				createEnforceChiralityOptionModel(), "Enforce the preservation of input chirality"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseExpTorsionAnglesOptionModel(), "Use experimental torsion angle terms"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseBasicKnowledgeOptionModel(), "Use basic knowledge terms (e.g. planar aromatic atoms)"));
+
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseRandomCoordinatesOptionModel(), "Use random coordinates as a starting point instead of distance geometry"));
 		super.addDialogComponent(new DialogComponentNumberEdit(
@@ -215,6 +231,33 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createUseRandomCoordinatesOptionModel() {
 		return new SettingsModelBoolean("useRandomCoordinates", DEFAULT_USE_RANDOM_COORDS);
+	}
+
+	/**
+	 * Creates the settings model for the option to enforce chirality. 
+	 * 
+	 * @return Settings model for option to enforce chirality.
+	 */
+	static final SettingsModelBoolean createEnforceChiralityOptionModel() {
+		return new SettingsModelBoolean("enforceChirality", DEFAULT_ENFORCE_CHIRALITY);
+	}
+
+	/**
+	 * Creates the settings model for the option to use experimental torsion angle terms.
+	 * 
+	 * @return Settings model for option to use experimental torsion angle terms.
+	 */
+	static final SettingsModelBoolean createUseExpTorsionAnglesOptionModel() {
+		return new SettingsModelBoolean("useExpTorsionAngles", DEFAULT_USE_EXP_TORSION_ANGLES);
+	}
+
+	/**
+	 * Creates the settings model for the option to use basic knowledge terms
+	 * 
+	 * @return Settings model for option to use basic knowledge terms.
+	 */
+	static final SettingsModelBoolean createUseBasicKnowledgeOptionModel() {
+		return new SettingsModelBoolean("useBasicKnowledge", DEFAULT_USE_BASIC_KNOWLEDGE);
 	}
 
 	/**

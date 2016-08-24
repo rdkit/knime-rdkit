@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.feature"
       label="RDKit KNIME integration"
-      version="3.1.0.qualifier"
+      version="3.2.0.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.nodes">
 
@@ -754,4 +754,5 @@ Public License instead of this License.  But first, please read
          install-size="0"
          version="0.0.0"
          fragment="true"/>
+
 </feature>

@@ -15,7 +15,6 @@ Require-Bundle: org.knime.base;bundle-version="[3.0.0,4.0.0)",
  org.eclipse.jdt.ui;bundle-version="[3.7.0,4.0.0)",
  org.knime.core;bundle-version="[3.0.0,4.0.0)",
  org.eclipse.ui.views.properties.tabbed;bundle-version="[3.5.0,4.0.0)",
- org.eclipse.core.runtime.compatibility;bundle-version="[3.2.0,4.0.0)",
  org.eclipse.gef;bundle-version="[3.7.0,4.0.0)",
  org.eclipse.pde;bundle-version="[3.7.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

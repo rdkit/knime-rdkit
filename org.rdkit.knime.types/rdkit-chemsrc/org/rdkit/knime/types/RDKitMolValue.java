@@ -54,6 +54,7 @@ import org.RDKit.ROMol;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.convert.DataValueAccessMethod;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -84,6 +85,7 @@ public interface RDKitMolValue extends DataValue {
 	 *
 	 * @return a newly created {@link ROMol} object.
 	 */
+	@DataValueAccessMethod(name = "ROMol")
 	ROMol readMoleculeValue();
 
 	/**
@@ -132,7 +134,7 @@ public interface RDKitMolValue extends DataValue {
 				} 
 				else {
 					// Do it the "official" way
-					molRDKit1 = ((RDKitMolValue) mol1).readMoleculeValue();
+					molRDKit1 = mol1.readMoleculeValue();
 					byteContent1 = RDKitMolCell2.toByteArray(molRDKit1);
 				}
 
@@ -143,7 +145,7 @@ public interface RDKitMolValue extends DataValue {
 				} 
 				else {
 					// Do it the "official" way
-					molRDKit2 = ((RDKitMolValue) mol2).readMoleculeValue();
+					molRDKit2 = mol2.readMoleculeValue();
 					byteContent2 = RDKitMolCell2.toByteArray(molRDKit2);
 				}
 

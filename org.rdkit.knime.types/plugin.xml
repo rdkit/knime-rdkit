@@ -3,7 +3,9 @@
 <plugin>
 
    <extension point="org.knime.core.DataType">
-   	   <DataType cellClass="org.rdkit.knime.types.RDKitMolCell2">
+   	   <DataType
+             cellClass="org.rdkit.knime.types.RDKitMolCell2"
+             factoryClass="org.rdkit.knime.types.RDKitMolCellFactory">
           <serializer
                 cellClass="org.rdkit.knime.types.RDKitMolCell2"
                 serializerClass="org.rdkit.knime.types.RDKitMolCell2$RDKitSerializer">

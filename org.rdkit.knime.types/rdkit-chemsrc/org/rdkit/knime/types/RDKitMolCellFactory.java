@@ -51,7 +51,9 @@ package org.rdkit.knime.types;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /** Factory creating {@link RDKitMolValue} compatible {@link DataCell} objects.
  * It's currently using {@link RDKitMolCell2}; future versions may return
@@ -60,7 +62,7 @@ import org.knime.core.data.DataType;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Manuel Schwarze, NIBR
  */
-public final class RDKitMolCellFactory {
+public final class RDKitMolCellFactory implements DataCellFactory {
 
     /**
      * Type representing cells implementing the {@link RDKitMolValue}
@@ -68,6 +70,11 @@ public final class RDKitMolCellFactory {
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = RDKitMolCell2.TYPE;
+    
+    @Override
+    public DataType getDataType() {
+        return TYPE;
+    }
 
     /**
      * Creates a new RDKit Cell based on the given molecule. The argument
@@ -171,4 +178,23 @@ public final class RDKitMolCellFactory {
             mol.delete();
         }
     }
+    
+    /**
+     * Creates a new RDKit Adapter Cell based on the given molecule and discards the
+     * argument using the {@link ROMol#delete()} method. A canonicalized SMILES will be
+     * created as part of the inner RDKit Cell.
+     * 
+     * <p>This method is the non-static variant of 
+     * {@link #createRDKitAdapterCellAndDelete(ROMol)} and used via KNIME's converter
+     * framework (see also type registration in this bundle's plugin.xml). 
+     * @param mol the ROMol value to store
+     * @return A data cell implementing RDKitMolValue interface. Currently this
+     * is a {@link RDKitAdapterCell} but this may change in future versions.
+     * @throws NullPointerException if argument is <code>null</code>
+     */
+    @DataCellFactoryMethod(name = "ROMol")
+    public DataCell createInstanceRDKitAdapterCellAndDelete(final ROMol mol) {
+        return createRDKitAdapterCellAndDelete(mol);
+    }
+    
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="diversity_picker.png" type="Manipulator">
+    <name>Wizard Sample (Splitter / Complex Filter, single-thread): RDKit Diversity Picker</name>
+
+    <shortDescription>
+        Picks diverse rows.
+	</shortDescription>
+
+    <fullDescription>
+        <intro>Picks diverse rows from an input table based on tanimoto distance between fingerprints.
+        The picking is done using the MaxMin algorithm 
+        (Ashton, M. et. al., Quant. Struct.-Act. Relat., 21 (2002), 598-604).
+        The algorithm is quite fast, even for large datasets, but note that runtime
+        increases rapidly with the number of rows to be picked.</intro>
+
+        <option name="Fingerprint column">The column containing the fingerprints</option>
+        <option name="Number to pick">Number of diverse rows to pick.</option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Fingerprints">Table with input data</inPort>
+        <outPort index="0" name="Diverse rows">The results of the diversity pick</outPort>
+    </ports>
+</knimeNode>

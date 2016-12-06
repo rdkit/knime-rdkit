@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="to_rdkit.png" type="Manipulator">
+    <name>Wizard Sample (CalculatorAndSplitter, multi-thread): Molecule to RDKit</name>
+    
+    <shortDescription>
+        Generates RDKit molecules from a string representation (SDF or Smiles).
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Generates RDKit molecule column from a string representation 
+        (SDF or Smiles) and appends it to the table.</intro>
+        <option name="Molecule column">
+            The column that contains the molecules (SDF or Smiles type column).
+        </option>
+        <option name="New column name">
+            Name of the new column in the output table.
+        </option>
+        <option name="Remove source column">
+            Toggles removal of the input molecule column in the output table.
+        </option>        
+        <option name="Error Handling">
+            If the molecule in an input row cannot be converted, you can select
+            if this row should be separated from the output table and be delivered 
+            at the second port, or if a missing value should be inserted instead
+            of the RDKit molecule in the result table.
+        </option>
+        <option name="Generate 2D Coordinates">
+           Select this option to generate 2D coordinates for the molecules.
+           The coordinates are used for, among other things, 2D renderings of the structures. 
+           If not selected, the renderer will (re-)compute coordinates on 
+           demand.
+        </option>
+        <option name="Force Generation">
+           Select this box to enforce 2D coordinate generation. Coordinates may
+           already be available in the (SDF) input, so this option allows you to
+           discard the original coordinates and recompute from scratch.
+        </option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Data">Data with Smiles or SDF representation of molecules</inPort>
+        <outPort index="0" name="Output data">Data with RDKit molecule column</outPort>
+        <outPort index="1" name="Erroneous input data">Rows that could not be converted to a RDKit molecule</outPort>
+    </ports>    
+</knimeNode>

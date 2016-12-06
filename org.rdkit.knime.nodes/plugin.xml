@@ -3,62 +3,62 @@
 <plugin>
    <extension point="org.knime.workbench.repository.nodes">
 
-      <node category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory" id="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory" id="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.inchi2rdkit.RDKitInChI2MoleculeNodeFactory" id="org.rdkit.knime.nodes.inchi2rdkit2.RDKitInChI2MoleculeNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.inchi2rdkit2.RDKitInChI2MoleculeNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" id="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" id="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory" id="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>      
+      <node category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.rdkit2molecule.RDKit2MoleculeConverterNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.inchi2rdkit.RDKitInChI2MoleculeNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.inchi2rdkit.RDKitInChI2MoleculeNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.rdkit2inchi.RDKitMolecule2InChINodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.iupac2rdkit.RDKitIUPACToRDKitNodeFactory" category-path="/community/rdkit/converters" factory-class="org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeFactory"/>      
 
-	  <node category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.addhs.RDKitAddHsNodeFactory" id="org.rdkit.knime.nodes.addhs.RDKitAddHsNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.addhs.RDKitAddHsNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.removehs.RDKitRemoveHsNodeFactory" id="org.rdkit.knime.nodes.removehs.RDKitRemoveHsNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.removehs.RDKitRemoveHsNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.aromatize.RDKitAromatizeNodeFactory" id="org.rdkit.knime.nodes.kekulize.RDKitAromatizeNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.kekulize.RDKitAromatizeNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.kekulize.RDKitKekulizeNodeFactory" id="org.rdkit.knime.nodes.kekulize.RDKitKekulizeNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.kekulize.RDKitKekulizeNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.saltstripper.RDKitSaltStripperNodeFactory" id="org.rdkit.knime.nodes.saltstripper.RDKitSaltStripperNodeFactory"/>
+	  <node category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.addhs.RDKitAddHsNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.addhs.RDKitAddHsNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.removehs.RDKitRemoveHsNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.removehs.RDKitRemoveHsNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.aromatize.RDKitAromatizeNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.aromatize.RDKitAromatizeNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.kekulize.RDKitKekulizeNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.kekulize.RDKitKekulizeNodeFactory" category-path="/community/rdkit/modifiers" factory-class="org.rdkit.knime.nodes.saltstripper.RDKitSaltStripperNodeFactory"/>
 
-      <node category-path="/community/rdkit/calculators" factory-class="org.rdkit.knime.nodes.descriptorcalculation.DescriptorCalculationNodeFactory" id="org.rdkit.knime.nodes.descriptorcalculation.DescriptorCalculationNodeFactory"/> 
-      <node after="org.rdkit.knime.nodes.descriptorcalculation.DescriptorCalculationNodeFactory" category-path="/community/rdkit/calculators" factory-class="org.rdkit.knime.nodes.calculatecharges.RDKitCalculateChargesNodeFactory" id="org.rdkit.knime.nodes.calculatecharges.RDKitCalculateChargesNodeFactory"/>
+      <node category-path="/community/rdkit/calculators" factory-class="org.rdkit.knime.nodes.descriptorcalculation.DescriptorCalculationNodeFactory"/> 
+      <node after="org.rdkit.knime.nodes.descriptorcalculation.DescriptorCalculationNodeFactory" category-path="/community/rdkit/calculators" factory-class="org.rdkit.knime.nodes.calculatecharges.RDKitCalculateChargesNodeFactory"/>
 
-      <node category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory" id="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"/>
-   	  <node after="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory" id="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.addconformers.RDKitAddConformersNodeFactory" id="org.rdkit.knime.nodes.addconformers.RDKitAddConformersNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.addconformers.RDKitAddConformersNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory" id="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.rmsdfilter.RDKitRMSDFilterNodeFactory" id="org.rdkit.knime.nodes.rmsdfilter.RDKitRMSDFilterNodeFactory"/>
+      <node category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory"/>
+   	  <node after="org.rdkit.knime.nodes.addcoordinates.RDKitAddCoordinatesNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.optimizegeometry.RDKitOptimizeGeometryNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.addconformers.RDKitAddConformersNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.addconformers.RDKitAddConformersNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.open3dalignment.RDKitOpen3DAlignmentNodeFactory" category-path="/community/rdkit/geometry" factory-class="org.rdkit.knime.nodes.rmsdfilter.RDKitRMSDFilterNodeFactory"/>
 
-      <node category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory" id="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory" id="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory" id="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory" id="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory" id="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory"/>
-      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory" id="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory"/>
-      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory" id="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory"/>
+      <node category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory"/>
 
-	  <node category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory" id="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" id="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory" id="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
+	  <node category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.molextractor.RDKitMoleculeExtractorNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.molfragmenter.RDKitMolFragmenterNodeFactory" category-path="/community/rdkit/fragments" factory-class="org.rdkit.knime.nodes.murckoscaffold.RDKitMurckoScaffoldNodeFactory"/>
 
-	  <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory" id="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" id="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
-      <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory" id="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/> 
-	  <node deprecated="true" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory" id="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"/>
+	  <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
+      <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/> 
+	  <node deprecated="true" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"/>
 
-      <node category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" id="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory" id="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.chemicaltransformation.RDKitChemicalTransformationNodeFactory" id="org.rdkit.knime.nodes.chemicaltransformation.RDKitChemicalTransformationNodeFactory"/>
-      <node deprecated="true" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory" id="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
-      <node deprecated="true" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory" id="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
+      <node category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.twocomponentreaction2.RDKitTwoComponentReactionNodeFactory" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.chemicaltransformation.RDKitChemicalTransformationNodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction.RDKitOneComponentReactionNodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.twocomponentreaction.RDKitTwoComponentReactionNodeFactory"/>
 
-      <node category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" id="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory"/>
-	  <node after="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" id="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlighting.RDKitHighlightingNodeFactory" id="org.rdkit.knime.nodes.highlighting.RDKitHighlightingNodeFactory"/>
-      <node deprecated="true" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory" id="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory"/>
+      <node category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory"/>
+	  <node after="org.rdkit.knime.nodes.interactivetable.RDKitInteractiveTableNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.smilesheaders.RDKitSmilesHeadersNodeFactory" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlighting.RDKitHighlightingNodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/viewing" factory-class="org.rdkit.knime.nodes.highlightingatoms.RDKitHighlightingAtomsNodeFactory"/>
 
-	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory" id="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
+	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
 
-      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory" id="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeNodeFactory"/>
-	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory" id="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory"/>
+      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory"/>
+	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory"/>
 </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes using RDKit" icon="icons/category_rdkit.png" level-id="rdkit" name="RDKit" path="/community">

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+	<target name="javadoc" description="Creates JavaDoc Information">
+		<property name="ps" value="${path.separator}" />
+		<javadoc access="protected" 
+		   author="true" 
+		   maxmemory="128M" 
+		   destdir="docs" 
+		   additionalparam="-breakiterator" 
+		   splitindex="true" 
+		   use="true" 
+		   version="true"
+		   doctitle="KNIME RDKit Nodes and Types" 
+		   nodeprecated="false" 
+		   nodeprecatedlist="false" 
+		   noindex="false" 
+		   nonavbar="false" 
+		   notree="false"
+		   source="1.8">
+			<packageset dir="src">
+				<include name="org/rdkit/**" />
+			</packageset>
+			<packageset dir="src-deprecated">
+				<include name="org/rdkit/**" />
+			</packageset>
+			<packageset dir="../org.rdkit.knime.types/rdkit-chemsrc">
+				<include name="org/rdkit/**" />
+			</packageset>
+		</javadoc>
+	</target>
+</project>

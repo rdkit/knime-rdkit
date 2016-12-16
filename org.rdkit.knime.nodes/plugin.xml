@@ -59,7 +59,9 @@
 
       <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory"/>
 	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory"/>
-</extension>
+	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.moleculecatalogfilter.RDKitMoleculeCatalogFilterNodeFactory"/>
+	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.adjustqueryproperties.RDKitAdjustQueryPropertiesNodeFactory"/>
+   </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes using RDKit" icon="icons/category_rdkit.png" level-id="rdkit" name="RDKit" path="/community">
       </category>

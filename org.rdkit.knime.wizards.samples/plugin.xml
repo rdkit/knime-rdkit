@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   	<extension point="org.knime.workbench.repository.nodes">
+      	<node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.calculator.RDKitMurckoScaffoldNodeFactory"/>
+      	<node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.calculator_multithread.RDKitFingerprintNodeFactory"/>
+      	<node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.calculatorsplitter.Molecule2RDKitConverterNodeFactory"/>
+      	<node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.calculatorsplitter_multithread.Molecule2RDKitConverterNodeFactory"/>
+       	<node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.splitter.RDKitDiversityPickerNodeFactory"/>
+        <node category-path="/community/rdkit/wizard_samples"
+			factory-class="org.rdkit.knime.wizards.samples.calculatorsplitter2.RDKitMolFragmenterNodeFactory"/>
+  	</extension>
+  	<extension
+      	point="org.knime.workbench.repository.categories">
+      	<category
+            description="Wizard Sample Nodes"
+            icon="icons/category_wizard.png"
+            level-id="wizard_samples"
+            name="Wizard Samples"
+			path="/community/rdkit">
+      	</category>
+   	</extension>   
+</plugin>

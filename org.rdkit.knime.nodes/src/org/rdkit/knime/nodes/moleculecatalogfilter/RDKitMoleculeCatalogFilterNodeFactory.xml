@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Manipulator">
+    <name>RDKit Molecule Catalog Filter</name>
+    
+    <shortDescription>
+        Filters a table of molecules by applying filters taken from a set of standard catalogs.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        Filters a table of molecules by applying filters taken from a set of standard catalogs. 
+        The second output table contains a very detailed view of the reasons why a molecule was filtered out. 
+        The node gives the option to generate one or more atom lists columns with the indexes of the atoms that matched the rule; 
+        this information can be used with the RDKit Molecule Highlighting node to color the associated substructures.
+        </intro>
+        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+        <option name="Filter catalogs to apply">Define which filter catalogs shall be used for filtering.</option>
+        <option name="Prefix for result columns">Column names for the second (filtered out) table are
+        automatically assigned, but a prefix can be assigned, which makes it possible to 
+        run this node sub-sequentially with different filters.</option>
+        <option name="Atom list handling">Controls whether or not lists of atoms matching the filters are generated. 
+        This also controls whether all matching atoms are in a single list or if there is a column per filter catalog.
+        </option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table with RDKit Molecules">Input table with RDKit Molecules to be filtered</inPort>
+        <outPort index="0" name="Good molecules">Molecules which have not been filtered out</outPort>
+        <outPort index="1" name="Bad molecules">Molecules which have been filtered out and associated reasons</outPort>
+    </ports>    
+</knimeNode>

@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.wizards.feature"
       label="RDKit KNIME Wizards"
-      version="3.1.0.qualifier"
+      version="3.2.2.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.wizards">
 

@@ -216,6 +216,13 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 			final String label, final List<T> listItems, final boolean bAllowEmptySelection) {
 		super(enumArrayModel);
 
+		enumArrayModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				setEnabledComponents(getModel().isEnabled());
+			}
+		});
+		
 		m_listEnums = listItems;
 
 		if ((m_listEnums == null) || (m_listEnums.size() == 0)) {

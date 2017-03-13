@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2014
+ * Copyright (C) 2017
  * Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,13 +47,10 @@
  */
 package org.rdkit.knime;
 
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
-
 /**
  * Checks if environment variable are set correctly for RDKit.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Manuel Schwarze
  */
 class EnvironmentChecker {
 
@@ -63,51 +60,8 @@ class EnvironmentChecker {
 	 * @return <code>null</code> if everything is OK, an error message suitable for the user otherwise
 	 */
 	public static String checkEnvironment() {
-		final String lcNumeric = System.getenv("LC_NUMERIC");
-		final String lcAll = System.getenv("LC_ALL");
-		final String lang = System.getenv("LANG");
-
-		if (lcNumeric != null) {
-			if (getDecimalSeparator(lcNumeric) == '.') {
-				return null; // OK
-			} else {
-				return "LC_NUMERIC is set to an incompatible value (" + lcNumeric
-						+ ") which causes RDKit to compute wrong results in some cases. Please "
-						+ " change LC_NUMERIC to an 'en' or 'C' locale.";
-			}
-		} else if (lcAll != null) {
-			if (getDecimalSeparator(lcAll) == '.') {
-				return null ; // OK
-			} else {
-				return "LC_ALL is set to an incompatible value (" + lcAll
-						+ ") which causes RDKit to compute wrong results in some cases. Please "
-						+ " change LC_ALL to an 'en' or 'C' locale.";
-			}
-		} else if (lang != null) {
-			if (getDecimalSeparator(lang) == '.') {
-				return null; // OK
-			} else {
-				return "LANG is set to an incompatible value (" + lang
-						+ ") which causes RDKit to compute wrong results in some cases. Please "
-						+ " change LANG to an 'en' or 'C' locale.";
-			}
-		}
+	   // Special criteria to check would go here
+	   // and cause an error message as return value
 		return null;
-	}
-
-	private static char getDecimalSeparator(final String localeString) {
-		final int index = localeString.indexOf('_');
-		Locale locale;
-		if (index > 0) {
-			final String language = localeString.substring(0, index);
-			final int index2 = localeString.indexOf('.');
-			final String variant = (index2 > 0) ? localeString.substring(index + 1, index2) : localeString.substring(index + 1);
-			locale = new Locale(language, variant);
-		} else {
-			locale = new Locale(localeString);
-		}
-
-		final DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
-		return symbols.getDecimalSeparator();
 	}
 }

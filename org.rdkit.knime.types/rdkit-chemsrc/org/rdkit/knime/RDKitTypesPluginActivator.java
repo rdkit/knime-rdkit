@@ -181,8 +181,6 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 			Platform.getLog(context.getBundle()).log(g_error);
 			investigateBinariesIssue();
 		}
-		
-		test();
 	}
 
 	/**
@@ -203,174 +201,6 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	// Protected Methods
 	//
 	
-	protected void test() {
-      final String strOsAndArch = Platform.getOS() + "."
-            + Platform.getOSArch();
-      final String strBinaryBundleName = "org.rdkit.knime.bin."
-            + strOsAndArch;
-      final String[] arrLibraries = LIBRARIES.get(strOsAndArch);
-      final String strSupportedSystems = LIBRARIES.keySet().toString();
-      final Version versionTypes = getDefault().getBundle().getVersion();
-
-      try {
-         // Check, if our software supports the operating system
-         if (arrLibraries == null) {
-            LOGGER.error("The operating system/architecture "
-                  + strOsAndArch
-                  + " is not supported. You may run the RDKit Nodes on: "
-                  + strSupportedSystems);
-         } else {
-            LOGGER.info("The operating system/architecture " + strOsAndArch
-                  + " is supported.");
-
-            // Find binary plugin
-            final Bundle bundle = Platform.getBundle(strBinaryBundleName);
-            if (bundle == null) {
-               LOGGER.error("The RDKit Binary Plugin "
-                     + strBinaryBundleName
-                     + " is not properly installed. "
-                     + "Please uninstall and reinstall the RDKit Nodes.");
-            } else {
-               LOGGER.info("The RDKit Binary Plugin "
-                     + strBinaryBundleName + " has been found.");
-
-               // Check version of the binary plugin - it should be in sync
-               // with the RDKit Types plugin version
-               final Version versionBinaries = bundle.getVersion();
-               if (versionTypes == null
-                     || versionBinaries == null
-                     || (versionTypes.getMajor() != versionBinaries
-                           .getMajor())
-                     || (versionTypes.getMinor() != versionBinaries
-                           .getMinor())
-                     || (versionTypes.getMicro() != versionBinaries
-                           .getMicro())) {
-                  LOGGER.error("The RDKit Binary Plugin "
-                        + strBinaryBundleName
-                        + " Version ("
-                        + versionBinaries
-                        + ") is different from the RDKit Types Version ("
-                        + versionTypes
-                        + "). Please uninstall and reinstall the RDKit Nodes.");
-               } else {
-                  LOGGER.info("The versions of the RDKit Binary and Types Plugin are matching: "
-                        + versionTypes);
-
-                  // Determine paths where libraries are loaded from
-                  // (combining Bundle path and java.library.path sources)
-                  final String[] arrPaths = getLibraryPaths(bundle);
-
-                  // Go through libraries and try to load them
-                  int iError = 0;
-                  int iMissingFile = 0;
-                  int iDependencyIssue = 0;
-                  int iSecurityIssue = 0;
-
-                  for (final String strLibName : arrLibraries) {
-                     final String strAbsoluteLibPath = getBundleLibraryPath(
-                           bundle, strLibName);
-                     final String strLibFileName = System
-                           .mapLibraryName(strLibName);
-                     final File[] arrLibPaths = findLibrary(
-                           strLibFileName, arrPaths);
-
-                     if (arrLibPaths.length > 1) {
-                        LOGGER.warn("Library file "
-                              + strLibFileName
-                              + " exists in multiple places - please try some cleanup: ");
-                        for (final File filePath : arrLibPaths) {
-                           LOGGER.warn("  "
-                                 + filePath.getAbsolutePath());
-                        }
-                     } else if (arrLibPaths.length == 1) {
-                        LOGGER.warn("Library file " + strLibFileName
-                              + " found: "
-                              + arrLibPaths[0].getAbsolutePath());
-                     }
-
-                     try {
-                        // Load the library
-                        System.loadLibrary(strLibName);
-                        LOGGER.info("Library " + strLibFileName
-                              + " successfully loaded from "
-                              + strAbsoluteLibPath + ".");
-                     } catch (final SecurityException exc) {
-                        LOGGER.error(
-                              "Loading of library "
-                                    + strLibFileName
-                                    + " failed for security reasons"
-                                    + (iError > 0 ? " (possibly a subsequent error)"
-                                          : "") + ": "
-                                    + exc.getMessage(), exc);
-                        LOGGER.error("The library "
-                              + strLibFileName
-                              + " cannot be accessed due to missing permission.");
-                        iSecurityIssue++;
-                        iError++;
-                     } catch (final UnsatisfiedLinkError exc) {
-                        LOGGER.error(
-                              "Loading of library "
-                                    + strLibFileName
-                                    + " failed"
-                                    + (iError > 0 ? " (possibly a subsequent error)"
-                                          : "") + ": "
-                                    + exc.getMessage(), exc);
-
-                        if (arrLibPaths.length == 0) {
-                           LOGGER.error("The library "
-                                 + strLibFileName + " is missing.");
-                           iMissingFile++;
-                        } else {
-                           LOGGER.error("The library "
-                                 + strLibFileName
-                                 + " has dependency issues. "
-                                 + "Please run a dependency walker on this file to find out what is missing.");
-                           iDependencyIssue++;
-                        }
-
-                        iError++;
-                     }
-                  }
-
-                  if (iSecurityIssue > 0) {
-                     LOGGER.error("Suggestion for fix: Please check your read permissions on the listed files.");
-                  }
-
-                  else if (iMissingFile > 0) {
-                     // On Windows systems we encountered very strange behavior, if the VS2010 redistributables
-                     // are not installed - For some reason that we do not understand in the moment in certain setups,
-                     // e.g. in the cloud, in an install folder "C:\Program Files\..., it does not find the DLLs
-                     // of RDKit that come with the plugin, even if they are definitely there. 
-                     // We will suggest to the user in that case that the VS2010 Redistributables should be installed.
-                     if (Platform.OS_WIN32.equals(Platform.getOS())) {
-                        if( Platform.ARCH_X86.equals(Platform.getOSArch()) ) {
-                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=8328 and then restart KNIME.");                
-                        } 
-                        else if( Platform.ARCH_X86_64.equals(Platform.getOSArch()) ) {
-                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=13523 and then restart KNIME.");                        
-                        } 
-                        else {
-                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables for your system and then restart KNIME.");                      
-                        }
-                     }
-                     else {
-                        LOGGER.error("Suggestion for fix: Please uninstall and reinstall the RDKit Nodes.");
-                     }
-                  }
-                  
-                  else if (iDependencyIssue > 0) {
-                     LOGGER.error("Suggestion for fix: Please correct your system libraries based on the outcome of the dependency walker.");
-                  }
-
-               }
-            }
-         }
-      } catch (final Throwable exc) {
-         LOGGER.error("Investigation of RDKit Binaries issues failed: "
-               + exc.getMessage(), exc);
-      }
-	}
-
 	/**
 	 * This method gets called when the RDKit Binaries failed to initialize
 	 * properly. It tries to find out the cause and suggests to the user (via
@@ -510,7 +340,25 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						}
 
 						else if (iMissingFile > 0) {
-						   LOGGER.error("Suggestion for fix: Please uninstall and reinstall the RDKit Nodes.");
+                     // On Windows systems we encountered very strange behavior, if the VS2010 redistributables
+                     // are not installed - For some reason that we do not understand in the moment in certain setups,
+                     // e.g. in the cloud, in an install folder "C:\Program Files\..., it does not find the DLLs
+                     // of RDKit that come with the plugin, even if they are definitely there. 
+                     // We will suggest to the user in that case that the VS2010 Redistributables should be installed.
+                     if (Platform.OS_WIN32.equals(Platform.getOS())) {
+                        if( Platform.ARCH_X86.equals(Platform.getOSArch()) ) {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=8328 and then restart KNIME.");                
+                        } 
+                        else if( Platform.ARCH_X86_64.equals(Platform.getOSArch()) ) {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=13523 and then restart KNIME.");                        
+                        } 
+                        else {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables for your system and then restart KNIME.");                      
+                        }
+                     }
+                     else {
+                        LOGGER.error("Suggestion for fix: Please uninstall and reinstall the RDKit Nodes.");
+                     }
 						}
 
 						else if (iDependencyIssue > 0) {

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2010
+ *  Copyright (C) 2010-2017
  *  Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify

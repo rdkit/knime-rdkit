@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2010
+ *  Copyright (C) 2010-2017
  *  Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -200,7 +200,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	//
 	// Protected Methods
 	//
-
+	
 	/**
 	 * This method gets called when the RDKit Binaries failed to initialize
 	 * properly. It tries to find out the cause and suggests to the user (via
@@ -340,7 +340,25 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						}
 
 						else if (iMissingFile > 0) {
-							LOGGER.error("Suggestion for fix: Please uninstall and reinstall the RDKit Nodes.");
+                     // On Windows systems we encountered very strange behavior, if the VS2010 redistributables
+                     // are not installed - For some reason that we do not understand in the moment in certain setups,
+                     // e.g. in the cloud, in an install folder "C:\Program Files\..., it does not find the DLLs
+                     // of RDKit that come with the plugin, even if they are definitely there. 
+                     // We will suggest to the user in that case that the VS2010 Redistributables should be installed.
+                     if (Platform.OS_WIN32.equals(Platform.getOS())) {
+                        if( Platform.ARCH_X86.equals(Platform.getOSArch()) ) {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=8328 and then restart KNIME.");                
+                        } 
+                        else if( Platform.ARCH_X86_64.equals(Platform.getOSArch()) ) {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=13523 and then restart KNIME.");                        
+                        } 
+                        else {
+                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables for your system and then restart KNIME.");                      
+                        }
+                     }
+                     else {
+                        LOGGER.error("Suggestion for fix: Please uninstall and reinstall the RDKit Nodes.");
+                     }
 						}
 
 						else if (iDependencyIssue > 0) {

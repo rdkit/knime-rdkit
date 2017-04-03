@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2017
+ * Copyright (C) 2014-2017
  * Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify

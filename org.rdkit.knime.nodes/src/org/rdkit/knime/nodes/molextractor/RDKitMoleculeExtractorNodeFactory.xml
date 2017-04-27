@@ -10,9 +10,10 @@
     <fullDescription>
         <intro>
         	Splits up disconnected fragment molecules contained in a single RDKit molecule cell 
-        	and extracts these molecules into separate cells. If the input molecule contains only one fragment
-        	or if the input cell is empty (missing), the input cell will be used as result with the 
-        	appropriate reference column. It can either be used with an input table or based on 
+        	and extracts these molecules into separate cells, also sanitizing these molecules if desired. 
+        	If the input cell is empty (missing), the input cell will be used as result with the 
+        	appropriate reference column. If the input molecule contains only one fragment it will
+        	result in a single row. The node can either be used with an input table or based on 
         	flow variable input for the molecules and their format. Supported molecule formats are
         	RDKit Mol cells (when connecting an input table), SMILES, MOL and SDF. <br></br>
         	Please be aware that auto-conversion (e.g for SMILES input) may fail when connecting an input table. <br></br>

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C)2015
+ * Copyright (C)2015-2017
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -702,11 +702,12 @@ public class RDKitMoleculeExtractorNodeModel extends AbstractRDKitNodeModel {
 		// We use only cells, which are not missing (see also createInputDataInfos(...) )
 		if (mol != null) {
 			try {
-				// Determine all fragments
+				// Determine all fragments (sanitize them, if desired)
 				final ROMol_Vect listFragments = markForCleanup(RDKFuncs.getMolFrags(mol, bSanitize), lUniqueWaveId);
 				final long lNumber = (listFragments == null ? 0 : listFragments.size());
-				// If there is more than one fragment add all of them
-				if (lNumber > 1) {
+            
+				// If there is one or more than one fragment add all of them
+				if (lNumber >= 1) {
 					for (int iFrag = 0; iFrag < lNumber; iFrag++) {
 						// Create a data row
 						final DataRow rowNew = new DefaultRow("row_" + rowOutputIndex,

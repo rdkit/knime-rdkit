@@ -49,7 +49,9 @@
 package org.rdkit.knime.nodes.optimizegeometry;
 
 import org.RDKit.DistanceGeom;
+import org.RDKit.EmbedParameters;
 import org.RDKit.ForceField;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -311,7 +313,9 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 
 					// Check, if 3D coordinates exist, otherwise create them
 					if (mol.getNumConformers() == 0) {
-						DistanceGeom.EmbedMolecule(mol, 0, 42);
+						EmbedParameters pms = RDKFuncs.getETKDG();
+						pms.setRandomSeed(42);
+						DistanceGeom.EmbedMolecule(mol, pms);
 					}
 
 					// Calculate force field

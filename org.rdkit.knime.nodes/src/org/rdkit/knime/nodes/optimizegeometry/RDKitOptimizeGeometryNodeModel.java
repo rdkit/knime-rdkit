@@ -321,21 +321,24 @@ public class RDKitOptimizeGeometryNodeModel extends AbstractRDKitCalculatorNodeM
 					// Calculate force field
 					int iConverge = -1;
 					double dEnergy = 0.0d;
-
-					final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), lUniqueWaveId);
-
-					if (forceField == null) {
-						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
-					}
-					else {
-						forceField.initialize();
-						if (iIterations > 0) {
-							iConverge = forceField.minimize(iIterations);
+					if(mol.getNumConformers()>=1){
+						final ForceField forceField = markForCleanup(forceFieldType.generateForceField(mol), lUniqueWaveId);
+	
+						if (forceField == null) {
+							warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Force field creation failed. Creating empty output.");
 						}
 						else {
-							iConverge = 1; // Translates to false later on
+							forceField.initialize();
+							if (iIterations > 0) {
+								iConverge = forceField.minimize(iIterations);
+							}
+							else {
+								iConverge = 1; // Translates to false later on
+							}
+							dEnergy = forceField.calcEnergy();
 						}
-						dEnergy = forceField.calcEnergy();
+					} else {
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Molecule has no coordinates. Creating empty output.");
 					}
 
 					// Create output cells

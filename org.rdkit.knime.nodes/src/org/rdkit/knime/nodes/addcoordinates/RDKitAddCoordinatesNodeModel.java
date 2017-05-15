@@ -48,6 +48,8 @@
 package org.rdkit.knime.nodes.addcoordinates;
 
 import org.RDKit.DistanceGeom;
+import org.RDKit.EmbedParameters;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
 import org.knime.core.data.DataCell;
@@ -325,8 +327,9 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 
 					// Calculate 3D Coordinates
 					else {
-						DistanceGeom.EmbedMolecule(mol, 0, 42, true, false, 2.0,
-								true, 1, null, 1e-3, false, true, true, true);
+						EmbedParameters pms = RDKFuncs.getETKDG();
+						pms.setRandomSeed(42);
+						DistanceGeom.EmbedMolecule(mol, pms);
 					}
 
 					// Generate output cell

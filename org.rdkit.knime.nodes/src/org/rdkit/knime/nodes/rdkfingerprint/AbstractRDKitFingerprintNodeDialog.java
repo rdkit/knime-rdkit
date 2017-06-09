@@ -115,6 +115,9 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	/** The default layer flags to be used. */
 	public static int DEFAULT_LAYER_FLAGS = 0xFFFF;
 
+	/** The default chirality option to be used. */
+	public static boolean DEFAULT_USECHIRALITY_OPTION = false;
+
 	/** The default rooting option to be used. */
 	public static boolean DEFAULT_ROOTED_OPTION = false;
 
@@ -167,6 +170,9 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	/** The layer flags setting model. */
 	private SettingsModelIntegerBounded m_modelLayerFlags;
 
+	/** The use chirality settings model. */
+	private SettingsModelBoolean m_modelUseChirality;
+
 	/** List of dialog components that can be shown or hidden. */
 	private final List<DialogComponent> m_listHidableDialogComponents;
 
@@ -209,6 +215,10 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 				m_modelAtomPairMinPath = createAtomPairMinPathModel(), "Min Path Length: ", 1, 2));
 		addHidableDialogComponent(new DialogComponentNumber(
 				m_modelAtomPairMaxPath = createAtomPairMaxPathModel(), "Max Path Length: ", 1, 2));
+		setHorizontalPlacement(false);
+		setHorizontalPlacement(true);
+		addHidableDialogComponent(new DialogComponentBoolean(
+				m_modelUseChirality = createUseChiralityModel(), "Use Chirality"));
 		setHorizontalPlacement(false);
 
 		createNewGroup(ROOTED_PARAMS_GROUP_NAME);
@@ -267,8 +277,8 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 		super.addDialogComponent(dialogComponent);
 	}
 
-	protected void enableOrDisableSettings(final FingerprintType fpType) {
-		final FingerprintSettings dummySettings = (fpType == null ? null : fpType.getSpecification(4, 1, 100, 1, 30, 2048, 5, 42, false, null, false));
+	protected void enableOrDisableSettings(final FingerprintType fpType) {		
+	final FingerprintSettings dummySettings = (fpType == null ? null : fpType.getSpecification(4, 1, 100, 1, 30, 2048, 5, 42, false, false, null, false));
 		final boolean bCanCalculateRootedFingerprint = (fpType == null ? false : fpType.canCalculateRootedFingerprint());
 
 		// Enable/disable rooted fingerprint settings
@@ -404,6 +414,13 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	 */
 	static final SettingsModelEnumeration<FingerprintType> createFPTypeModel() {
 		return new SettingsModelEnumeration<FingerprintType>(FingerprintType.class, "fp_type", FingerprintType.morgan);
+	}
+
+	/**
+	 * @return settings model
+	 */
+	static final SettingsModelBoolean createUseChiralityModel() {
+		return new SettingsModelBoolean("use_chirality", DEFAULT_USECHIRALITY_OPTION);
 	}
 
 	/**

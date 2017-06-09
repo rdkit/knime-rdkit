@@ -32,6 +32,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,				
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -44,6 +45,7 @@ public enum FingerprintType {
 					iRadius,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					bUseChirality,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					bIsCountBased);
 		}
@@ -126,6 +128,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -138,6 +141,7 @@ public enum FingerprintType {
 					iRadius,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					bUseChirality,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					bIsCountBased);
 		}
@@ -242,6 +246,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -254,6 +259,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					bUseChirality,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					bIsCountBased);
 		}
@@ -389,6 +395,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -401,6 +408,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					bUseChirality,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					bIsCountBased);
 		}
@@ -509,6 +517,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -521,6 +530,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					false,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					false);
 		}
@@ -582,6 +592,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -594,6 +605,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					RDKFuncs.getAvalonSimilarityBits(), // A constant from the RDKit
+					false,
 					false, null, false,
 					false);
 		}
@@ -623,6 +635,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -635,6 +648,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					iLayerFlags,
 					FingerprintSettings.UNAVAILABLE,
+					false,
 					bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList,
 					false);
 		}
@@ -699,6 +713,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -711,6 +726,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					false,
 					false, null, false,
 					false);
 		}
@@ -744,6 +760,7 @@ public enum FingerprintType {
 		public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 				final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 				final int iNumBits, final int iRadius, final int iLayerFlags,
+				final boolean bUseChirality,				
 				final boolean bIsRooted, final String strAtomListColumnName,
 				final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 			return new DefaultFingerprintSettings(toString(),
@@ -756,6 +773,7 @@ public enum FingerprintType {
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
 					FingerprintSettings.UNAVAILABLE,
+					false,
 					false, null, false,
 					false);
 		}
@@ -833,6 +851,7 @@ public enum FingerprintType {
 	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bUseChirality Use Chirality value. Can be false ({@link #UNAVAILABLE}.
 	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
 	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
 	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
@@ -842,11 +861,11 @@ public enum FingerprintType {
 	 */
 	public FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
-			final int iNumBits, final int iRadius, final int iLayerFlags,
+			final int iNumBits, final int iRadius, final int iLayerFlags,final boolean bUseChirality,
 			final boolean bIsRooted, final String strAtomListColumn, final boolean bTreatAtomListAsIncludeList) {
 		return getSpecification(iTorsionPathLength, iMinPath,
 				iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags,
+				iNumBits, iRadius, iLayerFlags, bUseChirality,
 				bIsRooted, strAtomListColumn, bTreatAtomListAsIncludeList, false);
 	}
 
@@ -864,6 +883,7 @@ public enum FingerprintType {
 	 * @param iNumBits Num Bits (Length) value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bUseChirality Use Chirality value. Can be false ({@link #UNAVAILABLE}.
 	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
 	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
 	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
@@ -875,6 +895,7 @@ public enum FingerprintType {
 	public abstract FingerprintSettings getSpecification(final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
+			final boolean bUseChirality,
 			final boolean bIsRooted, final String strAtomListColumn, final boolean bTreatAtomListAsIncludeList,
 			final boolean bIsCountBased);
 

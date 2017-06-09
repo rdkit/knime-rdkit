@@ -153,6 +153,10 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 			registerSettings(RDKitFingerprintNodeDialog.createLayerFlagsModel(), true);
 
 	/** Model for the flag to create rooted fingerprints. */
+	protected final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(RDKitFingerprintNodeDialog.createUseChiralityModel(), true);
+
+	/** Model for the flag to create rooted fingerprints. */
 	protected final SettingsModelBoolean m_modelRootedOption =
 			registerSettings(RDKitFingerprintNodeDialog.createRootedOptionModel(), true);
 

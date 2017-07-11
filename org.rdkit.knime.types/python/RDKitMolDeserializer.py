@@ -1,5 +1,5 @@
 from rdkit import Chem
 
-def deserialize(bytes):
-	return Chem.Mol(bytes)
+def deserialize(inbytes):
+	return Chem.Mol(inbytes)
 

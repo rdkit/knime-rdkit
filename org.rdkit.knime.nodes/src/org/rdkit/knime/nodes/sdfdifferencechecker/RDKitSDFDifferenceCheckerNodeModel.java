@@ -320,7 +320,7 @@ public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 							final double number2 = normalizeNumber(strToken2);
 
 							// Note: Integers are here also treated as NaN, because they can be string compared
-							if (number1 == Double.NaN || number2 == Double.NaN || Math.abs(number1 - number2) > dTolerance) {
+							if (Double.isNaN(number1) || Double.isNaN(number2) || Math.abs(number1 - number2) > dTolerance) {
 								recordDifference(row1, strSdf1, row2, strSdf2, "'" + strToken1 +
 										"' is different from '" + strToken2 + "'.", null, bFurtherDifferences);
 								bFurtherDifferences = true;

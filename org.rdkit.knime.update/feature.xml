@@ -28,4 +28,8 @@
          id="org.rdkit.knime.testing.feature"
          version="0.0.0"/>
 
+   <includes
+         id="org.rdkit.knime.binaries.feature"
+         version="0.0.0"/>
+
 </feature>

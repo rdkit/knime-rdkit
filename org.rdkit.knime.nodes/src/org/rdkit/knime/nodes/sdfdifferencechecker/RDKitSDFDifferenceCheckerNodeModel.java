@@ -77,7 +77,7 @@ import org.rdkit.knime.util.SettingsUtils;
  * providing difference checks for SDF strings that take certain granted differences
  * into account.
  * 
- * @author Manuel Schwarze
+ * @author Manuel Schwarze 
  */
 public class RDKitSDFDifferenceCheckerNodeModel extends AbstractRDKitNodeModel {
 

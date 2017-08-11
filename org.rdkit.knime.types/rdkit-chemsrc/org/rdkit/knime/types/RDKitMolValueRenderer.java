@@ -193,7 +193,8 @@ implements SvgProvider {
 					lConformerId = mol.compute2DCoords();
 				}
 
-				final String svg = mol.ToSVG(8,50);
+				// the svg namespace causes problems with the javascript table (github #29)
+				final String svg = mol.ToSVG(8,50).replaceAll("svg:", ""); 
 
 				if (lConformerId >= 0) {
 					mol.removeConformer(lConformerId);

@@ -57,7 +57,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
 
+import org.RDKit.MolSanitizeException;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
@@ -178,26 +181,29 @@ implements SvgProvider {
 		if (molCell != null) {
 			// Try to render the cell
 			m_strSmiles = molCell.getSmilesValue();
-			ROMol mol = null;
+			ROMol omol = null;
 			final Thread t = Thread.currentThread();
 			final ClassLoader contextClassLoader = t.getContextClassLoader();
 			t.setContextClassLoader(getClass().getClassLoader());
 
 			try {
-				mol = molCell.readMoleculeValue();
+				omol = molCell.readMoleculeValue();
 
-				// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
-				// This is necessary for the RDKit changes in the SVG generation
-				long lConformerId = -1;
-				if (mol.getNumConformers() == 0) {
-					lConformerId = mol.compute2DCoords();
+				RWMol mol;
+				mol = new RWMol(omol);
+				try {
+					RDKFuncs.prepareMolForDrawing(mol);
+				} catch(final MolSanitizeException ex) {
+					mol.delete();
+					mol = new RWMol(omol);
+					// skip kekulization. If this still fails we throw up our hands
+					RDKFuncs.prepareMolForDrawing(mol,false);
 				}
-
+				
 				// the svg namespace causes problems with the javascript table (github #29)
 				final String svg = mol.ToSVG(8,50).replaceAll("svg:", ""); 
-
-				if (lConformerId >= 0) {
-					mol.removeConformer(lConformerId);
+				if(mol != omol){
+					mol.delete();
 				}
 
 				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
@@ -225,8 +231,8 @@ implements SvgProvider {
 			}
 			finally {
 				t.setContextClassLoader(contextClassLoader);
-				if (mol != null) {
-					mol.delete();
+				if (omol != null) {
+					omol.delete();
 				}
 			}
 		}

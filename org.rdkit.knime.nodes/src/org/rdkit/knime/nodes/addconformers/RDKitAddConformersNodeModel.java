@@ -358,7 +358,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
          final int iQueueSize = 10 * iMaxParallelWorkers;
          final AtomicLong rowOutputIndex = new AtomicLong(0);
          
-         // Calculate one component reactions
+         // Calculate conformers
          new MultiThreadWorker<DataRow, DataRow[]>(iQueueSize, iMaxParallelWorkers) {
 
             /**

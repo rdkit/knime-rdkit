@@ -184,7 +184,7 @@ public enum Descriptor {
 	NumHeavyAtoms(IntCell.TYPE, "Number of heavy atoms #{Z[i] | Z[i] > 1}") {
 		@Override
 		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
-			return new IntCell[] { new IntCell((int)mol.getNumAtoms(true)) };
+			return new IntCell[] { new IntCell((int)mol.getNumHeavyAtoms()) };
 		}
 	},
 

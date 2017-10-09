@@ -56,8 +56,8 @@ import java.util.Set;
 
 import org.RDKit.Bond;
 import org.RDKit.BondIterator;
+import org.RDKit.ColourPalette;
 import org.RDKit.DrawColour;
-import org.RDKit.INT_DRAWCOLOUR_MAP;
 import org.RDKit.Int_Vect;
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.ROMol;
@@ -407,14 +407,14 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					for (final int indexBond : setBonds) {
 						ivBonds.add(indexBond);
 					}
-					final INT_DRAWCOLOUR_MAP mapRdkitAtomColors = new INT_DRAWCOLOUR_MAP();
+					final ColourPalette mapRdkitAtomColors = new ColourPalette();
 					for (final int indexAtom : mapAtomColors.keySet()) {
 						final DrawColour col = mapAtomColors.get(indexAtom);
 						if (col != null) {
 							mapRdkitAtomColors.set(indexAtom, col);
 						}
 					}
-					final INT_DRAWCOLOUR_MAP mapRdkitBondColors = new INT_DRAWCOLOUR_MAP();
+					final ColourPalette mapRdkitBondColors = new ColourPalette();
 					for (final int indexBond : mapBondColors.keySet()) {
 						final DrawColour col = mapBondColors.get(indexBond);
 						if (col != null) {
@@ -423,7 +423,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					}
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
-					molDrawing.drawMolecule(mol, ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
+					molDrawing.drawMolecule(mol, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 
 					final String xmlSvg = molDrawing.getDrawingText();

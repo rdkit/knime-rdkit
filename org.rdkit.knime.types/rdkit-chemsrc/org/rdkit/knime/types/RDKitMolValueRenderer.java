@@ -57,6 +57,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
 
+import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolSanitizeException;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
@@ -199,13 +200,17 @@ implements SvgProvider {
 					// skip kekulization. If this still fails we throw up our hands
 					RDKFuncs.prepareMolForDrawing(mol,false);
 				}
-				
+				final MolDraw2DSVG molDrawing = new MolDraw2DSVG(300, 300);
+				molDrawing.drawMolecule((ROMol)mol);
+				molDrawing.finishDrawing();
+
 				// the svg namespace causes problems with the javascript table (github #29)
-				final String svg = mol.ToSVG(8,50).replaceAll("svg:", ""); 
+				final String svg = molDrawing.getDrawingText().replaceAll("svg:", ""); 				
 				if(mol != omol){
 					mol.delete();
 				}
-
+				molDrawing.delete();
+				
 				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
 				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
 

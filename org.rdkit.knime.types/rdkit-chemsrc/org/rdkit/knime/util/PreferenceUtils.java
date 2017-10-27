@@ -61,8 +61,18 @@ import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.Preferences;
 
+/**
+ * Utility class to retrieve preference values from KNIME easily using the static
+ * methods in a Java Snippet node. This can be helpful for debugging purposes
+ * if the bug is related to unpropagated preferences, e.g. in a HPC environments.
+ * 
+ * @author Manuel Schwarze
+ */
 public class PreferenceUtils {
 
+   /**
+    * Wraps key data about an Eclipse preference.
+    */
    public static class Preference {
       public String scope;
       public String key;
@@ -82,19 +92,19 @@ public class PreferenceUtils {
    }
    
    /**
-    * Retrieves all preferences defined in KNIME as sorted string array in the form
-    * "<preferenceKey> [<scope>] = <preferenceValue>". Preferences can be defined in multiple
+    * Retrieves all preferences defined in KNIME as sorted Preference array. Preferences can be defined in multiple
     * scopes: bundle_defaults (= hard coded in code), configuration (= taken from settings files),
     * default (= programmatically set as defaults), instance (= set by user in preferences dialog).
-    * The highest defined scope of a preference defines the active value that should be used by KNIME.
+    * The highest defined scope of a preference defines the active value that SHOULD be used by KNIME.
     * For this reason the list will contain also a scope called "active" to make it easy to filter
     * out what the active preference should be. If a preference store cannot be access for some reason
-    * an entry will be called "ERROR [<scope>] = <Error details>".
+    * a preference object will be created that contains as key the exception class and as value the error message.
+    * Such a "preference" is always flagged as not active and serves only documentation purposes. 
     * 
     * This method can be helpful to investigate current settings of KNIME when a workflow is failing
     * remotely, e.g. on a cluster node or a server.
     * 
-    * @return Array of preference definition strings.
+    * @return Array of preference definitions.
     */
    public static Preference[] getPreferences() {
       Map<String, Preference> mapPrefs = new HashMap<>(5000);
@@ -127,6 +137,17 @@ public class PreferenceUtils {
       return listPrefs.toArray(new Preference[listPrefs.size()]);
    }
    
+   //
+   // Private Methods
+   //
+   
+   /**
+    * Recursively called method to traverse preferences in the preferences tree. 
+    * 
+    * @param prefs Preference node to traverse.
+    * @param scope Scope to be traversed.
+    * @param mapPrefs Map to add all preferences of current Preferences node.
+    */
    private static void traversePreferences(Preferences prefs, String scope, Map<String, Preference> mapPrefs) {
       // Get the full node path
       String strNodePath = prefs.absolutePath();

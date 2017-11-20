@@ -11,7 +11,7 @@
         <intro>
         	This node writes an FPS file using fingerprints from DenseBitVector cells of an input table.
         	If the file exists already it will not be overridden by default. 
-        	The format of the FPS file is mentioned here: http://code.google.com/p/chem-fingerprints/wiki/FPS
+        	The format of the FPS file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
         </intro>        
         <option name="Output file">The location of the output file where the FPS file will be created.</option>
         <option name="Overwrite if file exists">Set this to true to allow KNIME to override an existing file.</option>

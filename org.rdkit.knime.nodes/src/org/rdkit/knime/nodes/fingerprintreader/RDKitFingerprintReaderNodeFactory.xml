@@ -10,7 +10,7 @@
     <fullDescription>
         <intro>
         	This node reads an FPS file with its fingerprint records into a KNIME table. 
-        	The format of the .fps file is mentioned here: http://code.google.com/p/chem-fingerprints/wiki/FPS
+        	The format of the .fps file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
         </intro>
         
         <option name="Input FPS file">The location of the FPS file containing fingerprint records.</option>

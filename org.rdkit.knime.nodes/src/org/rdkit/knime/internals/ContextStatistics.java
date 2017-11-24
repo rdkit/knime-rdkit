@@ -95,7 +95,7 @@ public class ContextStatistics extends HashMap<String, Long> implements RDKitInt
     * 
     * @param context Context to be increase the counter for. Can be null to do nothing.
     */
-   public void countItem(String context) {
+   public synchronized void countItem(String context) {
       if (context != null) {
          if (containsKey(context)) {
             put(context, get(context).longValue() + 1l);
@@ -107,7 +107,7 @@ public class ContextStatistics extends HashMap<String, Long> implements RDKitInt
    }
    
    @Override
-   public void load(Config settings) {
+   public synchronized void load(Config settings) {
       clear();
       if (settings != null) {
          for (Enumeration<TreeNode> e = settings.children(); e.hasMoreElements(); ) {
@@ -126,7 +126,7 @@ public class ContextStatistics extends HashMap<String, Long> implements RDKitInt
    }
 
    @Override
-   public void save(Config settings) {
+   public synchronized void save(Config settings) {
       if (settings != null) {
          for (String context : keySet()) {
             settings.addLong(context, get(context));
@@ -135,7 +135,7 @@ public class ContextStatistics extends HashMap<String, Long> implements RDKitInt
    }
 
    @Override
-   public ContextStatistics merge(List<ContextStatistics> internals) {
+   public synchronized ContextStatistics merge(List<ContextStatistics> internals) {
       ContextStatistics merged = new ContextStatistics();
 
       if (internals != null) {

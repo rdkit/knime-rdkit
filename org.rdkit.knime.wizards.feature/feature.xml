@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.wizards.feature"
       label="RDKit KNIME Wizards"
-      version="3.2.4.qualifier"
+      version="3.3.0.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.wizards">
 
@@ -13,7 +13,7 @@
    <copyright>
       Copyright (C) 2015 Novartis Institutes for BioMedical Research
    </copyright>
-   
+
    <license>
       Please see below the General Public License (GPL), Version 3, 
 and the Additional Permissions according to Sec. 7 
@@ -696,12 +696,12 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
    </license>
+
    <plugin
          id="org.rdkit.knime.wizards"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-
 
 </feature>

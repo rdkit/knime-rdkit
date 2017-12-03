@@ -15,7 +15,7 @@ Require-Bundle: org.knime.base;bundle-version="[3.2.2,4.0.0)",
  org.knime.chem.types;bundle-version="[3.2.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[3.2.1,4.0.0)",
  org.knime.workbench.ui;bundle-version="[3.2.0,4.0.0)",
- org.knime.python;bundle-version="[3.2.2,4.0.0)";resolution:=optional
+ org.knime.python.typeextensions;bundle-version="[3.2.2,4.0.0)";resolution:=optional
 Bundle-Vendor: NIBR
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,

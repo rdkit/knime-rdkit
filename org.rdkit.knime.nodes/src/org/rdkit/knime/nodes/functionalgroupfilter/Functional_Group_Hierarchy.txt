@@ -49,14 +49,14 @@ Aldehyde			[CH;D2;!$(C-[!#6;!#1])]=O	Aldehyde
   Aldehyde.Aromatic		[CH;D2;$(C-!@[a])](=O)	Aromatic Aldehyde
   Aldehyde.Aliphatic		[CH;D2;$(C-!@C)](=O)	Aliphatic Aldehyde
 
-Halogen				[$([F,Cl,Br,I]-!@[#6]);!$([F,Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([F,Cl,Br,I]-[C,S](=[O,S,N]))]	Halogen
+Halogen				[$([F,Cl,Br,I]-!@[#6]);!$([F,Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([F,Cl,Br,I]-[C,S](=[D1;O,S,N]))]	Halogen
   Halogen.Aromatic		[F,Cl,Br,I;$(*-!@c)]	Aromatic Halogen
   Halogen.Aliphatic		[$([F,Cl,Br,I]-!@C);!$([F,Cl,Br,I]-!@C-!@[F,Cl,Br,I])]	Aliphatic Halogen
-  Halogen.NotFluorine		[$([Cl,Br,I]-!@[#6]);!$([Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([Cl,Br,I]-[C,S](=[O,S,N]))]	Not Fluorine Halogen
-  Halogen.NotFluorine.Aliphatic		[$([Cl,Br,I]-!@C);!$([Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([Cl,Br,I]-[C,S](=[O,S,N]))]	Aliphatic Not Fluorine Halogen
+  Halogen.NotFluorine		[$([Cl,Br,I]-!@[#6]);!$([Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([Cl,Br,I]-[C,S](=[D1;O,S,N]))]	Not Fluorine Halogen
+  Halogen.NotFluorine.Aliphatic		[$([Cl,Br,I]-!@C);!$([Cl,Br,I]-!@C-!@[F,Cl,Br,I]);!$([Cl,Br,I]-[C,S](=[D1;O,S,N]))]	Aliphatic Not Fluorine Halogen
   Halogen.NotFluorine.Aromatic		[$([Cl,Br,I]-!@c)]	Aromatic Not Fluorine Halogen
-  Halogen.Bromine	[$([Br]-!@[#6]);!$([Br]-!@C-!@[F,Cl,Br,I]);!$([Br]-[C,S](=[O,S,N]))]	Bromine Halogen
-  Halogen.Bromine.Aliphatic	[$(Br-!@C);!$(Br-!@C-!@[F,Cl,Br,I]);!$(Br-[C,S](=[O,S,N]))]	Aliphatic Bromine Halogen
+  Halogen.Bromine	[$([Br]-!@[#6]);!$([Br]-!@C-!@[F,Cl,Br,I]);!$([Br]-[C,S](=[D1;O,S,N]))]	Bromine Halogen
+  Halogen.Bromine.Aliphatic	[$(Br-!@C);!$(Br-!@C-!@[F,Cl,Br,I]);!$(Br-[C,S](=[D1;O,S,N]))]	Aliphatic Bromine Halogen
   Halogen.Bromine.Aromatic	[$(Br-!@c)]	Aromatic Bromine Halogen
   
 Azide				[N;H0;$(N-[#6]);D2]=[N;D2]=[N;D1]	Azide

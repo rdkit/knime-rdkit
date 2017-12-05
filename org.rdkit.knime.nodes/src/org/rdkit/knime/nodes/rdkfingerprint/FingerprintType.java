@@ -74,7 +74,7 @@ public enum FingerprintType {
 
 		@Override
 		public ExplicitBitVect calculate(final ROMol mol, final FingerprintSettings settings) {
-			return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits());
+			return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits(), null, null, settings.getUseChirality());
 		}
 
 		@Override
@@ -88,7 +88,7 @@ public enum FingerprintType {
 				}
 
 				return RDKFuncs.getMorganFingerprintAsBitVect(mol, settings.getRadius(), settings.getNumBits(),
-						null /* Invariants */, atomList);
+						null /* Invariants */, atomList, settings.getUseChirality());
 			}
 			finally {
 				if (atomListToFree != null) {
@@ -99,7 +99,7 @@ public enum FingerprintType {
 
 		@Override
 		public DenseByteVector calculateCountBased(final ROMol mol, final FingerprintSettings settings) {
-			return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits()));
+			return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits(), null, null, settings.getUseChirality()));
 		}
 
 		@Override
@@ -113,7 +113,7 @@ public enum FingerprintType {
 				}
 
 				return convertAndDispose(RDKFuncs.getHashedFingerprint(mol, settings.getRadius(), settings.getNumBits(),
-						null /* Invariants */, atomList));
+						null /* Invariants */, atomList, settings.getUseChirality()));
 			}
 			finally {
 				if (atomListToFree != null) {
@@ -304,9 +304,10 @@ public enum FingerprintType {
 			if (!settings.isAvailable(iAtomPairMaxPath)) {
 				iAtomPairMaxPath = ((1 << 5) - 1) - 1;
 			}
-
+			int iNumBitsPerEntry=4;
 			return RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol, settings.getNumBits(),
-					iAtomPairMinPath, iAtomPairMaxPath);
+					iAtomPairMinPath, iAtomPairMaxPath, null, null, null,
+					iNumBitsPerEntry,settings.getUseChirality());
 		}
 
 		@Override
@@ -329,9 +330,10 @@ public enum FingerprintType {
 				if (settings.isTreatAtomListAsExcludeList()) {
 					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
 				}
-
+				int iNumBitsPerEntry=4;
 				return RDKFuncs.getHashedAtomPairFingerprintAsBitVect(mol, settings.getNumBits(),
-						iAtomPairMinPath, iAtomPairMaxPath, atomList);
+						iAtomPairMinPath, iAtomPairMaxPath, atomList, null, null,
+						iNumBitsPerEntry, settings.getUseChirality());
 			}
 			finally {
 				if (atomListToFree != null) {
@@ -355,7 +357,7 @@ public enum FingerprintType {
 			}
 
 			return convertAndDispose(RDKFuncs.getHashedAtomPairFingerprint(mol, settings.getNumBits(),
-					iAtomPairMinPath, iAtomPairMaxPath));
+					iAtomPairMinPath, iAtomPairMaxPath, null, null, null, settings.getUseChirality()));
 		}
 
 		@Override
@@ -380,7 +382,8 @@ public enum FingerprintType {
 				}
 
 				return convertAndDispose(RDKFuncs.getHashedAtomPairFingerprint(mol, settings.getNumBits(),
-						iAtomPairMinPath, iAtomPairMaxPath, atomList));
+						iAtomPairMinPath, iAtomPairMaxPath, atomList, null, null, 
+						settings.getUseChirality()));
 			}
 			finally {
 				if (atomListToFree != null) {
@@ -443,8 +446,9 @@ public enum FingerprintType {
 			if (!settings.isAvailable(iTorsionPathLength)) {
 				iTorsionPathLength = 4;
 			}
-
-			return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits(), iTorsionPathLength);
+			int iNumBitsPerEntry=4;
+			return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits(), iTorsionPathLength,
+					null, null, null, iNumBitsPerEntry, settings.getUseChirality());
 		}
 
 		@Override
@@ -463,8 +467,10 @@ public enum FingerprintType {
 				if (settings.isTreatAtomListAsExcludeList()) {
 					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
 				}
-
-				return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits(), iTorsionPathLength, atomList);
+				int iNumBitsPerEntry=4;
+				return RDKFuncs.getHashedTopologicalTorsionFingerprintAsBitVect(mol, settings.getNumBits(), 
+						iTorsionPathLength, atomList, null, null, iNumBitsPerEntry,
+						settings.getUseChirality());
 			}
 			finally {
 				if (atomListToFree != null) {
@@ -482,7 +488,8 @@ public enum FingerprintType {
 				iTorsionPathLength = 4;
 			}
 
-			return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), iTorsionPathLength));
+			return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), 
+					iTorsionPathLength, null, null, null, settings.getUseChirality()));
 		}
 
 		@Override
@@ -502,7 +509,8 @@ public enum FingerprintType {
 					atomList = atomListToFree = ChemUtils.reverseAtomList(mol, atomList);
 				}
 
-				return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), iTorsionPathLength, atomList));
+				return convertAndDispose(RDKFuncs.getHashedTopologicalTorsionFingerprint(mol, settings.getNumBits(), iTorsionPathLength, 
+						atomList, null, null, settings.getUseChirality()));
 			}
 			finally {
 				if (atomListToFree != null) {

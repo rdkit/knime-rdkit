@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.binaries.feature"
       label="RDKit Binaries for Java"
-      version="3.3.0.qualifier"
+      version="3.3.1.qualifier"
       provider-name="NIBR">
 
    <description>

@@ -108,6 +108,9 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	public static final String PROPERTY_FP_SIMILARITY_BITS = "rdkit.fingerprint.similarityBits";
 
 	/** The property that holds a fingerprint information that can be handled with this handler. */
+	public static final String PROPERTY_FP_USE_CHIRALITY = "rdkit.fingerprint.useChirality";
+
+	/** The property that holds a fingerprint information that can be handled with this handler. */
 	public static final String PROPERTY_FP_IS_ROOTED = "rdkit.fingerprint.isRooted";
 
 	/** The property that holds a fingerprint information that can be handled with this handler. */
@@ -132,7 +135,8 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 		PROPERTY_FP_TYPE, PROPERTY_FP_TORSION_PATH_LENGTH, PROPERTY_FP_MIN_PATH, PROPERTY_FP_MAX_PATH,
 		PROPERTY_FP_ATOMPAIR_MIN_PATH, PROPERTY_FP_ATOMPAIR_MAX_PATH,
 		PROPERTY_FP_NUM_BITS, PROPERTY_FP_RADIUS, PROPERTY_FP_LAYER_FLAGS,
-		PROPERTY_FP_SIMILARITY_BITS, PROPERTY_FP_IS_ROOTED,PROPERTY_FP_ATOM_LIST_COLUMN_NAME,
+		PROPERTY_FP_SIMILARITY_BITS, PROPERTY_FP_USE_CHIRALITY, 
+		PROPERTY_FP_IS_ROOTED,PROPERTY_FP_ATOM_LIST_COLUMN_NAME,
 		PROPERTY_FP_ATOM_LIST_HANDLING, PROPERTY_FP_IS_COUNT_BASED
 	};
 
@@ -161,9 +165,9 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	public FingerprintSettingsHeaderProperty(final String strType, final int iTorsionPathLength,
 			final int iMinPath, final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits) {
+			final int iSimilarityBits, final boolean bUseChirality) {
 		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false, false);
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bUseChirality, false, null, false, false);
 	}
 
 	/**
@@ -186,10 +190,13 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	public FingerprintSettingsHeaderProperty(final String strType,final int iTorsionPathLength,
 			final int iMinPath, final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final int iSimilarityBits, final boolean bUseChirality,
+			final boolean bIsRooted, final String strAtomListColumnName,
 			final boolean bTreatAtomListAsIncludeList) {
 		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList, false);
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bUseChirality,
+				bIsRooted, strAtomListColumnName, 
+				bTreatAtomListAsIncludeList, false);
 	}
 
 	/**
@@ -213,10 +220,12 @@ public class FingerprintSettingsHeaderProperty extends DefaultFingerprintSetting
 	public FingerprintSettingsHeaderProperty(final String strType,final int iTorsionPathLength,
 			final int iMinPath, final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final int iSimilarityBits, 
+			final boolean bUseChirality,
+	final boolean bIsRooted, final String strAtomListColumnName,
 			final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 		super(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits,
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bUseChirality,
 				bIsRooted, strAtomListColumnName, bTreatAtomListAsIncludeList, bIsCountBased);
 	}
 

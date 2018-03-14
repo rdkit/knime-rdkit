@@ -48,6 +48,7 @@
  */
 package org.rdkit.knime.nodes.rdkfingerprint;
 
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.UInt_Vect;
 import org.knime.core.data.DataCell;
@@ -151,6 +152,10 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 	/** Model for the layer flags to be used for calculations. */
 	protected final SettingsModelIntegerBounded m_modelLayerFlags =
 			registerSettings(RDKitFingerprintNodeDialog.createLayerFlagsModel(), true);
+
+	/** Model for the flag to create rooted fingerprints. */
+	protected final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(RDKitFingerprintNodeDialog.createUseChiralityModel(), true);
 
 	/** Model for the flag to create rooted fingerprints. */
 	protected final SettingsModelBoolean m_modelRootedOption =
@@ -305,6 +310,11 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					try {
+						// we need to make sure stereochemistry is assigned if we're
+						// using chirality in the fingerprints
+						if(m_modelUseChirality.getBooleanValue()==true){
+							RDKFuncs.assignStereochemistry(mol);
+						}
 						// Calculate rooted fingerprint
 						if (bIsRooted && fpType.canCalculateRootedFingerprint()) {
 

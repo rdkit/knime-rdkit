@@ -174,7 +174,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 
 	/** Settings used to calculate fingerprints for pre-screening. */
 	protected static final FingerprintSettings FINGERPRINT_SETTING =
-			new DefaultFingerprintSettings(FingerprintType.pattern.name(), -1, -1, -1, -1, -1, 1024, -1, -1, -1);
+			new DefaultFingerprintSettings(FingerprintType.pattern.name(), -1, -1, -1, -1, -1, 1024, -1, -1, -1, false);
 
 	//
 	// Members

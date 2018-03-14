@@ -195,6 +195,26 @@ public enum Descriptor {
 		}
 	},
 
+	NumStereocenters(IntCell.TYPE, "Total number of atomic stereocenters") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			boolean cleanIt=false, force=false, flagPossible=true;
+			RDKFuncs.assignStereochemistry(mol,cleanIt,force,flagPossible);
+			int res= (int)RDKFuncs.numAtomStereoCenters(mol);
+			return new IntCell[] { new IntCell(res) };
+		}
+	},
+
+	NumUnspecifiedStereocenters(IntCell.TYPE, "Number of unspecified atomic stereocenters") {
+		@Override
+		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {
+			boolean cleanIt=false, force=false, flagPossible=true;
+			RDKFuncs.assignStereochemistry(mol,cleanIt,force,flagPossible);
+			int res= (int)RDKFuncs.numUnspecifiedAtomStereoCenters(mol);
+			return new IntCell[] { new IntCell(res) };
+		}
+	},
+
 	NumRings(IntCell.TYPE, "Number of rings") {
 		@Override
 		public DataCell[] calculate(final ROMol mol, final WarningConsolidator warningConsolidator) {

@@ -9,7 +9,9 @@
     
     <fullDescription>
         <intro>
-        	This node can be used for filtering sets of molecules based on named substructures (functional groups based on SMARTS).
+        	This node can be used for filtering sets of molecules based on named substructures (functional groups based on SMARTS). 
+        	Note that the default definitions are constructed to try and define functional groups relevant for reactivity; consequently 
+        	groups like -CF3 do not match the halogen pattern.
         </intro>
         
         <option name="RDKit Mol column">It specifies which column contains the set of RDKit molecules.</option>

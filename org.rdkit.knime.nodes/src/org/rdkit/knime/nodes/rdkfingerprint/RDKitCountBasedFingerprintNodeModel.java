@@ -114,6 +114,7 @@ public class RDKitCountBasedFingerprintNodeModel extends AbstractRDKitFingerprin
 				m_modelNumBits.getIntValue(),
 				m_modelRadius.getIntValue(),
 				m_modelLayerFlags.getIntValue(),
+				m_modelUseChirality.getBooleanValue(),
 				m_modelRootedOption.getBooleanValue(),
 				m_modelAtomListColumnName.getStringValue(),
 				m_modelAtomListHandlingIncludeOption.getBooleanValue(),

@@ -112,7 +112,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE,
 			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE,
 			2048, 2, // NumBits, Radius
-			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE);
+			FingerprintSettings.UNAVAILABLE, FingerprintSettings.UNAVAILABLE, false);
 
 	/** Row context for generating warnings, if something is incorrect in table 2. */
 	protected static final WarningConsolidator.Context ROW_CONTEXT_TABLE_2 = new Context("rowTable2", "row", "rows", true);

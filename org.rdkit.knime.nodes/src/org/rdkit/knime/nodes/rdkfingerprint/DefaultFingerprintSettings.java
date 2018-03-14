@@ -108,6 +108,9 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	/** The Fingerprint similarity bits. Can be -1 {@link #UNAVAILABLE}, if not set. */
 	private int m_iSimilarityBits;
 
+	/** Controls whether or not chirality is used in the fingerprint */
+	private boolean m_bUseChirality;
+
 	/** The Fingerprint rooted flag to tell that the fingerprint is or shall be a rooted fingerprint. */
 	private boolean m_bIsRooted;
 
@@ -137,13 +140,14 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bUseChirality Use Chirality. Can be null ({@link #UNAVAILABLE}.
 	 */
 	public DefaultFingerprintSettings(final String strType, final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits) {
+			final int iSimilarityBits, final boolean bUseChirality) {
 		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false);
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bUseChirality, false, null, false);
 	}
 
 	/**
@@ -159,6 +163,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bUseChirality Use Chirality. Can be null ({@link #UNAVAILABLE}.
 	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
 	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
 	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
@@ -166,10 +171,11 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	public DefaultFingerprintSettings(final String strType, final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final int iSimilarityBits, final boolean bUseChirality, 
+			final boolean bIsRooted, final String strAtomListColumnName,
 			final boolean bTreatAtomListAsIncludeList) {
 		this(strType, iTorsionPathLength, iMinPath, iMaxPath, iAtomPairMinPath, iAtomPairMaxPath,
-				iNumBits, iRadius, iLayerFlags, iSimilarityBits, false, null, false, false);
+				iNumBits, iRadius, iLayerFlags, iSimilarityBits, bUseChirality, false, null, false, false);
 	}
 
 	/**
@@ -185,6 +191,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	 * @param iRadius Radius value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iLayerFlags Layer Flags value. Can be -1 ({@link #UNAVAILABLE}.
 	 * @param iSimilarityBits Similarity bits. Can be -1 ({@link #UNAVAILABLE}.
+	 * @param bUseChirality Use Chirality. Can be null ({@link #UNAVAILABLE}.
 	 * @param bIsRooted Flag to set if a rooted fingerprint is desired.
 	 * @param strAtomListColumnName Atom list column name for rooted fingerprints.
 	 * @param bTreatAtomListAsIncludeList Flag to tell if atom list atoms shall be included (true) or excluded (false).
@@ -193,7 +200,8 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	public DefaultFingerprintSettings(final String strType, final int iTorsionPathLength, final int iMinPath,
 			final int iMaxPath, final int iAtomPairMinPath, final int iAtomPairMaxPath,
 			final int iNumBits, final int iRadius, final int iLayerFlags,
-			final int iSimilarityBits, final boolean bIsRooted, final String strAtomListColumnName,
+			final int iSimilarityBits, final boolean bUseChirality,
+			final boolean bIsRooted, final String strAtomListColumnName,
 			final boolean bTreatAtomListAsIncludeList, final boolean bIsCountBased) {
 		m_strType = strType;
 		m_rdkitType = FingerprintType.parseString(m_strType);
@@ -206,6 +214,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 		m_iRadius = iRadius;
 		m_iLayerFlags = iLayerFlags;
 		m_iSimilarityBits = iSimilarityBits;
+		m_bUseChirality = bUseChirality;
 		m_bIsRooted = bIsRooted;
 		m_strAtomListColumnName = strAtomListColumnName;
 		m_bTreatAtomListAsIncludeList = bTreatAtomListAsIncludeList;
@@ -232,6 +241,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 			m_iRadius = existing.getRadius();
 			m_iLayerFlags = existing.getLayerFlags();
 			m_iSimilarityBits = existing.getSimilarityBits();
+			m_bUseChirality = existing.getUseChirality();
 			m_bIsRooted = existing.isRooted();
 			m_strAtomListColumnName = existing.getAtomListColumnName();
 			m_bTreatAtomListAsIncludeList = existing.isTreatAtomListAsIncludeList();
@@ -296,6 +306,11 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	@Override
 	public synchronized int getSimilarityBits() {
 		return m_iSimilarityBits;
+	}
+
+	@Override
+	public synchronized boolean getUseChirality() {
+		return m_bUseChirality;
 	}
 
 	@Override
@@ -384,6 +399,11 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 	}
 
 	@Override
+	public synchronized void setUseChirality(final boolean bUseChirality) {
+		this.m_bUseChirality = bUseChirality;
+	}
+
+	@Override
 	public void setRooted(final boolean bRooted) {
 		this.m_bIsRooted = bRooted;
 	}
@@ -430,6 +450,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 		m_iRadius = UNAVAILABLE;
 		m_iLayerFlags = UNAVAILABLE;
 		m_iSimilarityBits = UNAVAILABLE;
+		m_bUseChirality = false;
 		m_bIsRooted = false;
 		m_strAtomListColumnName = null;
 		m_bTreatAtomListAsIncludeList = false;
@@ -458,6 +479,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 				+ ((m_strAtomListColumnName == null) ? 0 : m_strAtomListColumnName.hashCode());
 		result = prime * result + (m_bTreatAtomListAsIncludeList ? 1 : 0);
 		result = prime * result + (m_bIsCountBased ? 1 : 0);
+		result = prime * result + (m_bUseChirality ? 1 : 0);
 		return result;
 	}
 
@@ -482,6 +504,7 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 					this.m_iRadius == specToCompare.m_iRadius &&
 					this.m_iLayerFlags == specToCompare.m_iLayerFlags &&
 					this.m_iSimilarityBits == specToCompare.m_iSimilarityBits &&
+					this.m_bUseChirality == specToCompare.m_bUseChirality &&
 					this.m_bIsRooted == specToCompare.m_bIsRooted &&
 					SettingsUtils.equals(this.m_strAtomListColumnName, specToCompare.m_strAtomListColumnName) &&
 					this.m_bTreatAtomListAsIncludeList == specToCompare.m_bTreatAtomListAsIncludeList &&
@@ -558,6 +581,9 @@ public class DefaultFingerprintSettings extends DataCell implements FingerprintS
 				sb.append("\n");
 			}
 			sb.append("Similarity Bits: ").append(getSimilarityBits());
+		}
+		if (getUseChirality()) {
+			sb.append("Use Chirality: true");
 		}
 		if (isRooted()) {
 			if (sb.length() > 0) {

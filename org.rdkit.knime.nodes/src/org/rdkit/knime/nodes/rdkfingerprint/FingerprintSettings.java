@@ -137,6 +137,14 @@ public interface FingerprintSettings {
 	int getLayerFlags();
 
 	/**
+	 * Returns whether or not to use chirality or {@link #UNAVAILABLE}.
+	 * 
+	 * @return the UseChirality value or {@link #UNAVAILABLE}.
+	 */
+	boolean getUseChirality();	
+	
+	
+	/**
 	 * Returns the similarity bits setting if set or {@link #UNAVAILABLE} if not set.
 	 * 
 	 * @return the Similarity Bits value or {@link #UNAVAILABLE}.
@@ -259,6 +267,13 @@ public interface FingerprintSettings {
 	 */
 	void setLayerFlags(final int iLayerFlags);
 
+	/**
+	 * Sets whether or not to use chirality or {@link #UNAVAILABLE}.
+	 * 
+	 * @param bUseChirality the UseChirality value or {@link #UNAVAILABLE}.
+	 */
+	void setUseChirality(final boolean bUseChirality);	
+	
 	/**
 	 * Sets the similarity bits setting or {@link #UNAVAILABLE}.
 	 * 

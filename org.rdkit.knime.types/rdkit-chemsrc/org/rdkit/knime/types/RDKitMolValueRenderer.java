@@ -74,7 +74,6 @@ import org.knime.core.data.MissingCell;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.data.renderer.DataValueRenderer;
-import org.knime.core.data.util.LockedSupplier;
 import org.w3c.dom.svg.SVGDocument;
 
 /**
@@ -142,8 +141,6 @@ implements SvgProvider {
 	/** The SVG structure to paint, if it could be determined properly. */
 	private SVGDocument m_svgDocument;
 
-    private final ReentrantLock m_lock=new ReentrantLock();
-	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -349,8 +346,4 @@ implements SvgProvider {
 		}
 	}
 
-	@Override
-	public LockedSupplier<SVGDocument> getSvgSupplier() {
-        return new LockedSupplier<SVGDocument>(m_svgDocument, m_lock);
-	}
 }

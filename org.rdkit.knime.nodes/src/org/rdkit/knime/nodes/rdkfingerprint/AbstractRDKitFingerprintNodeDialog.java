@@ -391,7 +391,7 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	 * @return settings model
 	 */
 	static final SettingsModelIntegerBounded createRadiusModel() {
-		return new SettingsModelIntegerBounded("radius", DEFAULT_RADIUS, 1, 6);
+		return new SettingsModelIntegerBounded("radius", DEFAULT_RADIUS, 0, 6);
 	}
 
 	/**

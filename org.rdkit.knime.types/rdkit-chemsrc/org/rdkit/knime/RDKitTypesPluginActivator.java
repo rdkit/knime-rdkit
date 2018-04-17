@@ -106,10 +106,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
             "boost_serialization-vc100-mt-1_56",
       "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86_64,
-            new String[] { "boost_system-vc100-mt-1_56",
-            "boost_chrono-vc100-mt-1_56",
-            "boost_thread-vc100-mt-1_56",
-            "boost_serialization-vc100-mt-1_56",
+            new String[] { "boost_serialization-vc140-mt-1_65_1",
       "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86,
             new String[] { "GraphMolWrap" });
@@ -350,10 +347,10 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
                            LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=8328 and then restart KNIME.");                
                         } 
                         else if( Platform.ARCH_X86_64.equals(Platform.getOSArch()) ) {
-                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables from https://www.microsoft.com/en-us/download/details.aspx?id=13523 and then restart KNIME.");                        
+                           LOGGER.error("Suggestion for fix: Please install the VS2017 Redistributables from https://go.microsoft.com/fwlink/?LinkId=746572 and then restart KNIME.");                        
                         } 
                         else {
-                           LOGGER.error("Suggestion for fix: Please install the VS2010 Redistributables for your system and then restart KNIME.");                      
+                           LOGGER.error("Suggestion for fix: Please install the VS2017 Redistributables for your system and then restart KNIME.");                      
                         }
                      }
                      else {

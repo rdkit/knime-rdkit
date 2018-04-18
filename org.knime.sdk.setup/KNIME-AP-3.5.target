@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?><target name="KNIME Analytics Platform (3.5 release)" sequenceNumber="1512743933">
+<locations>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="com.knime.features.explorer.serverspace.feature.group" version="4.6.0.v201711041633"/>
+<unit id="jp.co.infocom.cheminfo.marvin.feature.feature.group" version="3.5.0.v0800"/>
+<unit id="org.eclipse.birt.chart.osgi.runtime.feature.group" version="4.6.0.v201606072122"/>
+<unit id="org.knime.features.base.feature.group" version="3.5.3.v201804041546"/>
+<unit id="org.knime.features.chem.types.feature.group" version="3.5.0.v201711021632"/>
+<unit id="org.knime.features.dbdrivers.feature.group" version="3.5.3.v201804031044"/>
+<unit id="org.knime.features.ensembles.feature.group" version="3.5.0.v201711151559"/>
+<unit id="org.knime.features.ext.chem.tools.feature.group" version="3.5.0.v201711021632"/>
+<unit id="org.knime.features.ext.itemset.feature.group" version="3.5.0.v201711021642"/>
+<unit id="org.knime.features.ext.jep.feature.group" version="3.5.0.v201711021642"/>
+<unit id="org.knime.features.ext.poi.feature.group" version="3.5.3.v201804031044"/>
+<unit id="org.knime.features.ext.svg.feature.group" version="3.5.0.v201711021650"/>
+<unit id="org.knime.features.js.quickforms.feature.group" version="3.5.3.v201804031047"/>
+<unit id="org.knime.features.json.feature.group" version="3.5.0.v201711300850"/>
+<unit id="org.knime.features.personalproductivity.feature.group" version="3.5.0.v201711041638"/>
+<unit id="org.knime.features.python2.feature.group" version="3.5.2.v201802051356"/>
+<unit id="org.knime.features.testingapplication.feature.group" version="3.5.2.v201802051355"/>
+<unit id="org.knime.features.xml.feature.group" version="3.5.0.v201711021653"/>
+<unit id="org.knime.targetPlatform.feature.group" version="3.5.1.v201802051358"/>
+<repository location="https://update.knime.org/analytics-platform/3.5/"/>
+</location>
+</locations>
+</target>

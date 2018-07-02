@@ -206,7 +206,7 @@ implements SvgProvider {
 				molDrawing.finishDrawing();
 
 				// the svg namespace causes problems with the javascript table (github #29)
-				final String svg = molDrawing.getDrawingText().replaceAll("svg:", ""); 				
+				final String svg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");
 				if(mol != omol){
 					mol.delete();
 				}

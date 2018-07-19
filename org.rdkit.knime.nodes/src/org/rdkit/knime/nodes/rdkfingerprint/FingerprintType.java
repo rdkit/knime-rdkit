@@ -57,7 +57,7 @@ public enum FingerprintType {
 			if (settings.getNumBits() <= 0) {
 				throw new InvalidSettingsException("Number of bits must be a positive number > 0.");
 			}
-			if (settings.getRadius() <= 0) {
+			if (settings.getRadius() < 0) {
 				throw new InvalidSettingsException("Radius must be a positive number > 0.");
 			}
 		}
@@ -153,7 +153,7 @@ public enum FingerprintType {
 			if (settings.getNumBits() <= 0) {
 				throw new InvalidSettingsException("Number of bits must be a positive number > 0.");
 			}
-			if (settings.getRadius() <= 0) {
+			if (settings.getRadius() < 0) {
 				throw new InvalidSettingsException("Radius must be a positive number > 0.");
 			}
 		}

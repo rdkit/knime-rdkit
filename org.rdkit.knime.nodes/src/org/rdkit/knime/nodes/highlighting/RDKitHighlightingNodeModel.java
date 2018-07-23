@@ -101,8 +101,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	//
 
 	/** The logger instance. */
-	protected static final NodeLogger LOGGER = NodeLogger
-			.getLogger(RDKitHighlightingNodeModel.class);
+	protected static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitHighlightingNodeModel.class);
 
 	/** Empty atom list to be used if an empty atom list cell is encountered. */
 	protected static final Int_Vect EMPTY_ATOM_LIST = new Int_Vect(0);
@@ -118,21 +117,21 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	//
 
 	/** Settings model for the column name of the input molecule column. */
-	private final SettingsModelString m_modelInputMolColumnName = registerSettings(RDKitHighlightingNodeDialog
-			.createInputMolColumnNameModel());
+	private final SettingsModelString m_modelInputMolColumnName = registerSettings(
+			RDKitHighlightingNodeDialog.createInputMolColumnNameModel());
 
 	/**
 	 * Settings model for the highlighting definitions.
 	 */
-	private final SettingsModelHighlighting m_modelHighlighting = registerSettings(RDKitHighlightingNodeDialog
-			.createHighlightingDefinitionsModel());
+	private final SettingsModelHighlighting m_modelHighlighting = registerSettings(
+			RDKitHighlightingNodeDialog.createHighlightingDefinitionsModel());
 
 	/**
 	 * Settings model for the column name of the new column to be added to the
 	 * output table.
 	 */
-	private final SettingsModelString m_modelNewColumnName = registerSettings(RDKitHighlightingNodeDialog
-			.createNewColumnNameModel());
+	private final SettingsModelString m_modelNewColumnName = registerSettings(
+			RDKitHighlightingNodeDialog.createNewColumnNameModel());
 
 	//
 	// Constructor
@@ -149,22 +148,20 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	// Protected Methods
 	//
 
-   /**
-    * Enable distribution and streaming for this node.
-    * {@inheritDoc}
-    */
-   @Override
-   public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
-         throws InvalidSettingsException {
-      return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
-   }
+	/**
+	 * Enable distribution and streaming for this node. {@inheritDoc}
+	 */
+	@Override
+	public StreamableOperator createStreamableOperator(PartitionInfo partitionInfo, PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+		return createStreamableOperatorForCalculator(partitionInfo, inSpecs);
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-			throws InvalidSettingsException {
+	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
 		// Reset warnings and check RDKit library readiness
 		super.configure(inSpecs);
 
@@ -172,17 +169,14 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 
 		// Auto guess the input mol column if not set - fails if no compatible
 		// column found
-		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputMolColumnName,
-				RDKitMolValue.class, 0,
+		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputMolColumnName, RDKitMolValue.class, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
 				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" "
 						+ "node to convert SMARTS.",
-						getWarningConsolidator());
+				getWarningConsolidator());
 
 		// Determines, if the input mol column exists - fails if it does not
-		SettingsUtils
-		.checkColumnExistence(inSpecs[0], m_modelInputMolColumnName,
-				RDKitMolValue.class,
+		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputMolColumnName, RDKitMolValue.class,
 				"Input column has not been specified yet.",
 				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
@@ -193,9 +187,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 			final HighlightingDefinition def = m_modelHighlighting.getDefinitions()[0];
 			if (def.isActive() && def.getType() == Type.Atoms && def.getInputColumn() == null) {
 				final SettingsModelString modelTemp = new SettingsModelString("dummy", null);
-				SettingsUtils.autoGuessColumn(
-						inSpecs[0], modelTemp,
-						CollectionDataValue.class, 0,
+				SettingsUtils.autoGuessColumn(inSpecs[0], modelTemp, CollectionDataValue.class, 0,
 						"Auto guessing: Using column %COLUMN_NAME%.",
 						"No Collection type column found in input table, which would contain atoms to be highlighted.",
 						getWarningConsolidator());
@@ -203,22 +195,21 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 			}
 		}
 
-		// Determines, if all input list columns exists for all activated rows - fails if it does not
+		// Determines, if all input list columns exists for all activated rows - fails
+		// if it does not
 		String strWarning = null;
 		int iCountWarnings = 0;
 		for (final HighlightingDefinition def : m_modelHighlighting.getActivatedDefinitions()) {
 			final String strName = def.getInputColumn();
 			if (strName == null) {
-				strWarning = "Input atom/bond index list column " +
-						"in an activated highlighting definition is not defined yet.";
+				strWarning = "Input atom/bond index list column "
+						+ "in an activated highlighting definition is not defined yet.";
 				iCountWarnings++;
-			}
-			else {
+			} else {
 				final SettingsModelString modelTemp = new SettingsModelString("dummy", strName);
-				SettingsUtils.checkColumnExistence(inSpecs[0],
-						modelTemp,
-						CollectionDataValue.class,
-						null, "Input " + def.getType().toString().toLowerCase() + " index list column %COLUMN_NAME% does not exist. Has the input table changed?");
+				SettingsUtils.checkColumnExistence(inSpecs[0], modelTemp, CollectionDataValue.class, null,
+						"Input " + def.getType().toString().toLowerCase()
+								+ " index list column %COLUMN_NAME% does not exist. Has the input table changed?");
 			}
 		}
 
@@ -227,16 +218,13 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 		}
 
 		// Auto guess the new column name and make it unique
-		final String strInputMolColumnName = m_modelInputMolColumnName
-				.getStringValue();
-		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
-				m_modelNewColumnName, strInputMolColumnName
-				+ " (Highlighting)");
+		final String strInputMolColumnName = m_modelInputMolColumnName.getStringValue();
+		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null, m_modelNewColumnName,
+				strInputMolColumnName + " (Highlighting)");
 
 		// Determine, if the new column name has been set and if it is really
 		// unique
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
-				m_modelNewColumnName,
+		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null, m_modelNewColumnName,
 				"Output column has not been specified yet.",
 				"The name %COLUMN_NAME% of the new column exists already in the input.");
 
@@ -248,31 +236,29 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	}
 
 	/**
-	 * This implementation generates input data info object for the input mol
-	 * column and connects it with the information coming from the appropriate
-	 * setting model. {@inheritDoc}
+	 * This implementation generates input data info object for the input mol column
+	 * and connects it with the information coming from the appropriate setting
+	 * model. {@inheritDoc}
 	 */
 	@Override
-	protected InputDataInfo[] createInputDataInfos(final int inPort,
-			final DataTableSpec inSpec) throws InvalidSettingsException {
+	protected InputDataInfo[] createInputDataInfos(final int inPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
 
 		InputDataInfo[] arrDataInfo = null;
 
 		// Specify input of table 1
 		if (inPort == 0) {
 			final HighlightingDefinition[] arrDefs = m_modelHighlighting.getActivatedDefinitions();
-			arrDataInfo = new InputDataInfo[1 + arrDefs.length]; // We have one molecule input columns + n index input columns
-			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, null,
-					m_modelInputMolColumnName, "molecule",
-					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-					RDKitMolValue.class);
+			arrDataInfo = new InputDataInfo[1 + arrDefs.length]; // We have one molecule input columns + n index input
+																	// columns
+			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, null, m_modelInputMolColumnName, "molecule",
+					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null, RDKitMolValue.class);
 			for (int i = 0; i < arrDefs.length; i++) {
-				final String strColumnName =  arrDefs[i].getInputColumn();
-				arrDataInfo[i + 1] = (strColumnName == null ? null : new InputDataInfo(inSpec, null,
-						new SettingsModelString("dummy", strColumnName),
-						arrDefs[i].getType().toString().toLowerCase() + " list",
-						InputDataInfo.EmptyCellPolicy.TreatAsNull,
-						null, CollectionDataValue.class));
+				final String strColumnName = arrDefs[i].getInputColumn();
+				arrDataInfo[i + 1] = (strColumnName == null ? null
+						: new InputDataInfo(inSpec, null, new SettingsModelString("dummy", strColumnName),
+								arrDefs[i].getType().toString().toLowerCase() + " list",
+								InputDataInfo.EmptyCellPolicy.TreatAsNull, null, CollectionDataValue.class));
 			}
 		}
 
@@ -298,28 +284,30 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 			// ==========
 			// Generate column specs for the output table columns produced by this factory
 			final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[1]; // We have only one output column
-			arrOutputSpec[0] = new DataColumnSpecCreator(
-					m_modelNewColumnName.getStringValue(), SvgCell.TYPE)
-			.createSpec();
+			arrOutputSpec[0] = new DataColumnSpecCreator(m_modelNewColumnName.getStringValue(), SvgCell.TYPE)
+					.createSpec();
 			final HighlightingDefinition[] arrDefs = m_modelHighlighting.getActivatedDefinitions();
 
 			// Generate factory
-			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-					getWarningConsolidator(), null, arrOutputSpec) {
+			arrOutputFactories[0] = new AbstractRDKitCellFactory(this,
+					AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues, getWarningConsolidator(), null,
+					arrOutputSpec) {
 
 				@Override
 				/**
-				 * This method implements the calculation logic to generate the new cells based on
-				 * the input made available in the first (and second) parameter.
+				 * This method implements the calculation logic to generate the new cells based
+				 * on the input made available in the first (and second) parameter.
 				 * {@inheritDoc}
 				 */
-				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
+				public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row,
+						final long lUniqueWaveId) throws Exception {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
-					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
+					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
+					// created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
 					if (mol.getNumConformers() == 0) {
 						mol.compute2DCoords();
@@ -331,18 +319,20 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final HashMap<Integer, DrawColour> mapAtomColors = new HashMap<Integer, DrawColour>();
 					final HashMap<Integer, DrawColour> mapBondColors = new HashMap<Integer, DrawColour>();
 					List<Bond> listBonds = null;
-					final int iBondCount = (int)mol.getNumBonds();
+					final int iBondCount = (int) mol.getNumBonds();
 
-					// Walk through the definitions from bottom to top to overwrite colors in case of
+					// Walk through the definitions from bottom to top to overwrite colors in case
+					// of
 					// overlaps with color definition from upper definitions
 					for (int i = arrDefs.length - 1; i >= 0; i--) {
 						if (arrInputDataInfo[i + 1] != null) {
 							final HighlightingDefinition def = arrDefs[i];
 							final DrawColour col = def.getRdkitColor();
-							final Int_Vect vectInt  = markForCleanup(arrInputDataInfo[i + 1].getRDKitIntegerVector(row), lUniqueWaveId);
+							final Int_Vect vectInt = markForCleanup(arrInputDataInfo[i + 1].getRDKitIntegerVector(row),
+									lUniqueWaveId);
 							bAppliedHighlighting = true;
 							if (vectInt != null) {
-								final int iCount = (int)vectInt.size();
+								final int iCount = (int) vectInt.size();
 								if (iCount > 0) {
 									switch (def.getType()) {
 									case Atoms:
@@ -355,16 +345,18 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 											mapAtomColors.put(indexAtom, col);
 										}
 
-										// Figure out which bonds to highlight between atoms, if neighborhood is included
+										// Figure out which bonds to highlight between atoms, if neighborhood is
+										// included
 										if (def.isNeighborhoodIncluded()) {
 											if (listBonds == null) {
 												listBonds = getBondList(mol, lUniqueWaveId);
 											}
 											for (final Bond bond : listBonds) {
-												final int iBeginAtom = (int)bond.getBeginAtomIdx();
-												final int iEndAtom = (int)bond.getEndAtomIdx();
-												final int iBondIndex = (int)bond.getIdx();
-												if (subSetAtoms.contains(iBeginAtom) && subSetAtoms.contains(iEndAtom)) {
+												final int iBeginAtom = (int) bond.getBeginAtomIdx();
+												final int iEndAtom = (int) bond.getEndAtomIdx();
+												final int iBondIndex = (int) bond.getIdx();
+												if (subSetAtoms.contains(iBeginAtom)
+														&& subSetAtoms.contains(iEndAtom)) {
 													setBonds.add(iBondIndex);
 													mapBondColors.put(iBondIndex, col);
 												}
@@ -380,11 +372,13 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 											setBonds.add(indexBond);
 											mapBondColors.put(indexBond, col);
 
-											// Figure out which atoms to highlight around bonds, if neighborhood is included
+											// Figure out which atoms to highlight around bonds, if neighborhood is
+											// included
 											if (def.isNeighborhoodIncluded() && indexBond < iBondCount) {
-												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond), lUniqueWaveId);
-												final int iBeginAtom = (int)bond.getBeginAtomIdx();
-												final int iEndAtom = (int)bond.getEndAtomIdx();
+												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond),
+														lUniqueWaveId);
+												final int iBeginAtom = (int) bond.getBeginAtomIdx();
+												final int iEndAtom = (int) bond.getEndAtomIdx();
 												setAtoms.add(iBeginAtom);
 												setAtoms.add(iEndAtom);
 												mapAtomColors.put(iBeginAtom, col);
@@ -426,18 +420,20 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					molDrawing.drawMolecule(mol, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 
-					final String xmlSvg = molDrawing.getDrawingText();
+					final String xmlSvg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");
 
+					
 					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {
-						// Important: Use the factory here, because using the normal SvgCell contructor causes
-						//			  OutOfMemory exceptions when processing many SVG structures.
+						// Important: Use the factory here, because using the normal SvgCell contructor
+						// causes
+						// OutOfMemory exceptions when processing many SVG structures.
 						outputCell = SvgCellFactory.create(xmlSvg);
-					}
-					else {
+					} else {
 						outputCell = DataType.getMissingCell();
 					}
 
-					// Store a warning for the row context, if no highlighting could be applied (if no column name specified at all)
+					// Store a warning for the row context, if no highlighting could be applied (if
+					// no column name specified at all)
 					if (!bAppliedHighlighting) {
 						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
 								"Highlighting could not be applied.");
@@ -455,12 +451,12 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	}
 
 	/**
-	 * {@inheritDoc} This implementation removes additionally the compound
-	 * source column, if specified in the settings.
+	 * {@inheritDoc} This implementation removes additionally the compound source
+	 * column, if specified in the settings.
 	 */
 	@Override
-	protected ColumnRearranger createColumnRearranger(final int outPort,
-			final DataTableSpec inSpec) throws InvalidSettingsException {
+	protected ColumnRearranger createColumnRearranger(final int outPort, final DataTableSpec inSpec)
+			throws InvalidSettingsException {
 		// Perform normal work
 		final ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
 		return result;
@@ -469,8 +465,10 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 	/**
 	 * Generates a Java list of bonds for the specified molecule.
 	 * 
-	 * @param mol RDKit Molecule to traverse. Can be null.
-	 * @param lUniqueWaveId A unique wave ID used for cleanup processes.
+	 * @param mol
+	 *            RDKit Molecule to traverse. Can be null.
+	 * @param lUniqueWaveId
+	 *            A unique wave ID used for cleanup processes.
 	 * 
 	 * @return List of bonds. Empty, if null was passed in. Never null.
 	 */

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?><target name="KNIME Analytics Platform (nightly build)" sequenceNumber="1512743966">
+<locations>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="false" type="InstallableUnit">
+<unit id="com.knime.features.explorer.serverspace.feature.group" version="4.7.0.v201806260933"/>
+<unit id="jp.co.infocom.cheminfo.marvin.feature.feature.group" version="3.6.0.v0901"/>
+<unit id="org.eclipse.birt.feature.group" version="4.7.0.v201706222054"/>
+<unit id="org.knime.features.base.feature.group" version="3.6.0.v201806302000"/>
+<unit id="org.knime.features.chem.types.feature.group" version="3.6.0.v201805030956"/>
+<unit id="org.knime.features.dbdrivers.feature.group" version="3.6.0.v201805030958"/>
+<unit id="org.knime.features.ensembles.feature.group" version="3.6.0.v201805031000"/>
+<unit id="org.knime.features.ext.chem.tools.feature.group" version="3.6.0.v201805030956"/>
+<unit id="org.knime.features.ext.itemset.feature.group" version="3.6.0.v201805031001"/>
+<unit id="org.knime.features.ext.jep.feature.group" version="3.6.0.v201805161318"/>
+<unit id="org.knime.features.ext.poi.feature.group" version="3.6.0.v201805031000"/>
+<unit id="org.knime.features.js.quickforms.feature.group" version="3.6.0.v201806191000"/>
+<unit id="org.knime.features.json.feature.group" version="3.6.0.v201806181316"/>
+<unit id="org.knime.features.personalproductivity.feature.group" version="3.6.0.v201806111057"/>
+<unit id="org.knime.features.python2.feature.group" version="3.6.0.v201806281353"/>
+<unit id="org.knime.features.testingapplication.feature.group" version="3.6.0.v201805240833"/>
+<unit id="org.knime.features.xml.feature.group" version="3.6.0.v201805031010"/>
+<unit id="org.knime.targetPlatform.feature.group" version="3.6.0.v201807011328"/>
+<repository location="https://update.knime.org/analytics-platform/nightly/"/>
+</location>
+</locations>
+<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+<launcherArgs>
+<vmArgs>-server
+-Dsun.java2d.d3d=false
+-Dosgi.classloader.lock=classname
+-XX:+UnlockDiagnosticVMOptions
+-XX:+UnsyncloadClass 
+-ea
+-Dorg.eclipse.swt.internal.gtk.cairoGraphics=false
+-Dorg.eclipse.swt.internal.gtk.useCairo=false
+-Dorg.eclipse.swt.browser.IEVersion=10001
+-Dsun.awt.noerasebackground=true
+-Dsun.net.client.defaultReadTimeout=0
+-Dorg.eclipse.swt.internal.gtk.disablePrinting</vmArgs>
+</launcherArgs>
+</target>

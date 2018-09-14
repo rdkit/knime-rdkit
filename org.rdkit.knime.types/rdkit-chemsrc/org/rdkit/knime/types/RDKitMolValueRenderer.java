@@ -56,6 +56,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolSanitizeException;
@@ -205,7 +206,7 @@ implements SvgProvider {
 				molDrawing.finishDrawing();
 
 				// the svg namespace causes problems with the javascript table (github #29)
-				final String svg = molDrawing.getDrawingText().replaceAll("svg:", ""); 				
+				final String svg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");
 				if(mol != omol){
 					mol.delete();
 				}
@@ -344,4 +345,5 @@ implements SvgProvider {
 			}
 		}
 	}
+
 }

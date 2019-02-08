@@ -1,2 +1,3 @@
 bin
 /org.rdkit.knime.types/python/*.pyc
+/.metadata/

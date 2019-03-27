@@ -2,39 +2,39 @@
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Molecule Highlighting</name>
-    
+
     <shortDescription>
-        Creates an SVG column showing a molecule with highlighted atoms and bonds based on information in the input table. 
+        Creates an SVG column showing a molecule with highlighted atoms and bonds based on information in the input table.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	Creates an SVG column showing a molecule with highlighted atoms and bonds based on information in the input table. 
-	        A molecule column as well as column(s) with a list of the atom and/or bond indexes to be highlighted 
-	        needs to be provided. The node lets the user define colors to be applied for the highlighting. 
-	        If highlighting definitions overlap (e.g. atom indexes in definition 1 is 1,2,3 and in definition 2 is 3,4,5)
-	        the highlighting of the first definition will be applied (e.g to atom 3) with the color it defined. 
+            Creates an SVG column showing a molecule with highlighted atoms and bonds based on information in the input table.
+            A molecule column as well as column(s) with a list of the atom and/or bond indexes to be highlighted
+            needs to be provided. The node lets the user define colors to be applied for the highlighting.
+            If highlighting definitions overlap (e.g. atom indexes in definition 1 is 1,2,3 and in definition 2 is 3,4,5)
+            the highlighting of the first definition will be applied (e.g to atom 3) with the color it defined.
         </intro>
-   		
-   		<tab name="Options">
-	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-	        <option name="Column name for molecule with highlighting">The name of the new column, which will contain the result.</option>
+
+           <tab name="Options">
+            <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+            <option name="Column name for molecule with highlighting">The name of the new column, which will contain the result.</option>
         </tab>
         <tab name="Highlighting">
-	        <option name="Active">Flag to activate the highlighting defined in the table row.</option>
-	        <option name="Type">Determines, if the indexes are atoms or bonds.</option>
-	        <option name="Column with indexes">Select the column here that contains atom or bond indexes.</option>
-	        <option name="Color">Pick a special color for highlighting. Use the default color to let RDKit decide.</option>
-	        <option name="Neighborhood">Flag to tell if bonds between two highlighted atoms or atoms around a 
-	        	highlighted bond shall also be highlighted with the same color. This is mainly interesting when highlighting substructures
-	        	based on atom lists.</option>
-       	</tab>
+            <option name="Active">Flag to activate the highlighting defined in the table row.</option>
+            <option name="Type">Determines, if the indexes are atoms or bonds.</option>
+            <option name="Column with indexes">Select the column here that contains atom or bond indexes.</option>
+            <option name="Color">Pick a special color for highlighting. Use the default color to let RDKit decide.</option>
+            <option name="Neighborhood">Flag to tell if bonds between two highlighted atoms or atoms around a
+                highlighted bond shall also be highlighted with the same color. This is mainly interesting when highlighting substructures
+                based on atom lists.</option>
+           </tab>
     </fullDescription>
-    
+
     <ports>
-        <inPort index="0" name="Table with RDKit Molecules and Atom/Bond List(s)">Table with an RDKit Molecules and list(s) 
-        	of atoms and/or bonds to be highlighted.</inPort>
-        <outPort index="0" name="Highlighted Molecules">The input table with an additional column that shows the 
-        	highlighted atoms and bonds in an SVG molecule graphic.</outPort>
-    </ports>    
+        <inPort index="0" name="Table with RDKit Molecules and Atom/Bond List(s)">Table with an RDKit Molecules and list(s)
+            of atoms and/or bonds to be highlighted.</inPort>
+        <outPort index="0" name="Highlighted Molecules">The input table with an additional column that shows the
+            highlighted atoms and bonds in an SVG molecule graphic.</outPort>
+    </ports>
 </knimeNode>

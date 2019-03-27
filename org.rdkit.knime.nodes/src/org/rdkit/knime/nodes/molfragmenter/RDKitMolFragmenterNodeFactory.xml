@@ -5,16 +5,16 @@
 
     <shortDescription>
         Fragments a set of RDKit molecules
-	</shortDescription>
+    </shortDescription>
 
     <fullDescription>
         <intro>Fragments a set of RDKit molecules into subgraphs</intro>
 
-		<tab name="Options">
-	        <option name="RDKit Mol column">The column containing the molecules</option>
-	        <option name="Min Path Length">The minimum size (in bonds) of the subgraphs to be included.</option>
-	        <option name="Max Path Length">The maximum size (in bonds) of the subgraphs to be included.</option>
-    	</tab>
+        <tab name="Options">
+            <option name="RDKit Mol column">The column containing the molecules</option>
+            <option name="Min Path Length">The minimum size (in bonds) of the subgraphs to be included.</option>
+            <option name="Max Path Length">The maximum size (in bonds) of the subgraphs to be included.</option>
+        </tab>
     </fullDescription>
 
     <ports>

@@ -5,7 +5,7 @@
 
     <shortDescription>
         Applies a reaction to an input RDKit Mol column
-	</shortDescription>
+    </shortDescription>
 
     <fullDescription>
         <intro>
@@ -19,26 +19,26 @@
                 second input port.</p>
         </intro>
 
-		<tab name="Reaction">
-	        <option name="Reactant RDKit Mol column">The column from the first table containing reactant molecules</option>
-	        <option name="Rxn column">The column from the second table containing the Rxn</option>
-	        <option name="Reaction SMARTS">
-	            A reaction SMARTS describing the reaction.
-	            <br />
-	            For a description of the format, please see Chapter 2 of the
-	            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
-	        </option>
+        <tab name="Reaction">
+            <option name="Reactant RDKit Mol column">The column from the first table containing reactant molecules</option>
+            <option name="Rxn column">The column from the second table containing the Rxn</option>
+            <option name="Reaction SMARTS">
+                A reaction SMARTS describing the reaction.
+                <br />
+                For a description of the format, please see Chapter 2 of the
+                <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
+            </option>
         </tab>
         <tab name="Randomization">
-	        <option name="Randomize reactants">If checked, random reactants will be picked for the reactions.</option>
-	        <option name="Maximum number of random reactions">Specify here the maximum number of reactions to be calculated.</option>
-	        <option name="Random seed (or -1 to be ignored): ">Specify here a seed for the random number generator or -1 to use it without a seed.</option>
+            <option name="Randomize reactants">If checked, random reactants will be picked for the reactions.</option>
+            <option name="Maximum number of random reactions">Specify here the maximum number of reactions to be calculated.</option>
+            <option name="Random seed (or -1 to be ignored): ">Specify here a seed for the random number generator or -1 to use it without a seed.</option>
         </tab>
         <tab name="Other Options">
-	        <option name="Uniquify products">
-	        	Enable this option to filter out duplicates of products caused by symmetry in molecules.
-	        	Only the first of multiple encountered products will show up in the result table.
-	        </option>
+            <option name="Uniquify products">
+                Enable this option to filter out duplicates of products caused by symmetry in molecules.
+                Only the first of multiple encountered products will show up in the result table.
+            </option>
         </tab>
     </fullDescription>
 

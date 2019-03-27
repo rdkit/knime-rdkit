@@ -2,33 +2,33 @@
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Chemical Transformation</name>
-    
+
     <shortDescription>
         Transforms a structure into another structure by applying several reactions provided as SMARTS values or Rxn Blocks.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	Transforms a structure into another structure by applying several reactions provided as SMARTS values or Rxn Blocks.
-        	Every valid reaction found in table 2 will be applied multiple times to every input molecule in table 1. If the result
-        	does not change anymore for one reaction, the next one will be applied, and so on. Sometimes, a reaction could be 
-        	applied forever. To avoid this scenario a maximal number of reaction cycles can be set. If a reaction fails in some cycle
-        	the failure will be ignored and the next reaction is being executed on the last successful product. At the very
-        	end after all reactions were applied the end product is being sanitized. If this sanitization fails for some reason
-        	the result cell will be empty.
+            Transforms a structure into another structure by applying several reactions provided as SMARTS values or Rxn Blocks.
+            Every valid reaction found in table 2 will be applied multiple times to every input molecule in table 1. If the result
+            does not change anymore for one reaction, the next one will be applied, and so on. Sometimes, a reaction could be
+            applied forever. To avoid this scenario a maximal number of reaction cycles can be set. If a reaction fails in some cycle
+            the failure will be ignored and the next reaction is being executed on the last successful product. At the very
+            end after all reactions were applied the end product is being sanitized. If this sanitization fails for some reason
+            the result cell will be empty.
         </intro>
         <tab name="Options">
-	        <option name="Reactant RDKit Mol column (table 1)">The input column with RDKit Molecules.</option>
-	        <option name="Reaction column (table 2)">The input column with the reactions (either SMARTS or Rxn).</option>
-	        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
-	        <option name="Remove source column">Set to true to remove the molecule input column from the result table.</option>
-	        <option name="Maximal number of applied reaction cycles">To avoid eternal reaction cycles the number of cycles can be limited.</option>
+            <option name="Reactant RDKit Mol column (table 1)">The input column with RDKit Molecules.</option>
+            <option name="Reaction column (table 2)">The input column with the reactions (either SMARTS or Rxn).</option>
+            <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+            <option name="Remove source column">Set to true to remove the molecule input column from the result table.</option>
+            <option name="Maximal number of applied reaction cycles">To avoid eternal reaction cycles the number of cycles can be limited.</option>
         </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Molecules">Table with RDKit Molecule column</inPort>
         <inPort index="1" name="Reactions">Table with reactions to be applied</inPort>
         <outPort index="0" name="Transformed molecules">Transformed molecules</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

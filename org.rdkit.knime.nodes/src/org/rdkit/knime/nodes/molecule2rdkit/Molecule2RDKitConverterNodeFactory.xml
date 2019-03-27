@@ -2,79 +2,79 @@
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit From Molecule</name>
-    
+
     <shortDescription>
         Generates RDKit molecules from a molecule string representation (SMILES, SDF or SMARTS).
     </shortDescription>
-    
+
     <fullDescription>
-        <intro>Generates RDKit molecule column from a molecule string representation 
+        <intro>Generates RDKit molecule column from a molecule string representation
         (SMILES, SDF or SMARTS) and appends it to the table. Depending on the input format of the
         molecule the usage of some options is not possible. All grayed out options are not
         taken into account when the RDKit molecule gets generated, regardless if flagged or not.
         </intro>
         <tab name="Options">
-	        <option name="Molecule column">
-	            The column that contains the molecules (SMILES, SDF or SMARTS type column). If the input column type supports multiple 
-	            molecule types, the node will take SMILES before SDF before SMARTS.
-	        </option>
-	        <option name="Treat as query">
-	            Flag that can be used for SMILES and SDF input columns. Select it to prepare the resulting RDKit molecules as queries.
-	            This forces a full sanitization, keeps hydrogens in the molecule and merges query hydrogens.
-	        </option>
-	        <option name="New column name">
-	            Name of the new column in the output table.
-	        </option>
-	        <option name="Remove source column">
-	            Toggles removal of the input molecule column in the output table.
-	        </option>        
-	        <option name="Error Handling">
-	            If the molecule in an input row cannot be converted, you can select
-	            if this row should be separated from the output table and be delivered 
-	            at the second port, or if a missing value should be inserted instead
-	            of the RDKit molecule in the result table.<br/><br/>
-	            Also, it is possible to get additional error information added
-	            for all structures that failed conversion. If this option is checked, 
-	            you need to specify the name of the error column.
-	        </option>
-	        <option name="Generate 2D Coordinates">
-	           Select this option to generate 2D coordinates for the molecules.
-	           The coordinates are used for, among other things, 2D renderings of the structures. 
-	           If not selected, the renderer will (re-)compute coordinates on 
-	           demand.
-	        </option>
-	        <option name="Force Generation">
-	           Select this box to enforce 2D coordinate generation. Coordinates may
-	           already be available in the (SDF) input, so this option allows you to
-	           discard the original coordinates and recompute from scratch.
-	        </option>
+            <option name="Molecule column">
+                The column that contains the molecules (SMILES, SDF or SMARTS type column). If the input column type supports multiple
+                molecule types, the node will take SMILES before SDF before SMARTS.
+            </option>
+            <option name="Treat as query">
+                Flag that can be used for SMILES and SDF input columns. Select it to prepare the resulting RDKit molecules as queries.
+                This forces a full sanitization, keeps hydrogens in the molecule and merges query hydrogens.
+            </option>
+            <option name="New column name">
+                Name of the new column in the output table.
+            </option>
+            <option name="Remove source column">
+                Toggles removal of the input molecule column in the output table.
+            </option>
+            <option name="Error Handling">
+                If the molecule in an input row cannot be converted, you can select
+                if this row should be separated from the output table and be delivered
+                at the second port, or if a missing value should be inserted instead
+                of the RDKit molecule in the result table.<br/><br/>
+                Also, it is possible to get additional error information added
+                for all structures that failed conversion. If this option is checked,
+                you need to specify the name of the error column.
+            </option>
+            <option name="Generate 2D Coordinates">
+               Select this option to generate 2D coordinates for the molecules.
+               The coordinates are used for, among other things, 2D renderings of the structures.
+               If not selected, the renderer will (re-)compute coordinates on
+               demand.
+            </option>
+            <option name="Force Generation">
+               Select this box to enforce 2D coordinate generation. Coordinates may
+               already be available in the (SDF) input, so this option allows you to
+               discard the original coordinates and recompute from scratch.
+            </option>
         </tab>
-        <tab name="Advanced"> 
-	        <option name="Keep Hydrogens">
-	           Switch this option on to prevent the RDKit from removing hydrogens
-	       	   from molecules constructed from SDF. This option has no effect for SMILES or SMARTS input.
-	        </option>
-	        <option name="Partial Sanitization">
-	           The RDKit does a fair amount of work when compounds are loaded to make sure that they are 
-	           chemically reasonable and correct. This is called sanitization. When switching on 
-	           partial sanitization the following options allow specific aspects of the sanitization to be turned off:
-	        </option>
-	        <option name="Partial Sanitization Option - Reperceive Aromaticity">
-	           If enabled (the default) all molecules are converted to a Kekule form and then Hueckel's 
-	           rules are applied to determine aromaticity. If disabled, whatever aromaticity information 
-	           is present in the input will be used. NOTE: SDF/MOL data contains no information about aromaticity.
-	        </option>
-	        <option name="Partial Sanitization Option - Correct Stereochemistry">
-	           If enabled (the default) all stereochemistry specifications will be checked to ensure that they 
-	           are not redundant or that stereochemistry markers are not set on either atoms or double bonds 
-	           that should not have them. 
-	        </option>
-		</tab>        
+        <tab name="Advanced">
+            <option name="Keep Hydrogens">
+               Switch this option on to prevent the RDKit from removing hydrogens
+                  from molecules constructed from SDF. This option has no effect for SMILES or SMARTS input.
+            </option>
+            <option name="Partial Sanitization">
+               The RDKit does a fair amount of work when compounds are loaded to make sure that they are
+               chemically reasonable and correct. This is called sanitization. When switching on
+               partial sanitization the following options allow specific aspects of the sanitization to be turned off:
+            </option>
+            <option name="Partial Sanitization Option - Reperceive Aromaticity">
+               If enabled (the default) all molecules are converted to a Kekule form and then Hueckel's
+               rules are applied to determine aromaticity. If disabled, whatever aromaticity information
+               is present in the input will be used. NOTE: SDF/MOL data contains no information about aromaticity.
+            </option>
+            <option name="Partial Sanitization Option - Correct Stereochemistry">
+               If enabled (the default) all stereochemistry specifications will be checked to ensure that they
+               are not redundant or that stereochemistry markers are not set on either atoms or double bonds
+               that should not have them.
+            </option>
+        </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Data">Data with Smiles or SDF representation of molecules</inPort>
         <outPort index="0" name="Output data">Data with RDKit molecule column</outPort>
         <outPort index="1" name="Erroneous input data">Rows that could not be converted to a RDKit molecule</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

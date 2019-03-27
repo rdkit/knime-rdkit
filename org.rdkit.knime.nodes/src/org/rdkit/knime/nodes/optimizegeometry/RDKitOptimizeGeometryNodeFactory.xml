@@ -2,55 +2,55 @@
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Optimize Geometry</name>
-    
+
     <shortDescription>
-		Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol.
+        Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-			Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol. If the passed
-			in molecules have no conformation, it will be calculated. The optimization is based on a particular force field 
-			and a number of iterations. It is also possible to turn off optimization completely by iterating 0 times. 
-			Optionally already available coordinates can be removed in order to calculate new ones from scratch. 
-			The following force fields are supported:
-			<ul>
-				<li>UFF: Universal force field is an all atom potential containing parameters for every atom. 
-					The force field parameters are estimated using general rules based only on the element, 
-					its hybridization, and its connectivity. 
-					Published in: UFF, a Full Periodic Table Force Field for Molecular Mechanics and Molecular Dynamics Simulations 
-					by A.K. Rappe, C.J. Casewit, K.S. Colwell, W.A. Goddard III, W.M. Skiff, J.Am. Chem. Soc. 114 (1992) 10024–10035
-				</li>
-				<li>MMFF94: Merck molecular force field. 
-					Published in: Basis, form, scope, parameterization, and performance of MMFF94, Thomas A. Halgren, J. Comp. Chem.; 1996; 490-519
-				</li>
-				<li>MMFF94S: Static variant of MMFF94. MMFF94S incorporates altered out of plane bending parameters that yield planar (or nearly planar) energy-minimized geometries 
-					at unstrained delocalized trigonal nitrogen centers.
-					Published in: MMFF VI. MMFF94s option for energy minimization studies, Thomas A. Halgren; 1999; J. Comput. Chem., 20: 720–729
-				</li>
-			</ul>	
+            Optimizes the geometry for an input RDKit Mol column and calculates the molecule's energy in kcal/mol. If the passed
+            in molecules have no conformation, it will be calculated. The optimization is based on a particular force field
+            and a number of iterations. It is also possible to turn off optimization completely by iterating 0 times.
+            Optionally already available coordinates can be removed in order to calculate new ones from scratch.
+            The following force fields are supported:
+            <ul>
+                <li>UFF: Universal force field is an all atom potential containing parameters for every atom.
+                    The force field parameters are estimated using general rules based only on the element,
+                    its hybridization, and its connectivity.
+                    Published in: UFF, a Full Periodic Table Force Field for Molecular Mechanics and Molecular Dynamics Simulations
+                    by A.K. Rappe, C.J. Casewit, K.S. Colwell, W.A. Goddard III, W.M. Skiff, J.Am. Chem. Soc. 114 (1992) 10024–10035
+                </li>
+                <li>MMFF94: Merck molecular force field.
+                    Published in: Basis, form, scope, parameterization, and performance of MMFF94, Thomas A. Halgren, J. Comp. Chem.; 1996; 490-519
+                </li>
+                <li>MMFF94S: Static variant of MMFF94. MMFF94S incorporates altered out of plane bending parameters that yield planar (or nearly planar) energy-minimized geometries
+                    at unstrained delocalized trigonal nitrogen centers.
+                    Published in: MMFF VI. MMFF94s option for energy minimization studies, Thomas A. Halgren; 1999; J. Comput. Chem., 20: 720–729
+                </li>
+            </ul>
         </intro>
         <tab name="Options">
-	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-	        <option name="Force field">The force field type that shall be used for optimization.</option>
-	        <option name="New column name for optimized molecule">The name of the new column, which will contain the optimized molecule.</option>
-	        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
-	        <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.
-	        	If iterations were set to 0 (no optimization) this value will always be false.</option>
-	        <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule in kcal/mol.</option>
+            <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+            <option name="Force field">The force field type that shall be used for optimization.</option>
+            <option name="New column name for optimized molecule">The name of the new column, which will contain the optimized molecule.</option>
+            <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+            <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.
+                If iterations were set to 0 (no optimization) this value will always be false.</option>
+            <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule in kcal/mol.</option>
         </tab>
         <tab name="Advanced">
-	        <option name="Iterations">Number of iterations to use for optimization. If the number is set too small,
-	        	molecules will not be fully converged. Set it to 0 iterations to skip optimizing and only calculate the energy value.
-	        </option>
-	        <option name="Remove starting coordinates before optimizing the molecule">Set to true to remove coordinates before starting the optimization process.
-	        	This may affect the results in a positive way.
-	        </option>
+            <option name="Iterations">Number of iterations to use for optimization. If the number is set too small,
+                molecules will not be fully converged. Set it to 0 iterations to skip optimizing and only calculate the energy value.
+            </option>
+            <option name="Remove starting coordinates before optimizing the molecule">Set to true to remove coordinates before starting the optimization process.
+                This may affect the results in a positive way.
+            </option>
         </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Input table with RDKit Molecules">The molecules to optimize the geometry for</inPort>
         <outPort index="0" name="Result table">Optimized molecules with converge and energy information (kcal/mol)</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

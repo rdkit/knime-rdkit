@@ -2,36 +2,36 @@
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Salt Stripper</name>
-    
+
     <shortDescription>
         Node for stripping salts from molecules.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	This node is used for removing salts from RDKit molecules and display the salt stripped 
-        	molecules in an additional column in the output table. The user can optionally input salt 
-        	definitions into the node. If no salt definition table is provided by the user then the default 
-        	salt definitions will be applied.
+            This node is used for removing salts from RDKit molecules and display the salt stripped
+            molecules in an additional column in the output table. The user can optionally input salt
+            definitions into the node. If no salt definition table is provided by the user then the default
+            salt definitions will be applied.
         </intro>
-        
+
         <tab name="Options">
-	        <option name="RDKit Mol column">The name of the column in first table containing RDKit molecules for stripping.</option>
-	        <option name="New column name">The new name of the column that will contained the salt stripped molecule.</option>
-	        <option name="Remove source column">Toggles removal of the input RDKit Mol column in the output table.</option>
-	        <option name="Salt definition column">
-	        	The name of the column in the optional second table containing 
-	        	RDKit molecules as salt definitions (generated usually from SMARTS). This only applies, if a second table is connected.
-	        </option>
-	        <option name="Keep only largest fragment after salt stripping">Option to reduce the salt stripping outcome even more
-	        	keeping only the largest fragment of all remaining fragments. If there are multiple fragments with the same
-	        	number of atoms identified as largest fragments, it will keep only the first one it encounters.</option>
-       	</tab>
+            <option name="RDKit Mol column">The name of the column in first table containing RDKit molecules for stripping.</option>
+            <option name="New column name">The new name of the column that will contained the salt stripped molecule.</option>
+            <option name="Remove source column">Toggles removal of the input RDKit Mol column in the output table.</option>
+            <option name="Salt definition column">
+                The name of the column in the optional second table containing
+                RDKit molecules as salt definitions (generated usually from SMARTS). This only applies, if a second table is connected.
+            </option>
+            <option name="Keep only largest fragment after salt stripping">Option to reduce the salt stripping outcome even more
+                keeping only the largest fragment of all remaining fragments. If there are multiple fragments with the same
+                number of atoms identified as largest fragments, it will keep only the first one it encounters.</option>
+           </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="RDKit molecules">Table having at least one RDKit molecule type column containing RDKit molecules for stripping.</inPort>
         <inPort index="1" name="Salt definitions">Table containing RDKit molecules as salt definitions (generated usually from SMARTS). This table is optional.</inPort>
         <outPort index="0" name="Molecules without salts">Table containing the column with salt stripped RDKit molecules.</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

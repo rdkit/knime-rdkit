@@ -5,27 +5,27 @@
 
     <shortDescription>
         Picks diverse rows.
-	</shortDescription>
+    </shortDescription>
 
     <fullDescription>
         <intro>Picks diverse rows from an input table based on tanimoto distance between fingerprints.
-        The picking is done using the MaxMin algorithm 
+        The picking is done using the MaxMin algorithm
         (Ashton, M. et. al., Quant. Struct.-Act. Relat., 21 (2002), 598-604).
         The algorithm is quite fast, even for large datasets, but note that runtime
         increases rapidly with the number of rows to be picked.</intro>
-		
-		<tab name="Options">
-	        <option name="Molecule or fingerprint column (table 1)">The column containing the molecules or fingerprints to pick from.
-	        	If molecules are selected their fingerprints will be calculated automatically with Morgan, Radius 2, 2048 bit length.</option>
-	        <option name="Molecule or fingerprint column to bias away from (table 2)">
-	        	The column containing molecules or fingerprints to bias away from. This option has the effect of 
-	        	seeding the diversity pick: Molecules selected will be diverse with respect to these biasing molecules 
-	        	as well as each other. If molecules are provided as input their fingerprints will be calculated automatically based on input of table 1. 
-	        	If table 1 has fingerprints with unknown settings this calculation will fail. In this case please regenerate fingerprints in table 1 with 
-	        	the RDKit Fingerprint Node or select a compatible fingerprint column in table 2 instead of a molecule column.
-	        </option>
-	        <option name="Number to pick">Number of diverse rows to pick.</option>
-	        <option name="Random seed">Random number seed to use.</option>
+
+        <tab name="Options">
+            <option name="Molecule or fingerprint column (table 1)">The column containing the molecules or fingerprints to pick from.
+                If molecules are selected their fingerprints will be calculated automatically with Morgan, Radius 2, 2048 bit length.</option>
+            <option name="Molecule or fingerprint column to bias away from (table 2)">
+                The column containing molecules or fingerprints to bias away from. This option has the effect of
+                seeding the diversity pick: Molecules selected will be diverse with respect to these biasing molecules
+                as well as each other. If molecules are provided as input their fingerprints will be calculated automatically based on input of table 1.
+                If table 1 has fingerprints with unknown settings this calculation will fail. In this case please regenerate fingerprints in table 1 with
+                the RDKit Fingerprint Node or select a compatible fingerprint column in table 2 instead of a molecule column.
+            </option>
+            <option name="Number to pick">Number of diverse rows to pick.</option>
+            <option name="Random seed">Random number seed to use.</option>
         </tab>
     </fullDescription>
 

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
-	<name>RDKit Find Murcko Scaffolds</name>
-	
-	<shortDescription>
-	    Generates the Murcko scaffold for an input RDKit Mol column
-	</shortDescription>
-	
-	<fullDescription>
-		<intro>Generates the Murcko scaffold for an input RDKit Mol column and appends
-		it to the table.</intro>
-	</fullDescription>
-	
-	<ports>
-		<inPort index="0" name="Data">Data with RDKit Mol column</inPort>
-		<outPort index="0" name="Data with scaffold column">Data with the Murcko scaffold column</outPort>
-	</ports>	
+    <name>RDKit Find Murcko Scaffolds</name>
+
+    <shortDescription>
+        Generates the Murcko scaffold for an input RDKit Mol column
+    </shortDescription>
+
+    <fullDescription>
+        <intro>Generates the Murcko scaffold for an input RDKit Mol column and appends
+        it to the table.</intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Data">Data with RDKit Mol column</inPort>
+        <outPort index="0" name="Data with scaffold column">Data with the Murcko scaffold column</outPort>
+    </ports>
 </knimeNode>

@@ -5,22 +5,22 @@
     <shortDescription>
         Node to read fingerprints from a FPS file into an output table.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	This node reads an FPS file with its fingerprint records into a KNIME table. 
-        	The format of the .fps file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
+            This node reads an FPS file with its fingerprint records into a KNIME table.
+            The format of the .fps file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
         </intro>
-        
+
         <tab name="Options">
-	        <option name="Input FPS file">The location of the FPS file containing fingerprint records.</option>
-	        <option name="Use IDs from file as row IDs (Requires unique IDs!)">
-	        	Flag to determine, if IDs read from a fingerprint record of the file shall be used as row IDs. 
-	        	This will fail, if the FPS file does not contain unique fingerprint IDs. </option>
-       	</tab>
+            <option name="Input FPS file">The location of the FPS file containing fingerprint records.</option>
+            <option name="Use IDs from file as row IDs (Requires unique IDs!)">
+                Flag to determine, if IDs read from a fingerprint record of the file shall be used as row IDs.
+                This will fail, if the FPS file does not contain unique fingerprint IDs. </option>
+           </tab>
     </fullDescription>
-    
+
     <ports>
         <outPort index="0" name="Fingerprint table">Table containing fingerprints.</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

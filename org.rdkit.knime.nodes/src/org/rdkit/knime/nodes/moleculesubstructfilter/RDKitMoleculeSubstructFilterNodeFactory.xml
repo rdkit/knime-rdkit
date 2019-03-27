@@ -5,7 +5,7 @@
 
     <shortDescription>
         Applies a number of substructure filters to an input RDKit Mol column.
-	</shortDescription>
+    </shortDescription>
 
     <fullDescription>
         <intro>Applies a substructure filter to an input RDKit Mol column. The patterns
@@ -13,27 +13,27 @@
             of patterns to match or to require that all match.
         </intro>
 
-		<tab name="Options">
-	        <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>
-	        <option name="Query Mol column">Select the column from the second input table that contains the query molecules.
-	        	Acceptable types are SMARTS, SMILES, SDF and RDKit Mol.</option>
-	        <option name="Matches">Select the minimum number of patterns that must match for each molecule so that it is
-	            included in the first output table</option>
-	        <option name="New column name for matching substructures">Enter here the name of the new column that will contain
-	        	a list of all matching substructure row indices</option>
-       	</tab>
-       	<tab name="Advanced">
-	        <option name="Fingerprint screening threshold">Substructure search performance can be improved using fingerprints.
-	        	This makes sense when there are many different query molecules and a lot of input molecules. In this case
-	        	the node can pre-calculate fingerprints once for all input and query molecules and do some pre-screening for
-	        	substructure matching. The fingerprint screening threshold value defines the number of query molecules (table 2) 
-	        	that must be present in order to enable fingerprint calculation and pre-screening. 
-	        	Set it to 0 to disable fingerprint screening completely for this node. Set it to -1 to always
-	        	use the RDKit Nodes default behavior (the standard setting).</option>
-	        <option name="Use row keys as substructure match information">
-	        	The column for matching substructure indices contained (for historic reasons) the row index, which turned out
-	        	not to be too useful. Click this flag to use row keys instead, which is today the default for new nodes.</option>
-       	</tab>
+        <tab name="Options">
+            <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>
+            <option name="Query Mol column">Select the column from the second input table that contains the query molecules.
+                Acceptable types are SMARTS, SMILES, SDF and RDKit Mol.</option>
+            <option name="Matches">Select the minimum number of patterns that must match for each molecule so that it is
+                included in the first output table</option>
+            <option name="New column name for matching substructures">Enter here the name of the new column that will contain
+                a list of all matching substructure row indices</option>
+           </tab>
+           <tab name="Advanced">
+            <option name="Fingerprint screening threshold">Substructure search performance can be improved using fingerprints.
+                This makes sense when there are many different query molecules and a lot of input molecules. In this case
+                the node can pre-calculate fingerprints once for all input and query molecules and do some pre-screening for
+                substructure matching. The fingerprint screening threshold value defines the number of query molecules (table 2)
+                that must be present in order to enable fingerprint calculation and pre-screening.
+                Set it to 0 to disable fingerprint screening completely for this node. Set it to -1 to always
+                use the RDKit Nodes default behavior (the standard setting).</option>
+            <option name="Use row keys as substructure match information">
+                The column for matching substructure indices contained (for historic reasons) the row index, which turned out
+                not to be too useful. Click this flag to use row keys instead, which is today the default for new nodes.</option>
+           </tab>
     </fullDescription>
 
     <ports>

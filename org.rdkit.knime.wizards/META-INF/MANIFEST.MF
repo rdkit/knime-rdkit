@@ -2,6 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes Wizards
 Bundle-SymbolicName: org.rdkit.knime.wizards;singleton:=true
+Automatic-Module-Name: org.rdkit.knime.wizards
 Bundle-Version: 3.5.0.qualifier
 Bundle-Activator: org.rdkit.knime.wizards.RDKitNodesWizardsPlugin
 Bundle-Vendor: NIBR

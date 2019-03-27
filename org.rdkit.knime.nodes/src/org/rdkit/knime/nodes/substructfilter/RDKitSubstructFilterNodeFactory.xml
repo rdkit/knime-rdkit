@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="substruct_filter.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Substructure Filter</name>
 
     <shortDescription>
@@ -12,14 +12,16 @@
             given as a single SMARTS pattern. Molecules that match the pattern appear in the first output table, molecules that don't
             match appear in the second output table.</intro>
 
-        <option name="RDKit Mol column">The column containing the molecules</option>
-        <option name="SMARTS query">A SMARTS string describing the query.</option>
-        <option name="Do exact match">If this is set, only molecules containing the same number of atoms as the substructure 
-        query can match. This isn't exactly equivalent to an exact structure match, because query features in the query molecule 
-        can still be used, but it's close.</option>
-        <option name="Match handling">Specify here, if an additional column with details about the match shall be added.
-        It is possible to add the Atom List of the First Match or of all matches (overlaps possible).</option>
-        <option name="Column name for matching atom list">The column name of the for the atom list column, if enabled.</option>
+		<tab name="Options">
+	        <option name="RDKit Mol column">The column containing the molecules</option>
+	        <option name="SMARTS query">A SMARTS string describing the query.</option>
+	        <option name="Do exact match">If this is set, only molecules containing the same number of atoms as the substructure 
+	        query can match. This isn't exactly equivalent to an exact structure match, because query features in the query molecule 
+	        can still be used, but it's close.</option>
+	        <option name="Match handling">Specify here, if an additional column with details about the match shall be added.
+	        It is possible to add the Atom List of the First Match or of all matches (overlaps possible).</option>
+	        <option name="Column name for matching atom list">The column name of the for the atom list column, if enabled.</option>
+        </tab>
     </fullDescription>
 
     <ports>

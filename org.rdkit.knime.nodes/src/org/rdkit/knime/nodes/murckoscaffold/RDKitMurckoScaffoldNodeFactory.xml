@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="murcko_scaffold.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
 	<name>RDKit Find Murcko Scaffolds</name>
 	
 	<shortDescription>

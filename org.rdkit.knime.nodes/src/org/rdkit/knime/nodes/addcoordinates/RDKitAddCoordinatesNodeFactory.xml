@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="add_coords.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
 	<name>RDKit Generate Coords</name>
 	
 	<shortDescription>
@@ -9,20 +9,21 @@
 	
 	<fullDescription>
 		<intro>Generates coordinates (2D or 3D) for an input RDKit Mol column.</intro>
-		
-  		<option name="RDKit Mol column">The column containing molecules to be processed.</option>
-    	<option name="New column name">Name of the new column in the output table.</option>
-    	<option name="Remove source column">Toggles removal of the input RDKit Mol column in the output table.</option>
-  	
-		<option name="Dimension"> 
-			Define whether 2D or 3D coordinates will be generated.
-			2D coordinates are useful for displaying molecules in tables. 
-		</option>
-		<option name="Template Smarts">
-			If provided and 2D coordinates are being generated, 
-			the coordinates will be generated so that the piece of each molecule that
-			corresponds to the template will be drawn in the same way.
-		</option>
+		<tab name="Options">		
+	  		<option name="RDKit Mol column">The column containing molecules to be processed.</option>
+	    	<option name="New column name">Name of the new column in the output table.</option>
+	    	<option name="Remove source column">Toggles removal of the input RDKit Mol column in the output table.</option>
+	  	
+			<option name="Dimension"> 
+				Define whether 2D or 3D coordinates will be generated.
+				2D coordinates are useful for displaying molecules in tables. 
+			</option>
+			<option name="Template Smarts">
+				If provided and 2D coordinates are being generated, 
+				the coordinates will be generated so that the piece of each molecule that
+				corresponds to the template will be drawn in the same way.
+			</option>
+		</tab>
 	</fullDescription>
 	
 	<ports>

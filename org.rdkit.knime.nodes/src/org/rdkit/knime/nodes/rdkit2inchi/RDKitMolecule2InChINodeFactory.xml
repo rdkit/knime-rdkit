@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./to_inchi.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit To InChI</name>
     
     <shortDescription>
@@ -14,23 +14,27 @@
         aux information, message, log message) and gives the user the possibility to specify
         switches to influence the InChI code generation in certain ways.
         </intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Remove source column">Enable to remove the specified source column from the result table.</option>
-        <option name="New column name for InChI codes">The name of the new column, which will contain the InChi code.</option>
-        <option name="Generate also InChI keys">Enable to also generated InChI Keys.</option>
-        <option name="New column name for InChI keys">The name of the new column, which will contain the InChi keys.</option>
-        <option name="New column name prefix for extra information">The prefix of column names, which will contain the extra information about InChI code generation.</option>
-        <option name="Return Code Column">Enable to also generated a column that contains the return code of the InChI generation routine.</option>
-        <option name="Aux Info Column">Enable to also generated a column that contains aux information about the InChI code.</option>
-        <option name="Message Column">Enable to also generated a column that contains a message generated during the InChI generation routine.</option>
-        <option name="Log Column">Enable to also generated a column that contains a log message of the InChI generation routine.</option>
-        <option name="Advanced - InChI Code Generation Switches">
-        	Specify here space-separated switches, which need to start with / or - to influence the InChI code generation.
-        	Some of them make the resulting InChI code Non-standard. A good overview about possible switches can be found here:
-        	<a href="http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14">
-        		http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14
-        	</a>
-        </option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Remove source column">Enable to remove the specified source column from the result table.</option>
+	        <option name="New column name for InChI codes">The name of the new column, which will contain the InChi code.</option>
+	        <option name="Generate also InChI keys">Enable to also generated InChI Keys.</option>
+	        <option name="New column name for InChI keys">The name of the new column, which will contain the InChi keys.</option>
+	        <option name="New column name prefix for extra information">The prefix of column names, which will contain the extra information about InChI code generation.</option>
+	        <option name="Return Code Column">Enable to also generated a column that contains the return code of the InChI generation routine.</option>
+	        <option name="Aux Info Column">Enable to also generated a column that contains aux information about the InChI code.</option>
+	        <option name="Message Column">Enable to also generated a column that contains a message generated during the InChI generation routine.</option>
+	        <option name="Log Column">Enable to also generated a column that contains a log message of the InChI generation routine.</option>
+        </tab>
+        <tab name="Advanced">
+	        <option name="InChI Code Generation Switches">
+	        	Specify here space-separated switches, which need to start with / or - to influence the InChI code generation.
+	        	Some of them make the resulting InChI code Non-standard. A good overview about possible switches can be found here:
+	        	<a href="http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14">
+	        		http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14
+	        	</a>
+	        </option>
+        </tab>
     </fullDescription>
     
     <ports>

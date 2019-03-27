@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="canonical_smiles.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Canon SMILES</name>
     
     <shortDescription>
@@ -12,9 +12,11 @@
         	Generates RDKit canonical SMILES for an input RDKit Mol column and appends
 			it to the table.
 		</intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="New column name">The name of the new column, which will contain the canonical SMILES.</option>
-        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+		<tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="New column name">The name of the new column, which will contain the canonical SMILES.</option>
+	        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+        </tab>
     </fullDescription>
     
     <ports>

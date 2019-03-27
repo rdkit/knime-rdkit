@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./to_rdkit.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit From InChI</name>
     
     <shortDescription>
@@ -13,15 +13,18 @@
         offers options to generate extra information about the generation process (return code,
         message, log message).
         </intro>
-        <option name="InChI code column">The input column with InChI codes.</option>
-        <option name="Remove source column">Enable to remove the specified source column from the result table.</option>
-        <option name="New column name for RDKit molecules">The name of the new column, which will contain the RDKit molecules.</option>
-        <option name="Sanitize resulting molecule">Enable to sanitize the generated molecule.</option>
-        <option name="Remove hydrogens">Enable to remove hydrogens from the generated molecule.</option>
-        <option name="New column name prefix for extra information">The prefix of column names, which will contain the extra information about the conversion.</option>
-        <option name="Return Code Column">Enable to also generated a column that contains the return code of the InChI code conversion.</option>
-        <option name="Message Column">Enable to also generated a column that contains a message generated during the InChI code conversion.</option>
-        <option name="Log Column">Enable to also generated a column that contains a log message of the InChI code conversion.</option>
+        
+        <tab name="Options">
+	        <option name="InChI code column">The input column with InChI codes.</option>
+	        <option name="Remove source column">Enable to remove the specified source column from the result table.</option>
+	        <option name="New column name for RDKit molecules">The name of the new column, which will contain the RDKit molecules.</option>
+	        <option name="Sanitize resulting molecule">Enable to sanitize the generated molecule.</option>
+	        <option name="Remove hydrogens">Enable to remove hydrogens from the generated molecule.</option>
+	        <option name="New column name prefix for extra information">The prefix of column names, which will contain the extra information about the conversion.</option>
+	        <option name="Return Code Column">Enable to also generated a column that contains the return code of the InChI code conversion.</option>
+	        <option name="Message Column">Enable to also generated a column that contains a message generated during the InChI code conversion.</option>
+	        <option name="Log Column">Enable to also generated a column that contains a log message of the InChI code conversion.</option>
+        </tab>
     </fullDescription>
     
     <ports>

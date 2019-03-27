@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit SMILES Headers</name>
     
     <shortDescription>
@@ -41,19 +41,21 @@
         	Optionally, it is possible to remove all SMILES information from the column properties before
         	applying any new SMILES values to them.
        	</intro>
-        <option name="Use column titles of Data Table as SMILES property definitions">
-        	Flag this option to use column titles as SMILES values. This option is only visible and
-        	takes only effect, if there is no SMILES Definition Table connected and if it is checked.
-        	Invalid SMILES values in header titles are ignored without warnings or errors.
-        </option>
-        <option name="Column with target column names">The input column of the SMILES Definition Table that defines
-        	which Data Table column headers shall be changed.</option>
-        <option name="Column with new SMILES values">The new SMILES values to be set for
-        	the specified Data Table columns. Note, that an empty or missing cell will actually 
-        	remove the SMILES header information.</option>
-        <option name="Remove existing SMILES values in all headers first">Flag this option to remove
-        	all existing SMILES values from the properties of all(!) header columns of the data table before 
-        	setting new SMILES values based on the SMILES Definition Table.</option>
+       	<tab name="Options">
+	        <option name="Use column titles of Data Table as SMILES property definitions">
+	        	Flag this option to use column titles as SMILES values. This option is only visible and
+	        	takes only effect, if there is no SMILES Definition Table connected and if it is checked.
+	        	Invalid SMILES values in header titles are ignored without warnings or errors.
+	        </option>
+	        <option name="Column with target column names">The input column of the SMILES Definition Table that defines
+	        	which Data Table column headers shall be changed.</option>
+	        <option name="Column with new SMILES values">The new SMILES values to be set for
+	        	the specified Data Table columns. Note, that an empty or missing cell will actually 
+	        	remove the SMILES header information.</option>
+	        <option name="Remove existing SMILES values in all headers first">Flag this option to remove
+	        	all existing SMILES values from the properties of all(!) header columns of the data table before 
+	        	setting new SMILES values based on the SMILES Definition Table.</option>
+       	</tab>
     </fullDescription>
     
     <ports>

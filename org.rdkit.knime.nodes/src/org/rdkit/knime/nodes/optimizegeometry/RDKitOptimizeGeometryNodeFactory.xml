@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Optimize Geometry</name>
     
     <shortDescription>
@@ -30,19 +30,23 @@
 				</li>
 			</ul>	
         </intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Force field">The force field type that shall be used for optimization.</option>
-        <option name="New column name for optimized molecule">The name of the new column, which will contain the optimized molecule.</option>
-        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
-        <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.
-        	If iterations were set to 0 (no optimization) this value will always be false.</option>
-        <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule in kcal/mol.</option>
-        <option name="Advanced - Iterations">Number of iterations to use for optimization. If the number is set too small,
-        	molecules will not be fully converged. Set it to 0 iterations to skip optimizing and only calculate the energy value.
-        </option>
-        <option name="Advanced - Remove starting coordinates before optimizing the molecule">Set to true to remove coordinates before starting the optimization process.
-        	This may affect the results in a positive way.
-        </option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Force field">The force field type that shall be used for optimization.</option>
+	        <option name="New column name for optimized molecule">The name of the new column, which will contain the optimized molecule.</option>
+	        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+	        <option name="New column name for converge information">The name of the new column, which will contain a flag to tell whether the optimized molecule is converged.
+	        	If iterations were set to 0 (no optimization) this value will always be false.</option>
+	        <option name="New column name for energy information">The name of the new column, which will contain the energy value of the optimized molecule in kcal/mol.</option>
+        </tab>
+        <tab name="Advanced">
+	        <option name="Iterations">Number of iterations to use for optimization. If the number is set too small,
+	        	molecules will not be fully converged. Set it to 0 iterations to skip optimizing and only calculate the energy value.
+	        </option>
+	        <option name="Remove starting coordinates before optimizing the molecule">Set to true to remove coordinates before starting the optimization process.
+	        	This may affect the results in a positive way.
+	        </option>
+        </tab>
     </fullDescription>
     
     <ports>

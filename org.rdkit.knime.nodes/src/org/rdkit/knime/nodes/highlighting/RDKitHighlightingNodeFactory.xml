@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Molecule Highlighting</name>
     
     <shortDescription>
@@ -15,16 +15,20 @@
 	        If highlighting definitions overlap (e.g. atom indexes in definition 1 is 1,2,3 and in definition 2 is 3,4,5)
 	        the highlighting of the first definition will be applied (e.g to atom 3) with the color it defined. 
         </intro>
-   
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Column name for molecule with highlighting">The name of the new column, which will contain the result.</option>
-        <option name="Highlighting - Active">Flag to activate the highlighting defined in the table row.</option>
-        <option name="Highlighting - Type">Determines, if the indexes are atoms or bonds.</option>
-        <option name="Highlighting - Column with indexes">Select the column here that contains atom or bond indexes.</option>
-        <option name="Highlighting - Color">Pick a special color for highlighting. Use the default color to let RDKit decide.</option>
-        <option name="Highlighting - Neighborhood">Flag to tell if bonds between two highlighted atoms or atoms around a 
-        	highlighted bond shall also be highlighted with the same color. This is mainly interesting when highlighting substructures
-        	based on atom lists.</option>
+   		
+   		<tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Column name for molecule with highlighting">The name of the new column, which will contain the result.</option>
+        </tab>
+        <tab name="Highlighting">
+	        <option name="Active">Flag to activate the highlighting defined in the table row.</option>
+	        <option name="Type">Determines, if the indexes are atoms or bonds.</option>
+	        <option name="Column with indexes">Select the column here that contains atom or bond indexes.</option>
+	        <option name="Color">Pick a special color for highlighting. Use the default color to let RDKit decide.</option>
+	        <option name="Neighborhood">Flag to tell if bonds between two highlighted atoms or atoms around a 
+	        	highlighted bond shall also be highlighted with the same color. This is mainly interesting when highlighting substructures
+	        	based on atom lists.</option>
+       	</tab>
     </fullDescription>
     
     <ports>

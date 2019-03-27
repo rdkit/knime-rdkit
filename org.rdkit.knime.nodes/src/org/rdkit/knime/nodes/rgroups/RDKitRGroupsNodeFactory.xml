@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="rgroups.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator">
 	<name>RDKit R Group Decomposition</name>
 	
 	<shortDescription>
@@ -11,8 +11,10 @@
 		<intro>Does an R group decomposition for an input RDKit Mol column.
 		</intro>
         
-        <option name="RDKit Mol column">The column containing molecules</option>
-        <option name="Core SMARTS">A SMARTS describing the core to use.</option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The column containing molecules</option>
+	        <option name="Core SMARTS">A SMARTS describing the core to use.</option>
+        </tab>
 	</fullDescription>
 	
 	<ports>

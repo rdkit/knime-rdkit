@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Structure Normalizer</name>
     
     <shortDescription>
@@ -33,72 +33,76 @@
 			<li>8192 - TEMPLATE_TRANSFORMED, Structure has been modified using a template</li>
 			</ul>
         </intro>
-        <option name="Options - Input - SDF, SMILES or RDKit Mol column">
-        	The input column with SDF, SMILES or RDKit Molecules. The latter ones are
-        	treated as SDF values. SMILES input will be converted internally into mol blocks before the normalization
-        	is done.</option>
-        <option name="Options - Passed Output - Corrected structure column name">
-        	The name of the column that will contain the original or corrected structure,
-        	in case that any normalization has been applied.</option>
-        <option name="Options - Passed Output - Flags column name">
-        	The name of the column that will contain the warning flags. This is a bit mask
-        	where each bit has a certain meaning as described above.</option>
-        <option name="Options - Passed Output - Warning messages column name">
-        	The name of the column that will contain the warning messages associated
-        	with the flags. The &quot;Passed Molecules&quot; table contains only warnings, which
-        	are usually associated with a normalization of the input structure.</option>
-        <option name="Options - Failed Output - Flags column name">
-        	The name of the column that will contain the error flags. This is a bit mask
-        	where each bit has a certain meaning as described above.</option>
-        <option name="Options - Failed Output - Error messages column name">
-        	The name of the column that will contain the error messages associated
-        	with the flags. The &quot;Failed Molecules&quot; table contains only error that
-        	prevented the normalization of an input structure. Additionally,
-        	it may contain also warnings that are treated like an error 
-        	on special request of the user (see Advanced tab).</option>
-        <option name="Options - Logfile Output (Optional) - Selected File">
-        	A logfile can be specified here which logs additional output in case
-        	of normalizations of structures. It can be used for informal 
-        	purposes only. There is no mapping in the logfile that would
-        	reveal which line belongs to which structures, hence it is only
-        	useful if not too many structures are processed.</option>
-        <option name="Options - Logfile Output (Optional) - Overwrite if file exists">
-            Set this flag to allow overwriting of an existing logfile.</option>
-
-        <option name="Handling Failures - Special Failures (Optional)">
-        	Define here, which warning flags should be treated as errors. 
-        	If defined as an error they will appear in the second table (&quot;Failed Molecules&quot; table).
-        	</option>
-            
-        <option name="Advanced - Transformation Configuration File (.trn) (Optional)">
-        	Let's the user define a customized transformation configuration file.
-        	The information button shows the configuration that will be used.</option>
-        <option name="Advanced - Augmented Atoms Configuration File (.chk) (Optional)">
-        	Let's the user define a augmented atoms configuration file.
-        	The information button shows the configuration that will be used.</option>
-        <option name="Advanced - Advanced Settings (Optional)">
-        	Configure here certain switches that influence how the Structure
-        	Normalizer performs its work:
-        	<ul>
-        	<li>cc - Check for collisions (of atoms with other atoms or bonds) (DEFAULT SETTING)</li>
-			<li>cs - Check stereo conventions (DEFAULT SETTING)</li>
-			<li>da - Convert atom text strings to properties</li>
-			<li>dg - Convert ISIS groups to S-Groups</li>
-			<li>ds - Convert CPSS STEXT to data fields</li>
-			<li>dw - Squeeze whitespace out of identifiers</li>
-			<li>dz - Strip most of the trailing zeros</li>
-			<li>tm - Split off minor fragments (and keep only largest one) (DEFAULT SETTING)</li>
-			</ul>
-        	</option>
-        <option name="Advanced - Additional options (for advanced users only)">
-        	Normally, there is no need to change these settings. However, 
-        	if you are familiar with the underlying StruChk tool, you may 
-        	define here manually options that are passed directly to the tool
-        	in addition to the specified switches from above.
-        	All options must start with a minus, some of them need a subsequent parameter like a file name.
-        	File names should be surrounded by quotes. 
-        	Multiple options must be separated with new line characters.
-        	</option>
+        <tab name="Options">
+	        <option name="Input - SDF, SMILES or RDKit Mol column">
+	        	The input column with SDF, SMILES or RDKit Molecules. The latter ones are
+	        	treated as SDF values. SMILES input will be converted internally into mol blocks before the normalization
+	        	is done.</option>
+	        <option name="Passed Output - Corrected structure column name">
+	        	The name of the column that will contain the original or corrected structure,
+	        	in case that any normalization has been applied.</option>
+	        <option name="Passed Output - Flags column name">
+	        	The name of the column that will contain the warning flags. This is a bit mask
+	        	where each bit has a certain meaning as described above.</option>
+	        <option name="Passed Output - Warning messages column name">
+	        	The name of the column that will contain the warning messages associated
+	        	with the flags. The &quot;Passed Molecules&quot; table contains only warnings, which
+	        	are usually associated with a normalization of the input structure.</option>
+	        <option name="Failed Output - Flags column name">
+	        	The name of the column that will contain the error flags. This is a bit mask
+	        	where each bit has a certain meaning as described above.</option>
+	        <option name="Failed Output - Error messages column name">
+	        	The name of the column that will contain the error messages associated
+	        	with the flags. The &quot;Failed Molecules&quot; table contains only error that
+	        	prevented the normalization of an input structure. Additionally,
+	        	it may contain also warnings that are treated like an error 
+	        	on special request of the user (see Advanced tab).</option>
+	        <option name="Logfile Output (Optional) - Selected File">
+	        	A logfile can be specified here which logs additional output in case
+	        	of normalizations of structures. It can be used for informal 
+	        	purposes only. There is no mapping in the logfile that would
+	        	reveal which line belongs to which structures, hence it is only
+	        	useful if not too many structures are processed.</option>
+	        <option name="Logfile Output (Optional) - Overwrite if file exists">
+	            Set this flag to allow overwriting of an existing logfile.</option>
+		</tab>
+		<tab name="Handling Failures">
+	        <option name="Special Failures (Optional)">
+	        	Define here, which warning flags should be treated as errors. 
+	        	If defined as an error they will appear in the second table (&quot;Failed Molecules&quot; table).
+	        	</option>
+		</tab>
+		<tab name="Advanced">            
+	        <option name="Transformation Configuration File (.trn) (Optional)">
+	        	Let's the user define a customized transformation configuration file.
+	        	The information button shows the configuration that will be used.</option>
+	        <option name="Augmented Atoms Configuration File (.chk) (Optional)">
+	        	Let's the user define a augmented atoms configuration file.
+	        	The information button shows the configuration that will be used.</option>
+	        <option name="Advanced Settings (Optional)">
+	        	Configure here certain switches that influence how the Structure
+	        	Normalizer performs its work:
+	        	<ul>
+	        	<li>cc - Check for collisions (of atoms with other atoms or bonds) (DEFAULT SETTING)</li>
+				<li>cs - Check stereo conventions (DEFAULT SETTING)</li>
+				<li>da - Convert atom text strings to properties</li>
+				<li>dg - Convert ISIS groups to S-Groups</li>
+				<li>ds - Convert CPSS STEXT to data fields</li>
+				<li>dw - Squeeze whitespace out of identifiers</li>
+				<li>dz - Strip most of the trailing zeros</li>
+				<li>tm - Split off minor fragments (and keep only largest one) (DEFAULT SETTING)</li>
+				</ul>
+	        	</option>
+	        <option name="Additional options (for advanced users only)">
+	        	Normally, there is no need to change these settings. However, 
+	        	if you are familiar with the underlying StruChk tool, you may 
+	        	define here manually options that are passed directly to the tool
+	        	in addition to the specified switches from above.
+	        	All options must start with a minus, some of them need a subsequent parameter like a file name.
+	        	File names should be surrounded by quotes. 
+	        	Multiple options must be separated with new line characters.
+	        	</option>
+		</tab>
     </fullDescription>
     
     <ports>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./rdkit_substruct_counter.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Substructure Counter</name>
     
     <shortDescription>
@@ -13,30 +13,36 @@
         	The number of times the query molecule present in the input molecule can be repeated. 
         	It is possible to choose the unique number of times the query molecule is present in the input molecule.
         </intro>
-        <option name="Input - RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Input - Input Query Column">The name of the column in second table containing query molecules which will act as substructure for the input molecules</option>
-        <option name="Search - Count Unique Matches Only?">This option is selected if user requires unique matches of the query molecule in an input molecule.</option>
-    	<option name="Output - Instead of query molecules use names as result header titles (and tags)">
-    		Select this option to allow the node to use names specified in the query table
-    		as column title for the resulting count columns and tags. If disabled, it will use the
-    		SMILES or SMARTS value as title.
-    	</option>
-    	<option name="Output - Column with names for header titles">
-    		If the last option is enabled the column with the query names must be selected here.
-    	</option>		
-    	<option name="Output - Add total hits count column">
-    		Select this option to add a column that contains the accumulated hits count of all hits.
-    	</option>
-    	<option name="Output - New column name for total hits count">
-    		If the last option is enabled the name for the new column must be specified here.
-    	</option>		
-    	<option name="Output - Add column with tags for matching queries">
-    		Select this option to add a column that contains a collection of all tags (SMILES, SMARTS values or tags taken from header titles column)
-    		for the matching queries. This can be useful for further processing.
-    	</option>
-    	<option name="Output - New column name for tags">
-    		If the last option is enabled the name for the new column must be specified here.
-    	</option>		
+        <tab name="Input">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Input Query Column">The name of the column in second table containing query molecules which will act as substructure for the input molecules</option>
+        </tab>
+        <tab name="Search">
+        	<option name="Count Unique Matches Only?">This option is selected if user requires unique matches of the query molecule in an input molecule.</option>
+    	</tab>
+    	<tab name="Output">
+	    	<option name="Instead of query molecules use names as result header titles (and tags)">
+	    		Select this option to allow the node to use names specified in the query table
+	    		as column title for the resulting count columns and tags. If disabled, it will use the
+	    		SMILES or SMARTS value as title.
+	    	</option>
+	    	<option name="Column with names for header titles">
+	    		If the last option is enabled the column with the query names must be selected here.
+	    	</option>		
+	    	<option name="Add total hits count column">
+	    		Select this option to add a column that contains the accumulated hits count of all hits.
+	    	</option>
+	    	<option name="New column name for total hits count">
+	    		If the last option is enabled the name for the new column must be specified here.
+	    	</option>		
+	    	<option name="Add column with tags for matching queries">
+	    		Select this option to add a column that contains a collection of all tags (SMILES, SMARTS values or tags taken from header titles column)
+	    		for the matching queries. This can be useful for further processing.
+	    	</option>
+	    	<option name="New column name for tags">
+	    		If the last option is enabled the name for the new column must be specified here.
+	    	</option>
+    	</tab>		
     </fullDescription>
     
     <ports>

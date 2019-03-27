@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Other">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Other" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit SDF Difference Checker</name>
     
     <shortDescription>
@@ -17,15 +17,17 @@
         	and if this succeeds for both sides, it will compare the numbers with each other. For the comparison
         	we can specify a tolerance. 
         </intro>
-        <option name="SDF column (table 1)">The first input column with SDF strings.</option>
-        <option name="SDF column (table 2)">The second input column with SDF strings.</option>
-        <option name="Tolerance for all floating point numbers">Every floating point number in the SDF string to be compared 
-        	is allowed to have this tolerance range.</option>
-        <option name="Fail on first encountered difference">Set to true to fail immediately when the first difference has been encountered.
-        	Set to false to walk through the tables until the end to find more differences (console output) and then fail and
-        	report the first encountered difference.</option>
-        <option name="Limit console output about different rows to">To avoid that the console gets cluttered with all
-        	differences that may be found you may set a limit here. Default is 3.</option>
+        <tab name="Options">
+	        <option name="SDF column (table 1)">The first input column with SDF strings.</option>
+	        <option name="SDF column (table 2)">The second input column with SDF strings.</option>
+	        <option name="Tolerance for all floating point numbers">Every floating point number in the SDF string to be compared 
+	        	is allowed to have this tolerance range.</option>
+	        <option name="Fail on first encountered difference">Set to true to fail immediately when the first difference has been encountered.
+	        	Set to false to walk through the tables until the end to find more differences (console output) and then fail and
+	        	report the first encountered difference.</option>
+	        <option name="Limit console output about different rows to">To avoid that the console gets cluttered with all
+	        	differences that may be found you may set a limit here. Default is 3.</option>
+       	</tab>
     </fullDescription>
     
     <ports>

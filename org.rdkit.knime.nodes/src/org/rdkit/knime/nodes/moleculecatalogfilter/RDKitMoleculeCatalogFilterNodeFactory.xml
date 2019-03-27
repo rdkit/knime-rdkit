@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Molecule Catalog Filter</name>
     
     <shortDescription>
@@ -14,14 +14,16 @@
         The node gives the option to generate one or more atom lists columns with the indexes of the atoms that matched the rule; 
         this information can be used with the RDKit Molecule Highlighting node to color the associated substructures.
         </intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Filter catalogs to apply">Define which filter catalogs shall be used for filtering.</option>
-        <option name="Prefix for result columns">Column names for the second (filtered out) table are
-        automatically assigned, but a prefix can be assigned, which makes it possible to 
-        run this node sub-sequentially with different filters.</option>
-        <option name="Atom list handling">Controls whether or not lists of atoms matching the filters are generated. 
-        This also controls whether all matching atoms are in a single list or if there is a column per filter catalog.
-        </option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Filter catalogs to apply">Define which filter catalogs shall be used for filtering.</option>
+	        <option name="Prefix for result columns">Column names for the second (filtered out) table are
+	        automatically assigned, but a prefix can be assigned, which makes it possible to 
+	        run this node sub-sequentially with different filters.</option>
+	        <option name="Atom list handling">Controls whether or not lists of atoms matching the filters are generated. 
+	        This also controls whether all matching atoms are in a single list or if there is a column per filter catalog.
+	        </option>
+        </tab>
     </fullDescription>
     
     <ports>

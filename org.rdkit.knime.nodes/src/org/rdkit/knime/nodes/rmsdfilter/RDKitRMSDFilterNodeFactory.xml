@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit RMSD Filter</name>
     
     <shortDescription>
@@ -13,11 +13,14 @@
         To know which conformers belong together a reference column is used. It must contain unique keys for each conformer molecule group.
         Otherwise the result is undefined.
         </intro>
-        <option name="RDKit Mol column with conformers">The name of the column with RDKit molecules, each with exactly one conformer.
-        	If the molecule has more than one conformer embedded, only the first one will be used for the calculation.</option>
-        <option name="Reference column (e.g. an ID)">The name of the column that defines which conformers belong to each other.</option>
-        <option name="Ignore Hs (increases performance)">Set this option to remove any existing hydrogens before performing the
-        		calculation. (Default is false)</option>
+        
+        <tab name="Options">
+	        <option name="RDKit Mol column with conformers">The name of the column with RDKit molecules, each with exactly one conformer.
+	        	If the molecule has more than one conformer embedded, only the first one will be used for the calculation.</option>
+	        <option name="Reference column (e.g. an ID)">The name of the column that defines which conformers belong to each other.</option>
+	        <option name="Ignore Hs (increases performance)">Set this option to remove any existing hydrogens before performing the
+	        		calculation. (Default is false)</option>
+    	</tab>
     </fullDescription>
     
     <ports>

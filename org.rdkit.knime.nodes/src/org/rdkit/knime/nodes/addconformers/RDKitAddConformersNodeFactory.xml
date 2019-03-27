@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Add Conformers</name>
     
     <shortDescription>
@@ -10,22 +10,30 @@
     <fullDescription>
         <intro>Creates a new table with multiple conformers per input molecule. Each conformer is a copy of the molecule with different coordinates assigned.			Each conformer row is mapped back to the input table molecule with an identifier - usually the row id - taken from an input table column.
         </intro>
-        <option name="Input - RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="Input - Reference column (e.g. an ID)">The input column with reference data to be assigned to conformer rows.</option>
-        <option name="Conformer Calculation - Number of conformers">Number of conformers to be generated.</option>
-        <option name="Conformer Calculation - Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.</option>
-        <option name="Conformer Calculation - Random seed">A random seed to initialize random number generator.</option>
-        <option name="Conformer Calculation - RMS threshold for keeping a conformer">The RMS threshold for keeping a conformer.</option>
-        <option name="Output - Column name for molecules with conformers">The output column with the generated conformers.</option>
-        <option name="Output - Column name for copied reference data">The output column with reference data taken from the input table.</option>
-        <option name="Advanced - Use random coordinates as a starting point instead of distance geometry">
-        	Setting this flag will use random coordinates as a starting point instead of distance geometry.</option>
-        <option name="Advanced - Multiplier for the size of the box for random coordinates">
-        	Specifies a multiplier for the size of the box for random coordinates.</option>
-        <option name="Advanced - Perform a cleanup using UFF (Universal force field) after calculation">
-        	Set this flag to perform cleanup with UFF after the conformer's calculation.
-        	Just clear this flag to output unprocessed conformers in case you want to perform other processing on them 
-        	before cleaning them up with a force field.</option>
+        <tab name="Input">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="Reference column (e.g. an ID)">The input column with reference data to be assigned to conformer rows.</option>
+        </tab>
+        <tab name="Conformer Calculation">
+	        <option name="Number of conformers">Number of conformers to be generated.</option>
+	        <option name="Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.</option>
+	        <option name="Random seed">A random seed to initialize random number generator.</option>
+	        <option name="RMS threshold for keeping a conformer">The RMS threshold for keeping a conformer.</option>
+        </tab>
+        <tab name="Output">
+	        <option name="Column name for molecules with conformers">The output column with the generated conformers.</option>
+	        <option name="Column name for copied reference data">The output column with reference data taken from the input table.</option>
+        </tab>
+        <tab name="Advanced">
+	        <option name="Use random coordinates as a starting point instead of distance geometry">
+	        	Setting this flag will use random coordinates as a starting point instead of distance geometry.</option>
+	        <option name="Multiplier for the size of the box for random coordinates">
+	        	Specifies a multiplier for the size of the box for random coordinates.</option>
+	        <option name="Perform a cleanup using UFF (Universal force field) after calculation">
+	        	Set this flag to perform cleanup with UFF after the conformer's calculation.
+	        	Just clear this flag to output unprocessed conformers in case you want to perform other processing on them 
+	        	before cleaning them up with a force field.</option>
+       	</tab>
     </fullDescription>
     
     <ports>

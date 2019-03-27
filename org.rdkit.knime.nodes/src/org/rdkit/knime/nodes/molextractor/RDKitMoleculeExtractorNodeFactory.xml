@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Molecule Extractor</name>
     
     <shortDescription>
@@ -24,30 +24,38 @@
         	KNIME Web Portal. When the user draws multiple molecules at once this node will split up the users
         	input into multiple molecules.  
         </intro>
-        <option name="Table Input - RDKit Mol column">The input column with RDKit Molecules, which may contain multiple disconnected fragments to be extracted.</option>
-        <option name="Table Input - Reference column (e.g. an ID)">The column to be used as reference column. Its values are assigned to 
-        	 to the cells with the extracted molecules. You may use the Row ID here or set it to None, in which case the reference column will not be added.</option>
-        <option name="Variable/Data Input - Molecules">A textual representation of the molecules to be split. Usually, you will 
-        	 attach a flow variable to control this setting, e.g. coming from a Molecule Sketcher. This setting will only
-        	 be used, if no table is connected.</option>
-        <option name="Variable/Data Input - Format">The format of the molecules: MOL, SDF or SMILES are supported. 
-             This setting will only be used, if no table is connected.</option>
-        <option name="Output - Column name for extracted molecules">The name to be used for the new column used to store extracted molecules.</option>
-        <option name="Output - Column name for copied reference data">The name to be used for the new reference column used to store the reference values.</option>
-        <option name="Advanced - Sanitize fragments">Flag to determine, if fragments shall be sanitized when being extracted. 
-        	Selecting this option may lead to additional fragmentation errors. Default is false.</option>
-        <option name="Advanced - How to react on conversion errors">Define here, how the node shall behave, if 
-        	an input molecule to be processed could not be converted into an RDKit molecule. Usually, this is the case
-        	if the molecule is invalid. By default, the node
-        	will generate a missing cell and no warning.
-        	If conversion requires special treatment, you may use the RDKit From Molecule node
-        	to perform the conversion before executing this node. It offers different options for conversion.</option>
-        <option name="Advanced - How to react on empty (missing) cells">Define here, how the node shall behave, if 
-        	an empty (missing) cell is used as input. By default, the node
-        	will generate a missing cell and no warning.</option>
-        <option name="Advanced - How to react on empty (zero atom) molecules">Define here, how the node shall behave, if 
-        	an empty molecule is used as input. This means that the molecule has zero atoms. By default, the node
-        	will generate a missing cell and no warning.</option>
+        <tab name="Table Input">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules, which may contain multiple disconnected fragments to be extracted.</option>
+	        <option name="Reference column (e.g. an ID)">The column to be used as reference column. Its values are assigned to 
+	        	 to the cells with the extracted molecules. You may use the Row ID here or set it to None, in which case the reference column will not be added.</option>
+       	 </tab>
+       	 <tab name="Variable/Data Input">
+	        <option name="Molecules">A textual representation of the molecules to be split. Usually, you will 
+	        	 attach a flow variable to control this setting, e.g. coming from a Molecule Sketcher. This setting will only
+	        	 be used, if no table is connected.</option>
+	        <option name="Format">The format of the molecules: MOL, SDF or SMILES are supported. 
+	             This setting will only be used, if no table is connected.</option>
+        </tab>
+        <tab name="Output">
+	        <option name="Column name for extracted molecules">The name to be used for the new column used to store extracted molecules.</option>
+	        <option name="Column name for copied reference data">The name to be used for the new reference column used to store the reference values.</option>
+        </tab>
+        <tab name="Advanced">
+	        <option name="Sanitize fragments">Flag to determine, if fragments shall be sanitized when being extracted. 
+	        	Selecting this option may lead to additional fragmentation errors. Default is false.</option>
+	        <option name="How to react on conversion errors">Define here, how the node shall behave, if 
+	        	an input molecule to be processed could not be converted into an RDKit molecule. Usually, this is the case
+	        	if the molecule is invalid. By default, the node
+	        	will generate a missing cell and no warning.
+	        	If conversion requires special treatment, you may use the RDKit From Molecule node
+	        	to perform the conversion before executing this node. It offers different options for conversion.</option>
+	        <option name="How to react on empty (missing) cells">Define here, how the node shall behave, if 
+	        	an empty (missing) cell is used as input. By default, the node
+	        	will generate a missing cell and no warning.</option>
+	        <option name="How to react on empty (zero atom) molecules">Define here, how the node shall behave, if 
+	        	an empty molecule is used as input. This means that the molecule has zero atoms. By default, the node
+	        	will generate a missing cell and no warning.</option>
+		</tab>
     </fullDescription>
     
     <ports>

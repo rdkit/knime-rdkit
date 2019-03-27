@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Adjust Query Properties</name>
     
     <shortDescription>
@@ -15,17 +15,19 @@
         	offers query properties that can be set explicitly for query molecules to influence a search. 
         	This node lets the user define the properties to be adjusted.
         </intro>
-        <option name="RDKit Mol column">The input column with molecules to be used as queries.</option>
-        <option name="New column name">The name of the new column which will contain the tuned queries as RDKit Molecules.</option>
-        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
-        <option name="Adjust degree">Enable so that modified atoms have an explicit-degree query added 
-        	based on their degree in the query.</option>
-        <option name="Adjust degree flag">Control which atoms have a degree query added.</option>
-        <option name="Adjust ring count">Enable so that modified atoms have a ring-count query added 
-        	based on their ring count in the query.</option>
-        <option name="Adjust ring count flag">Control which atoms have a ring-count query added.</option>
-        <option name="Make dummies queries">Enable so that dummy atoms that do not have a specified isotope 
-        	are converted to any-atom queries.</option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The input column with molecules to be used as queries.</option>
+	        <option name="New column name">The name of the new column which will contain the tuned queries as RDKit Molecules.</option>
+	        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+	        <option name="Adjust degree">Enable so that modified atoms have an explicit-degree query added 
+	        	based on their degree in the query.</option>
+	        <option name="Adjust degree flag">Control which atoms have a degree query added.</option>
+	        <option name="Adjust ring count">Enable so that modified atoms have a ring-count query added 
+	        	based on their ring count in the query.</option>
+	        <option name="Adjust ring count flag">Control which atoms have a ring-count query added.</option>
+	        <option name="Make dummies queries">Enable so that dummy atoms that do not have a specified isotope 
+	        	are converted to any-atom queries.</option>
+       	</tab>
     </fullDescription>
     
     <ports>

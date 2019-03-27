@@ -30,8 +30,8 @@
             <option name="InChI Code Generation Switches">
                 Specify here space-separated switches, which need to start with / or - to influence the InChI code generation.
                 Some of them make the resulting InChI code Non-standard. A good overview about possible switches can be found here:
-                <a href="http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14">
-                    http://www.inchi-trust.org/fileadmin/user_upload/html/inchifaq/inchi-faq.html#15.14
+                <a href="https://www.inchi-trust.org/technical-faq-2/#15.14">
+                    https://www.inchi-trust.org/technical-faq-2/#15.14
                 </a>
             </option>
         </tab>

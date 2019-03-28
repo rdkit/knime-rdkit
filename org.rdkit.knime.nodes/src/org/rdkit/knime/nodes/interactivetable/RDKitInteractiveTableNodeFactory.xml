@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./rdkittable.png" type="Visualizer">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Visualizer" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Interactive Table</name>
-    
+
     <shortDescription>
         Interactive table view with capability of hiliting and showing additional header information.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-      		Displays data in a table view with the capability to show additional header information
-      		in the column header, e.g. Smiles structures, produced by RDKit nodes.
-      		If the number of rows is unknown, the view counts the number of rows when opened. 
-      		Furthermore, rows can be selected and hilited.
+              Displays data in a table view with the capability to show additional header information
+              in the column header, e.g. Smiles structures, produced by RDKit nodes.
+              If the number of rows is unknown, the view counts the number of rows when opened.
+              Furthermore, rows can be selected and hilited.
         </intro>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Arbitrary input table">Arbitrary input table.</inPort>
         <outPort index="0" name="Same table as input table">Same table as input table.</outPort>
-    </ports>    
-    
+    </ports>
+
     <views>
-    	<view index="0" name="RDKit Interactive Table View">
-    		Interactive Table with additional header information, if present.
-    	</view>
+        <view index="0" name="RDKit Interactive Table View">
+            Interactive Table with additional header information, if present.
+        </view>
     </views>
 </knimeNode>

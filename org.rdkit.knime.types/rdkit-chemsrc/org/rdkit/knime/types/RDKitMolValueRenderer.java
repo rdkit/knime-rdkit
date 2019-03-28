@@ -56,7 +56,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolSanitizeException;

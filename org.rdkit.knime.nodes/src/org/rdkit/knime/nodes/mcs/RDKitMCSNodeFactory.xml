@@ -1,38 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit MCS</name>
-    
+
     <shortDescription>
         Node to find the Maximum Common Substructure (MCS).
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	This node is used to find the Maximum Common Substructure (MCS) of a set of compounds 
-        	using the RDKit MCS code. Such a calculation can be a long running process. 
-        	Therefore, a timeout must be specified as part of the options.
-        	The MCS of an empty list of molecules is undefined and results in empty result cells.
-        	The MCS of a single molecule is the molecule itself (as SMARTS value).
-        	All other MCS calculations are based on the specified parameters.
+            This node is used to find the Maximum Common Substructure (MCS) of a set of compounds
+            using the RDKit MCS code. Such a calculation can be a long running process.
+            Therefore, a timeout must be specified as part of the options.
+            The MCS of an empty list of molecules is undefined and results in empty result cells.
+            The MCS of a single molecule is the molecule itself (as SMARTS value).
+            All other MCS calculations are based on the specified parameters.
         </intro>
-        
-        <option name="RDKit molecule column">Select here the RDKit Molecule column to be used as input.</option>
-		<option name="Threshold">Fraction of molecules that the MCS must cover. Defaults to 1.0. 0.0 &lt; threshold &#8804; 1.0.</option>
-        <option name="Ring matches ring only">Determines whether ring bonds only match other ring bonds. Default is unchecked.</option>
-        <option name="Complete rings only">Determines whether only complete rings are included in the MCS. Default is unchecked.</option>
-        <option name="Match valences">Determines whether atom valences are used in the comparison. Default is unchecked.</option>
-        <option name="Atom comparison">Specify here how atoms shall be compared: Compare Any, Compare Elements, Compare Isotopes.</option>
-        <option name="Bond comparison">Specify here how bonds shall be compared: Compare Any, Compare Order, Compare Exact Order.</option>
-		<option name="Timeout (in seconds)">Specify here how long the MCS calculation shall run at a maximum. Default is 300 seconds.
-			There is currently no way to interrupt a long-running MCS calculation. Even if you cancel an executing node
-			the calculation will continue in the background and will occupy system resources until it is either done
-			or the specified timeout occurs. Use longer timeouts with care!</option>
+
+        <tab name="Options">
+            <option name="RDKit molecule column">Select here the RDKit Molecule column to be used as input.</option>
+            <option name="Threshold">Fraction of molecules that the MCS must cover. Defaults to 1.0. 0.0 &lt; threshold &#8804; 1.0.</option>
+            <option name="Ring matches ring only">Determines whether ring bonds only match other ring bonds. Default is unchecked.</option>
+            <option name="Complete rings only">Determines whether only complete rings are included in the MCS. Default is unchecked.</option>
+            <option name="Match valences">Determines whether atom valences are used in the comparison. Default is unchecked.</option>
+            <option name="Atom comparison">Specify here how atoms shall be compared: Compare Any, Compare Elements, Compare Isotopes.</option>
+            <option name="Bond comparison">Specify here how bonds shall be compared: Compare Any, Compare Order, Compare Exact Order.</option>
+            <option name="Timeout (in seconds)">Specify here how long the MCS calculation shall run at a maximum. Default is 300 seconds.
+                There is currently no way to interrupt a long-running MCS calculation. Even if you cancel an executing node
+                the calculation will continue in the background and will occupy system resources until it is either done
+                or the specified timeout occurs. Use longer timeouts with care!</option>
+        </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="RDKit Molecules">Input table with RDKit Molecules</inPort>
         <outPort index="0" name="MCS of the input structures">Table containing a single row with the MCS as a SMARTS value
-        	and additional information (atom count, bond count and if calculation timed out).</outPort>
-    </ports>    
+            and additional information (atom count, bond count and if calculation timed out).</outPort>
+    </ports>
 </knimeNode>

@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="molfragmenter.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Molecule Fragmenter</name>
 
     <shortDescription>
         Fragments a set of RDKit molecules
-	</shortDescription>
+    </shortDescription>
 
     <fullDescription>
         <intro>Fragments a set of RDKit molecules into subgraphs</intro>
 
-        <option name="RDKit Mol column">The column containing the molecules</option>
-        <option name="Min Path Length">The minimum size (in bonds) of the subgraphs to be included.</option>
-        <option name="Max Path Length">The maximum size (in bonds) of the subgraphs to be included.</option>
+        <tab name="Options">
+            <option name="RDKit Mol column">The column containing the molecules</option>
+            <option name="Min Path Length">The minimum size (in bonds) of the subgraphs to be included.</option>
+            <option name="Max Path Length">The maximum size (in bonds) of the subgraphs to be included.</option>
+        </tab>
     </fullDescription>
 
     <ports>

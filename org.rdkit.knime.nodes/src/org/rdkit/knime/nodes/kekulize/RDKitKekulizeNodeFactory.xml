@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Kekulizer</name>
-    
+
     <shortDescription>
         Kekulizes an RDKit Molecule.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>Kekulizes an RDKit Molecule.
         </intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
-        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+        <tab name="Options">
+	        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+	        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+	        <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+	    </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Input table with RDKit Molecules">Input table with RDKit Molecules</inPort>
         <outPort index="0" name="Output table with kekulized RDKit Molecules">Output table with kekulized RDKit Molecules</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

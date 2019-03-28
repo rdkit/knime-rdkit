@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Calculate Charges</name>
-    
+
     <shortDescription>
-	Calculates Gasteiger charges for all atoms of a molecule.        
+    Calculates Gasteiger charges for all atoms of a molecule.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-       		Calculates Gasteiger charges for all atoms of a molecule. The charges are computed using an iterative procedure presented in 
-       		J. Gasteiger, M. Marseli: Iterative Equalization of Orbital Electronegativity - A Rapid Access to Atomic Charges, Tetrahedron Vol 36 p3219 1980
+               Calculates Gasteiger charges for all atoms of a molecule. The charges are computed using an iterative procedure presented in
+               J. Gasteiger, M. Marseli: Iterative Equalization of Orbital Electronegativity - A Rapid Access to Atomic Charges, Tetrahedron Vol 36 p3219 1980
         </intro>
-        <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
-        <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+        <tab name="Options">
+            <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+            <option name="New column name">The name of the new column, which will contain the calculation results.</option>
+        </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Input table with RDKit Molecules">Input table with RDKit Molecules</inPort>
         <outPort index="0" name="Result table">Table with calculated Gasteiger charges</outPort>
-    </ports>    
+    </ports>
 </knimeNode>

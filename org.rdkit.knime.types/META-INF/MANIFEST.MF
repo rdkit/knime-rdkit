@@ -21,11 +21,11 @@ Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
  lib/org.RDKit.jar,
  lib/org.RDKitDoc.jar
-Bundle-Version: 3.5.0.qualifier
+Bundle-Version: 3.6.0.qualifier
 Bundle-Name: RDKit Chemistry Type Definition Plugin
 Bundle-Activator: org.rdkit.knime.RDKitTypesPluginActivator
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.rdkit.knime.types;singleton:=true
+Automatic-Module-Name: org.rdkit.knime.types
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-

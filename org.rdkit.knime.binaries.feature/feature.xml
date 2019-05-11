@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.binaries.feature"
       label="RDKit Binaries for Java"
-      version="3.6.0.qualifier"
+      version="3.6.1.qualifier"
       provider-name="NIBR">
 
    <description>
@@ -10,7 +10,7 @@
    </description>
 
    <copyright>
-      Copyright (C) 2015 Novartis Institutes for BioMedical Research
+      Copyright (C) 2019 Novartis Institutes for BioMedical Research
    </copyright>
 
    <license>

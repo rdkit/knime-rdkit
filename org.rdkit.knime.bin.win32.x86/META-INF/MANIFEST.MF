@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit binaries for 32bit Windows
 Bundle-SymbolicName: org.rdkit.knime.bin.win32.x86;singleton:=true
-Bundle-Version: 3.6.0.qualifier
-Fragment-Host: org.rdkit.knime.types;bundle-version="3.6.0"
+Bundle-Version: 3.6.1.qualifier
+Fragment-Host: org.rdkit.knime.types;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-PlatformFilter: (&(osgi.os=win32)(osgi.arch=x86))
 Bundle-Vendor: NIBR

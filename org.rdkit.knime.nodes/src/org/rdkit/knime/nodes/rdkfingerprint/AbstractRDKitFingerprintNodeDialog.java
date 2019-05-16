@@ -170,9 +170,6 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	/** The layer flags setting model. */
 	private SettingsModelIntegerBounded m_modelLayerFlags;
 
-	/** The use chirality settings model. */
-	private SettingsModelBoolean m_modelUseChirality;
-
 	/** List of dialog components that can be shown or hidden. */
 	private final List<DialogComponent> m_listHidableDialogComponents;
 
@@ -217,8 +214,7 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 				m_modelAtomPairMaxPath = createAtomPairMaxPathModel(), "Max Path Length: ", 1, 2));
 		setHorizontalPlacement(false);
 		setHorizontalPlacement(true);
-		addHidableDialogComponent(new DialogComponentBoolean(
-				m_modelUseChirality = createUseChiralityModel(), "Use Chirality"));
+		addHidableDialogComponent(new DialogComponentBoolean(createUseChiralityModel(), "Use Chirality"));
 		setHorizontalPlacement(false);
 
 		createNewGroup(ROOTED_PARAMS_GROUP_NAME);

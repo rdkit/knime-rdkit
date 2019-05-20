@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.update"
       label="RDKit Update Site"
-      version="3.6.1.qualifier">
+      version="3.7.0.qualifier">
 
    <description url="http://www.example.com/description">
       [Enter Feature Description here.]

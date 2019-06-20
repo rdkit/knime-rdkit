@@ -10,5 +10,5 @@ requires.2.greedy=true
 
 requires.3.namespace=org.eclipse.equinox.p2.iu
 requires.3.name=org.rdkit.knime.bin.macosx.x86_64
-requires.4.filter=(&(osgi.os=macosx)(osgi.arch=x86_64))
+requires.3.filter=(&(osgi.os=macosx)(osgi.arch=x86_64))
 requires.3.greedy=true

@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.testing.feature"
       label="RDKit KNIME JUnit Test"
-      version="3.7.0.qualifier"
+      version="3.8.0.qualifier"
       provider-name="NIBR">
 
    <description>

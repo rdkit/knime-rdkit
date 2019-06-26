@@ -103,9 +103,11 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
             new String[] { "boost_serialization-vc140-mt-1_65_1",
       "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86_64,
-            new String[] { "boost_serialization-vc140-mt-x64-1_67",
-            		"boost_iostreams-vc140-mt-x64-1_67",
-            		"boost_system-vc140-mt-x64-1_67",
+            new String[] { "boost_zlib-vc140-mt-1_65_1",
+            		"boost_bzip2-vc140-mt-1_65_1",
+            		"boost_serialization-vc140-mt-1_65_1",
+            		"boost_iostreams-vc140-mt-1_65_1",
+            		"boost_system-vc140-mt-1_65_1",
       "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86,
             new String[] { "GraphMolWrap" });

@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.feature"
       label="RDKit KNIME integration"
-      version="3.4.0.qualifier"
+      version="3.8.0.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.nodes">
 
@@ -11,7 +11,7 @@
    </description>
 
    <copyright>
-      Copyright (C) 2015 Novartis Institutes for BioMedical Research
+      Copyright (C) 2010-2019 Novartis Institutes for BioMedical Research
    </copyright>
 
    <license>

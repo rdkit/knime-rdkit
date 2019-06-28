@@ -1,24 +1,14 @@
 requires.1.namespace=org.eclipse.equinox.p2.iu
-requires.1.name=org.rdkit.knime.bin.linux.x86
-requires.1.filter=(&(osgi.os=linux)(osgi.arch=x86))
+requires.1.name=org.rdkit.knime.bin.linux.x86_64
+requires.1.filter=(&(osgi.os=linux)(osgi.arch=x86_64))
 requires.1.greedy=true
 
 requires.2.namespace=org.eclipse.equinox.p2.iu
-requires.2.name=org.rdkit.knime.bin.linux.x86_64
-requires.2.filter=(&(osgi.os=linux)(osgi.arch=x86_64))
+requires.2.name=org.rdkit.knime.bin.win32.x86_64
+requires.2.filter=(&(osgi.os=win32)(osgi.arch=x86_64))
 requires.2.greedy=true
 
 requires.3.namespace=org.eclipse.equinox.p2.iu
-requires.3.name=org.rdkit.knime.bin.win32.x86
-requires.3.filter=(&(osgi.os=win32)(osgi.arch=x86))
+requires.3.name=org.rdkit.knime.bin.macosx.x86_64
+requires.3.filter=(&(osgi.os=macosx)(osgi.arch=x86_64))
 requires.3.greedy=true
-
-requires.4.namespace=org.eclipse.equinox.p2.iu
-requires.4.name=org.rdkit.knime.bin.win32.x86_64
-requires.4.filter=(&(osgi.os=win32)(osgi.arch=x86_64))
-requires.4.greedy=true
-
-requires.5.namespace=org.eclipse.equinox.p2.iu
-requires.5.name=org.rdkit.knime.bin.macosx.x86_64
-requires.5.filter=(&(osgi.os=macosx)(osgi.arch=x86_64))
-requires.5.greedy=true

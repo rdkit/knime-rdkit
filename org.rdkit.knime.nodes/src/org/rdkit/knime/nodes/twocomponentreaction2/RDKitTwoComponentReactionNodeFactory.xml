@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="two_comp_react.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Two Component Reaction</name>
 
     <shortDescription>
         Applies a reaction to two RDKit Mol columns.
-	</shortDescription>
+    </shortDescription>
     <fullDescription>
         <intro>
             Applies a reaction to two RDKit Mol columns.
@@ -18,26 +18,32 @@
                 third input port.</p>
         </intro>
 
-        <option name="Reaction - Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
-        <option name="Reaction - Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
-        <option name="Reaction - Rxn column">The column from the second table containing the Rxn</option>
-        <option name="Reaction - Reaction SMARTS">
-            A reaction SMARTS describing the reaction.
-            <br />
-            For a description of the format, please see Chapter 2 of the
-            <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
-        </option>
-        <option name="Randomization - Randomize reactants">If checked, random reactants will be picked for the reactions.</option>
-        <option name="Randomization - Maximum number of random reactions">Specify here the maximum number of reactions to be calculated.
-        	Note: When picking a number higher than a million and switching on Matrix expansion this may cause memory issue and freeze KNIME.</option>
-        <option name="Randomization - Random seed (or -1 to be ignored): ">Specify here a seed for the random number generator or -1 to use it without a seed.</option>
-        <option name="Other Options - Uniquify products">
-        	Enable this option to filter out duplicates of products caused by symmetry in molecules.
-        	Only the first of multiple encountered products will show up in the result table.
-        </option>
-        <option name="Other Options - Do matrix expansion">If checked, each reactant 1 will be combined with each reactant 2
-            yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
-            sequentially, with the shorter list determining the number of output rows.</option>
+        <tab name="Reaction">
+            <option name="Reactants 1 RDKit Mol column">The column containing the first reactant molecules</option>
+            <option name="Reactants 2 RDKit Mol column">The column containing the second reactant molecules</option>
+            <option name="Rxn column">The column from the second table containing the Rxn</option>
+            <option name="Reaction SMARTS">
+                A reaction SMARTS describing the reaction.
+                <br />
+                For a description of the format, please see Chapter 2 of the
+                <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
+            </option>
+        </tab>
+        <tab name="Randomization">
+            <option name="Randomize reactants">If checked, random reactants will be picked for the reactions.</option>
+            <option name="Maximum number of random reactions">Specify here the maximum number of reactions to be calculated.
+                Note: When picking a number higher than a million and switching on Matrix expansion this may cause memory issue and freeze KNIME.</option>
+            <option name="Random seed (or -1 to be ignored): ">Specify here a seed for the random number generator or -1 to use it without a seed.</option>
+        </tab>
+        <tab name="Other Options">
+            <option name="Uniquify products">
+                Enable this option to filter out duplicates of products caused by symmetry in molecules.
+                Only the first of multiple encountered products will show up in the result table.
+            </option>
+            <option name="Do matrix expansion">If checked, each reactant 1 will be combined with each reactant 2
+                yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
+                sequentially, with the shorter list determining the number of output rows.</option>
+        </tab>
     </fullDescription>
     <ports>
         <inPort index="0" name="Reactant 1">Data with RDKit Mol column</inPort>

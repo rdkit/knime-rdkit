@@ -1,71 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit SMILES Headers</name>
-    
+
     <shortDescription>
         Sets, changes and retrieves SMILES structures of RDKit table header properties, which
         can be made visible using the RDKit Interactive View.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	Sets, changes and/or retrieves SMILES structures of RDKit table header properties, which
-        	can be made visible using the RDKit Interactive View. 
-        	<br/><br/>
-        	Beside the column title a KNIME column
-        	can have properties assigned. Use this node to manipulate the property that controls
-        	the SMILES value used by the RDKit Interactive View to render a molecule in the column header.
-        	This node will not change any of the column titles / names.
-        	<br/><br/>
-        	This node takes a Data Table as first input - the data of the table remains unchanged, only
-        	the column properties get affected by the change. You may either use existing column titles
-        	of the Data Table as SMILES properties (if they are valid SMILES), or read SMILES values from a 
-        	SMILES Definition Table that is connected to the second input port. 
-        	<br/><br/>
-        	If a SMILES Definition Table is connected it needs to contain at least two columns: 
-        	One defines a SMILES value and the other the name of the target column
-        	that should receive the SMILES value in the header property.
-        	The node will now walk through all columns of the Data Table and checks, if a SMILES value 
-        	is available in the SMILES Definition Table	for that column. If the name of the column
-        	is found in the SMILES Definition Table it will set the associated SMILES value as a
-        	column property, and the SMILES will show up in subsequent RDKit Interactive Views. If
-        	there is no SMILES value but an empty cell defined for that column, the SMILES
-        	property gets removed instead.
-        	<br/><br/>
-        	The Data Table is available with the manipulated column properties on the first output port.
-        	The second output table contains information about all columns that have SMILES values as 
-        	properties attached. It can be used to manipulate these structure (e.g. canonicalizing them)
-        	and to reassign them afterwards again to make these changes visible in the column headers.
-        	<br/><br/>
-        	Optionally, it is possible to remove all SMILES information from the column properties before
-        	applying any new SMILES values to them.
-       	</intro>
-        <option name="Use column titles of Data Table as SMILES property definitions">
-        	Flag this option to use column titles as SMILES values. This option is only visible and
-        	takes only effect, if there is no SMILES Definition Table connected and if it is checked.
-        	Invalid SMILES values in header titles are ignored without warnings or errors.
-        </option>
-        <option name="Column with target column names">The input column of the SMILES Definition Table that defines
-        	which Data Table column headers shall be changed.</option>
-        <option name="Column with new SMILES values">The new SMILES values to be set for
-        	the specified Data Table columns. Note, that an empty or missing cell will actually 
-        	remove the SMILES header information.</option>
-        <option name="Remove existing SMILES values in all headers first">Flag this option to remove
-        	all existing SMILES values from the properties of all(!) header columns of the data table before 
-        	setting new SMILES values based on the SMILES Definition Table.</option>
+            Sets, changes and/or retrieves SMILES structures of RDKit table header properties, which
+            can be made visible using the RDKit Interactive View.
+            <br/><br/>
+            Beside the column title a KNIME column
+            can have properties assigned. Use this node to manipulate the property that controls
+            the SMILES value used by the RDKit Interactive View to render a molecule in the column header.
+            This node will not change any of the column titles / names.
+            <br/><br/>
+            This node takes a Data Table as first input - the data of the table remains unchanged, only
+            the column properties get affected by the change. You may either use existing column titles
+            of the Data Table as SMILES properties (if they are valid SMILES), or read SMILES values from a
+            SMILES Definition Table that is connected to the second input port.
+            <br/><br/>
+            If a SMILES Definition Table is connected it needs to contain at least two columns:
+            One defines a SMILES value and the other the name of the target column
+            that should receive the SMILES value in the header property.
+            The node will now walk through all columns of the Data Table and checks, if a SMILES value
+            is available in the SMILES Definition Table    for that column. If the name of the column
+            is found in the SMILES Definition Table it will set the associated SMILES value as a
+            column property, and the SMILES will show up in subsequent RDKit Interactive Views. If
+            there is no SMILES value but an empty cell defined for that column, the SMILES
+            property gets removed instead.
+            <br/><br/>
+            The Data Table is available with the manipulated column properties on the first output port.
+            The second output table contains information about all columns that have SMILES values as
+            properties attached. It can be used to manipulate these structure (e.g. canonicalizing them)
+            and to reassign them afterwards again to make these changes visible in the column headers.
+            <br/><br/>
+            Optionally, it is possible to remove all SMILES information from the column properties before
+            applying any new SMILES values to them.
+           </intro>
+           <tab name="Options">
+            <option name="Use column titles of Data Table as SMILES property definitions">
+                Flag this option to use column titles as SMILES values. This option is only visible and
+                takes only effect, if there is no SMILES Definition Table connected and if it is checked.
+                Invalid SMILES values in header titles are ignored without warnings or errors.
+            </option>
+            <option name="Column with target column names">The input column of the SMILES Definition Table that defines
+                which Data Table column headers shall be changed.</option>
+            <option name="Column with new SMILES values">The new SMILES values to be set for
+                the specified Data Table columns. Note, that an empty or missing cell will actually
+                remove the SMILES header information.</option>
+            <option name="Remove existing SMILES values in all headers first">Flag this option to remove
+                all existing SMILES values from the properties of all(!) header columns of the data table before
+                setting new SMILES values based on the SMILES Definition Table.</option>
+           </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Data Table">Data Table whose header properties (not titles) shall be manipulated.</inPort>
         <inPort index="1" name="SMILES Definition Table">Defines target column names of the Data Table and SMILES values to be set as column header properties.</inPort>
         <outPort index="0" name="Result Data Table">Same table as input data table, but with potentially changed column header properties.</outPort>
         <outPort index="1" name="Result SMILES Definition Table">Table with all column header SMILES properties in Result Data Table.</outPort>
-    </ports>    
-    
+    </ports>
+
     <views>
-    	<view index="0" name="Interactive Table View">
-    		Displays the data in a table view. Has the capability to show chemical structures in the headers of the substructure count columns.
-    	</view>
+        <view index="0" name="Interactive Table View">
+            Displays the data in a table view. Has the capability to show chemical structures in the headers of the substructure count columns.
+        </view>
     </views>
 </knimeNode>

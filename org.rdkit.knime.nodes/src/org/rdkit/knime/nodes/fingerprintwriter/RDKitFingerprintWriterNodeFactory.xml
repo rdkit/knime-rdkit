@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./fingerprint_writer.png" type="Sink">
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Sink" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
     <name>RDKit Fingerprint Writer</name>
-    
+
     <shortDescription>
         Node to write fingerprints from an input table to an FPS file.
     </shortDescription>
-    
+
     <fullDescription>
         <intro>
-        	This node writes an FPS file using fingerprints from DenseBitVector cells of an input table.
-        	If the file exists already it will not be overridden by default. 
-        	The format of the FPS file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
-        </intro>        
-        <option name="Output file">The location of the output file where the FPS file will be created.</option>
-        <option name="Overwrite if file exists">Set this to true to allow KNIME to override an existing file.</option>
-		<option name="Fingerprint column">The input column containing fingerprints (DenseBitVector cells).</option>
-        <option name="Id column">
-        	The input column containing IDs that shall be written as second column into the FPS file.
-        	It is possible to use Row IDs.
-        </option>
+            This node writes an FPS file using fingerprints from DenseBitVector cells of an input table.
+            If the file exists already it will not be overridden by default.
+            The format of the FPS file is mentioned here: https://jcheminf.springeropen.com/articles/10.1186/1758-2946-5-S1-P36
+        </intro>
+
+        <tab name="Options">
+            <option name="Output file">The location of the output file where the FPS file will be created.</option>
+            <option name="Overwrite if file exists">Set this to true to allow KNIME to override an existing file.</option>
+            <option name="Fingerprint column">The input column containing fingerprints (DenseBitVector cells).</option>
+            <option name="Id column">
+                The input column containing IDs that shall be written as second column into the FPS file.
+                It is possible to use Row IDs.
+            </option>
+           </tab>
     </fullDescription>
-    
+
     <ports>
         <inPort index="0" name="Input fingerprints">Table containing the fingerprints.</inPort>
-    </ports>    
+    </ports>
 </knimeNode>

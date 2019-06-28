@@ -2,17 +2,17 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes for Knime
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
-Bundle-Version: 3.4.0.qualifier
+Automatic-Module-Name: org.rdkit.knime.nodes
+Bundle-Version: 3.8.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
- org.knime.base;bundle-version="[3.2.2,4.0.0)",
- org.knime.chem.types;bundle-version="[3.2.2,4.0.0)",
- org.knime.workbench.repository;bundle-version="[3.2.1,4.0.0)",
- org.rdkit.knime.types;bundle-version="[3.2.5,4.0.0)",
- org.knime.ext.svg;bundle-version="[3.2.0,4.0.0)" 
-Export-Package: org.RDKit,
- org.rdkit.knime.nodes,
+Require-Bundle: org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
+ org.knime.base;bundle-version="[3.6.2,5.0.0)",
+ org.knime.chem.types;bundle-version="[3.6.0,5.0.0)",
+ org.knime.workbench.repository;bundle-version="[3.6.0,5.0.0)",
+ org.rdkit.knime.types;bundle-version="[3.8.0,5.0.0)",
+ org.knime.ext.svg;bundle-version="[3.6.2,5.0.0)"
+Export-Package: org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.addconformers,
  org.rdkit.knime.nodes.addcoordinates;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",
  org.rdkit.knime.nodes.addhs,

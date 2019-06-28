@@ -8,7 +8,7 @@
         <dependency name="org.eclipse.platform" componentType="eclipse.feature" />
 		<dependency name="javax.xml.rpc" componentType="osgi.bundle" versionDesignator="[1.1.0, 2.0.0)"/>
         <dependency name="javax.xml.soap" componentType="osgi.bundle" versionDesignator="[1.1.0, 2.0.0)"/>
-		<dependency name="org.apache.commons.logging" componentType="osgi.bundle" versionDesignator="1.1.1"/>
+		<dependency name="org.apache.commons.logging" componentType="osgi.bundle" versionDesignator="[1.2.0, 2.0.0)"/>
     </dependencies>
 </cspecExtension>
 

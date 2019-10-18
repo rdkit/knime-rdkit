@@ -1,24 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator">
-    <name>RDKit R Group Decomposition</name>
+    <name>RDKit R-Group Decomposition (new beta)</name>
 
     <shortDescription>
-        Does an R group decomposition for an input RDKit Mol column
+        Performs an R-Group decomposition for an input RDKit Mol column.
     </shortDescription>
 
     <fullDescription>
-        <intro>Does an R group decomposition for an input RDKit Mol column.
+        <intro>
+        	Performs an R-Group decomposition for an input RDKit Mol column. The algorithm in RDKit was developed in 2018/2019. 
+        	It is still in beta state and should be used with care. Results may vary in later versions.
         </intro>
 
         <tab name="Options">
-            <option name="RDKit Mol column">The column containing molecules</option>
-            <option name="Core SMARTS">A SMARTS describing the core to use.</option>
+            <option name="Input Molecules - RDKit Mol column (1st table)">The column containing molecules.</option>
+            <option name="Input Scaffolds - Core Input Column (2nd table)">If second table is connected, the column containing cores as RDKit Molecules, SMARTS, SMILES or SDF.</option>
+            <option name="Input Scaffolds - Core SMARTS">If no second table is connected, one or multiple new-line separated SMARTS can be defined as the cores to be used.</option>
+            <option name="Error Handling - Fail if no matching R-Groups are found">Flag to be set to let the node fail if no matches have been found at all.</option>
+        </tab>
+        <tab name="Advanced">
+            <option name="Labels to recognize R-Groups in scaffolds">Enable or disable one or multiple labels to be used to recognize R-Groups in scaffolds. At least one item need to be picked.</option>
+            <option name="Matching strategy">Select how matches shall be found.</option>
+            <option name="Labeling for R-Groups output">Enable or disable options now to label R-Groups in the ouput.</option>
+            <option name="Core alignment">Select how cores shall be aligned.</option>
+            <option name="Match only at R-Groups">Flag to be set to find matches only at R-Groups.</option>
+            <option name="Remove hydrogen only R-Groups">Flag to be set to remove R-Groups that consists only of hydrogens from matching.</option>
+            <option name="Remove hydrogens post match">Flag to be set to remove all hydrogens in the resulting R-Groups output.</option>
         </tab>
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data">Data with SMILES or RDKit Molecule column</inPort>
-        <outPort index="0" name="Table with R groups">Table with R groups added</outPort>
+        <inPort index="0" name="Molecules">Molecules as RDKit Molecule, SMILES or SDF column</inPort>
+        <inPort index="1" name="Scaffolds">Cores as RDKit Molecule, SMARTS, SMILES or SDF column</inPort>
+        <outPort index="0" name="Matches with R-Groups">Table with matching core and decomposed R-Groups</outPort>
+        <outPort index="1" name="Unmatched molecules">Table with unmatched input rows</outPort>
     </ports>
 </knimeNode>

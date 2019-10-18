@@ -267,6 +267,36 @@ public class InputDataInfo {
 	 * processing.
 	 * 
 	 * @param inSpec Table specification. Can be null to throw an InvalidSettingsException.
+	 * @param modelColumnName Column model, which act as container for the column name
+	 * 		and afterwards as unique id to distinguish between different data info objects.
+	 * 		Must not be null.
+	 * @param emptyCellPolicy Defines the policy to be used when an empty cell
+	 * 		is encountered during processing.
+	 * @param defaultCell A default cell value, which can be used when an empty cell
+	 * 		is encountered during processing. Can be null.
+	 * @param listDataValueClasses A list of acceptable data types. Optional. If specified,
+	 * 		then one needs to be at least compatible with the column spec, otherwise
+	 * 		an exception is thrown.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if something is not set or not compatible
+	 * 		with the data types that are expected.
+	 */
+	public InputDataInfo(final DataTableSpec inSpec, final SettingsModelString modelColumnName,
+			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
+			final List<Class<? extends DataValue>> listDataValueClasses) throws InvalidSettingsException {
+		this(inSpec, null, modelColumnName, null, emptyCellPolicy, defaultCell, listDataValueClasses);
+	}
+
+	/**
+	 * Creates a new input data info object based on a concrete table spec,
+	 * a column name within a setting model object as well as a data value class
+	 * that specifies the expected type of value. There are several checks performed
+	 * to ensure that data are compatible with the processing that will happen later.
+	 * The most important information that is delivered is the index of the
+	 * column within the specified table. This must be easily accessible during
+	 * processing.
+	 * 
+	 * @param inSpec Table specification. Can be null to throw an InvalidSettingsException.
 	 * @param strTableDescription Optional table description to be used in error message that
 	 * 		concern the table. Can be null or empty to show "input table" in messages. Otherwise it
 	 * 		will show "strTableDescription table" in messages.
@@ -292,6 +322,44 @@ public class InputDataInfo {
 			final SettingsModelString modelColumnName, final String strColumnDescription,
 			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
 			final Class<? extends DataValue>... arrDataValueClasses) throws InvalidSettingsException {
+		this(inSpec, null, modelColumnName, null, emptyCellPolicy, defaultCell, 
+				arrDataValueClasses == null ? null : Arrays.asList(arrDataValueClasses));
+	}
+	
+	/**
+	 * Creates a new input data info object based on a concrete table spec,
+	 * a column name within a setting model object as well as a data value class
+	 * that specifies the expected type of value. There are several checks performed
+	 * to ensure that data are compatible with the processing that will happen later.
+	 * The most important information that is delivered is the index of the
+	 * column within the specified table. This must be easily accessible during
+	 * processing.
+	 * 
+	 * @param inSpec Table specification. Can be null to throw an InvalidSettingsException.
+	 * @param strTableDescription Optional table description to be used in error message that
+	 * 		concern the table. Can be null or empty to show "input table" in messages. Otherwise it
+	 * 		will show "strTableDescription table" in messages.
+	 * @param modelColumnName Column model, which act as container for the column name
+	 * 		and afterwards as unique id to distinguish between different data info objects.
+	 * 		Must not be null.
+	 * @param strColumnDescription Optional column description to be used in error message that
+	 * 		concern the column. Can be null or empty to show "input column" in messages. Otherwise it
+	 * 		will show "strColumnDescription column" in messages.
+	 * @param emptyCellPolicy Defines the policy to be used when an empty cell
+	 * 		is encountered during processing.
+	 * @param defaultCell A default cell value, which can be used when an empty cell
+	 * 		is encountered during processing. Can be null.
+	 * @param listDataValueClasses A list of acceptable data types. Optional. If specified,
+	 * 		then one needs to be at least compatible with the column spec, otherwise
+	 * 		an exception is thrown.
+	 * 
+	 * @throws InvalidSettingsException Thrown, if something is not set or not compatible
+	 * 		with the data types that are expected.
+	 */
+	public InputDataInfo(final DataTableSpec inSpec, final String strTableDescription,
+			final SettingsModelString modelColumnName, final String strColumnDescription,
+			final EmptyCellPolicy emptyCellPolicy, final DataCell defaultCell,
+			final List<Class<? extends DataValue>> listDataValueClasses) throws InvalidSettingsException {
 		m_strColumnDescription = strColumnDescription;
 		m_strTableDescription = strTableDescription;
 
@@ -336,9 +404,8 @@ public class InputDataInfo {
 		}
 		else {
 			m_dataType = m_colSpec.getType(); // The existing type of the input column
-			final List<Class<? extends DataValue>> listPreferredValueClasses = (arrDataValueClasses == null ?
-					new ArrayList<Class<? extends DataValue>>(1) :
-						Arrays.asList(arrDataValueClasses));
+			final List<Class<? extends DataValue>> listPreferredValueClasses = (listDataValueClasses == null ?
+					new ArrayList<Class<? extends DataValue>>(1) : listDataValueClasses);
 			final List<Class<? extends DataValue>> m_listCompatibleValueClasses =
 					RDKitAdapterCellSupport.expandByAdaptableTypes(listPreferredValueClasses);
 
@@ -1111,7 +1178,8 @@ public class InputDataInfo {
 			if (cell.getType().isCompatible(SmilesValue.class)) {
 				strSmiles = ((SmilesValue)cell).getSmilesValue();
 			}
-         else if (cell.getType().isAdaptable(SmilesValue.class)) {
+         else if (cell.getType().isCompatible(AdapterValue.class)
+					&& cell.getType().isAdaptable(SmilesValue.class)) {
             strSmiles = ((AdapterValue)cell).getAdapter(SmilesValue.class).getSmilesValue();
          }
 			else {
@@ -1147,6 +1215,10 @@ public class InputDataInfo {
 			if (cell.getType().isCompatible(SmartsValue.class)) {
 				strSmarts = ((SmartsValue)cell).getSmartsValue();
 			}
+         else if (cell.getType().isCompatible(AdapterValue.class)
+					&& cell.getType().isAdaptable(SmartsValue.class)) {
+         	strSmarts = ((AdapterValue)cell).getAdapter(SmartsValue.class).getSmartsValue();
+         }
 			else {
 				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +
 						" is not compatible with a SmartsValue. This is usually an implementation error.");
@@ -1180,7 +1252,8 @@ public class InputDataInfo {
 			if (cell.getType().isCompatible(SdfValue.class)) {
 				strSdfValue = ((SdfValue)cell).getSdfValue();
 			}
-			else if (cell.getType().isAdaptable(SdfValue.class)) {
+			else if (cell.getType().isCompatible(AdapterValue.class)
+					&& cell.getType().isAdaptable(SdfValue.class)) {
 			   strSdfValue = ((AdapterValue)cell).getAdapter(SdfValue.class).getSdfValue();
 			}
 			else {

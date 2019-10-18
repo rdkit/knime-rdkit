@@ -871,8 +871,15 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 		// Check, if empty selections are allowed
 		if (!m_bAllowEmptySelection && m_listModelInclude.isEmpty()) {
 			((SettingsModelEnumerationArray<T>)getModel()).setValues((T[])null);
+			String strLabel = (m_lbHeader == null ? null : m_lbHeader.getText());
+			if (strLabel != null) {
+				strLabel = strLabel.trim();
+				if (strLabel.endsWith(":")) {
+					strLabel = "'" + strLabel.substring(0, strLabel.length() - 1) + "'";
+				}
+			}
 			throw new InvalidSettingsException(
-					"Please select an item from the list.");
+					"Please select a at least one item" + (strLabel == null ? "" : " of " + strLabel) + ".");
 		}
 
 		// We transfer the values from the include list into the model
@@ -952,6 +959,8 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 		});
 
 		int iRow = 0;
+		LayoutUtils.constrain(buttonPanel, new JPanel(), 0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTH, 1.0d, 1.0d, 0, 0, 0, 0);
 		LayoutUtils.constrain(buttonPanel, m_btnAdd, 0, iRow++, LayoutUtils.REMAINDER, 1,
 				LayoutUtils.HORIZONTAL, LayoutUtils.NORTH, 1.0d, 0.25d, 0, 0, 0, 0);
 		LayoutUtils.constrain(buttonPanel, m_btnAddAll, 0, iRow++, LayoutUtils.REMAINDER, 1,
@@ -960,6 +969,8 @@ public class DialogComponentEnumFilterPanel<T extends Enum<T>> extends DialogCom
 				LayoutUtils.HORIZONTAL, LayoutUtils.NORTH, 1.0d, 0.25d, 0, 0, 0, 0);
 		LayoutUtils.constrain(buttonPanel, m_btnRemoveAll, 0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
 				LayoutUtils.HORIZONTAL, LayoutUtils.NORTH, 1.0d, 0.25d, 0, 0, 0, 0);
+		LayoutUtils.constrain(buttonPanel, new JPanel(), 0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.HORIZONTAL, LayoutUtils.NORTH, 1.0d, 1.0d, 0, 0, 0, 0);
 
 		return buttonPanel;
 	}

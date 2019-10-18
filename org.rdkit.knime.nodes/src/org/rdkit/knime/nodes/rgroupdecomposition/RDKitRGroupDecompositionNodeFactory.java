@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
+ * Copyright (C) 2019
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -55,7 +55,6 @@ import org.knime.core.node.NodeView;
 /**
  * <code>NodeFactory</code> for the RDKit based "RDKitRGroups" Node.
  * 
- * @author Greg Landrum
  * @author Manuel Schwarze
  */
 public class RDKitRGroupDecompositionNodeFactory extends NodeFactory<RDKitRGroupDecompositionNodeModel> {

@@ -50,9 +50,9 @@ package org.rdkit.knime.nodes.rgroupdecomposition;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.RDKit.Atom;
 import org.RDKit.RDKFuncs;
 import org.RDKit.RGroupDecomposition;
 import org.RDKit.RGroupDecompositionParameters;
@@ -62,17 +62,20 @@ import org.RDKit.RWMol;
 import org.RDKit.StringMolMap;
 import org.RDKit.StringMolMap_Vect;
 import org.RDKit.StringROMol_VectMap;
+import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmartsCell;
+import org.knime.chem.types.SmartsCellFactory;
+import org.knime.chem.types.SmartsValue;
+import org.knime.chem.types.SmilesValue;
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -80,30 +83,25 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
-import org.rdkit.knime.nodes.mcs.MCSUtils;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
-import org.rdkit.knime.util.SafeGuardedResource;
+import org.rdkit.knime.util.SettingsModelEnumeration;
+import org.rdkit.knime.util.SettingsModelEnumerationArray;
 import org.rdkit.knime.util.SettingsUtils;
+import org.rdkit.knime.util.StringUtils;
 import org.rdkit.knime.util.WarningConsolidator;
 import org.rdkit.knime.util.WarningConsolidator.Context;
 
 /**
  * This class implements the node model of the RDKitRGroups node
  * providing calculations based on the open source RDKit library.
- * 
- * Open questions:
- * - Since we process all molecules in the input table at once, at some point the table size might be too large
- *   How should we deal with this limit? No problem, only stupid users would feed in memory collapsing numbers of molecules
- * - Should we allow definition of cores as parameter AND optional second input table to combine them? No, table would take precedence, but we should warn 
- * - Is it true that input cores can be provided as SMILES or SMARTS? Also a mix?  No mix, either SMILES or SMARTS. SMARTS as parameters, SMILES or SMARTS as input table
- * - How to do the cleanup of the data structures related to the decomposition? Clean main result object and all input molecules
  * 
  * @author Manuel Schwarze
  */
@@ -121,40 +119,74 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	protected static final int INPUT_COLUMN_MOL = 0;
 
 	/** Input data info index for SMARTS values for defining cores (optional table). */
-	protected static final int INPUT_COLUMN_SMARTS = 0;
+	protected static final int INPUT_COLUMN_CORES = 0;
 	
 	/** Row context for generating warnings, if something is incorrect in table 2 (cores). */
 	protected static final WarningConsolidator.Context ROW_CONTEXT_TABLE_CORES = new Context("cores-table", "row", "rows", true);
 
+	protected static final List<Class<? extends DataValue>> CORE_INPUT_VALUE_CLASSES = new ArrayList<>();
+	
+	static {
+		CORE_INPUT_VALUE_CLASSES.add(RDKitMolValue.class);
+		CORE_INPUT_VALUE_CLASSES.add(SmartsValue.class);
+		CORE_INPUT_VALUE_CLASSES.add(SmilesValue.class);
+		CORE_INPUT_VALUE_CLASSES.add(SdfValue.class);
+	}
+	
 	//
 	// Members
 	//
 
 	/** Settings model for the column name of the input column. */
 	private final SettingsModelString m_modelInputColumnName =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createInputColumnNameModel());
 
 	/** Settings model for the column name of the SMARTS input column (cores). */
 	private final SettingsModelString m_modelCoresInputColumnName =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createCoresInputColumnNameModel(), "cores_input_column");
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createCoresInputColumnNameModel());
 
 	/** Settings model for the core smarts to be used for the R-Group Decomposition. */
 	private final SettingsModelString m_modelCoreSmarts =
 			registerSettings(RDKitRGroupDecompositionNodeDialog.createSmartsModel());
 
-	/** Settings model for the option to remove empty Rx columns. */
-	private final SettingsModelBoolean m_modelRemoveEmptyColumns =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createRemoveEmptyColumnsModel(), true);
+	/** Settings model for the option to let the node fail, if there is match at all. */
+	private final SettingsModelBoolean m_modelFailForNoMatch =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createFailForNoMatchOptionModel(), true);
+	
+	/** Settings model for R Group labels options. */
+	private final SettingsModelEnumerationArray<Labels> m_modelLabels =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createLabelsModel());
+	
+	/** Settings model for R Group matching strategy. */
+	private final SettingsModelEnumeration<Matching> m_modelMatchingStrategy = 
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createMatchingStrategyModel());
+	
+	/** Settings model for R Group labeling options. */
+	private final SettingsModelEnumerationArray<Labeling> m_modelLabeling =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createLabelingModel());
+
+	/** Settings model for R Group core alignment. */
+	private final SettingsModelEnumeration<CoreAlignment> m_modelCoreAlignment =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createCoreAlignmentModel());
+
+	/** Settings model for the option to only match R Groups. */
+	private final SettingsModelBoolean m_modelOnlyMatchAtRGroupsModel =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createMatchOnlyAtRGroupsModel());
+
+	/** Settings model for the option to remove hydrogen only R Groups. */
+	private final SettingsModelBoolean m_modelRemoveHydrogenOnlyRGroupsModel =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createRemoveHydrogenOnlyRGroupsModel());
+
+	/** Settings model for the option to remove hydrogens post match. */
+	private final SettingsModelBoolean m_modelRemoveHydrogensPostMatchModel = 
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createRemoveHydrogensPostMatchModel());
 
 	//
 	// Intermediate Results
 	//
 	
+	/** Generated cores based on either input table or parameter. */
 	private ROMol[] m_arrSmarts = null;
-
-	private AtomicInteger[] m_aiFilledCellCounter = null;
-	
-	private int m_iNumberOfRGroups = 0;
 
 	//
 	// Constructor
@@ -192,28 +224,49 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 		// Auto guess the input column if not set - fails if no compatible column found
 		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class, 0,
-				"Auto guessing: Using column %COLUMN_NAME%.",
-				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" " +
-						"node to convert SMARTS.", getWarningConsolidator());
-
+				"Auto guessing input molecules in table 1: Using column %COLUMN_NAME%.",
+				"No RDKit Mol, SMILES or SDF compatible column in input table 1.", getWarningConsolidator());
+		
 		// Determines, if the input column exists - fails if it does not
 		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
 				"Input column has not been specified yet.",
 				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
-		// Check core SMARTS
-		if (m_modelCoreSmarts.getStringValue().isEmpty()) {
-			throw new InvalidSettingsException("Please provide a core SMARTS.");
+		// Alternative core input table handling
+		if (hasAdditionalInputTable(inSpecs)) {
+			/* 
+			// Disabled, because hiding the parameter if a cores table is connected makes more sense and is cleaner
+			// Warn, if beside the core input table also a core SMARTS parameter is set
+			if (!m_modelCoreSmarts.getStringValue().trim().isEmpty()) {
+				getWarningConsolidator().saveWarning("You set a core SMARTS parameter (currently hidden), but also connected a second table "
+						+ "with core inputs. The table will take precedence, the core SMARTS parameter will be ignored.");
+			}
+			*/
+
+			// Auto guess the core input column if not set - fails if no compatible column found
+			SettingsUtils.autoGuessColumn(inSpecs[1], m_modelCoresInputColumnName, CORE_INPUT_VALUE_CLASSES, 0,
+					"Auto guessing core input column in table 2: Using column %COLUMN_NAME%.",
+					"No RDKit Mol, SMARTS, SMILES or SDF compatible column in input table 2.", getWarningConsolidator());
+			
+			// Determines, if the core input column exists - fails if it does not
+			SettingsUtils.checkColumnExistence(inSpecs[1], m_modelCoresInputColumnName, CORE_INPUT_VALUE_CLASSES,
+					"Core input column has not been specified yet.",
+					"Core input column %COLUMN_NAME% does not exist. Has the input table 2 changed?");
 		}
-		
-		// Check optional cores table
-		// TODO - Currently not supported
+		else {
+			// Check core SMARTS parameter
+			if (m_modelCoreSmarts.getStringValue().trim().isEmpty()) {
+				throw new InvalidSettingsException("Please provide at least one valid core SMARTS as parameter or connect a second input table with cores.");
+			}
+		}
 
 		// Consolidate all warnings and make them available to the user
 		generateWarnings();
 
 		// Generate output specs
-		return m_modelRemoveEmptyColumns.getBooleanValue() ? null : getOutputTableSpecs(inSpecs);
+		DataTableSpec[] arrSpecs = getOutputTableSpecs(inSpecs);
+		
+		return arrSpecs;
 	}
 
 	/**
@@ -229,17 +282,17 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 		// Specify input of table 1 (molecules)
 		if (inPort == 0) {
-			arrDataInfo = new InputDataInfo[1]; // We have only one input column
+			arrDataInfo = new InputDataInfo[1]; // We have only one molecule input column
 			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
-					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null,
 					RDKitMolValue.class);
 		}
+		
 		// Specify input of optional table 2 (cores)
-		else if (inPort == 1) {
-			arrDataInfo = new InputDataInfo[1]; // We have only one input column
-			arrDataInfo[INPUT_COLUMN_SMARTS] = new InputDataInfo(inSpec, m_modelInputColumnName,
-					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
-					RDKitMolValue.class);
+		else if (inPort == 1 && inSpec != null) {
+			arrDataInfo = new InputDataInfo[1]; // We have only one core input column
+			arrDataInfo[INPUT_COLUMN_CORES] = new InputDataInfo(inSpec, m_modelCoresInputColumnName,
+					InputDataInfo.EmptyCellPolicy.TreatAsNull, null, CORE_INPUT_VALUE_CLASSES);
 		}
 
 		return (arrDataInfo == null ? new InputDataInfo[0] : arrDataInfo);
@@ -247,7 +300,11 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 	/**
 	 * Returns the output table specification of the specified out port.
-	 * 
+	 * We cannot predict what the R groups will be called, because this 
+	 * depends highly on the labels of the input cores. Therefore for port 0
+	 * this returns always null. For port 1 it returns always the spec
+	 * of the first input table. 
+	 *  
 	 * @param outPort Index of output port in focus. Zero-based.
 	 * @param inSpecs All input table specifications.
 	 * 
@@ -264,21 +321,15 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		switch (outPort) {
 
 		case 0:
-			if (m_arrSmarts != null &&  !m_modelRemoveEmptyColumns.getBooleanValue()) {
-				final DataColumnSpec[] arrOutputSpec = new DataColumnSpec[m_iNumberOfRGroups + 1];
-				arrOutputSpec[0] = new DataColumnSpecCreator("Core", SmartsCell.TYPE).createSpec();
-	
-				for (int i = 1; i < arrOutputSpec.length; i++) {
-					arrOutputSpec[i] = new DataColumnSpecCreator("R" + i,
-							RDKitAdapterCell.RAW_TYPE).createSpec();
-				}			
-	
-				spec = new DataTableSpec("RGroups", arrOutputSpec);
-			}
+			// We cannot predict what the R groups will be called, because this
+			// depends highly on the labels of the input cores
 			break;
+			
 		case 1:
 			// Same as input table as we just put in the same rows that did not match
-			spec = DataTableSpec.mergeDataTableSpecs(new DataTableSpec("Unmatched"), inSpecs[0]);
+			DataTableSpecCreator specCreator = new DataTableSpecCreator(inSpecs[0]);
+			specCreator.setName("Unmatched");
+			spec = specCreator.createSpec();
 			break;
 		}
 
@@ -291,34 +342,22 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	}
 	
 	/**
-	 * Prepares all cores to be used as input for R Group Decomposition. They
-	 * come either from a parameter or from an optional second input table.
-	 * In both cases they are made available as SMARTS.
+	 * Prepares all cores to be used as input for R-Group Decomposition. They
+	 * come either from a parameter (with one or more SMARTS values) or 
+	 * from an optional second input table which may contain RDKitMol values,
+	 * SMARTS, SMILES or SDF values. A table would always take precedence.
 	 */
 	@Override
 	protected void preProcessing(BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo, ExecutionContext exec)
 			throws Exception {
-		// Get the cores either from the parameter or from the input table (TODO)
-		String[] arrCores = null;
-		
-		if (inData != null) {
-			// TODO: Get cores from input table
+		if (inData.length > 1 && inData[1] != null) {
+			if (!evaluateCores(inData[1], arrInputDataInfo[1][INPUT_COLUMN_CORES])) {
+				throw new RuntimeException("No valid cores found in input table 2.");
+			}
 		}
 		else {
-			arrCores = m_modelCoreSmarts.getStringValue().split("\n");
-		}
-		
-		m_iNumberOfRGroups = 0;
-		m_arrSmarts = new ROMol[arrCores.length];
-		for (int i = 0; i < arrCores.length; i++) {
-			final String coreSmarts = arrCores[i];
-			m_arrSmarts[i] = markForCleanup(RWMol.MolFromSmarts(coreSmarts, 0, true));
-			if (m_arrSmarts[i] == null) {
-				// TODO: Better error handling
-				throw new RuntimeException("Invalid SMARTS detected.");
-			}
-			else {
-				m_iNumberOfRGroups += m_arrSmarts[i].getNumAtoms();
+			if (!evaluateCores(m_modelCoreSmarts.getStringValue())) {
+				throw new RuntimeException("No valid SMARTS found in cores parameter.");
 			}
 		}
 	}
@@ -330,29 +369,35 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, 
 			final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
-		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
-
-		// Contains the rows with the R Groups that matched
-		final BufferedDataContainer newTableData = exec.createDataContainer(arrOutSpecs[0]);
-
+		final WarningConsolidator warnings = getWarningConsolidator();
+		
 		// Contains the rows from input which did not match
-		final BufferedDataContainer unmatchedTableData = exec.createDataContainer(arrOutSpecs[1]);
+		final BufferedDataContainer unmatchedTableData = exec.createDataContainer(getOutputTableSpecs(inData)[1]);
 
 		// Get settings and define data specific behavior
 		final long lTotalRowCount = inData[0].size();
 
-		// Setup decomposition
-		RGroupDecompositionParameters params = new RGroupDecompositionParameters();
-		ROMol_Vect vScaffolds = new ROMol_Vect(m_arrSmarts.length);
+		// Setup decomposition parameters
+		RGroupDecompositionParameters params = markForCleanup(new RGroupDecompositionParameters());
+		params.setLabels(Labels.getCombinedValues(m_modelLabels.getValues()));
+		params.setMatchingStrategy(m_modelMatchingStrategy.getValue().getRDKitRGroupMatching().swigValue());
+		params.setRgroupLabelling(Labeling.getCombinedValues(m_modelLabeling.getValues()));
+		params.setAlignment(m_modelCoreAlignment.getValue().getRDKitRGroupCoreAlignment().swigValue());
+		params.setOnlyMatchAtRGroups(m_modelOnlyMatchAtRGroupsModel.getBooleanValue());
+		params.setRemoveAllHydrogenRGroups(m_modelRemoveHydrogenOnlyRGroupsModel.getBooleanValue());
+		params.setRemoveHydrogensPostMatch(m_modelRemoveHydrogensPostMatchModel.getBooleanValue());
+		
+		// Feed in scaffolds
+		ROMol_Vect vScaffolds = markForCleanup(new ROMol_Vect());
 		for (ROMol scaffold : m_arrSmarts) {
 			vScaffolds.add(scaffold);
 		}
-		RGroupDecomposition decomp = new RGroupDecomposition(vScaffolds, params);
+		RGroupDecomposition decomp = markForCleanup(new RGroupDecomposition(vScaffolds, params));
 		
-		// Get all molecules to be used as input and add the for decomposition
+		// Get all molecules to be used as input and add them for decomposition
 		int rowIndex = 0;
-		final ExecutionContext execSubAdd = exec.createSubExecutionContext(0.25d);
-		final ExecutionContext execSubProcess = exec.createSubExecutionContext(0.5d); // TODO - Handle with Pseudo Progress
+		final ExecutionContext execSubAdd = exec.createSubExecutionContext(0.50d);
+		final ExecutionContext execSubProcess = exec.createSubExecutionContext(0.25d);
 		final ExecutionContext execSubGetResults = exec.createSubExecutionContext(0.25d);
 		final List<Boolean> listMatched = new ArrayList<Boolean>();
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
@@ -365,6 +410,9 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			if (mol != null) {
 				bMatched = (decomp.add(mol) >= 0);
 			}
+			else {
+				warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty molecule cell in table 1 - ignored it.");
+			}
 
 			listMatched.add(bMatched);
 			if (!bMatched) {
@@ -373,246 +421,96 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 			// Every 20 iterations check cancellation status and report progress
 			if (rowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(execSubAdd, rowIndex, lTotalRowCount, row, " - Generating R Groups");
+				AbstractRDKitNodeModel.reportProgress(execSubAdd, rowIndex, lTotalRowCount, row, " - Detecting matches of cores");
 			}
 		}
 
 		execSubAdd.setProgress(1.0d);
 
 		// Perform decomposition
-		if (!decomp.process()) {
-			// TOOD: What, if process() returns false? Shall we fail or just return everything as unmatched?
+		execSubProcess.setMessage("Running R-Group decomposition for " + listMatched.size() + " (of " + lTotalRowCount + ") matching molecules");
+		final AtomicBoolean abSuccess = new AtomicBoolean(false);
+		Thread threadWorker = new Thread(new Runnable() {
+			public void run() {
+				abSuccess.set(decomp.process());
+			}
+		}, "R-Group-Decomposition");
+		threadWorker.setDaemon(true);
+		threadWorker.start();
+		// Wait for the thread to finish or for the user to cancel
+		monitorWorkingThreadExecution(threadWorker, execSubProcess, (int)(lTotalRowCount / 10.0d * 100.0d), true, false);
+		
+		if (!abSuccess.get() && m_modelFailForNoMatch.getBooleanValue()) {
+			throw new RuntimeException("No R-Group matches found.");
 		}
 		
+		execSubProcess.checkCanceled();
 		execSubProcess.setProgress(1.0d);
 
 		rowIndex = 0;
-		StringMolMap_Vect vResults = markForCleanup(decomp.getRGroupsAsRows());
+		int matchIndex = 0;
+		
+		// Figure out columns that are being returned
+		// TODO: Replace with decomp.getRGroupsAsColumns().keys() functionality when it becomes available
+		StringROMol_VectMap vColumns = markForCleanup(decomp.getRGroupsAsColumns());
+		List<String> lColNames = new ArrayList<String>();
+		int iNumRGroups = (int)vColumns.size() - 1; // -1 for the Core column, which is always there
+		for (int i = 0; i < 100 /* 99 is the largest possible reaction class number */ && lColNames.size() < iNumRGroups; i++) {
+			if (vColumns.has_key("R" + i)) {
+				lColNames.add("R" + i);
+			}
+		}
+		
+		DataTableSpecCreator specCreator = new DataTableSpecCreator(inData[0].getSpec());
+		specCreator.setName("RGroups");
+		specCreator.addColumns(new DataColumnSpecCreator("Core", SmartsCell.TYPE).createSpec());
+		for (int i = 0; i < iNumRGroups; i++) {
+			specCreator.addColumns(new DataColumnSpecCreator(lColNames.get(i), RDKitAdapterCell.RAW_TYPE).createSpec());
+		}
 
+		// Contains the rows with the R Groups that matched
+		final BufferedDataContainer matchedTableData = exec.createDataContainer(specCreator.createSpec());
+
+		// Get all rows with R group matches		
+		StringMolMap_Vect vResults = markForCleanup(decomp.getRGroupsAsRows());
+		
 		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
 			final DataRow row = i.next();
 		
 			if (((Boolean)listMatched.get(rowIndex)).booleanValue()) {
-				StringMolMap mapResults = vResults.get(rowIndex);
-				ROMol molCore = mapResults.get("Core");
-				DataCell[] arrResultCells = new DataCell[m_iNumberOfRGroups + 1];
-				arrResultCells[0] = 
-				for (int iR = 0; iR < m_iNumberOfRGroups; iR++) {
-					ROMol rGroup = mapResults.get("R" + iR);
-					AbstractRDKitCellFactory.mergeDataCells(row, arrResultCells, -1);
-					DefaultRow resultRow = new DefaultRow(row.getKey(), row);
-					
+				StringMolMap mapResults = vResults.get(matchIndex++);
+				
+				// Create matching core cell
+				ROMol molCore = markForCleanup(mapResults.get("Core"));
+				DataCell[] arrResultCells = AbstractRDKitCellFactory.createEmptyCells(iNumRGroups + 1);
+				arrResultCells[0] = SmartsCellFactory.create(RDKFuncs.MolToSmarts(molCore, false)); // Do not include stereo chemistry
+				
+				// Create all R group cells
+				for (int iR = 0; iR < iNumRGroups; iR++) {
+					String strRGroup = lColNames.get(iR);
+					if (mapResults.has_key(strRGroup)) {
+						ROMol rGroup = markForCleanup(mapResults.get(strRGroup));
+						arrResultCells[iR + 1] = RDKitMolCellFactory.createRDKitAdapterCell(rGroup);
+					}
 				}
 				
-
-			}
-
-			// Every 20 iterations check cancellation status and report progress
-			if (rowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(execSubGetResults, rowIndex, lTotalRowCount, row, " - Generating R Groups");
+				// Append core and R group cells to input columns
+				DataRow resultRow = AbstractRDKitCellFactory.mergeDataCells(row, arrResultCells, -1);
+				matchedTableData.addRowToTable(resultRow);
+	
+				// Every 20 iterations check cancellation status and report progress
+				if (rowIndex % 20 == 0) {
+					AbstractRDKitNodeModel.reportProgress(execSubGetResults, rowIndex, lTotalRowCount, row, " - Processing R-Groups decomposition results");
+				}
 			}
 		}
 		
 		execSubGetResults.setProgress(1.0d);
-		
-		int iSuccessIndex = decomp.add(mol);
-		if (iSuccessIndex >= 0) {
-			boolean bSuccess = decomp.process();
-			if (bSuccess) {
-				StringMolMap_Vect result = decomp.getRGroupsAsRows();
-				result.get(0..n).get("R1".."Rn")
-				result.get(0..n).get("Core");
-				result.get(0..n).
-			}
-			else {
-				
-			}
-		}
-		else {
-			
-		}
-		
 
-		
-		
-		// Calculate MCS
-		final ExecutionContext execSub2 = exec.createSubExecutionContext(0.98d);
+		matchedTableData.close();
+		unmatchedTableData.close();
 
-		final DataCell[] arrResults = MCSUtils.calculateMCS(mols, m_modelThreshold.getDoubleValue(),
-				m_modelRingMatchesRingOnlyOption.getBooleanValue(), m_modelCompleteRingsOnlyOption.getBooleanValue(),
-				m_modelMatchValencesOption.getBooleanValue(), m_modelAtomComparison.getValue(),
-				m_modelBondComparison.getValue(), m_modelTimeout.getIntValue(), execSub2);
-
-		newTableData.addRowToTable(new DefaultRow("MCS",
-				arrResults[MCSUtils.SMARTS_INDEX],
-				arrResults[MCSUtils.ATOM_NUMBER_INDEX],
-				arrResults[MCSUtils.BOND_NUMBER_INDEX],
-				arrResults[MCSUtils.TIMED_OUT_INDEX]));
-
-		exec.checkCanceled();
-		exec.setProgress(1.0, "Finished Processing");
-
-		// Generate warning, if no MCS was found
-		if (arrResults[MCSUtils.SMARTS_INDEX] == null || arrResults[MCSUtils.SMARTS_INDEX].isMissing()) {
-			if (mols.size() > 0) {
-				getWarningConsolidator().saveWarning("No MCS found - Created empty cells.");
-			}
-			else {
-				getWarningConsolidator().saveWarning("No input molecules found - Created empty cells.");
-			}
-		}
-		else if (arrResults[MCSUtils.TIMED_OUT_INDEX] != null &&
-				!arrResults[MCSUtils.TIMED_OUT_INDEX].isMissing() &&
-				((BooleanCell)arrResults[MCSUtils.TIMED_OUT_INDEX]).getBooleanValue() == true) {
-			getWarningConsolidator().saveWarning("The MCS calculation timed out.");
-		}
-
-		newTableData.close();
-
-		return new BufferedDataTable[] { newTableData.getTable() };
-	}
-
-	/**
-	 * Generates the output factory that calculates the R Group Decomposition.
-	 * 
-	 * @return Factory instance.
-	 */
-	protected AbstractRDKitCellFactory createOutputFactory(final InputDataInfo[] arrInputDataInfo)
-			throws InvalidSettingsException {
-
-		// Generate factory
-		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
-				getWarningConsolidator(), arrInputDataInfo, arrOutputSpec) {
-
-			@Override
-			/**
-			 * This method implements the calculation logic to generate the new cells based on
-			 * the input made available in the first (and second) parameter.
-			 * {@inheritDoc}
-			 */
-			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
-				// Calculate the new cells
-				final DataCell[] outputCells = createEmptyCells(iCoreAtomNumber);
-				final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
-
-				try {
-					RGroupDecomposition decomp = new RGroupDecomposition(core.get()); // or multiple (from optional second input table)
-					int iSuccessIndex = decomp.add(mol);
-					if (iSuccessIndex >= 0) {
-						boolean bSuccess = decomp.process();
-						if (bSuccess) {
-							StringMolMap_Vect result = decomp.getRGroupsAsRows();
-							result.get(0..n).get("R1".."Rn")
-							result.get(0..n).get("Core");
-							result.get(0..n).
-						}
-						else {
-							
-						}
-					}
-					else {
-						
-					}
-					
-					// Get the molecule with replaced core
-					final ROMol chains = markForCleanup(RDKFuncs.replaceCore(mol, core.get(), true, true), lUniqueWaveId);
-
-					if (chains != null) {
-						final ROMol_Vect frags = markForCleanup(RDKFuncs.getMolFrags(chains), lUniqueWaveId);
-						final int iFragsSize = (int)frags.size();
-
-						// Iterate through all fragments
-						for (int i = 0; i < iFragsSize; i++) {
-							final ROMol frag = frags.get(i);
-							final int iNumAtoms = (int)frag.getNumAtoms();
-							boolean found = false;
-
-							// Iterate through all atoms
-							for (int atomIndex = 0; atomIndex < iNumAtoms; atomIndex++) {
-								final Atom atom = frag.getAtomWithIdx(atomIndex);
-								if (atom.getAtomicNum() == 0) {
-									final int iso= (int)atom.getIsotope();
-
-									// Dummies are labeled by the zero-based atom index they're attached to.
-									// To make things clearer to the user, increment these.
-									atom.setIsotope(iso + 1);
-									outputCells[iso] = RDKitMolCellFactory.createRDKitAdapterCell(frag);
-									m_aiFilledCellCounter[iso].incrementAndGet();
-									found=true;
-									break;
-								}
-							}
-
-							if (!found) {
-								final String msg = "Attachment label not found for a side chain.";
-								getWarningConsolidator().saveWarning(
-										WarningConsolidator.ROW_CONTEXT.getId(), msg);
-								LOGGER.warn(msg + " (Row '" + row.getKey() + "')");
-							}
-						}
-					}
-				}
-				catch (final Exception e) {
-					final String msg = "Could not construct a valid output molecule.";
-					getWarningConsolidator().saveWarning(
-							WarningConsolidator.ROW_CONTEXT.getId(), msg);
-					LOGGER.warn(msg + " (Row '" + row.getKey() + "')");
-				}
-
-				return outputCells;
-			}
-		};
-
-		// Enable or disable this factory to allow parallel processing
-		// Note: In this implementation always parallel processing is used
-		factory.setAllowParallelProcessing(true);
-
-		return factory;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * This implementation returns always 0.05d.
-	 * 
-	 * @return Returns always 0.05d.
-	 */
-	@Override
-	protected double getPostProcessingPercentage() {
-		return 0.05d;
-	}
-
-	/**
-	 * In the case that the option to remove empty Rx columns is enabled,
-	 * this post processing routine will do exactly that.
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData,
-			final InputDataInfo[][] arrInputDataInfo,
-			final BufferedDataTable[] processingResult, final ExecutionContext exec)
-					throws Exception {
-
-		BufferedDataTable[] arrResults = processingResult;
-
-		// Determine, if the user wants to remove all empty Rx columns
-		if (m_modelRemoveEmptyColumns.getBooleanValue()) {
-			if (processingResult != null && processingResult.length == 1) {
-				final ColumnRearranger rearranger = new ColumnRearranger(processingResult[0].getDataTableSpec());
-
-				for (int i = 0; i < m_aiFilledCellCounter.length; i++) {
-					if (m_aiFilledCellCounter[i].get() == 0) {
-						rearranger.remove("R" + (i + 1));
-					}
-				}
-
-				// Create the new table without empty Rx columns
-				arrResults = new BufferedDataTable[] {
-						exec.createColumnRearrangeTable(processingResult[0], rearranger, exec)
-				};
-			}
-		}
-
-		return arrResults;
+		return new BufferedDataTable[] { matchedTableData.getTable(), unmatchedTableData.getTable() };
 	}
 
 	/**
@@ -620,8 +518,184 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	 */
 	@Override
 	protected void cleanupIntermediateResults() {
-		m_aiFilledCellCounter = null;
 		m_arrSmarts = null;
-		m_iNumberOfRGroups = 0;
+	}
+
+	
+	/**
+	 * Takes a data table and input data information about RDKitMols,
+	 * SMARTS, SMILES or SDF values and creates 
+	 * RDKit Molecules from them, determines the number of resulting R-Groups
+	 * from them (by summing up their atoms), and makes the results
+	 * available as intermediate variables used during configuration
+	 * to determine the output spec of the result table and during
+	 * processing to use them as input cores. Existing intermediate
+	 * variables will be freed and overwritten.
+	 * 
+	 * @param strSmartsList Comma separated list of SMARTS. Can be null.
+	 * 
+	 * @return True, if at least one usable core was found. False otherwise.
+	 */
+	protected boolean evaluateCores(BufferedDataTable inData, InputDataInfo inputDataInfo) {
+		cleanupIntermediateResults();
+		
+		DataType type = inputDataInfo.getDataType();
+		
+		boolean bRDKit = (type.isCompatible(RDKitMolValue.class) || 
+				(type.isCompatible(AdapterValue.class) && type.isAdaptable(RDKitMolValue.class)));
+		boolean bSmarts = (type.isCompatible(SmartsValue.class) || 
+				(type.isCompatible(AdapterValue.class) && type.isAdaptable(SmartsValue.class)));
+		boolean bSmiles = (type.isCompatible(SmilesValue.class) || 
+				(type.isCompatible(AdapterValue.class) && type.isAdaptable(SmilesValue.class)));
+		boolean bSdf = (type.isCompatible(SdfValue.class) || 
+				(type.isCompatible(AdapterValue.class) && type.isAdaptable(SdfValue.class)));
+		
+		WarningConsolidator warnings = getWarningConsolidator();
+		List<ROMol> listCores = new ArrayList<>();
+
+		for (CloseableRowIterator rows = inData.iterator(); rows.hasNext(); ) {
+			ROMol molCore = null;
+			DataRow row = rows.next();
+			String strErrorMsg = null;
+			
+			if (inputDataInfo.isMissing(row)) {
+				warnings.saveWarning(ROW_CONTEXT_TABLE_CORES.getId(), "Encountered empty core molecule cell in input table 2 - ignored it.");
+			}
+			else {
+				try {
+					if (bRDKit) {
+						molCore = markForCleanup(inputDataInfo.getROMol(row));
+					}
+					else if (bSmarts) {
+						String strSmarts = inputDataInfo.getSmarts(row);
+						if (strSmarts != null) {
+							// Merge Hs
+							molCore = markForCleanup(RWMol.MolFromSmarts(strSmarts, 0, true));
+						}
+					}
+					else if (bSmiles) {
+						String strSmiles = inputDataInfo.getSmiles(row);
+						if (strSmiles != null) {
+							// Do not sanitize
+							molCore = markForCleanup(RWMol.MolFromSmiles(strSmiles, 0, false));
+						}
+					}
+					else if (bSdf) {
+						String strSdf = inputDataInfo.getSdfValue(row);
+						if (strSdf != null) {
+							// Do not sanitize, do not remove Hs
+							molCore = markForCleanup(RWMol.MolFromMolBlock(strSdf, false, false));
+						}
+					}
+				}
+				catch (Exception exc) {
+					strErrorMsg = exc.getMessage();
+				}
+				
+				if (molCore != null) {
+					listCores.add(molCore);
+				}
+				else {
+					warnings.saveWarning(ROW_CONTEXT_TABLE_CORES.getId(), "Invalid " +
+							(bRDKit ? "RDKitMol" : bSmarts ? "SMARTS" : bSmiles ? "SMILES" : bSdf ? "SDF" : "") +
+							" core found in input table 2" + 
+							(StringUtils.isEmptyAfterTrimming(strErrorMsg) ? "" : " (" + strErrorMsg + ")") + ".");
+				}
+			}
+		}	
+		
+		m_arrSmarts = listCores.toArray(markForCleanup(new ROMol[listCores.size()]));
+
+		return (m_arrSmarts.length > 0);
+	}
+
+	/**
+	 * Takes a comma separated list of SMARTS values and creates 
+	 * RDKit Molecules from them, determines the number of resulting R-Groups
+	 * from them (by summing up their atoms), and makes the results
+	 * available as intermediate variables used during configuration
+	 * to determine the output spec of the result table and during
+	 * processing to use them as input cores. Existing intermediate
+	 * variables will be freed and overwritten.
+	 * 
+	 * @param strSmartsList Comma separated list of SMARTS. Can be null.
+	 * 
+	 * @return True, if at least one usable core was found. False otherwise.
+	 */
+	protected boolean evaluateCores(String strSmartsList) {
+		cleanupIntermediateResults();
+		
+		WarningConsolidator warnings = getWarningConsolidator();
+		String[] arrCores = m_modelCoreSmarts.getStringValue().trim().split("\n");
+		List<ROMol> listCores = new ArrayList<>();
+		
+		for (String strSmarts : arrCores) {
+			ROMol molCore = null;
+			String strErrorMsg = null;
+			
+			if (!strSmarts.trim().isEmpty()) {
+				strSmarts = strSmarts.trim();
+				try {
+					molCore = markForCleanup(RWMol.MolFromSmarts(strSmarts, 0, true));
+				}
+				catch (Exception exc) {
+					strErrorMsg = exc.getMessage();
+				}
+	
+				if (molCore != null) {
+					listCores.add(molCore);
+				}
+				else {
+					warnings.saveWarning(ROW_CONTEXT_TABLE_CORES.getId(), "Invalid SMARTS core found in parameter" + 
+							(StringUtils.isEmptyAfterTrimming(strErrorMsg) ? "" : " (" + strErrorMsg + ")") + ".");
+				}
+			}
+		}	
+		
+		m_arrSmarts = listCores.toArray(markForCleanup(new ROMol[listCores.size()]));
+		
+		return (m_arrSmarts.length > 0);
+	}
+	
+	@Override
+	protected Map<String, Long> createWarningContextOccurrencesMap(BufferedDataTable[] inData,
+	      InputDataInfo[][] arrInputDataInfo, BufferedDataTable[] resultData) {
+		final Map<String, Long> mapContextOccurrences = super.createWarningContextOccurrencesMap(inData, arrInputDataInfo,
+				resultData);
+
+		if (hasAdditionalInputTable(getInputTableSpecs(inData))) {
+			mapContextOccurrences.put(ROW_CONTEXT_TABLE_CORES.getId(), inData[1].size());
+		}
+		else {
+			String[] arrCores = m_modelCoreSmarts.getStringValue().trim().split("\n");
+			long lCount = 0;
+			for (String strSmarts : arrCores) {
+				if (!strSmarts.trim().isEmpty()) {
+					lCount++;
+				}
+			}
+			mapContextOccurrences.put(ROW_CONTEXT_TABLE_CORES.getId(), lCount);
+		}
+
+		return mapContextOccurrences;
+	}
+
+	//
+	// Static Public Methods
+	//
+
+	/**
+	 * Determines, if the condition is fulfilled that we have an additional input table with
+	 * cores connected to the node according to the passed in specs.
+	 * 
+	 * @param inSpecs Port specifications.
+	 * 
+	 * @return True, if there is an additional input table present in the last index of the specs,
+	 * 		and if it has columns.
+	 */
+	public static boolean hasAdditionalInputTable(final PortObjectSpec[] inSpecs) {
+		return (inSpecs != null && inSpecs.length >= 2 &&
+				inSpecs[1] instanceof DataTableSpec &&
+				((DataTableSpec)inSpecs[1]).getNumColumns() > 0);
 	}
 }

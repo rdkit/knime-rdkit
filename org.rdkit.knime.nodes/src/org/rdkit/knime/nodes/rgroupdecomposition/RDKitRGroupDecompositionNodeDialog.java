@@ -57,7 +57,6 @@ import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
@@ -75,10 +74,6 @@ import org.rdkit.knime.util.SettingsModelEnumerationArray;
 
 /**
  * <code>NodeDialog</code> for the "RDKitRGroups" Node.
- * 
- * This node dialog derives from {@link DefaultNodeSettingsPane} which allows
- * creation of a simple dialog with standard components. If you need a more
- * complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  * 
  * @author Manuel Schwarze
  */
@@ -153,9 +148,11 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		m_compCoreInputTextField.getComponentPanel().setBorder(BorderFactory.createEmptyBorder(10,  10,  10, 10));
 
 		
-		super.createNewGroup("Error Handling");
+		super.createNewGroup("Output Handling");
 		super.addDialogComponent(new DialogComponentBoolean(
-				createFailForNoMatchOptionModel(), "Fail if no matching R-Groups are found"));
+				createRemoveEmptyColumnsModel(), "Remove empty Rx columns"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createFailForNoMatchOptionModel(), "Fail if no cores are matching at all"));
 		
 		super.createNewTab("Advanced");
 		
@@ -240,6 +237,15 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		return new SettingsModelString("smarts_value", "");
 	}
 
+	/**
+	 * Creates the settings model for the option to remove empty Rx columns.
+	 * 
+	 * @return Settings model for removing empty Rx columns.
+	 */
+	static final SettingsModelBoolean createRemoveEmptyColumnsModel() {
+		return new SettingsModelBoolean("remove_empty_columns", true);
+	}
+	
 	/**
 	 * Creates the settings model for the option to let the node fail, if there is match at all.
 	 * 

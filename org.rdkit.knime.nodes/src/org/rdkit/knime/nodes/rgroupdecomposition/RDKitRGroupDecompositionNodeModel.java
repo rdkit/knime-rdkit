@@ -76,6 +76,7 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -149,9 +150,13 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelString m_modelCoreSmarts =
 			registerSettings(RDKitRGroupDecompositionNodeDialog.createSmartsModel());
 
+	/** Settings model for the option to remove empty Rx columns. */
+	private final SettingsModelBoolean m_modelRemoveEmptyColumns =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createRemoveEmptyColumnsModel());
+
 	/** Settings model for the option to let the node fail, if there is match at all. */
 	private final SettingsModelBoolean m_modelFailForNoMatch =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createFailForNoMatchOptionModel(), true);
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createFailForNoMatchOptionModel());
 	
 	/** Settings model for R Group labels options. */
 	private final SettingsModelEnumerationArray<Labels> m_modelLabels =
@@ -187,6 +192,9 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	
 	/** Generated cores based on either input table or parameter. */
 	private ROMol[] m_arrSmarts = null;
+	
+	/** Boolean array to remember which R-Group columns are non-empty. */
+	private boolean[] m_arrNonEmptyColumn = null;
 
 	//
 	// Constructor
@@ -369,6 +377,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, 
 			final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
+		// Setup helpers
 		final WarningConsolidator warnings = getWarningConsolidator();
 		
 		// Contains the rows from input which did not match
@@ -460,6 +469,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 				lColNames.add("R" + i);
 			}
 		}
+		m_arrNonEmptyColumn = (iNumRGroups > 0 ? new boolean[iNumRGroups] : null);
 		
 		DataTableSpecCreator specCreator = new DataTableSpecCreator(inData[0].getSpec());
 		specCreator.setName("RGroups");
@@ -491,6 +501,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 					if (mapResults.has_key(strRGroup)) {
 						ROMol rGroup = markForCleanup(mapResults.get(strRGroup));
 						arrResultCells[iR + 1] = RDKitMolCellFactory.createRDKitAdapterCell(rGroup);
+						m_arrNonEmptyColumn[iR] = true;
 					}
 				}
 				
@@ -515,10 +526,58 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 	/**
 	 * {@inheritDoc}
+	 * This implementation returns always 0.05d.
+	 * 
+	 * @return Returns always 0.05d.
+	 */
+	@Override
+	protected double getPostProcessingPercentage() {
+		return 0.05d;
+	}
+
+	/**
+	 * In the case that the option to remove empty Rx columns is enabled,
+	 * this post processing routine will do exactly that.
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData,
+			final InputDataInfo[][] arrInputDataInfo,
+			final BufferedDataTable[] processingResult, final ExecutionContext exec)
+					throws Exception {
+
+		BufferedDataTable[] arrResults = processingResult;
+
+		// Determine, if the user wants to remove all empty Rx columns
+		if (m_modelRemoveEmptyColumns.getBooleanValue()) {
+			if (processingResult != null && processingResult.length > 0 && m_arrNonEmptyColumn != null) {
+				final ColumnRearranger rearranger = new ColumnRearranger(processingResult[0].getDataTableSpec());
+				int iOffset = processingResult[0].getDataTableSpec().getNumColumns() - m_arrNonEmptyColumn.length;
+				// Rearrange from right to left, otherwise the index position would "move" due to the deletion
+				for (int i = m_arrNonEmptyColumn.length - 1; i >= 0; i--) {
+					if (!m_arrNonEmptyColumn[i]) {
+						rearranger.remove(iOffset + i);
+					}
+				}
+
+				// Create the new table without empty Rx columns
+				arrResults = new BufferedDataTable[] {
+						exec.createColumnRearrangeTable(processingResult[0], rearranger, exec),
+						arrResults[1]
+				};
+			}
+		}
+
+		return arrResults;
+	}
+
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	protected void cleanupIntermediateResults() {
 		m_arrSmarts = null;
+		m_arrNonEmptyColumn = null;
 	}
 
 	
@@ -604,7 +663,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			}
 		}	
 		
-		m_arrSmarts = listCores.toArray(markForCleanup(new ROMol[listCores.size()]));
+		m_arrSmarts = listCores.toArray(new ROMol[listCores.size()]);
 
 		return (m_arrSmarts.length > 0);
 	}
@@ -652,7 +711,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			}
 		}	
 		
-		m_arrSmarts = listCores.toArray(markForCleanup(new ROMol[listCores.size()]));
+		m_arrSmarts = listCores.toArray(new ROMol[listCores.size()]);
 		
 		return (m_arrSmarts.length > 0);
 	}

@@ -459,17 +459,21 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		rowIndex = 0;
 		int matchIndex = 0;
 		
-		// Figure out columns that are being returned
-		// TODO: Replace with decomp.getRGroupsAsColumns().keys() functionality when it becomes available
-		StringROMol_VectMap vColumns = markForCleanup(decomp.getRGroupsAsColumns());
 		List<String> lColNames = new ArrayList<String>();
-		int iNumRGroups = (int)vColumns.size() - 1; // -1 for the Core column, which is always there
-		for (int i = 0; i < 100 /* 99 is the largest possible reaction class number */ && lColNames.size() < iNumRGroups; i++) {
-			if (vColumns.has_key("R" + i)) {
-				lColNames.add("R" + i);
+		int iNumRGroups = 0;
+		
+		if (abSuccess.get()) {
+			// Figure out columns that are being returned
+			// TODO: Replace with decomp.getRGroupsAsColumns().keys() functionality when it becomes available
+			StringROMol_VectMap vColumns = markForCleanup(decomp.getRGroupsAsColumns());
+			iNumRGroups = (int)vColumns.size() - 1; // -1 for the Core column, which is always there
+			for (int i = 0; i < 100 /* 99 is the largest possible reaction class number */ && lColNames.size() < iNumRGroups; i++) {
+				if (vColumns.has_key("R" + i)) {
+					lColNames.add("R" + i);
+				}
 			}
+			m_arrNonEmptyColumn = (iNumRGroups > 0 ? new boolean[iNumRGroups] : null);
 		}
-		m_arrNonEmptyColumn = (iNumRGroups > 0 ? new boolean[iNumRGroups] : null);
 		
 		DataTableSpecCreator specCreator = new DataTableSpecCreator(inData[0].getSpec());
 		specCreator.setName("RGroups");
@@ -481,37 +485,39 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		// Contains the rows with the R Groups that matched
 		final BufferedDataContainer matchedTableData = exec.createDataContainer(specCreator.createSpec());
 
-		// Get all rows with R group matches		
-		StringMolMap_Vect vResults = markForCleanup(decomp.getRGroupsAsRows());
-		
-		for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
-			final DataRow row = i.next();
-		
-			if (((Boolean)listMatched.get(rowIndex)).booleanValue()) {
-				StringMolMap mapResults = vResults.get(matchIndex++);
-				
-				// Create matching core cell
-				ROMol molCore = markForCleanup(mapResults.get("Core"));
-				DataCell[] arrResultCells = AbstractRDKitCellFactory.createEmptyCells(iNumRGroups + 1);
-				arrResultCells[0] = SmartsCellFactory.create(RDKFuncs.MolToSmarts(molCore, false)); // Do not include stereo chemistry
-				
-				// Create all R group cells
-				for (int iR = 0; iR < iNumRGroups; iR++) {
-					String strRGroup = lColNames.get(iR);
-					if (mapResults.has_key(strRGroup)) {
-						ROMol rGroup = markForCleanup(mapResults.get(strRGroup));
-						arrResultCells[iR + 1] = RDKitMolCellFactory.createRDKitAdapterCell(rGroup);
-						m_arrNonEmptyColumn[iR] = true;
+		if (abSuccess.get()) { 		
+			// Get all rows with R group matches		
+			StringMolMap_Vect vResults = markForCleanup(decomp.getRGroupsAsRows());
+			
+			for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
+				final DataRow row = i.next();
+			
+				if (((Boolean)listMatched.get(rowIndex)).booleanValue()) {
+					StringMolMap mapResults = vResults.get(matchIndex++);
+					
+					// Create matching core cell
+					ROMol molCore = markForCleanup(mapResults.get("Core"));
+					DataCell[] arrResultCells = AbstractRDKitCellFactory.createEmptyCells(iNumRGroups + 1);
+					arrResultCells[0] = SmartsCellFactory.create(RDKFuncs.MolToSmarts(molCore, false)); // Do not include stereo chemistry
+					
+					// Create all R group cells
+					for (int iR = 0; iR < iNumRGroups; iR++) {
+						String strRGroup = lColNames.get(iR);
+						if (mapResults.has_key(strRGroup)) {
+							ROMol rGroup = markForCleanup(mapResults.get(strRGroup));
+							arrResultCells[iR + 1] = RDKitMolCellFactory.createRDKitAdapterCell(rGroup);
+							m_arrNonEmptyColumn[iR] = true;
+						}
 					}
-				}
-				
-				// Append core and R group cells to input columns
-				DataRow resultRow = AbstractRDKitCellFactory.mergeDataCells(row, arrResultCells, -1);
-				matchedTableData.addRowToTable(resultRow);
-	
-				// Every 20 iterations check cancellation status and report progress
-				if (rowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(execSubGetResults, rowIndex, lTotalRowCount, row, " - Processing R-Groups decomposition results");
+					
+					// Append core and R group cells to input columns
+					DataRow resultRow = AbstractRDKitCellFactory.mergeDataCells(row, arrResultCells, -1);
+					matchedTableData.addRowToTable(resultRow);
+		
+					// Every 20 iterations check cancellation status and report progress
+					if (rowIndex % 20 == 0) {
+						AbstractRDKitNodeModel.reportProgress(execSubGetResults, rowIndex, lTotalRowCount, row, " - Processing R-Groups decomposition results");
+					}
 				}
 			}
 		}

@@ -57,7 +57,8 @@
 
 	  <node category-path="/community/rdkit/testing" factory-class="org.rdkit.knime.nodes.sdfdifferencechecker.RDKitSDFDifferenceCheckerNodeFactory"/>
 
-      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory"/>
+      <node deprecated="false" category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroups.RDKitRGroupsNodeFactory"/>
+      <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.rgroupdecomposition.RDKitRGroupDecompositionNodeFactory"/>
 	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.structurenormalizer.RDKitStructureNormalizerNodeFactory"/>
 	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.moleculecatalogfilter.RDKitMoleculeCatalogFilterNodeFactory"/>
 	  <node category-path="/community/rdkit/experimental" factory-class="org.rdkit.knime.nodes.adjustqueryproperties.RDKitAdjustQueryPropertiesNodeFactory"/>

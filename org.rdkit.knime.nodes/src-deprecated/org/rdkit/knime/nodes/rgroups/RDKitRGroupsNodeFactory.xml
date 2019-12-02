@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator">
+    <name>RDKit R-Group Decomposition (deprecated)</name>
+
+    <shortDescription>
+        Does an R-Group decomposition for an input RDKit Mol column. It is planned to deprecate this node soon.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+        	Does an R-Group decomposition for an input RDKit Mol column. It is planned to deprecate this node soon,
+        	so that it cannot be used in new workflows anymore. It will be replaced by a new one developed based 
+        	on RDKit functionality that was added in 2018/2019.
+        </intro>
+
+        <tab name="Options">
+            <option name="RDKit Mol column">The column containing molecules.</option>
+            <option name="Core SMARTS">A SMARTS describing the core to use.</option>
+        </tab>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Data">Data with SMILES or RDKit Molecule column</inPort>
+        <outPort index="0" name="Table with R groups">Table with R groups added</outPort>
+    </ports>
+</knimeNode>

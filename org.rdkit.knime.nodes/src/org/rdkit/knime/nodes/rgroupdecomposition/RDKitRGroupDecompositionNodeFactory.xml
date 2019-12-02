@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode>
 <knimeNode icon="default.png" type="Manipulator">
-    <name>RDKit R-Group Decomposition (new beta)</name>
+    <name>RDKit R-Group Decomposition</name>
 
     <shortDescription>
         Performs an R-Group decomposition for an input RDKit Mol column.

@@ -112,8 +112,11 @@ public abstract class AbstractRDKitFingerprintNodeDialog extends DefaultNodeSett
 	/** The default number of bits to be used. */
 	public static int DEFAULT_NUM_BITS = 1024;
 
-	/** The default layer flags to be used. */
-	public static int DEFAULT_LAYER_FLAGS = 0xFFFF;
+	/** 
+	 * The default layer flags to be used. Set to 7, which means a
+	 * combination of 0x01 pure topology + 0x02 bond order + 0x04 atom types.
+	 */
+	public static int DEFAULT_LAYER_FLAGS = 7;
 
 	/** The default chirality option to be used. */
 	public static boolean DEFAULT_USECHIRALITY_OPTION = false;

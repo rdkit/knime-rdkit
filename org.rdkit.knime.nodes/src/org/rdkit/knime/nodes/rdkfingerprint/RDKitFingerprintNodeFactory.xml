@@ -21,9 +21,12 @@
               <li>Torsion: Topological-torsion fingerprint</li>
               <li>RDKit: Daylight-like topological fingerprint</li>
               <li>Avalon: Fingerprint from the Avalon toolkit (http://sourceforge.net/p/avalontoolkit/)</li>
-              <li>Layered: An experimental substructure-matching fingerprint</li>
+              <li>Layered: An experimental substructure-matching fingerprint (see LayerFlags defintion below)</li>
               <li>MACCS: RDKit implementation of the 166 public MACCS keys</li>
+              <li>Pattern: Substructure screening fingerprint based on small number of very generic SMARTS patterns</li>
             </ul>
+            More details about different RDKit fingerprint implementations can be found here: 
+            https://www.rdkit.org/docs/RDKit_Book.html#additional-information-about-the-fingerprints
             </option>
             <option name="RDKit Mol column">The column containing reactant molecules</option>
             <option name="New Column Name">Name of the fingerprint column in the output table.</option>
@@ -33,7 +36,10 @@
             <option name="Fingerprint Settings - Num Bits">Number of bits in the fingerprint.</option>
             <option name="Fingerprint Settings - Path length">Path length to be used (Torsion only).</option>
             <option name="Fingerprint Settings - Radius">The radius of the atomic environments considered.</option>
-            <option name="Fingerprint Settings - LayerFlags">Which atomic layers should be included.</option>
+            <option name="Fingerprint Settings - LayerFlags">Which atomic layers should be included. This value is the total of the following 
+            	layer flag values: 0x01 pure topology, 0x02 bond order, 0x04 atom types, 0x08 presence of rings, 
+            	0x10 ring sizes, 0x20 aromaticity. The default value of 7 (0x01 pure topology + 0x02 bond order + 0x04 atom types) 
+            	allows classic substructure searches.</option>
             <option name="Fingerprint Settings - Min Path Length">Minimum length (in bonds) of the paths to be considered.</option>
             <option name="Fingerprint Settings - Max Path Length">Maximum length (in bonds) of the paths to be considered.</option>
             <option name="Rooted Fingerprints - Create rooted fingerprint">Check this option to create a rooted fingerprint based on an atom list.

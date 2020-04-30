@@ -51,6 +51,8 @@ package org.rdkit.knime.nodes.rgroupdecomposition;
 import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.RDKit.RGroupDecompositionParameters;
 import org.knime.chem.types.SdfValue;
@@ -61,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -69,6 +72,7 @@ import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumFilterPanel;
 import org.rdkit.knime.util.DialogComponentEnumSelection;
+import org.rdkit.knime.util.DialogComponentSeparator;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 import org.rdkit.knime.util.SettingsModelEnumerationArray;
 
@@ -146,9 +150,41 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 				createSmartsModel(), "Core SMARTS (separate by new line to specify multiple cores): ", 
 				false, 50, 5));
 		m_compCoreInputTextField.getComponentPanel().setBorder(BorderFactory.createEmptyBorder(10,  10,  10, 10));
-
 		
 		super.createNewGroup("Output Handling");
+		
+		super.setHorizontalPlacement(false);
+		SettingsModelBoolean modelAddMatchingSmartsCore = createAddMatchingSmartsCoreModel();
+		super.setHorizontalPlacement(true);
+		super.addDialogComponent(new DialogComponentBoolean(
+				modelAddMatchingSmartsCore, "Add matching SMARTS core"));
+		super.addDialogComponent(new DialogComponentString(
+				createNewMatchingSmartsCoreColumnNameModel(modelAddMatchingSmartsCore), "Core column name: ", false, 20));	
+		super.setHorizontalPlacement(false);
+		super.setHorizontalPlacement(true);
+
+		super.addDialogComponent(new DialogComponentSeparator());
+
+		super.setHorizontalPlacement(false);
+		SettingsModelBoolean modelAddMatchingSubstructure = createAddMatchingSubstructureModel();
+		super.setHorizontalPlacement(true);
+		super.addDialogComponent(new DialogComponentBoolean(
+				modelAddMatchingSubstructure, "Add matching substructure"));
+		super.addDialogComponent(new DialogComponentString(
+				createNewMatchingSubstructureColumnNameModel(modelAddMatchingSubstructure), "Substructure column name: ", false, 20));
+		super.setHorizontalPlacement(false);
+		super.setHorizontalPlacement(true);
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseAtomMapsModel(modelAddMatchingSubstructure), "Use atom maps"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseRLabelsModel(modelAddMatchingSubstructure), "Use R-labels"));
+		super.setHorizontalPlacement(false);
+		super.setHorizontalPlacement(true);
+		
+		super.addDialogComponent(new DialogComponentSeparator());
+
+		super.setHorizontalPlacement(false);
+		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
 				createRemoveEmptyColumnsModel(), "Remove empty Rx columns"));
 		super.addDialogComponent(new DialogComponentBoolean(
@@ -156,6 +192,7 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		
 		super.createNewTab("Advanced");
 		
+		super.setHorizontalPlacement(false);
 		DialogComponentEnumFilterPanel<Labels> dcLabels = 
 				new DialogComponentEnumFilterPanel<Labels>(createLabelsModel(), 
 						"Labels to recognize R-Groups in scaffolds:", null, false /* disallow no selection */); 
@@ -187,7 +224,7 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(createRemoveHydrogenOnlyRGroupsModel(), "Remove hydrogen only R-Groups"));
 		super.addDialogComponent(new DialogComponentBoolean(createRemoveHydrogensPostMatchModel(), "Remove hydrogens post match"));
-	}
+}
 
 	//
 	// Protected Methods
@@ -253,6 +290,100 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	 */
 	static final SettingsModelBoolean createFailForNoMatchOptionModel() {
 		return new SettingsModelBoolean("fail_for_no_match", true);
+	}
+	
+	/**
+	 * Creates the settings model for the option to add the matching SMARTS core.
+	 * 
+	 * @return Settings model for the option to add the matching SMARTS core.
+	 */
+	static final SettingsModelBoolean createAddMatchingSmartsCoreModel() {
+		return new SettingsModelBoolean("add_matching_smarts_core", true);
+	}
+	
+	/**
+	 * Creates the settings model to be used to specify the new matching SMARTS core column name.
+	 * 
+	 * @return Settings model for the new matching SMARTS core column name.
+	 */
+	static final SettingsModelString createNewMatchingSmartsCoreColumnNameModel(
+			final SettingsModelBoolean modelAddMatchingSmartsCore) {
+		final SettingsModelString result =
+				new SettingsModelString("new_matching_smarts_core_column_name", "Core");
+		modelAddMatchingSmartsCore.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelAddMatchingSmartsCore.getBooleanValue());
+			}
+		});
+		result.setEnabled(modelAddMatchingSmartsCore.getBooleanValue());
+		return result;
+	}
+	
+	/**
+	 * Creates the settings model for the option to generate the matching core.
+	 * 
+	 * @return Settings model for the option to generate the matching core.
+	 */
+	static final SettingsModelBoolean createAddMatchingSubstructureModel() {
+		return new SettingsModelBoolean("add_matching_substructure", false);
+	}
+	
+	/**
+	 * Creates the settings model to be used to specify the new matching substructure column name.
+	 * 
+	 * @return Settings model for the new matching substructure column name.
+	 */
+	static final SettingsModelString createNewMatchingSubstructureColumnNameModel(
+			final SettingsModelBoolean modelAddMatchingSubstructure) {
+		final SettingsModelString result =
+				new SettingsModelString("new_matching_substructure_column_name", "Substructure");
+		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+			}
+		});
+		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		return result;
+	}
+	
+	/**
+	 * Creates the settings model for the option to use atom maps when generating the matching substructure.
+	 * 
+	 * @return Settings model for the option to use atom maps when generating the matching substructure.
+	 */
+	static final SettingsModelBoolean createUseAtomMapsModel(
+			final SettingsModelBoolean modelAddMatchingSubstructure) {
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("use_atom_maps_for_substructure", true);
+		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+			}
+		});
+		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		return result;
+	}
+	
+	/**
+	 * Creates the settings model for the option to use R labels when generating the matching substructure.
+	 * 
+	 * @return Settings model for the option to use R labels when generating the matching substructure.
+	 */
+	static final SettingsModelBoolean createUseRLabelsModel(
+			final SettingsModelBoolean modelAddMatchingSubstructure) {
+		final SettingsModelBoolean result =
+				new SettingsModelBoolean("use_r_labels_for_substructure", true);
+		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+			}
+		});
+		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		return result;
 	}
 	
 	/**

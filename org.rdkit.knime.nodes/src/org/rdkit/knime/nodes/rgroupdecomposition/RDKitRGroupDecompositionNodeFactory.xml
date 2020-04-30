@@ -17,6 +17,15 @@
             <option name="Input Molecules - RDKit Mol column (1st table)">The column containing molecules.</option>
             <option name="Input Scaffolds - Core Input Column (2nd table)">If second table is connected, the column containing cores as RDKit Molecules, SMARTS, SMILES or SDF.</option>
             <option name="Input Scaffolds - Core SMARTS">If no second table is connected, one or multiple new-line separated SMARTS can be defined as the cores to be used.</option>
+            <option name="Output Handling - Add matching SMARTS core">Flag to be set to add a column that contains the matching core from SMARTS input.</option>
+            <option name="Output Handling - Core column name">The column name for the SMARTS core column, if it is set to be added.</option>
+            <option name="Output Handling - Add matching substructure">
+            	Flag to be set to add a column that contains the matching substructure based on the matching SMARTS and input molecule.
+            	With this substructure it is possible to see where the Rx groups are attached, which is not possible when looking at the SMARTS.
+            </option>
+            <option name="Output Handling - Substructure column name">The column name for the matching substructure column, if it is set to be added.</option>
+            <option name="Output Handling - Use atom maps">Flag to be set to control atom properties of the matching substructure.</option>
+            <option name="Output Handling - Use R-labels">Flag to be set to control atom properties of the matching substructure.</option>
             <option name="Output Handling - Fail if no matching R-Groups are found">Flag to be set to detect Rx columns that are completely empty and remove them.</option>
             <option name="Output Handling - Fail if no cores are matching at all">Flag to be set to let the node fail if no matches for the provided cores have been found at all.</option>
         </tab>

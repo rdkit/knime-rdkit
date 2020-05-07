@@ -319,11 +319,11 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			listMoreColumnNames.add(m_modelNewMatchingSmartsCoreColumnName.getStringValue());
 		}
 
-		// Check validity uniqueness of potential substructure match column name
+		// Check validity uniqueness of potential explicit core match column name
 		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], listMoreColumnNames.toArray(new String[listMoreColumnNames.size()]),
 				null, m_modelNewMatchingExplicitCoreColumnName, 
-				m_modelAddMatchingExplicitCore.getBooleanValue() ? "Output column for substructure match has not been specified yet." : null, 
-				m_modelAddMatchingExplicitCore.getBooleanValue() ? "The name %COLUMN_NAME% of the new substructure match column conflicts with an existing name." : null);
+				m_modelAddMatchingExplicitCore.getBooleanValue() ? "Output column for the matching explicit core has not been specified yet." : null, 
+				m_modelAddMatchingExplicitCore.getBooleanValue() ? "The name %COLUMN_NAME% of the new matching explicit core column conflicts with an existing name." : null);
 		
 		// Consolidate all warnings and make them available to the user
 		generateWarnings();
@@ -455,12 +455,12 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		
 		// Get settings for additional output columns
 		boolean bAddMatchingSmartsCore = m_modelAddMatchingSmartsCore.getBooleanValue();
-		boolean bAddMatchingSubstructure = m_modelAddMatchingExplicitCore.getBooleanValue();
-		String strCoreColumnName = m_modelNewMatchingSmartsCoreColumnName.getStringValue();
-		String strSubstructureColumnName = m_modelNewMatchingExplicitCoreColumnName.getStringValue();
+		boolean bAddMatchingExplicitCore = m_modelAddMatchingExplicitCore.getBooleanValue();
+		String strSmartsCoreColumnName = m_modelNewMatchingSmartsCoreColumnName.getStringValue();
+		String strExplicitCoreColumnName = m_modelNewMatchingExplicitCoreColumnName.getStringValue();
 		boolean bUseAtomMaps = m_modelUseAtomMaps.getBooleanValue();
 		boolean bUseRLabels = m_modelUseRLabels.getBooleanValue();
-		int iNumNonRGroupCols = (bAddMatchingSmartsCore ? 1 : 0) + (bAddMatchingSubstructure ? 1 : 0);
+		int iNumNonRGroupCols = (bAddMatchingSmartsCore ? 1 : 0) + (bAddMatchingExplicitCore ? 1 : 0);
 		
 		// Feed in scaffolds
 		ROMol_Vect vScaffolds = markForCleanup(new ROMol_Vect());
@@ -545,10 +545,10 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		DataTableSpecCreator specCreator = new DataTableSpecCreator(inData[0].getSpec());
 		specCreator.setName("RGroups");
 		if (bAddMatchingSmartsCore) {
-			specCreator.addColumns(new DataColumnSpecCreator(strCoreColumnName, SmartsCell.TYPE).createSpec());
+			specCreator.addColumns(new DataColumnSpecCreator(strSmartsCoreColumnName, SmartsCell.TYPE).createSpec());
 		}
-		if (bAddMatchingSubstructure) {
-			specCreator.addColumns(new DataColumnSpecCreator(strSubstructureColumnName, RDKitAdapterCell.RAW_TYPE).createSpec());
+		if (bAddMatchingExplicitCore) {
+			specCreator.addColumns(new DataColumnSpecCreator(strExplicitCoreColumnName, RDKitAdapterCell.RAW_TYPE).createSpec());
 		}
 		for (int i = 0; i < iNumRGroups; i++) {
 			specCreator.addColumns(new DataColumnSpecCreator(lColNames.get(i), RDKitAdapterCell.RAW_TYPE).createSpec());
@@ -577,7 +577,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 					}
 					
 					// Create optionally matching substructure
-					if (bAddMatchingSubstructure) {
+					if (bAddMatchingExplicitCore) {
 						final long lUniqueWaveId = createUniqueCleanupWaveId();
 						try {
 							ROMol molSubstructure = markForCleanup(generateMatchingExplicitCore(
@@ -587,7 +587,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 						}
 						catch (Exception exc) {
 							warnings.saveWarning(ROW_CONTEXT_R_GROUP_OUTPUT_TABLE.getId(), 
-									"Unable to generate matching substructure for SMARTS core.");
+									"Unable to generate matching explicit core for SMARTS core.");
 							arrResultCells[iColIndex] = DataType.getMissingCell();
 						}
 						finally {
@@ -824,8 +824,8 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	 * not needed anymore.
 	 * 
 	 * @param mol Input molecule. Can be null to return null.
-	 * @param strSmartsCore SMARTS core to be used for finding the substructure. Can be null to return null.
-	 * @param bUseAtomMaps True to use atom map number from scaffold to set as atom property in substructure.
+	 * @param strSmartsCore SMARTS core to be used for finding the explicit core. Can be null to return null.
+	 * @param bUseAtomMaps True to use atom map number from scaffold to set as atom property in explicit core.
 	 * @param bUseRLabels True to use R Labels to set atom properties "_MolFileRLabel" and "dummyLabel".
 	 * @param lUniqueWaveId Used for marking RDKit objects for cleanup.
 	 * 
@@ -842,7 +842,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			String repl = strSmartsCore.replaceAll("#0","*");
 			ROMol molScaffold = markForCleanup(RWMol.MolFromSmarts(repl), lUniqueWaveId);
 			
-			// Get all atoms of matching substructure in original molecule
+			// Get all atoms of matching explicit core in original molecule
 			Match_Vect mv;
 			RWMol molWithHs = markForCleanup(new RWMol(mol.addHs(false, true)), lUniqueWaveId);
 			mv = markForCleanup(molWithHs.getSubstructMatch(molScaffold), lUniqueWaveId);	
@@ -877,7 +877,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 				arrAtomsToRemove[mi.getSecond()] = false;
 			}
 			
-			// Remove all atoms that are not part of the substructure match
+			// Remove all atoms that are not part of the explicit core match
 			for (int i = (int)molWithHs.getNumAtoms() - 1; i >= 0; i--) {
 				if (arrAtomsToRemove[i]) {
 					molWithHs.removeAtom(i);

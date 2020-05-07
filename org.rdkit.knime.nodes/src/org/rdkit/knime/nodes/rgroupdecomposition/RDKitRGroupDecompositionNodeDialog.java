@@ -166,18 +166,18 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		super.addDialogComponent(new DialogComponentSeparator());
 
 		super.setHorizontalPlacement(false);
-		SettingsModelBoolean modelAddMatchingSubstructure = createAddMatchingExplicitCoreModel();
+		SettingsModelBoolean modelAddMatchingExplicitCore = createAddMatchingExplicitCoreModel();
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
-				modelAddMatchingSubstructure, "Add matching explicit core"));
+				modelAddMatchingExplicitCore, "Add matching explicit core"));
 		super.addDialogComponent(new DialogComponentString(
-				createNewMatchingExplicitCoreColumnNameModel(modelAddMatchingSubstructure), "Explicit core column name: ", false, 20));
+				createNewMatchingExplicitCoreColumnNameModel(modelAddMatchingExplicitCore), "Explicit core column name: ", false, 20));
 		super.setHorizontalPlacement(false);
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
-				createUseAtomMapsModel(modelAddMatchingSubstructure), "Use atom maps"));
+				createUseAtomMapsModel(modelAddMatchingExplicitCore), "Use atom maps"));
 		super.addDialogComponent(new DialogComponentBoolean(
-				createUseRLabelsModel(modelAddMatchingSubstructure), "Use R-labels"));
+				createUseRLabelsModel(modelAddMatchingExplicitCore), "Use R-labels"));
 		super.setHorizontalPlacement(false);
 		super.setHorizontalPlacement(true);
 		

@@ -166,12 +166,12 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		super.addDialogComponent(new DialogComponentSeparator());
 
 		super.setHorizontalPlacement(false);
-		SettingsModelBoolean modelAddMatchingSubstructure = createAddMatchingSubstructureModel();
+		SettingsModelBoolean modelAddMatchingSubstructure = createAddMatchingExplicitCoreModel();
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
 				modelAddMatchingSubstructure, "Add matching explicit core"));
 		super.addDialogComponent(new DialogComponentString(
-				createNewMatchingSubstructureColumnNameModel(modelAddMatchingSubstructure), "Explicit core column name: ", false, 20));
+				createNewMatchingExplicitCoreColumnNameModel(modelAddMatchingSubstructure), "Explicit core column name: ", false, 20));
 		super.setHorizontalPlacement(false);
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
@@ -304,6 +304,8 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	/**
 	 * Creates the settings model to be used to specify the new matching SMARTS core column name.
 	 * 
+	 * @param modelAddMatchingSmartsCore Main model to switch feature on and off.
+	 * 
 	 * @return Settings model for the new matching SMARTS core column name.
 	 */
 	static final SettingsModelString createNewMatchingSmartsCoreColumnNameModel(
@@ -321,68 +323,72 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	}
 	
 	/**
-	 * Creates the settings model for the option to generate the matching core.
+	 * Creates the settings model for the option to generate the matching explicit core.
 	 * 
-	 * @return Settings model for the option to generate the matching core.
+	 * @return Settings model for the option to generate the matching explicit core.
 	 */
-	static final SettingsModelBoolean createAddMatchingSubstructureModel() {
-		return new SettingsModelBoolean("add_matching_substructure", false);
+	static final SettingsModelBoolean createAddMatchingExplicitCoreModel() {
+		return new SettingsModelBoolean("add_matching_explicit_core", false);
 	}
 	
 	/**
-	 * Creates the settings model to be used to specify the new matching substructure column name.
+	 * Creates the settings model to be used to specify the new matching explicit core column name.
 	 * 
-	 * @return Settings model for the new matching substructure column name.
+	 * @return Settings model for the new matching explicit core column name.
 	 */
-	static final SettingsModelString createNewMatchingSubstructureColumnNameModel(
-			final SettingsModelBoolean modelAddMatchingSubstructure) {
+	static final SettingsModelString createNewMatchingExplicitCoreColumnNameModel(
+			final SettingsModelBoolean modelAddMatchingExplicitCore) {
 		final SettingsModelString result =
-				new SettingsModelString("new_matching_substructure_column_name", "Explicit Core");
-		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+				new SettingsModelString("new_matching_explicit_core_column_name", "Explicit Core");
+		modelAddMatchingExplicitCore.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
-				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+				result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 			}
 		});
-		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 		return result;
 	}
 	
 	/**
-	 * Creates the settings model for the option to use atom maps when generating the matching substructure.
+	 * Creates the settings model for the option to use atom maps when generating the matching explicit core.
 	 * 
-	 * @return Settings model for the option to use atom maps when generating the matching substructure.
+	 * @param modelAddMatchingExplicitCore Main model to switch feature on and off.
+	 * 
+	 * @return Settings model for the option to use atom maps when generating the matching explicit core.
 	 */
 	static final SettingsModelBoolean createUseAtomMapsModel(
-			final SettingsModelBoolean modelAddMatchingSubstructure) {
+			final SettingsModelBoolean modelAddMatchingExplicitCore) {
 		final SettingsModelBoolean result =
-				new SettingsModelBoolean("use_atom_maps_for_substructure", true);
-		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+				new SettingsModelBoolean("use_atom_maps_for_explicit_core", true);
+		modelAddMatchingExplicitCore.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
-				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+				result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 			}
 		});
-		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 		return result;
 	}
 	
 	/**
-	 * Creates the settings model for the option to use R labels when generating the matching substructure.
+	 * Creates the settings model for the option to use R labels when generating the matching explicit core.
 	 * 
-	 * @return Settings model for the option to use R labels when generating the matching substructure.
+	 * @param modelAddMatchingExplicitCore Main model to switch feature on and off.
+	 * 
+	 * @return Settings model for the option to use R labels when generating the matching explicit core.
 	 */
 	static final SettingsModelBoolean createUseRLabelsModel(
-			final SettingsModelBoolean modelAddMatchingSubstructure) {
+			final SettingsModelBoolean modelAddMatchingExplicitCore) {
 		final SettingsModelBoolean result =
-				new SettingsModelBoolean("use_r_labels_for_substructure", true);
-		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
+				new SettingsModelBoolean("use_r_labels_for_explicit_core", true);
+		modelAddMatchingExplicitCore.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
-				result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+				result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 			}
 		});
-		result.setEnabled(modelAddMatchingSubstructure.getBooleanValue());
+		result.setEnabled(modelAddMatchingExplicitCore.getBooleanValue());
 		return result;
 	}
 	

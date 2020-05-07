@@ -180,21 +180,21 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelString m_modelNewMatchingSmartsCoreColumnName =
 			registerSettings(RDKitRGroupDecompositionNodeDialog.createNewMatchingSmartsCoreColumnNameModel(m_modelAddMatchingSmartsCore), true);
 
-	/** Settings model for the option to add the matching substructure. This was not available in the initial version. */
-	private final SettingsModelBoolean m_modelAddMatchingSubstructure =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createAddMatchingSubstructureModel(), true);
+	/** Settings model for the option to add the matching explicit core. This was not available in the initial version. */
+	private final SettingsModelBoolean m_modelAddMatchingExplicitCore =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createAddMatchingExplicitCoreModel(), true);
 
-	/** Settings model to specify the new matching substructure column name. This was not available in the initial version. */
-	private final SettingsModelString m_modelNewMatchingSubstructureColumnName =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createNewMatchingSubstructureColumnNameModel(m_modelAddMatchingSubstructure), true);
+	/** Settings model to specify the new matching explicit core column name. This was not available in the initial version. */
+	private final SettingsModelString m_modelNewMatchingExplicitCoreColumnName =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createNewMatchingExplicitCoreColumnNameModel(m_modelAddMatchingExplicitCore), true);
 
-	/** Settings model for the option to use atom maps when generating the matching substructure. This was not available in the initial version. */
+	/** Settings model for the option to use atom maps when generating the matching explicit core. This was not available in the initial version. */
 	private final SettingsModelBoolean m_modelUseAtomMaps =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createUseAtomMapsModel(m_modelAddMatchingSubstructure), true);
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createUseAtomMapsModel(m_modelAddMatchingExplicitCore), true);
 
-	/** Settings model for the option to use R labels when generating the matching substructure. This was not available in the initial version. */
+	/** Settings model for the option to use R labels when generating the matching explicit core. This was not available in the initial version. */
 	private final SettingsModelBoolean m_modelUseRLabels =
-			registerSettings(RDKitRGroupDecompositionNodeDialog.createUseRLabelsModel(m_modelAddMatchingSubstructure), true);
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createUseRLabelsModel(m_modelAddMatchingExplicitCore), true);
 	
 	/** Settings model for R Group labels options. */
 	private final SettingsModelEnumerationArray<Labels> m_modelLabels =
@@ -321,9 +321,9 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 		// Check validity uniqueness of potential substructure match column name
 		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], listMoreColumnNames.toArray(new String[listMoreColumnNames.size()]),
-				null, m_modelNewMatchingSubstructureColumnName, 
-				m_modelAddMatchingSubstructure.getBooleanValue() ? "Output column for substructure match has not been specified yet." : null, 
-				m_modelAddMatchingSubstructure.getBooleanValue() ? "The name %COLUMN_NAME% of the new substructure match column conflicts with an existing name." : null);
+				null, m_modelNewMatchingExplicitCoreColumnName, 
+				m_modelAddMatchingExplicitCore.getBooleanValue() ? "Output column for substructure match has not been specified yet." : null, 
+				m_modelAddMatchingExplicitCore.getBooleanValue() ? "The name %COLUMN_NAME% of the new substructure match column conflicts with an existing name." : null);
 		
 		// Consolidate all warnings and make them available to the user
 		generateWarnings();
@@ -455,9 +455,9 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 		
 		// Get settings for additional output columns
 		boolean bAddMatchingSmartsCore = m_modelAddMatchingSmartsCore.getBooleanValue();
-		boolean bAddMatchingSubstructure = m_modelAddMatchingSubstructure.getBooleanValue();
+		boolean bAddMatchingSubstructure = m_modelAddMatchingExplicitCore.getBooleanValue();
 		String strCoreColumnName = m_modelNewMatchingSmartsCoreColumnName.getStringValue();
-		String strSubstructureColumnName = m_modelNewMatchingSubstructureColumnName.getStringValue();
+		String strSubstructureColumnName = m_modelNewMatchingExplicitCoreColumnName.getStringValue();
 		boolean bUseAtomMaps = m_modelUseAtomMaps.getBooleanValue();
 		boolean bUseRLabels = m_modelUseRLabels.getBooleanValue();
 		int iNumNonRGroupCols = (bAddMatchingSmartsCore ? 1 : 0) + (bAddMatchingSubstructure ? 1 : 0);
@@ -580,7 +580,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 					if (bAddMatchingSubstructure) {
 						final long lUniqueWaveId = createUniqueCleanupWaveId();
 						try {
-							ROMol molSubstructure = markForCleanup(generateMatchingSubstructure(
+							ROMol molSubstructure = markForCleanup(generateMatchingExplicitCore(
 									markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MOL].getROMol(row)), 
 										strSmartsWithoutStereoChemistry, bUseAtomMaps, bUseRLabels, lUniqueWaveId));
 							arrResultCells[iColIndex] = RDKitMolCellFactory.createRDKitAdapterCell(molSubstructure);
@@ -819,7 +819,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	}
 	
 	/**
-	 * Generates the matching substructure from the passed in RDKit molecule based on the passed in SMARTS core.
+	 * Generates the matching explicit core from the passed in RDKit molecule based on the passed in SMARTS core.
 	 * It is responsibility of the caller to clean up the RDKit molecule returned by this method when it is 
 	 * not needed anymore.
 	 * 
@@ -829,13 +829,13 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	 * @param bUseRLabels True to use R Labels to set atom properties "_MolFileRLabel" and "dummyLabel".
 	 * @param lUniqueWaveId Used for marking RDKit objects for cleanup.
 	 * 
-	 * @return Matching substructure or null, if non was matching.
+	 * @return Matching explicit core or null, if none was matching.
 	 * 
 	 * @throws Exception Thrown if processing failed.
 	 */
-	protected ROMol generateMatchingSubstructure(ROMol mol, String strSmartsCore, boolean bUseAtomMaps, 
+	protected ROMol generateMatchingExplicitCore(ROMol mol, String strSmartsCore, boolean bUseAtomMaps, 
 			boolean bUseRLabels, long lUniqueWaveId) throws Exception {
-		ROMol molSubstructure = null;
+		ROMol molExplicitCore = null;
 
 		if (mol != null && strSmartsCore != null) {
 			// Massage SMARTS to allow correct matches
@@ -885,10 +885,10 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 			}
 			
 			molWithHs.updatePropertyCache(false);
-			molSubstructure = molWithHs;
+			molExplicitCore = molWithHs;
 		}
 		
-		return molSubstructure;
+		return molExplicitCore;
 	}
 	
 	@Override

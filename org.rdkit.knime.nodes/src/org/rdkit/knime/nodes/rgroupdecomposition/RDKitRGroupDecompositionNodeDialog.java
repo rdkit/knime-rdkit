@@ -169,9 +169,9 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		SettingsModelBoolean modelAddMatchingSubstructure = createAddMatchingSubstructureModel();
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
-				modelAddMatchingSubstructure, "Add matching substructure"));
+				modelAddMatchingSubstructure, "Add matching explicit core"));
 		super.addDialogComponent(new DialogComponentString(
-				createNewMatchingSubstructureColumnNameModel(modelAddMatchingSubstructure), "Substructure column name: ", false, 20));
+				createNewMatchingSubstructureColumnNameModel(modelAddMatchingSubstructure), "Explicit core column name: ", false, 20));
 		super.setHorizontalPlacement(false);
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(
@@ -337,7 +337,7 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	static final SettingsModelString createNewMatchingSubstructureColumnNameModel(
 			final SettingsModelBoolean modelAddMatchingSubstructure) {
 		final SettingsModelString result =
-				new SettingsModelString("new_matching_substructure_column_name", "Substructure");
+				new SettingsModelString("new_matching_substructure_column_name", "Explicit Core");
 		modelAddMatchingSubstructure.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(final ChangeEvent e) {

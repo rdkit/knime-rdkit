@@ -25,8 +25,8 @@
             <option name="Reaction SMARTS">
                 A reaction SMARTS describing the reaction.
                 <br />
-                For a description of the format, please see Chapter 2 of the
-                <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf">RDKit Book</a>.
+                For a description of the format, please have a look in 
+                <a href="http://rdkit.org/docs/RDKit_Book.html#reaction-smarts">The RDKit Book</a>.
             </option>
         </tab>
         <tab name="Randomization">

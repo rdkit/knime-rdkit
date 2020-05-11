@@ -16,8 +16,12 @@
 		</intro>
         
         <option name="RDKit Mol column">The column containing reactant molecules</option>
-        <option name="Reaction SMARTS">A reaction SMARTS describing the reaction.
-        <br />For a description of the format, please see Chapter 2 of the <a href="http://rdkit.svn.sourceforge.net/viewvc/rdkit/trunk/Docs/Book/RDKit_Book.pdf" >RDKit Book</a>. </option>
+        <option name="Reaction SMARTS">
+                A reaction SMARTS describing the reaction.
+                <br />
+                For a description of the format, please have a look in 
+                <a href="http://rdkit.org/docs/RDKit_Book.html#reaction-smarts">The RDKit Book</a>.
+        </option>
         <option name="Use Reaction from RXN file">If you want to use a reaction file rather than a smarts pattern, select this box and choose the RXN file in the file browser. </option>
 
 	</fullDescription>

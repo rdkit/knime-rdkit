@@ -55,6 +55,7 @@ import org.RDKit.Match_Vect;
 import org.RDKit.Match_Vect_Vect;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.SubstructMatchParameters;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -69,6 +70,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
@@ -142,6 +144,9 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelBoolean m_modelExactMatch =
 			registerSettings(RDKitSubstructFilterNodeDialog.createExactMatchModel());
 
+	private final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(RDKitSubstructFilterNodeDialog.createUseChiralityModel());
+
 	private final SettingsModelEnumeration<MatchHandling> m_modelMatchHandling =
 			registerSettings(RDKitSubstructFilterNodeDialog.createMatchHandlingModel(), true);
 
@@ -200,15 +205,15 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		if (m_modelSmartsQuery.getStringValue().equals("")) {
 			throw new InvalidSettingsException("Please specify a SMARTS query.");
 		}
-
-		// Check validity of SMARTS
-		final ROMol pattern = markForCleanup(RWMol.MolFromSmarts(m_modelSmartsQuery.getStringValue(), 0, true));
-		if (pattern == null) {
-			throw new InvalidSettingsException("Could not parse SMARTS query: "
-					+ m_modelSmartsQuery.getStringValue());
+		if(!m_modelSmartsQuery.getStringValue().equals("missing")) {
+			// Check validity of SMARTS
+			final ROMol pattern = markForCleanup(RWMol.MolFromSmarts(m_modelSmartsQuery.getStringValue(), 0, true));
+			if (pattern == null) {
+				throw new InvalidSettingsException("Could not parse SMARTS query: "
+						+ m_modelSmartsQuery.getStringValue());
+			}
+			cleanupMarkedObjects();
 		}
-		cleanupMarkedObjects();
-
 		// Determine, if the new column name has been set and if it is really unique
 		if (m_modelNewAtomListColumnName.isEnabled()) {
 
@@ -340,7 +345,9 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 								mol.getNumBonds() == molPattern.getNumBonds()))) {
 
 					// See if there is a match
-					final boolean matched = mol.hasSubstructMatch(molPattern);
+					final SubstructMatchParameters ps = new SubstructMatchParameters();
+					ps.setUseChirality(m_modelUseChirality.getBooleanValue());
+					final boolean matched = mol.hasSubstructMatch(molPattern,ps);
 
 					// We found a match
 					if (matched) {
@@ -356,7 +363,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 						else {
 							try {
 								final ArrayList<DataCell> listCellAtomList = new ArrayList<DataCell>();
-								final Match_Vect_Vect vecVecMatches = mol.getSubstructMatches(molPattern);
+								final Match_Vect_Vect vecVecMatches = mol.getSubstructMatches(molPattern,ps);
 								final StringBuilder sb = new StringBuilder("( ");
 
 								if (vecVecMatches != null) {
@@ -422,6 +429,20 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		return factory;
 	}
 
+	@Override
+	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+	      throws InvalidSettingsException {
+	    super.loadValidatedSettingsFrom(settings);
+	
+	    try {
+	       m_modelUseChirality.loadSettingsFrom(settings);
+	    }
+	    catch (final InvalidSettingsException excOrig) {
+	       m_modelUseChirality.setBooleanValue(false);
+	    }
+	}
+
+	
 	/**
 	 * {@inheritDoc}
 	 */

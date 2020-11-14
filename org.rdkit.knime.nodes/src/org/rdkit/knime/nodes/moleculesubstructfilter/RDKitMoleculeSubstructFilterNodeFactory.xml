@@ -17,6 +17,7 @@
             <option name="RDKit Mol column">Select the column from the first input table that contains the RDKit molecules</option>
             <option name="Query Mol column">Select the column from the second input table that contains the query molecules.
                 Acceptable types are SMARTS, SMILES, SDF and RDKit Mol.</option>
+            <option name="Use chirality">If this is set, information about stereochemistry will be used in the substructure search.</option>
             <option name="Matches">Select the minimum number of patterns that must match for each molecule so that it is
                 included in the first output table</option>
             <option name="New column name for matching substructures">Enter here the name of the new column that will contain

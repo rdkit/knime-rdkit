@@ -100,6 +100,9 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(
 				new DialogComponentBoolean(createUniqueMatchesOnlyModel(),
 						"Count unique matches only"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createUseChiralityModel(),
+						"Use chirality when matching"));
 
 		createNewGroup("Output");
 		// Add query name option settings
@@ -161,6 +164,16 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createUniqueMatchesOnlyModel() {
 		return new SettingsModelBoolean("countUniqueMatches", true);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to use chirality in the matching
+	 * 
+	 * @return Settings model for useChirality option.
+	 */
+	static final SettingsModelBoolean createUseChiralityModel() {
+		return new SettingsModelBoolean("useChirality", false);
 	}
 
 	/**

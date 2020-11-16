@@ -122,6 +122,18 @@ public class RDKitAdjustQueryPropertiesNodeModel extends AbstractRDKitCalculator
     /** Settings model for the option to make dummies queries. */
     private final SettingsModelBoolean m_modelMakeDummiesQueriesOption =
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeDummiesQueriesOptionModel());
+    private final SettingsModelBoolean m_modelAromatizeOption =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAromatizeOptionModel());
+    private final SettingsModelBoolean m_modelAdjustConjugated5Rings =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustConjugated5RingsOptionModel());
+    private final SettingsModelBoolean m_modelAdjustSingleBondsToDegree1Neighbors =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsToDegree1NeighborsOptionModel());
+    private final SettingsModelBoolean m_modelAdjustSingleBondsBetweenAromaticAtoms =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsBetweenAromaticAtomsOptionModel());
+    private final SettingsModelBoolean m_modelSetMDL5RingAromaticity =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createSetMDL5RingAromaticityOptionModel());
+    private final SettingsModelBoolean m_modelUseStereoCareForBonds =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createUseStereoCareForBondsOptionModel());
 
     /** Settings model for the adjust degree flags. */
     private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelAdjustDegreeFlags =
@@ -132,6 +144,19 @@ public class RDKitAdjustQueryPropertiesNodeModel extends AbstractRDKitCalculator
     private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelAdjustRingCountFlags =
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustRingCountFlagsOptionModel(
     				m_modelAdjustRingCountOption));
+    
+    private final SettingsModelBoolean m_modelMakeAtomsGenericOption =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeAtomsGenericOptionModel());
+    private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelMakeAtomsGenericFlags =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeAtomsGenericFlagsOptionModel(
+    				m_modelMakeAtomsGenericOption));
+
+    private final SettingsModelBoolean m_modelMakeBondsGenericOption =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeBondsGenericOptionModel());
+    private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelMakeBondsGenericFlags =
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeBondsGenericFlagsOptionModel(
+    				m_modelMakeBondsGenericOption));
+
     
     //
     // Constructor
@@ -237,7 +262,17 @@ public class RDKitAdjustQueryPropertiesNodeModel extends AbstractRDKitCalculator
     		adjustParams.setAdjustDegreeFlags(RDKitAdjustQueryPropertiesNodeDialog.getFlags(m_modelAdjustDegreeFlags.getValues()));
     		adjustParams.setAdjustRingCount(m_modelAdjustRingCountOption.getBooleanValue());
     		adjustParams.setAdjustRingCountFlags(RDKitAdjustQueryPropertiesNodeDialog.getFlags(m_modelAdjustRingCountFlags.getValues()));
+    		adjustParams.setMakeAtomsGeneric(m_modelMakeAtomsGenericOption.getBooleanValue());
+    		adjustParams.setMakeAtomsGenericFlags(RDKitAdjustQueryPropertiesNodeDialog.getFlags(m_modelMakeAtomsGenericFlags.getValues()));
+    		adjustParams.setMakeBondsGeneric(m_modelMakeBondsGenericOption.getBooleanValue());
+    		adjustParams.setMakeBondsGenericFlags(RDKitAdjustQueryPropertiesNodeDialog.getFlags(m_modelMakeBondsGenericFlags.getValues()));
     		adjustParams.setMakeDummiesQueries(m_modelMakeDummiesQueriesOption.getBooleanValue());
+    		adjustParams.setAromatizeIfPossible(m_modelAromatizeOption.getBooleanValue());
+    		adjustParams.setAdjustConjugatedFiveRings(m_modelAdjustConjugated5Rings.getBooleanValue());
+    		adjustParams.setAdjustSingleBondsBetweenAromaticAtoms(m_modelAdjustSingleBondsBetweenAromaticAtoms.getBooleanValue());
+    		adjustParams.setAdjustSingleBondsToDegreeOneNeighbors(m_modelAdjustSingleBondsToDegree1Neighbors.getBooleanValue());
+    		adjustParams.setUseStereoCareForBonds(m_modelUseStereoCareForBonds.getBooleanValue());
+    		adjustParams.setSetMDLFiveRingAromaticity(m_modelSetMDL5RingAromaticity.getBooleanValue());
     		
     		// Generate factory 
     	    arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,

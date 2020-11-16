@@ -25,8 +25,23 @@
             <option name="Adjust ring count">Enable so that modified atoms have a ring-count query added
                 based on their ring count in the query.</option>
             <option name="Adjust ring count flag">Control which atoms have a ring-count query added.</option>
+            <option name="Make atoms generic">Convert atoms to any-atom queries.</option>
+            <option name="Make atoms generic flag">Control which atoms are converted to any-atom queries.</option>
+            <option name="Make bonds generic">Convert bonds to any-bond queries.</option>
+            <option name="Make bonds generic flag">Control which bonds are converted to any-bond queries.</option>
             <option name="Make dummies queries">Enable so that dummy atoms that do not have a specified isotope
                 are converted to any-atom queries.</option>
+            <option name="Aromatize if possible">Perceive and set aromaticity.</option>
+            <option name="Adjust conjugated 5 rings">Sets bond queries in conjugated five-rings to
+                SINGLE|DOUBLE|AROMATIC.</option>
+            <option name="Set MDL 5 ring aromaticity">Uses the 5-ring aromaticity behavior of the (former) MDL
+                software as documented in the Chemical Representation Guide.</option>
+            <option name="Adjust single bonds to degree 1 neighbors">Sets single bonds between aromatic atoms and degree one
+                neighbors to SINGLE|AROMATIC.</option>
+            <option name="Adjust single bonds between aromatic atoms">Sets non-ring single bonds between two aromatic atoms to
+                SINGLE|AROMATIC.</option>
+            <option name="Use stereo care for bonds">Remove stereochemistry info from double bonds that do not have
+                the stereoCare property set.</option>
            </tab>
     </fullDescription>
 

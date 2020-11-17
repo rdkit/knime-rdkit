@@ -58,6 +58,7 @@ import java.util.Map;
 import org.RDKit.ChemicalReaction;
 import org.RDKit.ExplicitBitVect;
 import org.RDKit.Int_Vect;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.UInt_Vect;
 import org.knime.chem.types.RxnValue;
@@ -1027,13 +1028,9 @@ public class InputDataInfo {
 				final BitVectorValue bitVector = ((BitVectorValue)cell);
 
 				// Convert the bit vector to RDKit style explicit bit vector
+				final String binString = new StringBuilder(bitVector.toBinaryString()).reverse().toString();
 				expBitVector = new ExplicitBitVect(bitVector.length());
-				long nextBit = bitVector.nextSetBit(0);
-
-				while (nextBit >= 0) {
-					expBitVector.setBit(nextBit);
-					nextBit = bitVector.nextSetBit(nextBit+1);
-				}
+				RDKFuncs.FromBitString(expBitVector, binString);
 			}
 			else {
 				throw new IllegalArgumentException("The cell in column " + getColumnSpec().getName() +

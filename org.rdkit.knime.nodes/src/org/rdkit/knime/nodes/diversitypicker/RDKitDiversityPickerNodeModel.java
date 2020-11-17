@@ -555,13 +555,12 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 			}
 		}
 		else if (firstPicks == null || firstPicks.isEmpty()) {
-			intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
-					iNumberToPick, m_randomSeed.getIntValue()));
+			firstPicks = new Int_Vect();
 		}
-		else {
-			intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
-					iNumberToPick + firstPicks.size(), m_randomSeed.getIntValue(), firstPicks));
-		}
+		// the distance cache just slows things down with the new diversity picker implementation
+		Boolean useDistanceCache = false;
+		intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
+				iNumberToPick + firstPicks.size(), m_randomSeed.getIntValue(), firstPicks, useDistanceCache));
 
 		subExecCheckDiversity.setProgress(1.0d);
 		subExecCheckDiversity.checkCanceled();

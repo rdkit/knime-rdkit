@@ -264,7 +264,7 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 	/**
 	 * Creates the settings model to specify the use chirality option.
 	 * 
-	 * @return settings model for the use chirality toggle
+	 * @return settings model for the use chirality toggle.
 	 */
 	static final SettingsModelBoolean createUseChiralityModel() {
 		return new SettingsModelBoolean("use_chirality", false);

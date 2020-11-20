@@ -122,18 +122,30 @@ public class RDKitAdjustQueryPropertiesNodeModel extends AbstractRDKitCalculator
     /** Settings model for the option to make dummies queries. */
     private final SettingsModelBoolean m_modelMakeDummiesQueriesOption =
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeDummiesQueriesOptionModel());
+
+    /** Settings model for aromatize option. Added in November 2020. */
     private final SettingsModelBoolean m_modelAromatizeOption =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAromatizeOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAromatizeOptionModel(), true);
+
+    /** Settings model for adjust conjugated 5-rings option. Added in November 2020. */
     private final SettingsModelBoolean m_modelAdjustConjugated5Rings =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustConjugated5RingsOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustConjugated5RingsOptionModel(), true);
+
+    /** Settings model for adjust single bonds to degree 1 neighbors option. Added in November 2020. */
     private final SettingsModelBoolean m_modelAdjustSingleBondsToDegree1Neighbors =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsToDegree1NeighborsOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsToDegree1NeighborsOptionModel(), true);
+
+    /** Settings model for adjust single bonds between aromatic atoms option. Added in November 2020. */
     private final SettingsModelBoolean m_modelAdjustSingleBondsBetweenAromaticAtoms =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsBetweenAromaticAtomsOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustSingleBondsBetweenAromaticAtomsOptionModel(), true);
+
+    /** Settings model for set MDL 5-ring aromaticity option. Added in November 2020. */
     private final SettingsModelBoolean m_modelSetMDL5RingAromaticity =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createSetMDL5RingAromaticityOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createSetMDL5RingAromaticityOptionModel(), true);
+
+    /** Settings model for use stereo care for bonds option. Added in November 2020. */
     private final SettingsModelBoolean m_modelUseStereoCareForBonds =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createUseStereoCareForBondsOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createUseStereoCareForBondsOptionModel(), true);
 
     /** Settings model for the adjust degree flags. */
     private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelAdjustDegreeFlags =
@@ -145,17 +157,23 @@ public class RDKitAdjustQueryPropertiesNodeModel extends AbstractRDKitCalculator
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createAdjustRingCountFlagsOptionModel(
     				m_modelAdjustRingCountOption));
     
+    /** Settings model for option to make atoms generic. Added in November 2020. */
     private final SettingsModelBoolean m_modelMakeAtomsGenericOption =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeAtomsGenericOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeAtomsGenericOptionModel(), true);
+    
+    /** Settings model for flags to make atoms generic. Added in November 2020. */
     private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelMakeAtomsGenericFlags =
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeAtomsGenericFlagsOptionModel(
-    				m_modelMakeAtomsGenericOption));
+    				m_modelMakeAtomsGenericOption), true);
 
+    /** Settings model for option to make bonds generic. Added in November 2020. */
     private final SettingsModelBoolean m_modelMakeBondsGenericOption =
-    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeBondsGenericOptionModel());
+    		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeBondsGenericOptionModel(), true);
+    
+    /** Settings model for flags to make bonds generic. Added in November 2020. */
     private final SettingsModelEnumerationArray<AdjustQueryWhichFlags> m_modelMakeBondsGenericFlags =
     		registerSettings(RDKitAdjustQueryPropertiesNodeDialog.createMakeBondsGenericFlagsOptionModel(
-    				m_modelMakeBondsGenericOption));
+    				m_modelMakeBondsGenericOption), true);
 
     
     //

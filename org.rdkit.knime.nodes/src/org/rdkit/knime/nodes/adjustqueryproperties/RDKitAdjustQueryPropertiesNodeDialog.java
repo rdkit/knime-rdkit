@@ -326,30 +326,73 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
         return new SettingsModelBoolean("make_dummies_queries", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeDummiesQueries());
     }
+    
+    /**
+     * Creates the settings model to be used to specify, if molecule should be aromatized.
+     * Added in November 2020.
+     * 
+     * @return Settings model for aromatize option.
+     */
     static final SettingsModelBoolean createAromatizeOptionModel() {
         return new SettingsModelBoolean("aromatize_if_possible", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getAromatizeIfPossible());
     }
+    
+    /**
+     * Creates the settings model to be used to specify, if conjugated 5-rings shall be adjusted.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting conjugated 5-rings.
+     */
     static final SettingsModelBoolean createAdjustConjugated5RingsOptionModel() {
         return new SettingsModelBoolean("adjust_conjugated_five_rings", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustConjugatedFiveRings());
     }    
+    
+    /**
+     * Creates the settings model to be used to specify, if single bonds shall be adjusted to degree 1 neighbors.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting single bonds to degree 1 neighbors option.
+     */
     static final SettingsModelBoolean createAdjustSingleBondsToDegree1NeighborsOptionModel() {
         return new SettingsModelBoolean("adjust_single_bonds_to_degree_1_neighbors", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustSingleBondsToDegreeOneNeighbors());
     }    
+    
+    /**
+     * Creates the settings model to be used to specify, if single bonds between aromatic atoms shall be adjusted.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting single bonds between aromatic atoms.
+     */
     static final SettingsModelBoolean createAdjustSingleBondsBetweenAromaticAtomsOptionModel() {
         return new SettingsModelBoolean("adjust_single_bonds_between_aromatic_atoms", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustSingleBondsBetweenAromaticAtoms());
     }    
+    
+    /**
+     * Creates the settings model to be used to specify, if MDL 5-ring aromaticity shall be set.
+     * Added in November 2020.
+     * 
+     * @return Settings model for setting MDL 5-ring aromaticity.
+     */
     static final SettingsModelBoolean createSetMDL5RingAromaticityOptionModel() {
         return new SettingsModelBoolean("set_mdl_five_ring_aromaticity", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getSetMDLFiveRingAromaticity());
     }    
+    
+    /**
+     * Creates the settings model to be used to specify, if stereo care for bonds shall be used.
+     * Added in November 2020.
+     * 
+     * @return Settings model for using stereo care for bonds.
+     */
     static final SettingsModelBoolean createUseStereoCareForBondsOptionModel() {
         return new SettingsModelBoolean("use_stereo_care_for_bonds", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getUseStereoCareForBonds());
-    }    
+    }  
+    
     /**
      * Removes elements from the {@link AdjustQueryWhichFlags} enumeration, which 
      * are not meaningful in the UI.
@@ -416,11 +459,29 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
     	
     	return model;    
     }   
-
+    
+    /**
+     * Creates the settings model to be used to specify, if atoms shall be made generic.
+     * Added in November 2020.
+     * 
+     * @return Settings model for making atoms generic.
+     */
     static final SettingsModelBoolean createMakeAtomsGenericOptionModel() {
         return new SettingsModelBoolean("make_atoms_generic", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeAtomsGeneric());
     }
+      
+    /**
+     * Creates the settings model to be used to specify, how atoms shall be made generic,
+     * which has only an effect, if the making atoms generic option is enabled.
+     * Added in November 2020.
+     * 
+     * @param makeAtomsGenericModel Model that the model to be created depends on.
+     * 	Based on the state of the passed in model we will enable or disable the
+     *  AdjustQueryWhichFlags model.
+     * 
+     * @return Settings model for defining the flags how to make atoms generic.
+     */
     static final SettingsModelEnumerationArray<AdjustQueryWhichFlags> createMakeAtomsGenericFlagsOptionModel(
     		final SettingsModelBoolean makeAtomsGenericModel) {
     	SettingsModelEnumerationArray<AdjustQueryWhichFlags> model =
@@ -438,10 +499,30 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
     	
     	return model;    
     } 
+    
+    /**
+     * Creates the settings model to be used to specify, if bonds shall be made generic.
+     * Added in November 2020.
+     * 
+     * @return Settings model for making bonds generic.
+     */
     static final SettingsModelBoolean createMakeBondsGenericOptionModel() {
         return new SettingsModelBoolean("make_bonds_generic", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeBondsGeneric());
     }
+    
+    
+	/**
+	 * Creates the settings model to be used to specify, how bonds shall be made
+	 * generic, which has only an effect, if the making atoms generic option is enabled. 
+	 * Added in November 2020.
+	 * 
+	 * @param makeBondsGenericModel Model that the model to be created depends on.
+	 *    Based on the state of the passed in model we will enable or disable the 
+	 *    AdjustQueryWhichFlags model.
+	 * 
+	 * @return Settings model for defining the flags how to make bonds generic.
+	 */
     static final SettingsModelEnumerationArray<AdjustQueryWhichFlags> createMakeBondsGenericFlagsOptionModel(
     		final SettingsModelBoolean makeBondsGenericModel) {
     	SettingsModelEnumerationArray<AdjustQueryWhichFlags> model =

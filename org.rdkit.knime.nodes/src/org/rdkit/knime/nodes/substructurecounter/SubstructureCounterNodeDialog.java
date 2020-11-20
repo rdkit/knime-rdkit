@@ -168,7 +168,8 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 
 	/**
 	 * Creates the settings model to be used to specify the option
-	 * to use chirality in the matching
+	 * to use chirality in the matching.
+	 * Added in November 2020.
 	 * 
 	 * @return Settings model for useChirality option.
 	 */

@@ -133,8 +133,9 @@ public class RDKitSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
 
 	/**
 	 * Creates the settings model to specify the use chirality option.
+	 * Added in November 2020.
 	 * 
-	 * @return settings model for the use chirality toggle
+	 * @return settings model for the use chirality toggle.
 	 */
 	static final SettingsModelBoolean createUseChiralityModel() {
 		return new SettingsModelBoolean("use_chirality", false);

@@ -84,7 +84,6 @@ import org.rdkit.knime.headers.HeaderPropertyUtils;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.TableViewSupport;
-import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeDialog;
 import org.rdkit.knime.properties.SmilesHeaderProperty;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
@@ -139,9 +138,9 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	private final SettingsModelBoolean m_modelUniqueMatchesOnly =
 			registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
 
-	/** Settings model for the option to use stereochemistry in the match. */
+	/** Settings model for the option to use stereochemistry in the match. Added in November 2020. */
 	private final SettingsModelBoolean m_modelUseChirality =
-			registerSettings(SubstructureCounterNodeDialog.createUseChiralityModel());
+			registerSettings(SubstructureCounterNodeDialog.createUseChiralityModel(), true);
 
 	/** Settings model for the option to use a query name column. */
 	private final SettingsModelBoolean m_modelUseQueryNameColumn =
@@ -521,7 +520,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 						ListCell.getCollectionType(StringCell.TYPE)).createSpec();
 			}
 
-			final SubstructMatchParameters ps = new SubstructMatchParameters();
+			final SubstructMatchParameters ps = markForCleanup(new SubstructMatchParameters());
 			ps.setUseChirality(m_modelUseChirality.getBooleanValue());
 			ps.setUniquify(m_modelUniqueMatchesOnly.getBooleanValue());
 			

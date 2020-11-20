@@ -91,7 +91,6 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintType;
-import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeDialog;
 import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeModel;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
@@ -186,18 +185,19 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 	protected final SettingsModelString m_modelInputColumnName =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createInputColumnNameModel(), "input_column", "rdkitColumn");
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for query column selection. */
 	protected final SettingsModelString m_modelQueryColumnName =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createQueryColumnNameModel(), "query_column", "queryColumn");
 
+	/** Settings model for the use chirality toggle. Added in November 2020. */
 	protected final SettingsModelBoolean m_modelUseChirality =
-			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createUseChiralityModel());
+			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createUseChiralityModel(), true);
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for the matching criteria. */
 	protected final SettingsModelEnumeration<MatchingCriteria> m_modelMatchingCriteria =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createMatchingCriteriaModel(), true);
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for the matching criteria number of "At least". */
 	protected final SettingsModelIntegerBounded m_modelMinimumMatches =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createMinimumMatchesModel(m_modelMatchingCriteria));
 
@@ -486,7 +486,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 								mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 							}
 
-							if (mol.hasSubstructMatch(molPattern,ps)) {
+							if (mol.hasSubstructMatch(molPattern, ps)) {
 								listQueryRefs.add(bRowKeyMatchInfo ? new StringCell(keyPattern) : new IntCell(i + 1));
 								iNumberOfMatchingPatterns++;
 							}

@@ -204,10 +204,65 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
         filterPanelRingCountOption.getComponentPanel().setPreferredSize(new Dimension(550, 135));
    
         super.addDialogComponent(new DialogComponentSeparator());
+ 
+        SettingsModelBoolean makeAtomsGenericModel = createMakeAtomsGenericOptionModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+        		makeAtomsGenericModel, "Make atoms generic"));
+        DialogComponentEnumFilterPanel<AdjustQueryWhichFlags> filterPanelAtomsGenericOption = 
+        		new DialogComponentEnumFilterPanel(
+                		createMakeAtomsGenericFlagsOptionModel(makeAtomsGenericModel), 
+                		"Use the following flags to make atoms generic:", 
+                		generateReducedFlagList(), true) {
+                	protected void setEnabledComponents(boolean enabled) {
+                		super.setEnabledComponents(enabled);
+                		setListCellRenderer(enabled ? TOOLTIP_LIST_RENDERER :  new DefaultListCellRenderer());
+                	}
+                };
+        super.addDialogComponent(filterPanelAtomsGenericOption);
+        filterPanelAtomsGenericOption.setSearchVisible(false);
+        filterPanelAtomsGenericOption.setExcludeTitle(" Do not use ");
+        filterPanelAtomsGenericOption.setIncludeTitle(" Use ");
+        filterPanelAtomsGenericOption.setListCellRenderer(TOOLTIP_LIST_RENDERER);
+        filterPanelAtomsGenericOption.getComponentPanel().setPreferredSize(new Dimension(550, 135));
+        super.addDialogComponent(new DialogComponentSeparator());
+   
+        SettingsModelBoolean makeBondsGenericModel = createMakeBondsGenericOptionModel();
+        super.addDialogComponent(new DialogComponentBoolean(
+        		makeBondsGenericModel, "Make bonds generic"));
+        DialogComponentEnumFilterPanel<AdjustQueryWhichFlags> filterPanelBondsGenericOption = 
+        		new DialogComponentEnumFilterPanel(
+                		createMakeBondsGenericFlagsOptionModel(makeBondsGenericModel), 
+                		"Use the following flags to make bonds generic:", 
+                		generateReducedFlagList(), true) {
+                	protected void setEnabledComponents(boolean enabled) {
+                		super.setEnabledComponents(enabled);
+                		setListCellRenderer(enabled ? TOOLTIP_LIST_RENDERER :  new DefaultListCellRenderer());
+                	}
+                };
+        super.addDialogComponent(filterPanelBondsGenericOption);
+        filterPanelAtomsGenericOption.setSearchVisible(false);
+        filterPanelAtomsGenericOption.setExcludeTitle(" Do not use ");
+        filterPanelAtomsGenericOption.setIncludeTitle(" Use ");
+        filterPanelAtomsGenericOption.setListCellRenderer(TOOLTIP_LIST_RENDERER);
+        filterPanelAtomsGenericOption.getComponentPanel().setPreferredSize(new Dimension(550, 135));
+        super.addDialogComponent(new DialogComponentSeparator());
         
         super.addDialogComponent(new DialogComponentBoolean(
         		createMakeDummiesQueriesOptionModel(), "Make dummies queries"));
-    }
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createAromatizeOptionModel(), "Aromatize if possible"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createAdjustConjugated5RingsOptionModel(), "Adjust conjugated 5 rings"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createSetMDL5RingAromaticityOptionModel(), "Set MDL 5 ring aromaticity"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createAdjustSingleBondsToDegree1NeighborsOptionModel(), "Adjust single bonds to degree 1 neighbors"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createAdjustSingleBondsBetweenAromaticAtomsOptionModel(), "Adjust single bonds between aromatic atoms"));
+        super.addDialogComponent(new DialogComponentBoolean(
+        		createUseStereoCareForBondsOptionModel(), "Use stereo care for bonds"));
+	
+	}
 
     //
     // Static Methods
@@ -271,6 +326,72 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
         return new SettingsModelBoolean("make_dummies_queries", 
         		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeDummiesQueries());
     }
+    
+    /**
+     * Creates the settings model to be used to specify, if molecule should be aromatized.
+     * Added in November 2020.
+     * 
+     * @return Settings model for aromatize option.
+     */
+    static final SettingsModelBoolean createAromatizeOptionModel() {
+        return new SettingsModelBoolean("aromatize_if_possible", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getAromatizeIfPossible());
+    }
+    
+    /**
+     * Creates the settings model to be used to specify, if conjugated 5-rings shall be adjusted.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting conjugated 5-rings.
+     */
+    static final SettingsModelBoolean createAdjustConjugated5RingsOptionModel() {
+        return new SettingsModelBoolean("adjust_conjugated_five_rings", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustConjugatedFiveRings());
+    }    
+    
+    /**
+     * Creates the settings model to be used to specify, if single bonds shall be adjusted to degree 1 neighbors.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting single bonds to degree 1 neighbors option.
+     */
+    static final SettingsModelBoolean createAdjustSingleBondsToDegree1NeighborsOptionModel() {
+        return new SettingsModelBoolean("adjust_single_bonds_to_degree_1_neighbors", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustSingleBondsToDegreeOneNeighbors());
+    }    
+    
+    /**
+     * Creates the settings model to be used to specify, if single bonds between aromatic atoms shall be adjusted.
+     * Added in November 2020.
+     * 
+     * @return Settings model for adjusting single bonds between aromatic atoms.
+     */
+    static final SettingsModelBoolean createAdjustSingleBondsBetweenAromaticAtomsOptionModel() {
+        return new SettingsModelBoolean("adjust_single_bonds_between_aromatic_atoms", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getAdjustSingleBondsBetweenAromaticAtoms());
+    }    
+    
+    /**
+     * Creates the settings model to be used to specify, if MDL 5-ring aromaticity shall be set.
+     * Added in November 2020.
+     * 
+     * @return Settings model for setting MDL 5-ring aromaticity.
+     */
+    static final SettingsModelBoolean createSetMDL5RingAromaticityOptionModel() {
+        return new SettingsModelBoolean("set_mdl_five_ring_aromaticity", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getSetMDLFiveRingAromaticity());
+    }    
+    
+    /**
+     * Creates the settings model to be used to specify, if stereo care for bonds shall be used.
+     * Added in November 2020.
+     * 
+     * @return Settings model for using stereo care for bonds.
+     */
+    static final SettingsModelBoolean createUseStereoCareForBondsOptionModel() {
+        return new SettingsModelBoolean("use_stereo_care_for_bonds", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getUseStereoCareForBonds());
+    }  
     
     /**
      * Removes elements from the {@link AdjustQueryWhichFlags} enumeration, which 
@@ -338,7 +459,88 @@ public class RDKitAdjustQueryPropertiesNodeDialog extends AbstractRDKitNodeSetti
     	
     	return model;    
     }   
+    
+    /**
+     * Creates the settings model to be used to specify, if atoms shall be made generic.
+     * Added in November 2020.
+     * 
+     * @return Settings model for making atoms generic.
+     */
+    static final SettingsModelBoolean createMakeAtomsGenericOptionModel() {
+        return new SettingsModelBoolean("make_atoms_generic", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeAtomsGeneric());
+    }
+      
+    /**
+     * Creates the settings model to be used to specify, how atoms shall be made generic,
+     * which has only an effect, if the making atoms generic option is enabled.
+     * Added in November 2020.
+     * 
+     * @param makeAtomsGenericModel Model that the model to be created depends on.
+     * 	Based on the state of the passed in model we will enable or disable the
+     *  AdjustQueryWhichFlags model.
+     * 
+     * @return Settings model for defining the flags how to make atoms generic.
+     */
+    static final SettingsModelEnumerationArray<AdjustQueryWhichFlags> createMakeAtomsGenericFlagsOptionModel(
+    		final SettingsModelBoolean makeAtomsGenericModel) {
+    	SettingsModelEnumerationArray<AdjustQueryWhichFlags> model =
+    			new SettingsModelEnumerationArray<>(AdjustQueryWhichFlags.class, "make_atoms_generic_flags", 
+    					getFlags(DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeAtomsGenericFlags()));
 
+    	makeAtomsGenericModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				model.setEnabled(makeAtomsGenericModel.getBooleanValue());
+			}
+		});
+    	
+    	model.setEnabled(makeAtomsGenericModel.getBooleanValue());
+    	
+    	return model;    
+    } 
+    
+    /**
+     * Creates the settings model to be used to specify, if bonds shall be made generic.
+     * Added in November 2020.
+     * 
+     * @return Settings model for making bonds generic.
+     */
+    static final SettingsModelBoolean createMakeBondsGenericOptionModel() {
+        return new SettingsModelBoolean("make_bonds_generic", 
+        		DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeBondsGeneric());
+    }
+    
+    
+	/**
+	 * Creates the settings model to be used to specify, how bonds shall be made
+	 * generic, which has only an effect, if the making atoms generic option is enabled. 
+	 * Added in November 2020.
+	 * 
+	 * @param makeBondsGenericModel Model that the model to be created depends on.
+	 *    Based on the state of the passed in model we will enable or disable the 
+	 *    AdjustQueryWhichFlags model.
+	 * 
+	 * @return Settings model for defining the flags how to make bonds generic.
+	 */
+    static final SettingsModelEnumerationArray<AdjustQueryWhichFlags> createMakeBondsGenericFlagsOptionModel(
+    		final SettingsModelBoolean makeBondsGenericModel) {
+    	SettingsModelEnumerationArray<AdjustQueryWhichFlags> model =
+    			new SettingsModelEnumerationArray<>(AdjustQueryWhichFlags.class, "make_bonds_generic_flags", 
+    					getFlags(DEFAULT_ADJUST_QUERY_PARAMETERS.getMakeBondsGenericFlags()));
+
+    	makeBondsGenericModel.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				model.setEnabled(makeBondsGenericModel.getBooleanValue());
+			}
+		});
+    	
+    	model.setEnabled(makeBondsGenericModel.getBooleanValue());
+    	
+    	return model;    
+    } 
+    
     /**
      * Converts the passed in array of flags into a long value.
      * 

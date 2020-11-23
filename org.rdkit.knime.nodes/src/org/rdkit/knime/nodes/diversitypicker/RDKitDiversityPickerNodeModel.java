@@ -51,6 +51,9 @@ package org.rdkit.knime.nodes.diversitypicker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.RDKit.EBV_Vect;
 import org.RDKit.ExplicitBitVect;
@@ -65,6 +68,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -72,6 +76,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.util.MultiThreadWorker;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitSplitterNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
@@ -363,84 +368,29 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 		m_ebvRowsToKeep = null;
 
 		// Create sub execution contexts for pre-processing steps
-		final ExecutionContext subExecReadingFingerprints = exec.createSubExecutionContext(0.25d);
-		final ExecutionContext subExecReadingAdditionalFingerprints = exec.createSubExecutionContext(0.25d);
-		final ExecutionContext subExecCheckDiversity = exec.createSubExecutionContext(0.25d);
-		final ExecutionContext subExecProcessingDiversity = exec.createSubExecutionContext(0.25d);
+		final ExecutionContext subExecReadingFingerprints = exec.createSubExecutionContext(0.75d);
+		final ExecutionContext subExecReadingAdditionalFingerprints = exec.createSubExecutionContext(0.05d);
+		final ExecutionContext subExecCheckDiversity = exec.createSubExecutionContext(0.10d);
+		final ExecutionContext subExecProcessingDiversity = exec.createSubExecutionContext(0.10d);
 
 		final long lInputRowCount = inData[0].size();
-		final List<Integer> listIndicesUsed = new ArrayList<Integer>();
+		final List<Long> listIndicesUsed = new ArrayList<Long>();
 		final EBV_Vect vFingerprints = markForCleanup(new EBV_Vect());
 		Int_Vect firstPicks = null;
-		long lFpLength = -1;
+		AtomicLong alFpLength = new AtomicLong(-1);
 
 		// 1. Get all fingerprints in a form that we can process further
-		final InputDataInfo inputDataInfo1 = arrInputDataInfo[0][INPUT_COLUMN_MAIN];
-		final boolean bNeedsCalculation1 = inputDataInfo1.isCompatibleOrAdaptable(RDKitMolValue.class);
-		String strInfoForProgress = (bNeedsCalculation1 ? " - Calculating fingerprints" : " - Reading fingerprints");
+		final boolean bNeedsCalculation1 = arrInputDataInfo[0][INPUT_COLUMN_MAIN].isCompatibleOrAdaptable(RDKitMolValue.class);
 		final FingerprintSettingsHeaderProperty fpSpec1 = (bNeedsCalculation1 ?
 				new FingerprintSettingsHeaderProperty(DEFAULT_FINGERPRINT_SETTINGS) :
 					new FingerprintSettingsHeaderProperty(arrInputDataInfo[0][INPUT_COLUMN_MAIN].getColumnSpec()));
 		FingerprintSettingsHeaderProperty fpSpec2 = null;
-		final FingerprintType fpTypeDefault = DEFAULT_FINGERPRINT_SETTINGS.getRdkitFingerprintType();
 
-		int iRowIndex = 0;
-		final RowIterator it1 = inData[0].iterator();
-		while (it1.hasNext()) {
-			final DataRow row = it1.next();
-			ExplicitBitVect expBitVector = null;
-
-			if (bNeedsCalculation1) {
-				// Calculate the fingerprint for the molecule on the fly
-				ROMol mol = null;
-
-				try {
-					mol = arrInputDataInfo[0][INPUT_COLUMN_MAIN].getROMol(row);
-					if (mol != null) {
-						expBitVector = markForCleanup(fpTypeDefault.calculate(mol, DEFAULT_FINGERPRINT_SETTINGS));
-					}
-					else {
-						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty molecule cell in table 1 - ignored it.");
-					}
-				}
-				finally {
-					// Delete the molecule manually to free memory quickly
-					if (mol != null) {
-						mol.delete();
-					}
-				}
-			}
-			else {
-				expBitVector = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_MAIN].getExplicitBitVector(row));
-				if (expBitVector == null) {
-					warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(), "Encountered empty fingerprint cell in table 1 - ignored it.");
-				}
-			}
-
-			if (expBitVector != null) {
-				final long lNumBits = expBitVector.getNumBits();
-				if (lFpLength == -1) {
-					lFpLength = lNumBits;
-				}
-
-				if (lFpLength == lNumBits){
-					listIndicesUsed.add(iRowIndex);
-					vFingerprints.add(expBitVector);
-				}
-				else {
-					warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-							"Encountered fingerprint with invalid length (" +
-									lNumBits + " instead of " + lFpLength + " bits) in table 1 - ignoring it.");
-				}
-			}
-
-			// Every 20 iterations report progress and check for cancel
-			if (iRowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, iRowIndex, lInputRowCount, row, " - Reading fingerprints");
-			}
-
-			iRowIndex++;
-		}
+		// Parallel processing to prepare fingerprints from main table (first table)
+        prepareFingerprints(1, inData[0], arrInputDataInfo[0][INPUT_COLUMN_MAIN], 
+        		bNeedsCalculation1, DEFAULT_FINGERPRINT_SETTINGS.getRdkitFingerprintType(), 
+        		listIndicesUsed, vFingerprints, alFpLength, 
+        		warnings, subExecReadingFingerprints);
 
 		// Check, if parameters of user make sense based on the found fingerprints in table 1 (NOT combined yet with table 2)
 		final int iNumberToPick = m_modelNumberToPick.getIntValue();
@@ -464,7 +414,7 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 				int iAdditionalRowIndex = 0;
 				int iBiasAwayIndex = (int)vFingerprints.size();
 				final long lAdditionalRowCount = inData[1].size();
-				strInfoForProgress = (bNeedsCalculation2 ? " - Calculating additional fingerprints" : " - Reading additional fingerprints");
+				final String strInfoForProgress = (bNeedsCalculation2 ? " - Calculating additional fingerprints" : " - Reading additional fingerprints");
 
 				if (!bNeedsCalculation2) {
 					fpSpec2 = new FingerprintSettingsHeaderProperty(
@@ -513,11 +463,11 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 					// Just add the fingerprint to bias away from and mark it as part of first picks
 					if (expBitVector != null) {
 						final long lNumBits = expBitVector.getNumBits();
-						if (lFpLength == -1) {
-							lFpLength = lNumBits;
+						if (alFpLength.get() == -1) {
+							alFpLength.set(lNumBits);
 						}
 
-						if (lFpLength == lNumBits){
+						if (alFpLength.get() == lNumBits){
 							vFingerprints.add(expBitVector);
 							firstPicks.add(iBiasAwayIndex);
 							iBiasAwayIndex++;
@@ -525,12 +475,12 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 						else {
 							warnings.saveWarning(ROW_CONTEXT_TABLE_2.getId(),
 									"Encountered fingerprint with invalid length (" +
-											lNumBits + " instead of " + lFpLength + " bits) in table 2 - ignoring it.");
+											lNumBits + " instead of " + alFpLength.get() + " bits) in table 2 - ignoring it.");
 						}
 					}
 
-					// Every 20 iterations report progress and check for cancel
-					if (iAdditionalRowIndex % 20 == 0) {
+					// Every 1000 iterations report progress and check for cancel
+					if (iAdditionalRowIndex % 1000 == 0) {
 						AbstractRDKitNodeModel.reportProgress(subExecReadingAdditionalFingerprints, iAdditionalRowIndex, lAdditionalRowCount, row, strInfoForProgress);
 					}
 
@@ -555,13 +505,12 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 			}
 		}
 		else if (firstPicks == null || firstPicks.isEmpty()) {
-			intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
-					iNumberToPick, m_randomSeed.getIntValue()));
+			firstPicks = new Int_Vect();
 		}
-		else {
-			intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
-					iNumberToPick + firstPicks.size(), m_randomSeed.getIntValue(), firstPicks));
-		}
+		// the distance cache just slows things down with the new diversity picker implementation
+		Boolean useDistanceCache = false;
+		intVector = markForCleanup(RDKFuncs.pickUsingFingerprints(vFingerprints,
+				iNumberToPick + firstPicks.size(), m_randomSeed.getIntValue(), firstPicks, useDistanceCache));
 
 		subExecCheckDiversity.setProgress(1.0d);
 		subExecCheckDiversity.checkCanceled();
@@ -572,20 +521,139 @@ public class RDKitDiversityPickerNodeModel extends AbstractRDKitSplitterNodeMode
 		for(int i = 0; i < iDiversityCount; i++) {
 			final int pickedFingerprintIndex = intVector.get(i);
 			if (pickedFingerprintIndex < listIndicesUsed.size()) {
-				final int pickedRowIndex = listIndicesUsed.get(pickedFingerprintIndex);
+				final long pickedRowIndex = listIndicesUsed.get(pickedFingerprintIndex);
 				if (pickedRowIndex < lInputRowCount) {
 					m_ebvRowsToKeep.setBit(pickedRowIndex);
 				}
 			}
 
-			// Every 20 iterations report progress and check for cancel
-			if (i % 20 == 0) {
+			// Every 1000 iterations report progress and check for cancel
+			if (i % 1000 == 0) {
 				AbstractRDKitNodeModel.reportProgress(subExecProcessingDiversity, i, iDiversityCount,
 						null, " - Processing diversity results");
 			}
 		}
 
 		subExecProcessingDiversity.setProgress(1.0d);
+	}
+
+	/**
+	 * Prepares fingerprints for diversity picking from an input table, either with a molecule column
+	 * or with a fingerprint column.
+	 * 
+	 * @param iTableNumber Table index. Only used for warning generations.
+	 * @param inData Table data. Must not be null.
+	 * @param inputDataInfo Input data definition for the column to process. Must not be null.
+	 * @param bNeedsCalculation True to calculate fingerprints from molecules. False otherwise.
+	 * @param fpTypeDefault Fingerprint type used when we need to calculate fingerprints from molecules.
+	 * 		Must not be null.
+	 * @param listIndicesUsed IN/OUT: List of indices that will be filled with row indexes.
+	 * @param vFingerprints IN/OUT: List of fingerprints that will be filled with fingerprints.
+	 * @param alFpLength IN/OUT: Length of processed fingerprints. Must not be null.
+	 * @param warnings Warning consolidator. Must not be null.
+	 * @param subExecReadingFingerprints Execution context. Must not be null.
+	 * 
+	 * @throws Exception Thrown, if something goes wrong.
+	 */
+	protected void prepareFingerprints(final int iTableNumber, final BufferedDataTable inData, final InputDataInfo inputDataInfo, 
+			final boolean bNeedsCalculation, final FingerprintType fpTypeDefault, 
+			final List<Long> listIndicesUsed, final EBV_Vect vFingerprints, final AtomicLong alFpLength,
+			final WarningConsolidator warnings, final ExecutionContext subExecReadingFingerprints) throws Exception {
+        
+        // Get settings and define data specific behavior
+        final int iMaxParallelWorkers = (int)Math.ceil(1.5 * Runtime.getRuntime().availableProcessors());
+        final int iQueueSize = 1000 * iMaxParallelWorkers;
+        final long lTotalRowCount = inData.size();
+        
+		// Calculate RDKit Fingerprints from molecule, or convert them from KNIME Fingerprints
+		new MultiThreadWorker<DataRow, ExplicitBitVect>(iQueueSize, iMaxParallelWorkers) {
+
+			/**
+			 * Prepares a fingerprint from first table.
+			 * 
+			 * @param row   Input row.
+			 * @param index Index of row.
+			 * 
+			 * @return Null, if fingerprint could not be determined.
+			 * 		   Result fingerprint, if we have a valid fingerprint
+			 *         to be used for diversity picking.
+			 */
+			@Override
+			protected ExplicitBitVect compute(final DataRow row, final long index) throws Exception {
+				ExplicitBitVect expBitVector = null;
+
+				if (bNeedsCalculation) {
+					// Calculate the fingerprint for the molecule on the fly
+					ROMol mol = null;
+
+					try {
+						mol = inputDataInfo.getROMol(row);
+						if (mol != null) {
+							expBitVector = markForCleanup(fpTypeDefault.calculate(mol, DEFAULT_FINGERPRINT_SETTINGS));
+						} 
+						else {
+							warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+									"Encountered empty molecule cell in table " + iTableNumber + " - ignored it.");
+						}
+					} 
+					finally {
+						// Delete the molecule manually to free memory quickly
+						if (mol != null) {
+							mol.delete();
+						}
+					}
+				} 
+				else {
+					expBitVector = markForCleanup(inputDataInfo.getExplicitBitVector(row));
+					if (expBitVector == null) {
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+								"Encountered empty fingerprint cell in table " + iTableNumber + " - ignored it.");
+					}
+				}
+				
+				return expBitVector;
+			}
+
+			/**
+			 * Adds the fingerprint results to the fingerprint list for further processing.
+			 * 
+			 * @param task Processing result for a row.
+			 */
+			@Override
+			protected void processFinished(final ComputationTask task)
+					throws ExecutionException, CancellationException, InterruptedException {
+				final ExplicitBitVect expBitVector = task.get();
+				final long lRowIndex = task.getIndex();
+
+				if (expBitVector != null) {
+					final long lNumBits = expBitVector.getNumBits();
+					if (alFpLength.get() == -1) {
+						alFpLength.set(lNumBits);
+					}
+
+					if (alFpLength.get() == lNumBits) {
+						listIndicesUsed.add(lRowIndex);
+						vFingerprints.add(expBitVector);
+					} else {
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+								"Encountered fingerprint with invalid length (" + lNumBits + " instead of " + alFpLength.get()
+										+ " bits) in table " + iTableNumber + " - ignoring it.");
+					}
+				}
+				
+				// Check, if user pressed cancel (however, we will finish the method
+				// nevertheless)
+				// Update the progress only every 1000 rows
+				if (task.getIndex() % 1000 == 0) {
+					try {
+						AbstractRDKitNodeModel.reportProgress(subExecReadingFingerprints, lRowIndex, lTotalRowCount, null, 
+								" - " + (bNeedsCalculation ? "Calculating" : "Reading") + " fingerprints");
+					} catch (final CanceledExecutionException e) {
+						cancel(true);
+					}
+				}
+			};
+		}.run(inData);		
 	}
 
 	/**

@@ -22,7 +22,7 @@
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="jp.co.infocom.cheminfo.marvin.feature.feature.group" version="0.0.0"/>
-<repository location="https://update.knime.org/analytics-platform/4.2/"/>
+<repository location="https://update.knime.com/partner/4.3/"/>
 </location>
 </locations>
 </target>

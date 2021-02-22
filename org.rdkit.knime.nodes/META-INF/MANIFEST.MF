@@ -61,4 +61,4 @@ Export-Package: org.rdkit.knime.nodes,
 Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
- lib/opsin-1.3.0-jar-with-dependencies.jar
+ lib/opsin-2.5.0-excludingInChI-jar-with-dependencies.jar

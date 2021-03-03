@@ -41,6 +41,27 @@
                suggestAsDefault="true">
          </renderer>
       </dataValue>
+      <dataValue
+            valueClass="org.knime.chem.types.SmilesValue">
+         <renderer
+               rendererFactoryClass="org.rdkit.knime.types.RDKitMolValueRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.chem.types.SdfValue">
+         <renderer
+               rendererFactoryClass="org.rdkit.knime.types.RDKitMolValueRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.chem.types.SmartsValue">
+         <renderer
+               rendererFactoryClass="org.rdkit.knime.types.RDKitMolValueRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
    </extension>
    
    <extension point="org.knime.workbench.ui.startupMessages">

@@ -2575,7 +2575,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @author Manuel Schwarze
 	 */
-	static class RDKitCleanupTracker extends HashMap<Long, List<Object>> {
+	static class RDKitCleanupTracker extends HashMap<Long, HashSet<Object>> {
 
 		//
 		// Constants
@@ -2661,9 +2661,9 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				if (bRemoveFromOtherWave) {
 
 					// Loop through all waves to find the rdkitObject - we create a copy here, because
-					// we may remove empty wave lists which may blow up out iterator
+					// we may remove empty wave lists which may blow up our iterator
 					for (final long waveExisting : new HashSet<Long>(keySet())) {
-						final List<Object> list = get(waveExisting);
+						final HashSet<Object> list = get(waveExisting);
 						if (list.remove(rdkitObject) && list.isEmpty()) {
 							remove(waveExisting);
 						}
@@ -2671,18 +2671,16 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				}
 
 				// Get the list of the target wave
-				List<Object> list = get(wave);
+				HashSet<Object> set = get(wave);
 
 				// Create a wave list, if not found yet
-				if (list == null) {
-					list = new ArrayList<Object>();
-					put(wave, list);
+				if (set == null) {
+					set = new HashSet<Object>();
+					put(wave, set);
 				}
 
-				// Add the object only once
-				if (!list.contains(rdkitObject)) {
-					list.add(rdkitObject);
-				}
+				// Add the object (only once, since it is a set)
+				set.add(rdkitObject);
 			}
 
 			return rdkitObject;
@@ -2708,11 +2706,11 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		 */
 		public synchronized void cleanupMarkedObjects(final long wave) {
 			// Find the right wave list, if not found yet
-			final List<Object> list = get(wave);
+			final HashSet<Object> set = get(wave);
 
 			// If wave list was found, free all objects in it
-			if (list != null) {
-				for (final Object objForCleanup : list) {
+			if (set != null) {
+				for (final Object objForCleanup : set) {
 					Class<?> clazz = null;
 
 					try {
@@ -2739,7 +2737,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					}
 				}
 
-				list.clear();
+				set.clear();
 				remove(wave);
 			}
 		}

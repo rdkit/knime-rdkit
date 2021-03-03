@@ -18,6 +18,7 @@
             <option name="Do exact match">If this is set, only molecules containing the same number of atoms as the substructure
             query can match. This isn't exactly equivalent to an exact structure match, because query features in the query molecule
             can still be used, but it's close.</option>
+            <option name="Use chirality">If this is set, information about stereochemistry will be used in the substructure search.</option>
             <option name="Match handling">Specify here, if an additional column with details about the match shall be added.
             It is possible to add the Atom List of the First Match or of all matches (overlaps possible).</option>
             <option name="Column name for matching atom list">The column name of the for the atom list column, if enabled.</option>

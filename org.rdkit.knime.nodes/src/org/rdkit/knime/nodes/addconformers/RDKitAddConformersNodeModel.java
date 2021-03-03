@@ -54,6 +54,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.RDKit.Conformer;
 import org.RDKit.DistanceGeom;
 import org.RDKit.ForceField;
 import org.RDKit.Int_Vect;
@@ -402,16 +403,11 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
                         for (int indexTarget = 0; indexTarget < iSize; indexTarget++) {
 
                            // Make a copy of the calculated molecule that still contains all conformers
-                           final ROMol output = markForCleanup(new ROMol(molTemp), lUniqueWaveId);
+                           final ROMol output = markForCleanup(new ROMol(mol), lUniqueWaveId);
+                           output.clearConformers();
                            final int iTargetConformerId = listConformerIds.get(indexTarget);
-
-                           // Remove all conformers that are out of focus
-                           for (int indexConf = 0; indexConf < iSize; indexConf++) {
-                              final int iOtherConformerId = listConformerIds.get(indexConf);
-                              if (iTargetConformerId != iOtherConformerId) {
-                                 output.removeConformer(iOtherConformerId);
-                              }
-                           }
+                           final Conformer conf = markForCleanup(new Conformer(molTemp.getConformer(iTargetConformerId)), lUniqueWaveId); 
+                           output.addConformer(conf);
 
                            // Create a data row, if we have meaningful output (other checks could be added here)
                            if (output != null) {

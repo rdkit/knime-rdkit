@@ -1,42 +1,24 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target name="KNIME Analytics Platform (nightly build)" sequenceNumber="1512743962">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target includeMode="feature" name="KNIME Analytics Platform (nightly)">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="com.knime.features.explorer.serverspace.feature.group" version="4.10.0.v201911181437"/>
-<unit id="org.knime.features.base.feature.group" version="4.1.0.v201911291624"/>
-<unit id="org.knime.features.database.feature.group" version="4.1.0.v201911301831"/>
-<unit id="org.knime.features.dbdrivers.feature.group" version="4.1.0.v201911110943"/>
-<unit id="org.knime.features.ensembles.feature.group" version="4.1.0.v201911261600"/>
-<unit id="org.knime.features.ext.itemset.feature.group" version="4.1.0.v201911261331"/>
-<unit id="org.knime.features.ext.jep.feature.group" version="4.1.0.v201911291238"/>
-<unit id="org.knime.features.ext.poi.feature.group" version="4.1.0.v201911281550"/>
-<unit id="org.knime.features.js.quickforms.feature.group" version="4.1.0.v201911291621"/>
-<unit id="org.knime.features.json.feature.group" version="4.1.0.v201911110939"/>
-<unit id="org.knime.features.personalproductivity.feature.group" version="4.1.0.v201911121318"/>
-<unit id="org.knime.features.testing.application.feature.group" version="4.1.0.v201911180510"/>
-<unit id="org.knime.features.xml.feature.group" version="4.1.0.v201911110941"/>
-<unit id="org.knime.targetPlatform.feature.group" version="4.1.0.v201911191228"/>
+<unit id="com.knime.features.explorer.serverspace.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.base.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.chem.types.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.dbdrivers.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.ensembles.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.ext.itemset.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.ext.jep.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.ext.poi.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.js.quickforms.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.json.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.personalproductivity.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.python2.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.testing.application.feature.group" version="0.0.0"/>
+<unit id="org.knime.features.xml.feature.group" version="0.0.0"/>
+<unit id="org.knime.targetPlatform.feature.group" version="0.0.0"/>
 <repository location="https://update.knime.org/analytics-platform/nightly/"/>
-	<unit id="jp.co.infocom.cheminfo.marvin.feature.feature.group" version="4.0.0.v192100"/>
-	<unit id="org.knime.features.chem.types.feature.group" version="4.1.0.v201911110939"/>
-	<unit id="org.knime.features.ext.chem.tools.feature.group" version="4.1.0.v201911110939"/>
-	<unit id="org.knime.features.ext.svg.feature.group" version="4.1.0.v201911110939"/>
-	<unit id="org.knime.features.python2.feature.group" version="4.1.0.v201911281838"/>
 </location>
 </locations>
-<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-<launcherArgs>
-<vmArgs>-server
--Dsun.java2d.d3d=false
--Dosgi.classloader.lock=classname
--XX:+UnlockDiagnosticVMOptions
--XX:+UnsyncloadClass 
--XX:+UseG1GC
--ea
--Dorg.eclipse.swt.internal.gtk.cairoGraphics=false
--Dorg.eclipse.swt.internal.gtk.useCairo=false
--Dorg.eclipse.swt.browser.IEVersion=11001
--Dsun.awt.noerasebackground=true
--Dsun.net.client.defaultReadTimeout=0
--Dorg.eclipse.swt.internal.gtk.disablePrinting</vmArgs>
-</launcherArgs>
 </target>

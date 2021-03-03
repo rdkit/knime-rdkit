@@ -56,6 +56,7 @@ import java.util.List;
 
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.SubstructMatchParameters;
 import org.knime.chem.types.SmartsValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -184,15 +185,19 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 	protected final SettingsModelString m_modelInputColumnName =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createInputColumnNameModel(), "input_column", "rdkitColumn");
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for query column selection. */
 	protected final SettingsModelString m_modelQueryColumnName =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createQueryColumnNameModel(), "query_column", "queryColumn");
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for the use chirality toggle. Added in November 2020. */
+	protected final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createUseChiralityModel(), true);
+
+	/** Settings model for the matching criteria. */
 	protected final SettingsModelEnumeration<MatchingCriteria> m_modelMatchingCriteria =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createMatchingCriteriaModel(), true);
 
-	/** Settings model for the column name of the input column. */
+	/** Settings model for the matching criteria number of "At least". */
 	protected final SettingsModelIntegerBounded m_modelMinimumMatches =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createMinimumMatchesModel(m_modelMatchingCriteria));
 
@@ -448,7 +453,10 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 				DenseBitVector fingerprintMol = null;
 				boolean bFingerprintMolAvailable = true;
 				int iNumberOfMatchingPatterns = 0;
-
+				
+				final SubstructMatchParameters ps = new SubstructMatchParameters();
+				ps.setUseChirality(m_modelUseChirality.getBooleanValue());
+				
 				for (int i = 0; i < m_arrQueryMols.length; i++) {
 					final ROMol molPattern = m_arrQueryMols[i];
 					final String keyPattern = m_arrQueryRowKeys[i];
@@ -478,7 +486,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 								mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 							}
 
-							if (mol.hasSubstructMatch(molPattern)) {
+							if (mol.hasSubstructMatch(molPattern, ps)) {
 								listQueryRefs.add(bRowKeyMatchInfo ? new StringCell(keyPattern) : new IntCell(i + 1));
 								iNumberOfMatchingPatterns++;
 							}

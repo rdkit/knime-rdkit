@@ -516,12 +516,7 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 				final ChemicalReaction[] arrCopy = new ChemicalReaction[m_arrReactions.length];
 
 				for (int i = 0; i < m_arrReactions.length; i++) {
-					if (m_bIsSmartsInput) {
-						arrCopy[i] = markForCleanup(ChemicalReaction.ReactionFromSmarts(ChemicalReaction.ReactionToSmarts(m_arrReactions[i])));
-					}
-					else {
-						arrCopy[i] = markForCleanup(ChemicalReaction.ReactionFromRxnBlock(ChemicalReaction.ReactionToRxnBlock(m_arrReactions[i])));
-					}
+					arrCopy[i] = markForCleanup(new ChemicalReaction(m_arrReactions[i]));
 				}
 
 				return arrCopy;

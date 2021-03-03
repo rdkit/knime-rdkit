@@ -89,6 +89,9 @@ public class RDKitSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
 				"SMARTS query: "));
 		super.addDialogComponent(new DialogComponentBoolean(createExactMatchModel(),
 				"Do exact match"));
+		super.addDialogComponent(new DialogComponentBoolean(createUseChiralityModel(),
+				"Use stereochemistry"));
+
 
 		final SettingsModelEnumeration<MatchHandling> matchHandlingModel = createMatchHandlingModel();
 		super.addDialogComponent(new DialogComponentEnumSelection<MatchHandling>(matchHandlingModel,
@@ -126,6 +129,16 @@ public class RDKitSubstructFilterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createExactMatchModel() {
 		return new SettingsModelBoolean("exact_match", false);
+	}
+
+	/**
+	 * Creates the settings model to specify the use chirality option.
+	 * Added in November 2020.
+	 * 
+	 * @return settings model for the use chirality toggle.
+	 */
+	static final SettingsModelBoolean createUseChiralityModel() {
+		return new SettingsModelBoolean("use_chirality", false);
 	}
 
 	/**

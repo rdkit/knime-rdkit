@@ -55,6 +55,7 @@ import org.RDKit.Match_Vect;
 import org.RDKit.Match_Vect_Vect;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.SubstructMatchParameters;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -136,15 +137,23 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelString m_modelInputColumnName =
 			registerSettings(RDKitSubstructFilterNodeDialog.createInputColumnNameModel(), "input_column", "first_column");
 
+	/** Settings model for the SMARTS value. */
 	private final SettingsModelString m_modelSmartsQuery =
 			registerSettings(RDKitSubstructFilterNodeDialog.createSmartsModel());
 
+	/** Settings model for the exact match option. */
 	private final SettingsModelBoolean m_modelExactMatch =
 			registerSettings(RDKitSubstructFilterNodeDialog.createExactMatchModel());
 
+	/** Settings model for the use chirality toggle. Added in November 2020. */
+	private final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(RDKitSubstructFilterNodeDialog.createUseChiralityModel(), true);
+
+	/** Settings model for defining how matching shall be handled. */
 	private final SettingsModelEnumeration<MatchHandling> m_modelMatchHandling =
 			registerSettings(RDKitSubstructFilterNodeDialog.createMatchHandlingModel(), true);
 
+	/** Settings model for defining the new column to contain the matching atoms. */
 	private final SettingsModelString m_modelNewAtomListColumnName =
 			registerSettings(RDKitSubstructFilterNodeDialog.createNewMatchColumnNameModel(m_modelMatchHandling), true);
 
@@ -200,15 +209,18 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		if (m_modelSmartsQuery.getStringValue().equals("")) {
 			throw new InvalidSettingsException("Please specify a SMARTS query.");
 		}
-
-		// Check validity of SMARTS
-		final ROMol pattern = markForCleanup(RWMol.MolFromSmarts(m_modelSmartsQuery.getStringValue(), 0, true));
-		if (pattern == null) {
-			throw new InvalidSettingsException("Could not parse SMARTS query: "
-					+ m_modelSmartsQuery.getStringValue());
+		
+		// Consider flow variables that are not initialized yet (usually set to "missing"), and ignore this case
+		if (!m_modelSmartsQuery.getStringValue().equals("missing")) {
+			// Check validity of SMARTS
+			final ROMol pattern = markForCleanup(RWMol.MolFromSmarts(m_modelSmartsQuery.getStringValue(), 0, true));
+			if (pattern == null) {
+				throw new InvalidSettingsException("Could not parse SMARTS query: "
+						+ m_modelSmartsQuery.getStringValue());
+			}
+			cleanupMarkedObjects();
 		}
-		cleanupMarkedObjects();
-
+		
 		// Determine, if the new column name has been set and if it is really unique
 		if (m_modelNewAtomListColumnName.isEnabled()) {
 
@@ -312,6 +324,10 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		arrOutputSpec[0] = new DataColumnSpecCreator(
 				m_modelNewAtomListColumnName.getStringValue().trim(), ListCell.getCollectionType(IntCell.TYPE))
 		.createSpec();
+		
+		// Generate substructure match paramaters based on settings
+		final SubstructMatchParameters ps = markForCleanup(new SubstructMatchParameters());
+		ps.setUseChirality(m_modelUseChirality.getBooleanValue());	
 
 		// Generate factory
 		final AbstractRDKitCellFactory factory = new AbstractRDKitCellFactory(this,
@@ -340,7 +356,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 								mol.getNumBonds() == molPattern.getNumBonds()))) {
 
 					// See if there is a match
-					final boolean matched = mol.hasSubstructMatch(molPattern);
+					final boolean matched = mol.hasSubstructMatch(molPattern, ps);
 
 					// We found a match
 					if (matched) {
@@ -356,7 +372,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 						else {
 							try {
 								final ArrayList<DataCell> listCellAtomList = new ArrayList<DataCell>();
-								final Match_Vect_Vect vecVecMatches = mol.getSubstructMatches(molPattern);
+								final Match_Vect_Vect vecVecMatches = markForCleanup(mol.getSubstructMatches(molPattern, ps), lUniqueWaveId);
 								final StringBuilder sb = new StringBuilder("( ");
 
 								if (vecVecMatches != null) {
@@ -421,7 +437,7 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 
 		return factory;
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -439,10 +455,16 @@ public class RDKitSubstructFilterNodeModel extends AbstractRDKitNodeModel {
 		// Get settings and define data specific behavior
 		final long lTotalRowCount = inData[0].size();
 		final MatchHandling matchHandling = m_modelMatchHandling.getValue();
+		final String strSmartsPattern = m_modelSmartsQuery.getStringValue();
+
+		// Check for "missing" value, which is allowed in configuration state to deal with 
+		// uninitialized flow variables, but should be considered invalid during execution
+		if (strSmartsPattern.equals("missing")) {
+			throw new InvalidSettingsException("SMARTS query is missing.");
+		}
 
 		// Construct an RDKit molecule from the SMARTS pattern - make it available as member variable
 		// for the cell factory
-		final String strSmartsPattern = m_modelSmartsQuery.getStringValue();
 		m_pattern = markForCleanup(new SafeGuardedResource<ROMol>(!strSmartsPattern.contains("$")) {
 			@Override
 			protected ROMol createResource() {

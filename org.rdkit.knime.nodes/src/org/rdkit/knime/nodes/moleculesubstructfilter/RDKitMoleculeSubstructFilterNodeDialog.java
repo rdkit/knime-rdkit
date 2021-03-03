@@ -102,6 +102,8 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 		final DialogComponent compQueryColumn = add(new DialogComponentColumnNameSelection(
 				createQueryColumnNameModel(), "Query Mol column: ", 1,
 				arrClassesQueryType));
+		final DialogComponent compUseChirality = add(new DialogComponentBoolean(createUseChiralityModel(),
+				"Use stereochemistry"));
 		final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria =
 				createMatchingCriteriaModel();
 		final DialogComponent compMatchingCriteria = add(new DialogComponentEnumButtonGroup<MatchingCriteria>(
@@ -127,6 +129,10 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
 				0, 10, 0, 10);
 		LayoutUtils.constrain(panel, compQueryColumn.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, compUseChirality.getComponentPanel(),
 				0, iRow++, LayoutUtils.REMAINDER, 1,
 				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
 				0, 10, 0, 10);
@@ -253,6 +259,15 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 	 */
 	static final SettingsModelString createNewColumnNameModel() {
 		return new SettingsModelString("new_column_name", null);
+	}
+
+	/**
+	 * Creates the settings model to specify the use chirality option.
+	 * 
+	 * @return settings model for the use chirality toggle.
+	 */
+	static final SettingsModelBoolean createUseChiralityModel() {
+		return new SettingsModelBoolean("use_chirality", false);
 	}
 
 	/**

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Node Wizards Samples
 Bundle-SymbolicName: org.rdkit.knime.wizards.samples;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.wizards.samples
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.3.0.qualifier
 Bundle-Activator: org.rdkit.knime.wizards.samples.Activator
 Bundle-Vendor: NIBR
 Require-Bundle: org.knime.base;bundle-version="[3.6.2,5.0.0)",

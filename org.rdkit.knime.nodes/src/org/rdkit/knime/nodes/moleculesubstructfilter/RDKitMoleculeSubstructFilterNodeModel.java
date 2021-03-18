@@ -91,6 +91,7 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintType;
+import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeDialog;
 import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeModel;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
@@ -192,6 +193,10 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 	/** Settings model for the use chirality toggle. Added in November 2020. */
 	protected final SettingsModelBoolean m_modelUseChirality =
 			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createUseChiralityModel(), true);
+
+	/** Settings model for the option to use enhanced stereo in the match. Added in March 2021. */
+	private final SettingsModelBoolean m_modelUseEnhancedStereo =
+			registerSettings(RDKitMoleculeSubstructFilterNodeDialog.createUseEnhancedStereoModel(m_modelUseChirality), true);
 
 	/** Settings model for the matching criteria. */
 	protected final SettingsModelEnumeration<MatchingCriteria> m_modelMatchingCriteria =
@@ -456,6 +461,7 @@ public class RDKitMoleculeSubstructFilterNodeModel extends AbstractRDKitNodeMode
 				
 				final SubstructMatchParameters ps = new SubstructMatchParameters();
 				ps.setUseChirality(m_modelUseChirality.getBooleanValue());
+				ps.setUseEnhancedStereo(m_modelUseEnhancedStereo.getBooleanValue());
 				
 				for (int i = 0; i < m_arrQueryMols.length; i++) {
 					final ROMol molPattern = m_arrQueryMols[i];

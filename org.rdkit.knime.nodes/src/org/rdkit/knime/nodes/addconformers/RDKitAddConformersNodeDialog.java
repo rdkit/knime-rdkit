@@ -48,6 +48,8 @@
  */
 package org.rdkit.knime.nodes.addconformers;
 
+import org.RDKit.EmbedParameters;
+import org.RDKit.RDKFuncs;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -81,6 +83,8 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	// Constants
 	//
 
+	public static final EmbedParameters rdkit_defaultParameters = RDKFuncs.getETKDGv3();
+	
 	/** Default value to be used for number of conformers. */
 	public static final int DEFAULT_NUMBER_OF_CONFORMERS = 10;
 
@@ -151,9 +155,26 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 				createEnforceChiralityOptionModel(), "Enforce the preservation of input chirality"));
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseExpTorsionAnglesOptionModel(), "Use experimental torsion angle terms"));
+		super.addDialogComponent(new DialogComponentNumber(
+				createETversionModel(), "Experimental torsion angles version ", new Integer(1), 1));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseSmallRingTorsionsOptionModel(), "Use experimental torsion angle terms for small rings"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseMacrocycleTorsionsOptionModel(), "Use experimental torsion angle terms for macrocycles"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseMacrocycle14OptionModel(), "Use 1-4 distance bound heuristics for macrocycles"));
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseBasicKnowledgeOptionModel(), "Use basic knowledge terms (e.g. planar aromatic atoms)"));
 
+		super.addDialogComponent(new DialogComponentBoolean(
+				createForceTransAmidesOptionModel(), "Force amide bonds to be trans"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createOnlyHeavyAtomsForRMSOptionModel(), "Only use heavy atoms when calculating RMS values"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseSymmetryForPruningOptionModel(), "Use molecular symmetry when pruning conformers"));	
+		super.addDialogComponent(new DialogComponentBoolean(
+				createEmbedFragmentsSeparatelyOptionModel(), "Embed fragments separately"));	
+		
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseRandomCoordinatesOptionModel(), "Use random coordinates as a starting point instead of distance geometry"));
 		super.addDialogComponent(new DialogComponentNumberEdit(
@@ -231,6 +252,79 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createUseRandomCoordinatesOptionModel() {
 		return new SettingsModelBoolean("useRandomCoordinates", DEFAULT_USE_RANDOM_COORDS);
+	}
+
+	
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseSmallRingTorsionsOptionModel() {
+		return new SettingsModelBoolean("useSmallRingTorsions", rdkit_defaultParameters.getUseSmallRingTorsions());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseMacrocycleTorsionsOptionModel() {
+		return new SettingsModelBoolean("useMacrocycleTorsions", rdkit_defaultParameters.getUseMacrocycleTorsions());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseMacrocycle14OptionModel() {
+		return new SettingsModelBoolean("useMacrocycle14", rdkit_defaultParameters.getUseMacrocycle14config());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createForceTransAmidesOptionModel() {
+		return new SettingsModelBoolean("forceTransAmides", rdkit_defaultParameters.getForceTransAmides());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createOnlyHeavyAtomsForRMSOptionModel() {
+		return new SettingsModelBoolean("onlyHeavyAtomsForRMS", rdkit_defaultParameters.getOnlyHeavyAtomsForRMS());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseSymmetryForPruningOptionModel() {
+		return new SettingsModelBoolean("useSymmetryForPruning", rdkit_defaultParameters.getUseSymmetryForPruning());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createEmbedFragmentsSeparatelyOptionModel() {
+		return new SettingsModelBoolean("embedFragmentsSeparately", rdkit_defaultParameters.getEmbedFragmentsSeparately());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelInteger createETversionModel() {
+		return new SettingsModelIntegerBounded("ETversion", (int)rdkit_defaultParameters.getETversion(),1,2);
 	}
 
 	/**

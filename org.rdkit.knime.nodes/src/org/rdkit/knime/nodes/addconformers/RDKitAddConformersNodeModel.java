@@ -389,6 +389,13 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
        }
 
       try {
+          m_modelEmbedFragmentsSeparatelyOption.loadSettingsFrom(settings);
+       }
+       catch (final InvalidSettingsException excOrig) {
+          m_modelEmbedFragmentsSeparatelyOption.setBooleanValue(true);
+       }
+
+      try {
           m_modelETversion.loadSettingsFrom(settings);
        }
        catch (final InvalidSettingsException excOrig) {

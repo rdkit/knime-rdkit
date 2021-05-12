@@ -16,7 +16,8 @@
         </tab>
         <tab name="Conformer Calculation">
             <option name="Number of conformers">Number of conformers to be generated.</option>
-            <option name="Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.</option>
+            <option name="Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.
+            	 0 means that the RDKit code sets the value to 10 times the number of atoms.</option>
             <option name="Random seed">A random seed to initialize random number generator.</option>
             <option name="RMS threshold for keeping a conformer">The RMS threshold for keeping a conformer.</option>
         </tab>

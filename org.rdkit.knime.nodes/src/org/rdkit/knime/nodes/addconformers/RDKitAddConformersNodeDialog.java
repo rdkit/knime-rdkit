@@ -258,16 +258,17 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	}
 
 	/**
-	 * Creates the settings model for the option to specify
-	 * maximum number of iterations.
+	 * Creates the settings model for the option to specify the
+	 * maximum number of iterations. The current default 0 means that 
+	 * the RDKit code sets the value to 10 times the number of atoms.
 	 * 
 	 * @return Settings model for specifying iterations.
 	 */
 	static final SettingsModelInteger createMaxIterationsModel() {
 		long lMaxIterations = RDKIT_DEFAULT_PARAMETERS.getMaxIterations();
 		return new SettingsModelIntegerBounded("maxIterations", 
-				(int)(lMaxIterations < 1 ? 1 : lMaxIterations > Integer.MAX_VALUE ? Integer.MAX_VALUE : lMaxIterations),
-				1, Integer.MAX_VALUE);
+				(int)(lMaxIterations < 0 ? 0 : lMaxIterations > Integer.MAX_VALUE ? Integer.MAX_VALUE : lMaxIterations),
+				0, Integer.MAX_VALUE);
 	}
 
 	/**

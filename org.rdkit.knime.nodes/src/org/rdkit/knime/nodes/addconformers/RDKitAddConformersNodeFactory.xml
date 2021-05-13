@@ -16,7 +16,8 @@
         </tab>
         <tab name="Conformer Calculation">
             <option name="Number of conformers">Number of conformers to be generated.</option>
-            <option name="Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.</option>
+            <option name="Maximum number of tries to generate conformers">Maximum number of tries that the RDKit will use to generate conformers.
+            	 0 means that the RDKit code sets the value to 10 times the number of atoms.</option>
             <option name="Random seed">A random seed to initialize random number generator.</option>
             <option name="RMS threshold for keeping a conformer">The RMS threshold for keeping a conformer.</option>
         </tab>
@@ -25,6 +26,42 @@
             <option name="Column name for copied reference data">The output column with reference data taken from the input table.</option>
         </tab>
         <tab name="Advanced">
+            <option name="Enforce the preservation of input chirality">
+                Ensures that the chirality/bond stereochemistry specified in the input structures 
+                is reflected in the conformers.</option>
+            <option name="Use experimental torsion angle terms">
+                Use data from experimental crystal structures to refine some torsion angles. 
+                This uses the "ET" method described in https://doi.org/10.1021/acs.jcim.5b00654 
+                and https://doi.org/10.1021/acs.jcim.0c00025 .</option>
+            <option name="Experimental torsion angles version">
+                Choose the version of the experimental torsion definitions to use. 
+                Possible values are 1 and 2.</option>
+            <option name="Use experimental torsion angle terms for small rings">
+                Use data from experimental crystal structures to refine some torsion angles in
+                 small rings. This uses the "srET" method described in https://doi.org/10.1021/acs.jcim.0c00025 .</option>
+            <option name="Use experimental torsion angle terms for macrocycles">
+                Use data from experimental crystal structures to refine some torsion angles in
+                 macrocycles. This uses the method described in https://doi.org/10.1021/acs.jcim.0c00025 .</option>
+            <option name="Use 1-4 distance bound heuristics for macrocycles">
+                Use empirical corrections to modify 1-4 distance bounds in macrocycles. T
+                his uses the method described in https://doi.org/10.1021/acs.jcim.0c00025 .</option>
+            <option name="Use basic knowledge terms">
+                Apply "basic knowledge" constraints to planarize atoms which should be planar 
+                (e.g. aromatic atoms, conjugated atoms). This uses the "K" method described 
+                in https://doi.org/10.1021/acs.jcim.5b00654 .</option>
+            <option name="Force amide bonds to be trans">
+                Applies constraints to force amide, ester, and related bonds to have trans configurations.</option>
+            <option name="Only use heavy atoms when calculating RMS values">
+                When doing RMS pruning only heavy atoms will be used to calculate RMS.</option>
+            <option name="Use molecular symmetry when pruning conformers">
+                When doing RMS pruning molecular symmetry will be taken into account. Note that for reasons
+                 of computation efficiency, when this option is enabled only heavy atoms will be used 
+                 in the RMS calculation.</option>
+            <option name="Embed fragments separately">
+                Embed each of the molecule's fragments individually. Each fragment will be 
+                centered at the origin (i.e. the fragments will overlap). When this option is disabled, the 
+                fragments will not overlap but attractive inter-fragment interactions (e.g. H-bonds) are not 
+                taken into account.</option>
             <option name="Use random coordinates as a starting point instead of distance geometry">
                 Setting this flag will use random coordinates as a starting point instead of distance geometry.</option>
             <option name="Multiplier for the size of the box for random coordinates">

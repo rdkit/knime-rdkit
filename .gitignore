@@ -1,3 +1,9 @@
 bin
 /org.rdkit.knime.types/python/*.pyc
 /.metadata/
+.polyglot.feature.xml.takari_issue_192
+.polyglot..META-INF_MANIFEST.MF
+.META-INF_MANIFEST.MF
+target/
+org.rdkit.knime.types/rdkit-chem.jar
+org.rdkit.knime.testing/rdkit-testing.jar

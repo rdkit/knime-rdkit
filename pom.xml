@@ -15,6 +15,7 @@
 		<knime.version>4.3</knime.version>
 		<tycho.version>1.5.1</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
+		<qualifier.prefix>v</qualifier.prefix>
 	</properties>
 
 	<!-- List the modules of your project here -->
@@ -171,7 +172,7 @@
 				</dependencies>
 				<configuration>
 					<timestampProvider>jgit</timestampProvider>
-					<format>'v'yyyyMMddHHmm</format>
+					<format>'${qualifier.prefix}'yyyyMMddHHmm</format>
 					<jgit.ignore>
 						pom.xml
 						.polyglot.build.properties

@@ -62,3 +62,4 @@ Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/opsin-2.5.0-excludingInChI-jar-with-dependencies.jar
+Import-Package: org.w3c.dom.events;version="3.0.0"

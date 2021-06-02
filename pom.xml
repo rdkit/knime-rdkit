@@ -192,7 +192,6 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<configuration>
 					<environments>
-						<!-- These can be removed once we shut down the Buckminster build -->
 						<environment>
 							<os>linux</os>
 							<ws>gtk</ws>

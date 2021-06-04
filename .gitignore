@@ -5,5 +5,11 @@ bin
 .polyglot..META-INF_MANIFEST.MF
 .META-INF_MANIFEST.MF
 target/
+org.rdkit.knime.binaries.feature/feature.xml.takari_issue_192
+org.rdkit.knime.feature/feature.xml.takari_issue_192
 org.rdkit.knime.types/rdkit-chem.jar
 org.rdkit.knime.testing/rdkit-testing.jar
+org.rdkit.knime.testing.feature/feature.xml.takari_issue_192
+org.rdkit.knime.wizards.feature/feature.xml.takari_issue_192
+org.rdkit.knime.update/category.xml.takari_issue_192
+org.rdkit.knime.update/.polyglot.category.xml.takari_issue_192

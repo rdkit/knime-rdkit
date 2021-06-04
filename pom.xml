@@ -16,6 +16,8 @@
 		<tycho.version>1.5.1</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
 		<qualifier.prefix>v</qualifier.prefix>
+		<update.site>https://update.knime.com/analytics-platform/${knime.version}</update.site>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<!-- List the modules of your project here -->
@@ -40,7 +42,7 @@
 		<repository>
 			<id>p2-knime-update-site</id>
 			<layout>p2</layout>
-			<url>https://update.knime.com/analytics-platform/${knime.version}</url>
+			<url>${update.site}</url>
 		</repository>
 	</repositories>
 

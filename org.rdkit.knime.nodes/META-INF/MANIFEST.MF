@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: RDKit Nodes for Knime
+Bundle-Name: RDKit Nodes
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.nodes
 Bundle-Version: 4.3.0.qualifier
@@ -62,3 +62,4 @@ Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/opsin-2.5.0-excludingInChI-jar-with-dependencies.jar
+Import-Package: org.w3c.dom.events;version="3.0.0"

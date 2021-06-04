@@ -62,7 +62,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import org.apache.xerces.impl.dv.util.Base64;
+import java.util.Base64;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -1059,7 +1060,7 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 
 			/**
 			 * Creates a SHA1 hash over all concatenated names in the specified list.
-			 * Before the hash gets calculated a copy of the list is sorted alphetically to
+			 * Before the hash gets calculated a copy of the list is sorted alphabetically to
 			 * ensure a well-defined order. The passed in list will not be changed.
 			 *
 			 * @param arrNames Array of names.
@@ -1082,7 +1083,7 @@ public class SettingsModelFunctionalGroupConditions extends SettingsModel implem
 					try {
 						final MessageDigest md = MessageDigest.getInstance("SHA1");
 						md.update(sb.toString().getBytes());
-						strHash = Base64.encode(md.digest());
+						strHash=  Base64.getMimeEncoder().encodeToString(md.digest());
 					}
 					catch (final NoSuchAlgorithmException exc) {
 						// Fallback - should never happen, but will also work

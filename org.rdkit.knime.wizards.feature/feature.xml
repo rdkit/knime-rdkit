@@ -7,11 +7,14 @@
       plugin="org.rdkit.knime.wizards">
 
    <description>
-      This feature contains several nodes that provide RDKit  Wizard functionality.
+      For KNIME Developers only: When installing this feature into the Eclipse SDK you will have an RDKit Nodes Wizard available to auto-generate you 95% of code 
+      when writing new RDKit nodes. The wizards support the generation of different types of nodes: Modifier, Calculator, Calculator and Splitter, Splitter and Filter.
+      It generates automatically functionality to perform multi-threading where applicable and is able to generate simple or more complex (advanced) code.
+      Use these wizards to focus on science and real RDKit functionality, and forget about the necessary glueing code!
    </description>
 
    <copyright>
-      Copyright (C) 2012-2019 Novartis Institutes for BioMedical Research
+      Copyright (C) 2012-2021 Novartis Institutes for BioMedical Research
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

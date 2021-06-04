@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
    <feature id="org.rdkit.knime.binaries.feature">
-      <category name="RDKIT"/>
+      <category name="RDKit KNIME Community Contributions"/>
    </feature>
    <feature id="org.rdkit.knime.feature">
-      <category name="RDKIT"/>
+      <category name="RDKit KNIME Community Contributions"/>
    </feature>
    <feature id="org.rdkit.knime.testing.feature">
-      <category name="RDKIT"/>
+      <category name="RDKit KNIME Community Contributions"/>
    </feature>
    <feature id="org.rdkit.knime.wizards.feature">
-      <category name="RDKIT"/>
+      <category name="RDKit KNIME Community Contributions"/>
    </feature>
    
-   <category-def name="RDKIT" label="RDIT Features"/>
+   <category-def name="RDKit KNIME Community Contributions" label="RDKit KNIME extensions contributed by NIBR to the KNIME community."/>
 </site>

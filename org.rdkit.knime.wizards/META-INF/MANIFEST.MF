@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: RDKit Nodes Wizards
+Bundle-Name: RDKit Nodes Creation Wizards
 Bundle-SymbolicName: org.rdkit.knime.wizards;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.wizards
 Bundle-Version: 4.3.0.qualifier

@@ -24,7 +24,6 @@ pipeline {
 	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-rdkit.git'  \
 	                     ]]
 	                ]
-	            ]
 	            checkout \
 	                scm: [ $class : 'GitSCM', \
 	                     branches: [[name: 'refs/heads/KNIME-1023_Setup_maven_as_build_tool']], \
@@ -34,7 +33,6 @@ pipeline {
 	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git'  \
 	                     ]]
 	                ]
-	            ]
 	        }
 	    }    
         stage('Compile and Build') {

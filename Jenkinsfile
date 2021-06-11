@@ -30,12 +30,14 @@ pipeline {
         }
         stage('Installing Test Instance') {
         	steps {
-				        		
+				// Output environment
+				sh "env"
         	}
         } 
         stage('Running Tests') {
         	steps {
-        		
+				// Output environment
+				sh "env"
         	}
         } 
         stage('Deploying to Update Site') {

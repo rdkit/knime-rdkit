@@ -10,7 +10,8 @@ pipeline {
 		PATH = "${M2_HOME}/bin:${PATH}"
     	KNIME_VERSION = "4.3"
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
-    	DEPLOY_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr-test/"
+    	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
+    	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
     	QUALIFIER_PREFIX = "vnibr"
     }
 
@@ -65,8 +66,8 @@ pipeline {
 					else {
 						// Deploy resulting build artifacts as review update (overriding an existing one)
 						sh '''
-							rm -rf "${DEPLOY_UPDATE_SITE}/${BRANCH_NAME}"
-							mv "${WORKSPACE}/org.rdkit.knime.update/target/repository" "${DEPLOY_UPDATE_SITE}/${BRANCH_NAME}"
+							rm -rf "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
+							mv "${WORKSPACE}/org.rdkit.knime.update/target/repository" "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
 						'''
 					}
 		        }

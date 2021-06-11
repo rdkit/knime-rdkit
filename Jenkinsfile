@@ -72,7 +72,8 @@ pipeline {
 						// Deploy resulting build artifacts as review update (overriding an existing one)
 						sh '''
 							rm -rf "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
-							mv "${WORKSPACE}/org.rdkit.knime.update/target/repository" "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
+							mkdir -p "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
+							mv -f "${WORKSPACE}/org.rdkit.knime.update/target/repository/*" "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}/"
 						'''
 					}
 		        }

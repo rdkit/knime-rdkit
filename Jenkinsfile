@@ -32,6 +32,9 @@ pipeline {
         	steps {
 				// Output environment
 				sh "env"
+				
+				// Cleanup old data
+				sh "rm -rf tmp results"
 	
 	            // Compiles the plugin and builds an update site from it
 		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {

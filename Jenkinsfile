@@ -7,9 +7,9 @@ pipeline {
 
     environment {
     	M2_HOME=/apps/knime/buildtools/apache-maven
-		PATH=${M2_HOME}/bin:${PATH}
+		PATH=$M2_HOME/bin:$PATH
     	KNIME_VERSION = "4.3"
-    	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
+    	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/$KNIME_VERSION/update/mirror"
     	QUALIFIER_PREFIX = "vnibr"
     }
 

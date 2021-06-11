@@ -29,10 +29,14 @@ pipeline {
 		    }    
         }
         stage('Installing Test Instance') {
-        
+        	steps {
+				        		
+        	}
         } 
         stage('Running Tests') {
-        
+        	steps {
+        		
+        	}
         } 
         stage('Deploying to Update Site') {
 			steps {

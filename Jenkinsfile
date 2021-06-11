@@ -44,10 +44,13 @@ pipeline {
 				// Output environment
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
-					ln -s "${DIRECTOR_HOME}" "./scripts/knime-community/director"
+					ln -sf "${DIRECTOR_HOME}" "./scripts/knime-community/director"
 					source ./scripts/knime-community/community.inc			
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
+					# "Setup virtual X-Server ..."
+					Xvfb :$$ -fp "/usr/share/X11/fonts/misc" -fbdir "${tempDirectory}" &
+					export DISPLAY=:$$
 					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository Testflows/${JOB_NAME##*-}/RDKit "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips"
 				'''
         	}

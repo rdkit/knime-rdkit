@@ -18,8 +18,8 @@ pipeline {
 	        steps {
 	            checkout \
 	                scm: [ $class : 'GitSCM', \
-	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'org.rdkit']],
-	                                 [ $class: 'ScmName', name: 'rdkit-git' ]], \
+	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'org.rdkit'],
+	                                  [$class: 'ScmName', name: 'rdkit-git' ]], \
 	                     userRemoteConfigs: [[ \
 	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-rdkit.git'  \
 	                     ]]
@@ -27,8 +27,8 @@ pipeline {
 	            checkout \
 	                scm: [ $class : 'GitSCM', \
 	                     branches: [[name: 'refs/heads/KNIME-1023_Setup_maven_as_build_tool']], \
-	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'scripts']],
-	                                 [ $class: 'ScmName', name: 'scripts' ]], \
+	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'scripts'],
+	                                  [$class: 'ScmName', name: 'scripts' ]], \
 	                     userRemoteConfigs: [[ \
 	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git'  \
 	                     ]]

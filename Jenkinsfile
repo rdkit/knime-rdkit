@@ -16,23 +16,17 @@ pipeline {
     stages {
 	    stage('GitCheckout') {
 	        steps {
-	            checkout \
-	                scm: [ $class : 'GitSCM', \
-	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'org.rdkit'],
-	                                  [$class: 'ScmName', name: 'rdkit-git' ]], \
-	                     userRemoteConfigs: [[ \
-	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-rdkit.git'  \
-	                     ]]
-	                ]
-	            checkout \
-	                scm: [ $class : 'GitSCM', \
-	                     branches: [[name: 'refs/heads/KNIME-1023_Setup_maven_as_build_tool']], \
-	                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'scripts'],
-	                                  [$class: 'ScmName', name: 'scripts' ]], \
-	                     userRemoteConfigs: [[ \
-	                         url: 'https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git'  \
-	                     ]]
-	                ]
+				dir("${WORKSPACE}/org.rdkit") {
+          			checkout([$class: 'GitSCM', branches: [[name: 'refs/heads/${BRANCH_NAME}']], doGenerateSubmoduleConfigurations: false, \
+          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
+          			url: "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-rdkit.git"]]])
+        		}
+				dir("${WORKSPACE}/scripts") {
+					// TODO: Change to refs/heads/master
+          			checkout([$class: 'GitSCM', branches: [[name: 'refs/heads/KNIME-1023_Setup_maven_as_build_tool']], doGenerateSubmoduleConfigurations: false, \
+          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
+          			url: "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"]]])
+        		}
 	        }
 	    }    
         stage('Compile and Build') {

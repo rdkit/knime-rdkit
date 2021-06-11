@@ -15,16 +15,18 @@ pipeline {
 
     stages {
         stage('Compile and Build') {
-            // Get code from BitBucket repository
-            checkout scm
-
-			// Output environment
-			sh "env"
-
-            // Compiles the plugin and builds an update site from it
-	        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-              sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
-	        }
+        	steps {
+	            // Get code from BitBucket repository
+	            checkout scm
+	
+				// Output environment
+				sh "env"
+	
+	            // Compiles the plugin and builds an update site from it
+		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
+	              sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+		        }
+		    }    
         }
         stage('Installing Test Instance') {
         
@@ -33,9 +35,16 @@ pipeline {
         
         } 
         stage('Deploying to Update Site') {
-        	if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
-        		
-        	}
+			steps {
+		        script {
+		          if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
+	
+		          } 
+		          else {
+	
+		          }
+		        }
+		    }
         } 
     }
 }

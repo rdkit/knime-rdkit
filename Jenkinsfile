@@ -41,7 +41,7 @@ pipeline {
         stage('Running Tests') {
         	steps {
 				// Output environment
-				sh '''
+				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
 					source ./scripts/community.inc			
 					export LC_NUMERIC=en_US.UTF-8

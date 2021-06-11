@@ -42,7 +42,7 @@ pipeline {
 	        	// They will be checked out into a scripts directory, which resides within the root directory of the main checkout,
 	        	// which is sub-optimal, but no other solution was found so far
 				dir("scripts") {
-					checkout([$class: 'GitSCM', branches: [[name: '${GIT_BRANCH_SCRIPTS}']], doGenerateSubmoduleConfigurations: false, \
+					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_SCRIPTS}"]], doGenerateSubmoduleConfigurations: false, \
           			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
           			url: "${GIT_REPO_SCRIPTS}"]]])
         		}
@@ -53,8 +53,8 @@ pipeline {
 				// Output environment
 				sh "env"
 				
-				// Cleanup old data
-				sh "rm -rf tmp results"
+				// Cleanup old data from last build
+				sh "rm -rf tmp results mirrorWorkspace"
 			}
 		}	 
         stage('Compile and Build') {

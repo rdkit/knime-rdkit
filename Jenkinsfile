@@ -10,6 +10,7 @@ pipeline {
 		PATH = "${M2_HOME}/bin:${PATH}"
     	KNIME_VERSION = "4.3"
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
+    	DEPLOY_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr-test/"
     	QUALIFIER_PREFIX = "vnibr"
     }
 
@@ -32,31 +33,42 @@ pipeline {
 	
 	            // Compiles the plugin and builds an update site from it
 		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-	              sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+					sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
 		        }
 		    }    
         }
-        stage('Installing Test Instance') {
-        	steps {
-				// Output environment
-				sh "env"
-        	}
-        } 
         stage('Running Tests') {
         	steps {
 				// Output environment
-				sh "env"
+				sh '''
+					cd "${WORKSPACE}"
+					source ./scripts/community.inc			
+					export LC_NUMERIC=en_US.UTF-8
+					export RELEASE_REPOS="${UPDATE_SITE}"
+					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository Testflows/${JOB_NAME##*-}/RDKit "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips"
+				'''
         	}
+            post {
+				// Archive always the test results
+                success {
+                    junit 'results/**/*.xml'
+                }
+            }
+        	
         } 
         stage('Deploying to Update Site') {
 			steps {
 		        script {
-		          if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
-	
-		          } 
-		          else {
-	
-		          }
+					if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
+						
+					} 
+					else {
+						// Deploy resulting build artifacts as review update (overriding an existing one)
+						sh '''
+							rm -rf "${DEPLOY_UPDATE_SITE}/${BRANCH_NAME}"
+							mv "${WORKSPACE}/org.rdkit.knime.update/target/repository" "${DEPLOY_UPDATE_SITE}/${BRANCH_NAME}"
+						'''
+					}
 		        }
 		    }
         } 

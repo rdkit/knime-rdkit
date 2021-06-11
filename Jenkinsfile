@@ -6,6 +6,7 @@ pipeline {
     }
 
     environment {
+    	DIRECTOR_HOME = "/apps/knime/buildtools/director"
     	M2_HOME = "/apps/knime/buildtools/apache-maven"
 		PATH = "${M2_HOME}/bin:${PATH}"
     	KNIME_VERSION = "4.3"
@@ -43,7 +44,8 @@ pipeline {
 				// Output environment
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
-					source ./scripts/community.inc			
+					ln -s "${DIRECTOR_HOME}" "./scripts/knime-community/director"
+					source ./scripts/knime-community/community.inc			
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
 					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository Testflows/${JOB_NAME##*-}/RDKit "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips"

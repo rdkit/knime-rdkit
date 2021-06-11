@@ -94,7 +94,7 @@ pipeline {
 					if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
 						// Add successfully tested RDKit artifacts to existing NIBR update site
 						sh '''
-							"${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime\ test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
+							"${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
 						'''
 					} 
 					else {

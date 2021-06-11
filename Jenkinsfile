@@ -16,12 +16,8 @@ pipeline {
     stages {
 	    stage('GitCheckout') {
 	        steps {
-				dir("${WORKSPACE}/org.rdkit") {
-          			checkout([$class: 'GitSCM', branches: [[name: 'refs/heads/${BRANCH_NAME}']], doGenerateSubmoduleConfigurations: false, \
-          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
-          			url: "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-rdkit.git"]]])
-        		}
-				dir("${WORKSPACE}/scripts") {
+	        	checkout scm
+				dir("scripts") {
 					// TODO: Change to refs/heads/master
           			checkout([$class: 'GitSCM', branches: [[name: 'refs/heads/KNIME-1023_Setup_maven_as_build_tool']], doGenerateSubmoduleConfigurations: false, \
           			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
@@ -35,11 +31,9 @@ pipeline {
 				sh "env"
 	
 	            // Compiles the plugin and builds an update site from it
-	            dir('org.rdkit') {
-			        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-		              sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
-			        }
-			    }
+		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
+	              sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+		        }
 		    }    
         }
         stage('Installing Test Instance') {

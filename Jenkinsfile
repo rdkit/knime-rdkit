@@ -19,10 +19,6 @@ pipeline {
 		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
 		// TODO: Change to refs/heads/master
         GIT_BRANCH_SCRIPTS = "refs/heads/KNIME-1023_Setup_maven_as_build_tool"
-        
-        # Configuration for KNIME test instance
-        GIT_REPO_CONFIG = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-client-config.git"
-    	GIT_BRANCH_CONFIG = "${KNIME_VERSION}"
     	
     	// Prefix for the version number of the artifacts to distinguish them from normal community builds 
     	// (vnibrYYYYMMDDHHSS always is considered a higher version than a community built version vYYYYMMDDHHSS)
@@ -30,9 +26,6 @@ pipeline {
     	
     	// Source update site used for building the KNIME Test Instance for regression testing
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
-    	
-    	// Define extra IUs to be installed for running test workflows
-    	EXTRA_IUs = "org.rdkit.knime.feature.feature.group," 
     	
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
@@ -52,11 +45,6 @@ pipeline {
 					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_SCRIPTS}"]], doGenerateSubmoduleConfigurations: false, \
           			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
           			url: "${GIT_REPO_SCRIPTS}"]]])
-        		}
-				dir("config") {
-					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_CONFIG}"]], doGenerateSubmoduleConfigurations: false, \
-          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
-          			url: "${GIT_REPO_CONFIG}"]]])
         		}
 	        }
 	    }   
@@ -88,9 +76,10 @@ pipeline {
 					ln -sf "${DIRECTOR_HOME}" "./scripts/knime-community/director"
 					# Apply NIBR KNIME configuration of DEV environment
 					source ./scripts/knime-community/community.inc
+					# This method gets called from the runTests() method after KNIME was installed, just before running tests
 					configureKnimeTestInstance() {
     					local knimeFolder=$1
-    					./scripts/applyConfig.sh "${knimeFolder}" ./config dev linux7 chbs IgnoreKnimeIni
+    					# Not used for RDKit tests
 					}
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"

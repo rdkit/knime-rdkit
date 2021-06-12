@@ -6,7 +6,10 @@ pipeline {
         }
     }
 
-    environment {
+    environment {		
+		// A feature (branch or master) should always be built for one specific KNIME version only
+    	KNIME_VERSION = "4.3"
+
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"
     	M2_HOME = "/apps/knime/buildtools/apache-maven"
@@ -16,9 +19,10 @@ pipeline {
 		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
 		// TODO: Change to refs/heads/master
         GIT_BRANCH_SCRIPTS = "refs/heads/KNIME-1023_Setup_maven_as_build_tool"
-		
-		// A feature (branch or master) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "4.3"
+        
+        # Configuration for KNIME test instance
+        GIT_REPO_CONFIG = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-client-config.git"
+    	GIT_BRANCH_CONFIG = "${KNIME_VERSION}"
     	
     	// Prefix for the version number of the artifacts to distinguish them from normal community builds 
     	// (vnibrYYYYMMDDHHSS always is considered a higher version than a community built version vYYYYMMDDHHSS)
@@ -26,6 +30,9 @@ pipeline {
     	
     	// Source update site used for building the KNIME Test Instance for regression testing
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
+    	
+    	// Define extra IUs to be installed for running test workflows
+    	EXTRA_IUs = "org.rdkit.knime.feature.feature.group," 
     	
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
@@ -45,6 +52,11 @@ pipeline {
 					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_SCRIPTS}"]], doGenerateSubmoduleConfigurations: false, \
           			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
           			url: "${GIT_REPO_SCRIPTS}"]]])
+        		}
+				dir("config") {
+					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_CONFIG}"]], doGenerateSubmoduleConfigurations: false, \
+          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
+          			url: "${GIT_REPO_CONFIG}"]]])
         		}
 	        }
 	    }   
@@ -74,7 +86,12 @@ pipeline {
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
 					ln -sf "${DIRECTOR_HOME}" "./scripts/knime-community/director"
+					# Apply NIBR KNIME configuration of DEV environment
 					source ./scripts/knime-community/community.inc
+					configureKnimeTestInstance() {
+    					local knimeFolder=$1
+    					./scripts/applyConfig.sh "${knimeFolder}" ./config dev linux7 chbs IgnoreKnimeIni
+					}
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
 					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips"

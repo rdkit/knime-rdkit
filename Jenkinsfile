@@ -7,6 +7,9 @@ pipeline {
     }
 
     environment {		
+    	// Email addresses to be notified about failures, unstable tests or fixes
+    	EMAIL_TO = 'manuel.schwarze@novartis.com'
+    	
 		// A feature (branch or master) should always be built for one specific KNIME version only
     	KNIME_VERSION = "4.3"
 
@@ -88,13 +91,20 @@ pipeline {
         	}
             post {
 				// Archive always the test results
-                success {
+                always {
                     junit 'results/**/*.xml'
                 }
             }
         	
         } 
         stage('Deploying to Update Site') {
+         	when {
+				expression {
+					// Do not deploy any master change with UNSTABLE tests, only branch changes
+                	(env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master') || 
+                	(currentBuild.result == null || currentBuild.result == 'SUCCESS')
+              	}
+            }
 			steps {
 		        script {
 					if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
@@ -115,4 +125,24 @@ pipeline {
 		    }
         } 
     }
+	post {
+        failure {
+            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
+                    recipientProviders: [developers(), requestor()],
+                    to: "${EMAIL_TO}", 
+                    subject: 'Build failed in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER'
+        }
+        unstable {
+            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
+                    recipientProviders: [developers(), requestor()],
+                    to: "${EMAIL_TO}", 
+                    subject: 'Unstable build in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER'
+        }
+        changed {
+            emailext body: 'Check console output at $BUILD_URL to view the results.', 
+                    recipientProviders: [developers(), requestor()],
+                    to: "${EMAIL_TO}", 
+                    subject: 'Jenkins build is back to normal: $PROJECT_NAME - #$BUILD_NUMBER'
+        }
+    }   
 }

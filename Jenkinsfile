@@ -31,7 +31,7 @@ pipeline {
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
     	
     	// Define extra IUs to be installed for running test workflows (used by community.inc methods)
-    	EXTRA_IUs = "" 
+    	EXTRA_IUs = "org.knime.features.core.streaming.feature.group" 
     	
     	// Defines how tests are performed - this is passed in addition to the runTests method, which internally calls
     	// the KNIME org.knime.testing.NGTestflowRunner application, which comes with the org.knime.features.testing.application feature.
@@ -61,7 +61,7 @@ pipeline {
 		//     -streaming: optional, enables additional streaming test for workflows configured accordingly. The test streaming job manager is set and used for each single node.
 		//     -preferences <file_name>: optional, specifies an exported preferences file that should be used to initialize preferences
 		//     -workflow.variable <variable-declaration>: optional, defines or overwrites workflow variable 'name' with value 'value' (possibly enclosed by quotes). The 'type' must be one of "String", "int" or "double".
-    	TEST_DEPTH_PARAMS = "-loadSaveLoad -views -dialogs -logMessages -streaming -stacktraceOnTimeout"
+    	TEST_DEPTH_PARAMS = "-loadSaveLoad -views -logMessages -streaming -stacktraceOnTimeout"
     	
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"

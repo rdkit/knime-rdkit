@@ -66,6 +66,9 @@ pipeline {
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
     	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
+    	
+    	// Usually, this is set to "false", but in certain situations it can be necessary to deploy also branch builds the "master" update site - then set it to "true"
+    	DEPLOY_BRANCH_BUILDS_TO_MASTER = "true"
     }
 
     stages {
@@ -97,7 +100,7 @@ pipeline {
         	steps {
 	            // Compiles the plugin and builds an update site from it
 		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-					sh(label: "Compile and Build", script: "mvn -U clean verify -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+					sh(label: "Compile and Build", script: "mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
 		        }
 		    }    
         }
@@ -110,7 +113,6 @@ pipeline {
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
 					ln -sf "${DIRECTOR_HOME}" "./scripts/knime-community/director"
-					# Apply NIBR KNIME configuration of DEV environment
 					source ./scripts/knime-community/community.inc
 					# This method gets called from the runTests() method after KNIME was installed, just before running tests
 					configureKnimeTestInstance() {
@@ -126,6 +128,18 @@ pipeline {
 				// Archive always the test results
                 always {
                     junit 'results/**/*.xml'
+	
+					sh '''#!/bin/bash     
+						# Check for hs_err_XXX file, which would tell us that the test run crashed (e.g. because of RDKit) - in that case no error would be recorded
+						# and we would treat a test as successful, although it is not - Exit the script in that case
+						for crashFile in "${WORKSPACE}/tmp"/hs_err_pid*.log
+						do
+							[ -f "${crashFile}" ] || continue
+							echo "At least one test crashed - log file found: ${crashFile}"
+							echo "Aborting build and testing process."
+	  						exit 1
+						done
+					'''                
                 }
             }
         	
@@ -133,21 +147,24 @@ pipeline {
         stage('Deploying to Update Site') {
          	when {
 				expression {
-					// Do not deploy any master change with UNSTABLE tests, only branch changes
-                	(env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master') || 
-                	(currentBuild.result == null || currentBuild.result == 'SUCCESS')
+					// Never run deployments on PROD, only on DEV or TEST
+					(env.NODE_LABELS.toUpperCase().contains("DEV") || env.NODE_LABELS.toUpperCase().contains("TEST")) 
               	}
             }
 			steps {
 		        script {
-					if (env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') {
-						// Add successfully tested RDKit artifacts to existing NIBR update site
-						sh '''
-							"${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
+					// Add successfully tested NIBR artifacts to existing NIBR update site
+					// Do not deploy any change with UNSTABLE tests to the master update site
+					if ((env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
+					    (currentBuild.result == null || currentBuild.result == 'SUCCESS')) {
+						sh '''#!/bin/bash
+							/bin/bash "${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
 						'''
 					} 
-					else {
-						// Deploy resulting build artifacts of branches as review update with the branch name only (overriding an existing one)
+
+					// Deploy resulting build artifacts of branches as review update with the branch name only (overriding an existing one)
+					// Also UNSTABLE tests are being deployed
+					if (env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master') {
 						sh '''
 							rm -rf "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
 							mkdir -p "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"

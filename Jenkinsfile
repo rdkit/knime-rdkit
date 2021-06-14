@@ -30,6 +30,36 @@ pipeline {
     	// Source update site used for building the KNIME Test Instance for regression testing
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
     	
+    	// Defines how tests are performed - this is passed in addition to the runTests method, which internally calls
+    	// the KNIME org.knime.testing.NGTestflowRunner application, which comes with the org.knime.features.testing.application feature.
+    	// To see an output of valid arguments like the following, specify an invalid argument.
+    	// 
+		// Valid arguments:
+		//     -include <regex>: only tests matching the regular expression <regex> will be run. The complete path of each testcase starting from the testflows' root directory is matched, e.g. '/Misc/Workflow'.
+		//     -root <dir_name>: optional, specifies the root dir where all testcases are located in. Multiple root arguments may be present.
+		//     -server <uri>: optional, a KNIME server  from which workflows should be downloaded first. Has to be used with -serverPath.
+		//                    Example: http://<user>:<password>@host[:port]/knime/rest
+		//     -serverPath <path>: optional, a path on the KNIME Server that specifies which workflows should be downloaded first.
+		//                    Example: /workflowGroup1/workflowGroup2
+		//     -xmlResult <file_name>: specifies a single XML  file where the test results are written to.
+		//     -xmlResultDir <directory_name>: specifies the directory  into which each test result is written to as an XML files. Either -xmlResult or -xmlResultDir must be provided.
+		//     -outputToSeparateFile: optional, specifies that system out and system err are written to a separate text file instead of being included in the XML result file (similar to Surefire)
+		//     -loadSaveLoad: optional, loads, saves, and loads the workflow before execution.
+		//     -deprecated: optional, reports deprecated nodes in workflows as failures.
+		//     -views: optional, opens all views during a workflow test.
+		//     -dialogs: optional, additional tests all node dialogs.
+		//     -logMessages: optional, checks for required or unexpected log messages.
+		//     -ignoreNodeMessages: optional, ignores any warning messages on nodes.
+		//     -untestedNodes <regex>: optional, checks for untested nodes, only node factories matching the regular expression are reported
+		//     -save <directory_name>: optional, specifies the directory  into which each testflow is saved after execution. If not specified the workflows are not saved.
+		//     -timeout <seconds>: optional, specifies the timeout for each individual workflow.
+		//     -stacktraceOnTimeout: optional, if specified output a full stack trace in case of timeouts.
+		//     -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for each testflow. If not specified no test for memory leaks is performed.
+		//     -streaming: optional, enables additional streaming test for workflows configured accordingly. The test streaming job manager is set and used for each single node.
+		//     -preferences <file_name>: optional, specifies an exported preferences file that should be used to initialize preferences
+		//     -workflow.variable <variable-declaration>: optional, defines or overwrites workflow variable 'name' with value 'value' (possibly enclosed by quotes). The 'type' must be one of "String", "int" or "double".
+    	TEST_DEPTH_PARAMS = "-loadSaveLoad -views -dialogs -logMessages -streaming -stacktraceOnTimeout"
+    	
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
     	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
@@ -86,7 +116,7 @@ pipeline {
 					}
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
-					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips"
+					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips" ${TEST_DEPTH_PARAMS}
 				'''
         	}
             post {

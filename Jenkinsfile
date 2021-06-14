@@ -30,6 +30,9 @@ pipeline {
     	// Source update site used for building the KNIME Test Instance for regression testing
     	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
     	
+    	// Define extra IUs to be installed for running test workflows (used by community.inc methods)
+    	EXTRA_IUs = "" 
+    	
     	// Defines how tests are performed - this is passed in addition to the runTests method, which internally calls
     	// the KNIME org.knime.testing.NGTestflowRunner application, which comes with the org.knime.features.testing.application feature.
     	// To see an output of valid arguments like the following, specify an invalid argument.
@@ -116,7 +119,7 @@ pipeline {
 					}
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
-					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips" ${TEST_DEPTH_PARAMS}
+					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips" "" "${TEST_DEPTH_PARAMS}"
 				'''
         	}
             post {

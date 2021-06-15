@@ -5,8 +5,13 @@ pipeline {
             label 'knime-test-basel-c7'
         }
     }
-
-    environment {		
+    
+    options {
+    	// Do not build the same branch twice at the same time
+        disableConcurrentBuilds()
+    }
+    
+    environment { 	
     	// Email addresses to be notified about failures, unstable tests or fixes
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
@@ -28,7 +33,7 @@ pipeline {
     	QUALIFIER_PREFIX = "vnibr"
     	
     	// Source update site used for building the KNIME Test Instance for regression testing
-    	UPDATE_SITE = "http://chbs-knime-app.tst.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
+    	UPDATE_SITE_TEMPLATE = "http://chbs-knime-app.%URL_SHORT_ENV%.nibr.novartis.net/${KNIME_VERSION}/update/mirror"
     	
     	// Define extra IUs to be installed for running test workflows (used by community.inc methods)
     	EXTRA_IUs = "org.knime.features.core.streaming.feature.group" 
@@ -64,6 +69,7 @@ pipeline {
     	TEST_DEPTH_PARAMS = "-loadSaveLoad -views -logMessages -streaming -stacktraceOnTimeout"
     	
     	// Target update sites to use when everything was tested successfully to deploy the build artifacts
+    	MASTER_UPDATE_SITE_URL_TEMPLATE = "http://chbs-knime-app.%URL_SHORT_ENV%.nibr.novartis.net/${KNIME_VERSION}/update/nibr"
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
     	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
     	
@@ -72,7 +78,33 @@ pipeline {
     }
 
     stages {
-	    stage('GitCheckout') {
+    	stage('Detect Env') {
+    		steps {
+    			script {
+    				if (env.NODE_LABELS.toUpperCase().contains("DEV")) {
+    					env.ENVIRONMENT = 'dev';
+    					env.URL_SHORT_ENV = 'dev';
+    				}
+    				else if (env.NODE_LABELS.toUpperCase().contains("TEST")) {
+    					env.ENVIRONMENT = 'test';
+    					env.URL_SHORT_ENV = 'tst';
+    				}
+    				else if (env.NODE_LABELS.toUpperCase().contains("PROD")) {
+    					env.ENVIRONMENT = 'prod';
+    					env.URL_SHORT_ENV = 'prd';
+    				}
+    				
+    				if (env.ENVIRONMENT == 'prod') {
+    					error("Running this job in a PROD environment is not allowed!");
+    				}
+    				
+    				// Define update sites based on environment
+    				env.UPDATE_SITE = env.UPDATE_SITE_TEMPLATE.replace("%URL_SHORT_ENV%", env.URL_SHORT_ENV);
+    				env.MASTER_UPDATE_SITE_URL = env.MASTER_UPDATE_SITE_URL_TEMPLATE.replace("%URL_SHORT_ENV%", env.URL_SHORT_ENV);
+    			}
+    		}
+    	}
+	    stage('Git Checkout') {
 	        steps {
 	        	// Get the branch that triggered this build 
 	        	checkout scm
@@ -104,7 +136,7 @@ pipeline {
 		        }
 		    }    
         }
-        stage('Running Tests') {
+        stage('Run Tests') {
         	steps {
 				// Installs with the Director tool a new minimal KNIME instance with the build artifacts (needs to run as bash script!)
 				// The logic comes from the KNIME Community implementation (community.inc), which was slightly adapted to disable
@@ -112,20 +144,29 @@ pipeline {
 				// and cannot access the server from NIBR (proxy settings and credentials would be required for authentication)
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
-					ln -sf "${DIRECTOR_HOME}" "./scripts/knime-community/director"
-					source ./scripts/knime-community/community.inc
+					
+					# Create a link to director directly beside the community.inc script to simulate how it works on the KNIME community server
+					pushd "./scripts/knime-community/"
+					rm -f director
+					ln -s "${DIRECTOR_HOME}" "director"
+					popd
+					
+					# Bring in functionality of KNIME community server
+					source "${WORKSPACE}/scripts/knime-community/community.inc"
+					
 					# This method gets called from the runTests() method after KNIME was installed, just before running tests
 					configureKnimeTestInstance() {
     					local knimeFolder=$1
     					# Not used for RDKit tests
 					}
+					
 					export LC_NUMERIC=en_US.UTF-8
 					export RELEASE_REPOS="${UPDATE_SITE}"
 					runTests file://${WORKSPACE}/org.rdkit.knime.update/target/repository "noServerAccess" "${WORKSPACE}/org.rdkit.knime.testing/regression-tests/zips" "" "${TEST_DEPTH_PARAMS}"
 				'''
         	}
             post {
-				// Archive always the test results
+				// Archive always the available test results
                 always {
                     junit 'results/**/*.xml'
 	
@@ -142,38 +183,64 @@ pipeline {
 					'''                
                 }
             }
-        	
         } 
-        stage('Deploying to Update Site') {
+        stage('Deploy to Main Update Site') {
          	when {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
-					(env.NODE_LABELS.toUpperCase().contains("DEV") || env.NODE_LABELS.toUpperCase().contains("TEST")) 
+					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
+					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
+					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
               	}
-            }
+            }        
 			steps {
 		        script {
 					// Add successfully tested NIBR artifacts to existing NIBR update site
 					// Do not deploy any change with UNSTABLE tests to the master update site
-					if ((env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
-					    (currentBuild.result == null || currentBuild.result == 'SUCCESS')) {
-						sh '''#!/bin/bash
-							/bin/bash "${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
-						'''
-					} 
-
-					// Deploy resulting build artifacts of branches as review update with the branch name only (overriding an existing one)
-					// Also UNSTABLE tests are being deployed
-					if (env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master') {
-						sh '''
-							rm -rf "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
-							mkdir -p "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
-							mv -f "${WORKSPACE}/org.rdkit.knime.update/target/repository"/* "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}/"
-						'''
-					}
+					sh '''#!/bin/bash
+						/bin/bash "${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
+					'''
 		        }
 		    }
-        } 
+        }
+        stage('Deploy to Branch Update Site') {
+         	when {
+				expression {
+					// Never run deployments on PROD, only on DEV or TEST
+					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
+					 (env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master')) 
+              	}
+            }
+			steps {
+		        script {
+					// Deploy resulting build artifacts of branches as review update with the branch name only (overriding an existing one)
+					// Also UNSTABLE tests are being deployed
+					sh '''#!/bin/bash 
+						rm -rf "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
+						mkdir -p "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}"
+						cp -rf "${WORKSPACE}/org.rdkit.knime.update/target/repository"/* "${DEPLOY_BRANCH_UPDATE_SITE}/${BRANCH_NAME}/"
+					'''
+		        }
+		    }
+        }
+        stage('Package and Rollout (only master)') {
+         	when {
+				expression {
+					// Never run deployments on PROD, only on DEV or TEST
+					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
+					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
+					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
+              	}
+            }        
+			steps {
+				build job: "/KNIME/knime${env.KNIME_VERSION}-${env.ENVIRONMENT}-package-linux", 
+					  parameters: [string(name: "ENVIRONMENT", value: "${env.ENVIRONMENT}"), 
+								 string(name: "MIRROR_UPDATE_SITE_URL", value: "${env.PRIMARY_UPDATE_SITE}"), 
+								 string(name: "NIBR_UPDATE_SITE_URL", value: "${env.MASTER_UPDATE_SITE_URL}")],
+					  quietPeriod: 0, 
+					  wait: false
+			}
+        }
     }
 	post {
         failure {

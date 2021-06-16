@@ -235,7 +235,7 @@ pipeline {
 			steps {
 				build job: "/KNIME/knime${env.KNIME_VERSION}-${env.ENVIRONMENT}-package-linux", 
 					  parameters: [string(name: "ENVIRONMENT", value: "${env.ENVIRONMENT}"), 
-								 string(name: "MIRROR_UPDATE_SITE_URL", value: "${env.PRIMARY_UPDATE_SITE}"), 
+								 string(name: "MIRROR_UPDATE_SITE_URL", value: "${env.UPDATE_SITE}"), 
 								 string(name: "NIBR_UPDATE_SITE_URL", value: "${env.MASTER_UPDATE_SITE_URL}")],
 					  quietPeriod: 0, 
 					  wait: false

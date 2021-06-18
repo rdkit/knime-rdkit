@@ -1,7 +1,7 @@
 pipeline {
     agent {
         node {
-        	// This job needs to run on the KNIME server that hosts also the target update site 
+            // This job needs to run on the KNIME server that hosts also the target update site 
             label 'knime-test-basel-c7'
         }
     }

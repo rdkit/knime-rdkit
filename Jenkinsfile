@@ -15,7 +15,7 @@ pipeline {
     	// Email addresses to be notified about failures, unstable tests or fixes
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
-		// A feature (branch or master) should always be built for one specific KNIME version only
+		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
     	KNIME_VERSION = "4.3"
 
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
@@ -73,7 +73,7 @@ pipeline {
     	DEPLOY_MASTER_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/nibr"
     	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
     	
-    	// Usually, this is set to "false", but in certain situations it can be necessary to deploy also branch builds the "master" update site - then set it to "true"
+    	// Usually, this is set to "false", but in certain situations it can be necessary to deploy also branch builds to the "master" update site - then set it to "true"
     	DEPLOY_BRANCH_BUILDS_TO_MASTER = "true"
     }
 
@@ -189,7 +189,7 @@ pipeline {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
+					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
 					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
               	}
             }        
@@ -208,7 +208,7 @@ pipeline {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					 (env.git_branch_lowercase != 'master' && env.GIT_BRANCH != 'master')) 
+					 (env.git_branch_lowercase != 'master_nibr' && env.GIT_BRANCH != 'master_nibr')) 
               	}
             }
 			steps {
@@ -223,12 +223,12 @@ pipeline {
 		        }
 		    }
         }
-        stage('Package and Rollout (only master)') {
+        stage('Package and Rollout (only master_nibr)') {
          	when {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master') &&
+					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
 					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
               	}
             }        

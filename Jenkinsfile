@@ -25,8 +25,7 @@ pipeline {
 		
 		// Scripts required for testing and deployment
 		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
-		// TODO: Change to refs/heads/master
-        GIT_BRANCH_SCRIPTS = "refs/heads/KNIME-1023_Setup_maven_as_build_tool"
+        GIT_BRANCH_SCRIPTS = "refs/heads/master"
     	
     	// Prefix for the version number of the artifacts to distinguish them from normal community builds 
     	// (vnibrYYYYMMDDHHSS always is considered a higher version than a community built version vYYYYMMDDHHSS)
@@ -74,7 +73,7 @@ pipeline {
     	DEPLOY_BRANCH_UPDATE_SITE = "/apps/knime/web/${KNIME_VERSION}/update/knime-rdkit-review"
     	
     	// Usually, this is set to "false", but in certain situations it can be necessary to deploy also branch builds to the "master" update site - then set it to "true"
-    	DEPLOY_BRANCH_BUILDS_TO_MASTER = "true"
+    	DEPLOY_BRANCH_BUILDS_TO_MASTER = "false"
     }
 
     stages {
@@ -189,14 +188,16 @@ pipeline {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
+					// Never deploy master (which is the community master) to the main update site
+					 ((env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' && !(env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master')) || 
+					  env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
+					// Never deploy any change with UNSTABLE tests to the master update site
 					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
               	}
             }        
 			steps {
 		        script {
 					// Add successfully tested NIBR artifacts to existing NIBR update site
-					// Do not deploy any change with UNSTABLE tests to the master update site
 					sh '''#!/bin/bash
 						/bin/bash "${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/"
 					'''
@@ -228,7 +229,10 @@ pipeline {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					 (env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' || env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
+					// Never trigger packaging for master (which is the community master) when building in NIBR environment
+					 ((env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' && !(env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master')) || 
+					  env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
+					// Never trigger packaging for any UNSTABLE tests
 					 (currentBuild.result == null || currentBuild.result == 'SUCCESS'))
               	}
             }        

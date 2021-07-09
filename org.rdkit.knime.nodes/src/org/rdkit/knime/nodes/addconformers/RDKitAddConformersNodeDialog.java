@@ -48,6 +48,8 @@
  */
 package org.rdkit.knime.nodes.addconformers;
 
+import org.RDKit.EmbedParameters;
+import org.RDKit.RDKFuncs;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -81,35 +83,68 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	// Constants
 	//
 
+	/** Default values, directly taken from RDKit binaries. */
+	public static final EmbedParameters RDKIT_DEFAULT_PARAMETERS = RDKFuncs.getETKDGv3();
+	
 	/** Default value to be used for number of conformers. */
 	public static final int DEFAULT_NUMBER_OF_CONFORMERS = 10;
 
-	/** Default value to be used for maximum iterations. */
-	public static final int DEFAULT_MAX_ITERATIONS = 30;
+	/** Default value to be used as cleanup with UFF option. */
+	public static final boolean DEFAULT_CLEANUP_WITH_UFF = true;
 
-	/** Default value to be used as random seed. */
-	public static final int DEFAULT_RANDOM_SEED = -1;
+	/** 
+	 * Default value to be used as cleanup option. 
+	 * @deprecated Since 4.3. Replaced with {@link #DEFAULT_CLEANUP_WITH_UFF}. To b removed soon. 
+	 */
+	public static final boolean DEFAULT_CLEANUP = DEFAULT_CLEANUP_WITH_UFF;
 
-	/** Default value to be used to prune RMS threshold. */
-	public static final double DEFAULT_PRUNE_RMS_THRESHOLD = -1.0d;
+	/** 
+	 * Default value to be used for maximum iterations.
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final int DEFAULT_MAX_ITERATIONS = (int)Math.min(RDKIT_DEFAULT_PARAMETERS.getMaxIterations(), Integer.MAX_VALUE);
 
-	/** Default value to be used as option to use random coordinates. */
-	public static final boolean DEFAULT_USE_RANDOM_COORDS = false;
+	/** 
+	 * Default value to be used as random seed. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final int DEFAULT_RANDOM_SEED = RDKIT_DEFAULT_PARAMETERS.getRandomSeed();
 
-	/** Default value to be used as box size multiplier. */
-	public static final double DEFAULT_BOX_SIZE_MULTIPLIER = 2.0d;
+	/** 
+	 * Default value to be used to prune RMS threshold. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final double DEFAULT_PRUNE_RMS_THRESHOLD = RDKIT_DEFAULT_PARAMETERS.getPruneRmsThresh();
 
-	/** Default value to be used as option to enforce chirality. */
-	public static final boolean DEFAULT_ENFORCE_CHIRALITY = true;
+	/** 
+	 * Default value to be used as option to use random coordinates. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final boolean DEFAULT_USE_RANDOM_COORDS = RDKIT_DEFAULT_PARAMETERS.getUseRandomCoords();
+
+	/** 
+	 * Default value to be used as box size multiplier. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final double DEFAULT_BOX_SIZE_MULTIPLIER = RDKIT_DEFAULT_PARAMETERS.getBoxSizeMult();
+
+	/** 
+	 * Default value to be used as option to enforce chirality. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final boolean DEFAULT_ENFORCE_CHIRALITY = RDKIT_DEFAULT_PARAMETERS.getEnforceChirality();
 	
-	/** Default value to be used as option to use experimental torsional angle terms. */
-	public static final boolean DEFAULT_USE_EXP_TORSION_ANGLES = true;
+	/** 
+	 * Default value to be used as option to use experimental torsional angle terms.
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final boolean DEFAULT_USE_EXP_TORSION_ANGLES = RDKIT_DEFAULT_PARAMETERS.getUseExpTorsionAnglePrefs();
 
-	/** Default value to be used as option to use basic knowledge terms. */
-	public static final boolean DEFAULT_USE_BASIC_KNOWLEDGE = true;
-
-	/** Default value to be used as cleanup option. */
-	public static final boolean DEFAULT_CLEANUP = false;
+	/** 
+	 * Default value to be used as option to use basic knowledge terms. 
+	 * @deprecated Since 4.3. Instead of using the DEFAULT_XXX constant, use directly {@link #RDKIT_DEFAULT_PARAMETERS} functionality.
+	 */
+	public static final boolean DEFAULT_USE_BASIC_KNOWLEDGE = RDKIT_DEFAULT_PARAMETERS.getUseBasicKnowledge();
 
 	//
 	// Constructor
@@ -151,9 +186,26 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 				createEnforceChiralityOptionModel(), "Enforce the preservation of input chirality"));
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseExpTorsionAnglesOptionModel(), "Use experimental torsion angle terms"));
+		super.addDialogComponent(new DialogComponentNumber(
+				createETversionModel(), "Experimental torsion angles version ", new Integer(1), 1));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseSmallRingTorsionsOptionModel(), "Use experimental torsion angle terms for small rings"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseMacrocycleTorsionsOptionModel(), "Use experimental torsion angle terms for macrocycles"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseMacrocycle14OptionModel(), "Use 1-4 distance bound heuristics for macrocycles"));
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseBasicKnowledgeOptionModel(), "Use basic knowledge terms (e.g. planar aromatic atoms)"));
 
+		super.addDialogComponent(new DialogComponentBoolean(
+				createForceTransAmidesOptionModel(), "Force amide bonds to be trans"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createOnlyHeavyAtomsForRMSOptionModel(), "Only use heavy atoms when calculating RMS values"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				createUseSymmetryForPruningOptionModel(), "Use molecular symmetry when pruning conformers"));	
+		super.addDialogComponent(new DialogComponentBoolean(
+				createEmbedFragmentsSeparatelyOptionModel(), "Embed fragments separately"));	
+		
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseRandomCoordinatesOptionModel(), "Use random coordinates as a starting point instead of distance geometry"));
 		super.addDialogComponent(new DialogComponentNumberEdit(
@@ -197,13 +249,26 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	}
 
 	/**
-	 * Creates the settings model for the option to specify
-	 * maximum number of iterations. Default is 30.
+	 * Creates the settings model for cleanup with UFF option.
+	 * 
+	 * @return Settings model for the cleanup with UFF option.
+	 */
+	static final SettingsModelBoolean createCleanupWithUffOptionModel() {
+		return new SettingsModelBoolean("cleanup_with_uff", DEFAULT_CLEANUP_WITH_UFF);
+	}
+
+	/**
+	 * Creates the settings model for the option to specify the
+	 * maximum number of iterations. The current default 0 means that 
+	 * the RDKit code sets the value to 10 times the number of atoms.
 	 * 
 	 * @return Settings model for specifying iterations.
 	 */
 	static final SettingsModelInteger createMaxIterationsModel() {
-		return new SettingsModelIntegerBounded("maxIterations", DEFAULT_MAX_ITERATIONS, 1, Integer.MAX_VALUE);
+		long lMaxIterations = RDKIT_DEFAULT_PARAMETERS.getMaxIterations();
+		return new SettingsModelIntegerBounded("maxIterations", 
+				(int)(lMaxIterations < 0 ? 0 : lMaxIterations > Integer.MAX_VALUE ? Integer.MAX_VALUE : lMaxIterations),
+				0, Integer.MAX_VALUE);
 	}
 
 	/**
@@ -212,7 +277,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for specifying random seed value.
 	 */
 	static final SettingsModelInteger createRandomSeedModel() {
-		return new SettingsModelInteger("seed", DEFAULT_RANDOM_SEED);
+		return new SettingsModelInteger("seed", RDKIT_DEFAULT_PARAMETERS.getRandomSeed());
 	}
 
 	/**
@@ -221,7 +286,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for prune RMS threshold value.
 	 */
 	static final SettingsModelDouble createPruneRmsThresholdModel() {
-		return new SettingsModelDouble("pruneRmsThreshold", DEFAULT_PRUNE_RMS_THRESHOLD);
+		return new SettingsModelDouble("pruneRmsThreshold", RDKIT_DEFAULT_PARAMETERS.getPruneRmsThresh());
 	}
 
 	/**
@@ -230,7 +295,80 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for option to use random coordinates.
 	 */
 	static final SettingsModelBoolean createUseRandomCoordinatesOptionModel() {
-		return new SettingsModelBoolean("useRandomCoordinates", DEFAULT_USE_RANDOM_COORDS);
+		return new SettingsModelBoolean("useRandomCoordinates", RDKIT_DEFAULT_PARAMETERS.getUseRandomCoords());
+	}
+
+	
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseSmallRingTorsionsOptionModel() {
+		return new SettingsModelBoolean("useSmallRingTorsions", RDKIT_DEFAULT_PARAMETERS.getUseSmallRingTorsions());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseMacrocycleTorsionsOptionModel() {
+		return new SettingsModelBoolean("useMacrocycleTorsions", RDKIT_DEFAULT_PARAMETERS.getUseMacrocycleTorsions());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseMacrocycle14OptionModel() {
+		return new SettingsModelBoolean("useMacrocycle14", RDKIT_DEFAULT_PARAMETERS.getUseMacrocycle14config());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createForceTransAmidesOptionModel() {
+		return new SettingsModelBoolean("forceTransAmides", RDKIT_DEFAULT_PARAMETERS.getForceTransAmides());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createOnlyHeavyAtomsForRMSOptionModel() {
+		return new SettingsModelBoolean("onlyHeavyAtomsForRMS", RDKIT_DEFAULT_PARAMETERS.getOnlyHeavyAtomsForRMS());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createUseSymmetryForPruningOptionModel() {
+		return new SettingsModelBoolean("useSymmetryForPruning", RDKIT_DEFAULT_PARAMETERS.getUseSymmetryForPruning());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelBoolean createEmbedFragmentsSeparatelyOptionModel() {
+		return new SettingsModelBoolean("embedFragmentsSeparately", RDKIT_DEFAULT_PARAMETERS.getEmbedFragmentsSeparately());
+	}
+
+	/**
+	 * Creates the settings model for the named option
+	 * 
+	 * @return Settings model for the option
+	 */
+	static final SettingsModelInteger createETversionModel() {
+		return new SettingsModelIntegerBounded("ETversion", (int)RDKIT_DEFAULT_PARAMETERS.getETversion(), 1, 2);
 	}
 
 	/**
@@ -239,7 +377,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for option to enforce chirality.
 	 */
 	static final SettingsModelBoolean createEnforceChiralityOptionModel() {
-		return new SettingsModelBoolean("enforceChirality", DEFAULT_ENFORCE_CHIRALITY);
+		return new SettingsModelBoolean("enforceChirality", RDKIT_DEFAULT_PARAMETERS.getEnforceChirality());
 	}
 
 	/**
@@ -248,7 +386,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for option to use experimental torsion angle terms.
 	 */
 	static final SettingsModelBoolean createUseExpTorsionAnglesOptionModel() {
-		return new SettingsModelBoolean("useExpTorsionAngles", DEFAULT_USE_EXP_TORSION_ANGLES);
+		return new SettingsModelBoolean("useExpTorsionAngles", RDKIT_DEFAULT_PARAMETERS.getUseExpTorsionAnglePrefs());
 	}
 
 	/**
@@ -257,7 +395,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for option to use basic knowledge terms.
 	 */
 	static final SettingsModelBoolean createUseBasicKnowledgeOptionModel() {
-		return new SettingsModelBoolean("useBasicKnowledge", DEFAULT_USE_BASIC_KNOWLEDGE);
+		return new SettingsModelBoolean("useBasicKnowledge", RDKIT_DEFAULT_PARAMETERS.getUseBasicKnowledge());
 	}
 
 	/**
@@ -266,7 +404,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 * @return Settings model for the multiplier for the size of the box for random coordinates.
 	 */
 	static final SettingsModelDoubleBounded createBoxSizeMultiplierModel() {
-		return new SettingsModelDoubleBounded("boxSizeMultiplier", DEFAULT_BOX_SIZE_MULTIPLIER, Double.MIN_VALUE, Double.MAX_VALUE);
+		return new SettingsModelDoubleBounded("boxSizeMultiplier", RDKIT_DEFAULT_PARAMETERS.getBoxSizeMult(), Double.MIN_VALUE, Double.MAX_VALUE);
 	}
 
 	/**
@@ -285,14 +423,5 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelString createReferenceOutputColumnNameModel() {
 		return new SettingsModelString("output_ref_name", null);
-	}
-
-	/**
-	 * Creates the settings model for cleanup with UFF option.
-	 * 
-	 * @return Settings model for the cleanup with UFF option.
-	 */
-	static final SettingsModelBoolean createCleanupWithUffOptionModel() {
-		return new SettingsModelBoolean("cleanup_with_uff", true);
 	}
 }

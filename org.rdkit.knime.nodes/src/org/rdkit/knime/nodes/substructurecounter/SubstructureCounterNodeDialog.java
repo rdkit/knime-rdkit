@@ -100,6 +100,14 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(
 				new DialogComponentBoolean(createUniqueMatchesOnlyModel(),
 						"Count unique matches only"));
+		final SettingsModelBoolean modelUseChiralityOption = createUseChiralityModel();
+		super.addDialogComponent(
+				new DialogComponentBoolean(modelUseChiralityOption,
+						"Use chirality when matching"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createUseEnhancedStereoModel(modelUseChiralityOption),
+						"Use enhanced stereochemistry when matching"));
+
 
 		createNewGroup("Output");
 		// Add query name option settings
@@ -161,6 +169,43 @@ public class SubstructureCounterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createUniqueMatchesOnlyModel() {
 		return new SettingsModelBoolean("countUniqueMatches", true);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to use chirality in the matching.
+	 * Added in November 2020.
+	 * 
+	 * @return Settings model for useChirality option.
+	 */
+	static final SettingsModelBoolean createUseChiralityModel() {
+		return new SettingsModelBoolean("useChirality", false);
+	}
+
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to use enhanced stereo in the matching.
+	 * Added in March 2021.
+	 * 
+	 * @return Settings model for useEnhancedStereo option.
+	 */
+	static final SettingsModelBoolean createUseEnhancedStereoModel(final SettingsModelBoolean modelUseChiralityOption) {
+		final SettingsModelBoolean modelWithDependency = new SettingsModelBoolean("useEnhancedStereo", false);
+
+		// React on any changes
+		modelUseChiralityOption.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				// Enable or disable the model
+				modelWithDependency.setEnabled(modelUseChiralityOption.getBooleanValue());
+			}
+		});
+
+		// Enable this model based on the dependent model's state
+		modelWithDependency.setEnabled(modelUseChiralityOption.getBooleanValue());
+
+		return modelWithDependency;
 	}
 
 	/**

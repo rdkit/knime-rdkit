@@ -59,6 +59,7 @@ import org.RDKit.Match_Vect_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.SubstructMatchParameters;
 import org.knime.chem.types.SmartsValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -136,6 +137,14 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	/** Settings model for the option to count unique matches only. */
 	private final SettingsModelBoolean m_modelUniqueMatchesOnly =
 			registerSettings(SubstructureCounterNodeDialog.createUniqueMatchesOnlyModel());
+
+	/** Settings model for the option to use stereochemistry in the match. Added in November 2020. */
+	private final SettingsModelBoolean m_modelUseChirality =
+			registerSettings(SubstructureCounterNodeDialog.createUseChiralityModel(), true);
+
+	/** Settings model for the option to use enhanced stereo in the match. Added in March 2021. */
+	private final SettingsModelBoolean m_modelUseEnhancedStereo =
+			registerSettings(SubstructureCounterNodeDialog.createUseEnhancedStereoModel(m_modelUseChirality), true);
 
 	/** Settings model for the option to use a query name column. */
 	private final SettingsModelBoolean m_modelUseQueryNameColumn =
@@ -515,9 +524,11 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 						ListCell.getCollectionType(StringCell.TYPE)).createSpec();
 			}
 
-			// Provide unique matches only option
-			final boolean bUniqueMatchesOnly = m_modelUniqueMatchesOnly.getBooleanValue();
-
+			final SubstructMatchParameters ps = markForCleanup(new SubstructMatchParameters());
+			ps.setUseChirality(m_modelUseChirality.getBooleanValue());
+    		ps.setUseEnhancedStereo(m_modelUseEnhancedStereo.getBooleanValue());
+			ps.setUniquify(m_modelUniqueMatchesOnly.getBooleanValue());
+			
 			// Generate factory
 			arrOutputFactories[0] = new AbstractRDKitCellFactory(this, AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 					getWarningConsolidator(), null, arrOutputSpec) {
@@ -542,7 +553,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 						final ROMol query = m_arrQueriesAsRDKitMols[iColIndex];
 						if (mol != null && query != null) {
 							final Match_Vect_Vect ms = markForCleanup(
-									mol.getSubstructMatches(query, bUniqueMatchesOnly), lUniqueWaveId);
+									mol.getSubstructMatches(query, ps), lUniqueWaveId);
 							final int iHits = (int)ms.size();
 							arrOutputCells[iColIndex] = new IntCell(iHits);
 							iTotalHitsCount += iHits;
@@ -662,7 +673,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 
 				// Or a SMILES (or SMARTS conversion failed)
 				if (strQueryMolString == null) {
-					strQueryMolString = mol.MolToSmiles(true);
+					strQueryMolString = RDKFuncs.MolToCXSmiles(mol);					
 				}
 
 				// Fallback, if SMARTS/SMILES conversion failed

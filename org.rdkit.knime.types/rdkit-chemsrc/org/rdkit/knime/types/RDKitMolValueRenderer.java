@@ -57,12 +57,14 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
 
+import org.RDKit.GenericRDKitException;
 import org.RDKit.MolDraw2DSVG;
+import org.RDKit.MolDrawOptions;
 import org.RDKit.MolSanitizeException;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
-import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
+import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
 import org.knime.base.data.xml.SvgValueRenderer;
@@ -74,6 +76,12 @@ import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.w3c.dom.svg.SVGDocument;
+
+import org.knime.chem.types.MolValue;
+import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmartsValue;
+import org.knime.chem.types.SmilesValue;
+
 
 /**
  * This a renderer that draws nice 2D depictions of RDKit molecules.
@@ -152,60 +160,125 @@ implements SvgProvider {
 		m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
 
 		RDKitMolValue molCell = null;
-
-		// We have an old plain RDKit Mol Value
-		if (value instanceof RDKitMolValue) {
-			molCell = (RDKitMolValue)value;
-		}
-
-		// We have a wrapped RDKit Mol Value (or an error)
-		else if (value instanceof AdapterValue) {
-			final AdapterValue adapter = (AdapterValue)value;
-
-			if (adapter.getAdapterError(RDKitMolValue.class) != null) {
-				m_bIsMissingCell = true;
-				m_strError = adapter.getAdapterError(RDKitMolValue.class).getError();
+		ROMol omol = null;
+		boolean trySanitizing = true;
+		try {
+			// We have an old plain RDKit Mol Value
+			if (value instanceof RDKitMolValue) {
+				molCell = (RDKitMolValue)value;
 			}
+	
+			// We have a wrapped RDKit Mol Value (or an error)
+			else if (value instanceof AdapterValue) {
+				final AdapterValue adapter = (AdapterValue)value;
+	
+				try {
+					if (adapter.getAdapterError(RDKitMolValue.class) != null) {
+						m_bIsMissingCell = true;
+						m_strError = adapter.getAdapterError(RDKitMolValue.class).getError();
+					}
+					else {
+						molCell = adapter.getAdapter(RDKitMolValue.class);
+					}
+				} catch (final IllegalArgumentException ex) {
+					// we land here if there's no adapter in place
+					molCell = null;
+				}
+			}
+			// We just have a missing cell (which might be caused by some error)
 			else {
-				molCell = adapter.getAdapter(RDKitMolValue.class);
+				m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
+				if (value instanceof MissingCell) {
+					m_strError = ((MissingCell)value).getError();
+				}
 			}
-		}
+		} catch (final Exception ex) {
+			// If conversion fails we set a null value, which will show up as error messgae
+			omol = null;
+			// Logging something here may swamp the log files - not desired.
 
-		// We just have a missing cell (which might be caused by some error)
-		else {
-			m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
-			if (value instanceof MissingCell) {
-				m_strError = ((MissingCell)value).getError();
-			}
 		}
-
 		if (molCell != null) {
-			// Try to render the cell
 			m_strSmiles = molCell.getSmilesValue();
-			ROMol omol = null;
+			omol = molCell.readMoleculeValue();
+		} else {
+			// see if we have a value that we can understand
+			try {
+				RWMol tmol = null;
+				if (value instanceof SmilesValue) {
+		            String val = ((SmilesValue) value).getSmilesValue();
+		            tmol = RWMol.MolFromSmiles(val,0,false);
+		        }
+				else if (value instanceof SdfValue) {
+		            String val = ((SdfValue) value).getSdfValue();
+		            tmol = RWMol.MolFromMolBlock(val,false);
+		        }
+				else if (value instanceof MolValue) {
+		            String val = ((MolValue) value).getMolValue();
+		            tmol = RWMol.MolFromMolBlock(val,false);
+		        }
+				else if (value instanceof SmartsValue) {
+		            String val = ((SmartsValue) value).getSmartsValue();
+		            tmol = RWMol.MolFromSmarts(val);
+		            trySanitizing=false;
+		        }
+				if(tmol != null) {
+					// save a copy in case something goes badly wrong in the sanitization
+					omol = new ROMol(tmol);
+					if(trySanitizing) {
+						try {
+							RDKFuncs.sanitizeMol(tmol);
+							omol.delete();
+							omol = tmol;
+						} catch (final Exception ex) {
+							trySanitizing=false;					
+							tmol.delete();
+							tmol = null;
+						}
+					}
+					// don't put this in an "else", we want to execute it if sanitization fails above.
+					if(!trySanitizing) {
+						// do a minimal amount of sanitization so that we can draw things properly
+						omol.updatePropertyCache(false);
+						RDKFuncs.symmetrizeSSSR(omol);
+						RDKFuncs.setHybridization(omol);
+						tmol.delete();
+					}
+				}
+			} catch (final Exception ex) {
+				omol = null;
+			}
+		}
+		if(omol != null) {
+			// Try to render the cell
 			final Thread t = Thread.currentThread();
 			final ClassLoader contextClassLoader = t.getContextClassLoader();
 			t.setContextClassLoader(getClass().getClassLoader());
 
 			try {
-				omol = molCell.readMoleculeValue();
-
 				RWMol mol;
 				mol = new RWMol(omol);
-				try {
-					RDKFuncs.prepareMolForDrawing(mol);
-				} catch(final MolSanitizeException ex) {
-					mol.delete();
-					mol = new RWMol(omol);
-					// skip kekulization. If this still fails we throw up our hands
+				if(trySanitizing) {
+					try {
+						RDKFuncs.prepareMolForDrawing(mol);
+					} catch(final MolSanitizeException ex) {
+						mol.delete();
+						mol = new RWMol(omol);
+						// skip kekulization. If this still fails we throw up our hands
+						RDKFuncs.prepareMolForDrawing(mol,false);
+					}
+				} else {
+					// skip kekulization
 					RDKFuncs.prepareMolForDrawing(mol,false);
 				}
 				final MolDraw2DSVG molDrawing = new MolDraw2DSVG(300, 300);
+				MolDrawOptions opts = molDrawing.drawOptions();
+				// we've already prepared the molecule appropriately, so don't try again:
+				opts.setPrepareMolsBeforeDrawing(false);
 				molDrawing.drawMolecule((ROMol)mol);
 				molDrawing.finishDrawing();
 
-				// the svg namespace causes problems with the javascript table (github #29)
-				final String svg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");
+				final String svg = molDrawing.getDrawingText();
 				if(mol != omol){
 					mol.delete();
 				}
@@ -228,8 +301,7 @@ implements SvgProvider {
 				// labels to be printed off their places
 				m_svgDocument.getRootElement().removeAttributeNS(
 						"http://www.w3.org/XML/1998/namespace", "space");
-			}
-			catch (final Exception ex) {
+			}catch (final Exception ex) {
 				// If conversion fails we set a null value, which will show up as error messgae
 				m_svgDocument = null;
 				// Logging something here may swam the log files - not desired.

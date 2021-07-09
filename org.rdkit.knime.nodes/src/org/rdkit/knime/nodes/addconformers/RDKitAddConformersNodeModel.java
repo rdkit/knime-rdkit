@@ -54,7 +54,9 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.RDKit.Conformer;
 import org.RDKit.DistanceGeom;
+import org.RDKit.EmbedParameters;
 import org.RDKit.ForceField;
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
@@ -147,15 +149,15 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 
    /** Settings model for the option to enforce chirality. */
    private final SettingsModelBoolean m_modelEnforceChiralityOption =
-         registerSettings(RDKitAddConformersNodeDialog.createEnforceChiralityOptionModel(),true);
+         registerSettings(RDKitAddConformersNodeDialog.createEnforceChiralityOptionModel(), true);
 
    /** Settings model for the option to use experimental torsion angles. */
    private final SettingsModelBoolean m_modelUseExpTorsionAnglesOption =
-         registerSettings(RDKitAddConformersNodeDialog.createUseExpTorsionAnglesOptionModel(),true);
+         registerSettings(RDKitAddConformersNodeDialog.createUseExpTorsionAnglesOptionModel(), true);
 
-   /** Settings model for the option to use random coordinates. */
+   /** Settings model for the option to use basic knowledge. */
    private final SettingsModelBoolean m_modelUseBasicKnowledgeOption =
-         registerSettings(RDKitAddConformersNodeDialog.createUseBasicKnowledgeOptionModel(),true);
+         registerSettings(RDKitAddConformersNodeDialog.createUseBasicKnowledgeOptionModel(), true);
 
    /** Settings model for the box size multiplier. */
    private final SettingsModelDoubleBounded m_modelBoxSizeMultiplier =
@@ -170,9 +172,33 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
          registerSettings(RDKitAddConformersNodeDialog.createReferenceOutputColumnNameModel());
 
    /** Settings model for the option to cleanup a conformer after its calculation. */
-   private final SettingsModelBoolean m_modelCleanupOption =
+   private final SettingsModelBoolean m_modelCleanupWithUffOption =
          registerSettings(RDKitAddConformersNodeDialog.createCleanupWithUffOptionModel(), true);
 
+   private final SettingsModelBoolean m_modelUseSmallRingTorsionsOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createUseSmallRingTorsionsOptionModel(), true);
+
+   private final SettingsModelBoolean m_modelUseMacrocycleTorsionsOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createUseMacrocycleTorsionsOptionModel(), true);
+
+   private final SettingsModelBoolean m_modelUseMacrocycle14Option =
+	         registerSettings(RDKitAddConformersNodeDialog.createUseMacrocycle14OptionModel(), true);
+
+   private final SettingsModelBoolean m_modelForceTransAmidesOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createForceTransAmidesOptionModel(), true);
+
+   private final SettingsModelBoolean m_modelOnlyHeavyAtomsForRMSOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createOnlyHeavyAtomsForRMSOptionModel(), true);
+   
+   private final SettingsModelBoolean m_modelUseSymmetryForPruningOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createUseSymmetryForPruningOptionModel(), true);
+	   
+   private final SettingsModelBoolean m_modelEmbedFragmentsSeparatelyOption =
+	         registerSettings(RDKitAddConformersNodeDialog.createEmbedFragmentsSeparatelyOptionModel(), true);
+
+   private final SettingsModelInteger m_modelETversion =
+	         registerSettings(RDKitAddConformersNodeDialog.createETversionModel(), true);
+   
    //
    // Constructor
    //
@@ -308,19 +334,78 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
          throws InvalidSettingsException {
       super.loadValidatedSettingsFrom(settings);
 
-      // Exception: For old nodes we will treat the row key match info option as "false", for new nodes as "true"
+      // Important: For old nodes we define here the node behavior so that it does exactly the same
+      //            as before - applying here the new current default values would change that behavior,
+      //            which is not desired.
       try {
          m_modelUseExpTorsionAnglesOption.loadSettingsFrom(settings);
       }
       catch (final InvalidSettingsException excOrig) {
          m_modelUseExpTorsionAnglesOption.setBooleanValue(false);
       }
+      
       try {
          m_modelUseBasicKnowledgeOption.loadSettingsFrom(settings);
       }
       catch (final InvalidSettingsException excOrig) {
          m_modelUseBasicKnowledgeOption.setBooleanValue(false);
       }
+
+		try {
+			m_modelUseSmallRingTorsionsOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseSmallRingTorsionsOption.setBooleanValue(false);
+		}
+		
+		try {
+			m_modelUseMacrocycleTorsionsOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseMacrocycleTorsionsOption.setBooleanValue(false);
+		}
+
+		try {
+			m_modelUseMacrocycle14Option.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseMacrocycle14Option.setBooleanValue(false);
+		}
+
+		try {
+			m_modelForceTransAmidesOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelForceTransAmidesOption.setBooleanValue(false);
+		}
+
+		try {
+			m_modelUseSymmetryForPruningOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelUseSymmetryForPruningOption.setBooleanValue(false);
+		}
+
+		try {
+			m_modelOnlyHeavyAtomsForRMSOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelOnlyHeavyAtomsForRMSOption.setBooleanValue(false);
+		}
+
+		try {
+			m_modelEmbedFragmentsSeparatelyOption.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelEmbedFragmentsSeparatelyOption.setBooleanValue(true);
+		}
+
+		try {
+			m_modelETversion.loadSettingsFrom(settings);
+		} 
+		catch (final InvalidSettingsException excOrig) {
+			m_modelETversion.setIntValue(1);
+		}
    }
    
    
@@ -342,16 +427,27 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
 
       // Get calculation parameters
       final int iNumberOfConformers = m_modelNumberOfConformers.getIntValue();
-      final int iMaxIterations = m_modelMaxIterations.getIntValue();
-      final int iRandomSeed = m_modelRandomSeed.getIntValue();
-      final double dPruneRmsThreshold = m_modelPruneRmsThreshold.getDoubleValue();
-      final boolean bUseRandomCoordinates = m_modelUseRandomCoordinatesOption.getBooleanValue();
-      final boolean bEnforceChirality = m_modelEnforceChiralityOption.getBooleanValue();
-      final boolean bUseExpTorsionAngles = m_modelUseExpTorsionAnglesOption.getBooleanValue();
-      final boolean bUseBasicKnowldge = m_modelUseBasicKnowledgeOption.getBooleanValue();
-      final double dBoxSizeMultiplier = m_modelBoxSizeMultiplier.getDoubleValue();
-      final boolean bCleanup = m_modelCleanupOption.getBooleanValue();
+      final boolean bCleanupWithUff = m_modelCleanupWithUffOption.getBooleanValue();
 
+      final EmbedParameters embedParams = new EmbedParameters();
+      embedParams.setMaxIterations(m_modelMaxIterations.getIntValue());
+      embedParams.setRandomSeed(m_modelRandomSeed.getIntValue());
+      embedParams.setPruneRmsThresh(m_modelPruneRmsThreshold.getDoubleValue());
+      embedParams.setUseRandomCoords(m_modelUseRandomCoordinatesOption.getBooleanValue());
+      embedParams.setEnforceChirality(m_modelEnforceChiralityOption.getBooleanValue());
+      embedParams.setUseExpTorsionAnglePrefs(m_modelUseExpTorsionAnglesOption.getBooleanValue());
+      embedParams.setUseBasicKnowledge(m_modelUseBasicKnowledgeOption.getBooleanValue());
+      embedParams.setBoxSizeMult(m_modelBoxSizeMultiplier.getDoubleValue());
+      embedParams.setUseSmallRingTorsions(m_modelUseSmallRingTorsionsOption.getBooleanValue());
+      embedParams.setUseMacrocycleTorsions(m_modelUseMacrocycleTorsionsOption.getBooleanValue());
+      embedParams.setUseMacrocycle14config(m_modelUseMacrocycle14Option.getBooleanValue());
+      embedParams.setForceTransAmides(m_modelForceTransAmidesOption.getBooleanValue());
+      embedParams.setOnlyHeavyAtomsForRMS(m_modelOnlyHeavyAtomsForRMSOption.getBooleanValue());
+      embedParams.setUseSymmetryForPruning(m_modelUseSymmetryForPruningOption.getBooleanValue());
+      embedParams.setEmbedFragmentsSeparately(m_modelEmbedFragmentsSeparatelyOption.getBooleanValue());
+
+      embedParams.setETversion(m_modelETversion.getIntValue());
+      
       if (lTotalRowCount > 0) {
          // Get settings and define data specific behavior
          final int iMaxParallelWorkers = (int)Math.ceil(1.5 * Runtime.getRuntime().availableProcessors());
@@ -388,12 +484,7 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
                      final ROMol molTemp = markForCleanup(new ROMol(mol), lUniqueWaveId);
                      final Int_Vect listConformerIds;
                      listConformerIds = markForCleanup(DistanceGeom.EmbedMultipleConfs(molTemp, iNumberOfConformers, 
-                           iMaxIterations, iRandomSeed,
-                           true /* clearConfs */, bUseRandomCoordinates, dBoxSizeMultiplier,
-                           true /* randNegEig */, 1 /* numZeroFail */, dPruneRmsThreshold, 
-                           null /* coordMap */, 1e-3 /* optmizerForceTol */,
-                           false /* ignoreSmoothingFailures */,
-                           bEnforceChirality,bUseExpTorsionAngles,bUseBasicKnowldge), lUniqueWaveId);
+                           embedParams), lUniqueWaveId);
 
                      // Note: There will be no output row, if there are no conformers at all, only a warning
                      if (listConformerIds != null) {
@@ -402,22 +493,17 @@ public class RDKitAddConformersNodeModel extends AbstractRDKitNodeModel {
                         for (int indexTarget = 0; indexTarget < iSize; indexTarget++) {
 
                            // Make a copy of the calculated molecule that still contains all conformers
-                           final ROMol output = markForCleanup(new ROMol(molTemp), lUniqueWaveId);
+                           final ROMol output = markForCleanup(new ROMol(mol), lUniqueWaveId);
+                           output.clearConformers();
                            final int iTargetConformerId = listConformerIds.get(indexTarget);
-
-                           // Remove all conformers that are out of focus
-                           for (int indexConf = 0; indexConf < iSize; indexConf++) {
-                              final int iOtherConformerId = listConformerIds.get(indexConf);
-                              if (iTargetConformerId != iOtherConformerId) {
-                                 output.removeConformer(iOtherConformerId);
-                              }
-                           }
+                           final Conformer conf = markForCleanup(new Conformer(molTemp.getConformer(iTargetConformerId)), lUniqueWaveId); 
+                           output.addConformer(conf);
 
                            // Create a data row, if we have meaningful output (other checks could be added here)
                            if (output != null) {
 
                               // Cleanup the conformer molecule, if desired
-                              if (bCleanup) {
+                              if (bCleanupWithUff) {
                                  ForceField.UFFOptimizeMolecule(output);
                               }
 

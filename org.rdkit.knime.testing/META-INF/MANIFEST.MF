@@ -1,12 +1,12 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Testing
+Bundle-Name: RDKit Nodes Tests
 Bundle-SymbolicName: org.rdkit.knime.testing;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.testing
-Bundle-Version: 4.0.1.qualifier
-Fragment-Host: org.rdkit.knime.nodes;bundle-version="4.0.1"
+Bundle-Version: 4.3.0.qualifier
+Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Fragment-Host: org.rdkit.knime.nodes;bundle-version="4.3.0"
 Require-Bundle: org.knime.testing;bundle-version="[3.7.0,5.0.0)",
- org.knime.chem.base;bundle-version="[3.6.0,5.0.0)",
- jp.co.infocom.cheminfo.marvin;bundle-version="[3.6.0,5.0.0)"
+ org.knime.chem.base;bundle-version="[3.6.0,5.0.0)"
 Bundle-ClassPath: rdkit-testing.jar

@@ -2,7 +2,7 @@ pipeline {
     agent {
         node {
             // This job needs to run on the KNIME server that hosts also the target update site 
-            label 'knime-test-basel-c7'
+            label 'knime-dev-basel-c7'
         }
     }
     
@@ -259,11 +259,11 @@ pipeline {
                     to: "${EMAIL_TO}", 
                     subject: 'Unstable build in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER'
         }
-        changed {
+        fixed {
             emailext body: 'Check console output at $BUILD_URL to view the results.', 
                     recipientProviders: [developers(), requestor()],
                     to: "${EMAIL_TO}", 
-                    subject: 'Jenkins build is back to normal: $PROJECT_NAME - #$BUILD_NUMBER'
+                    subject: 'Jenkins build started working again: $PROJECT_NAME - #$BUILD_NUMBER'
         }
     }   
 }

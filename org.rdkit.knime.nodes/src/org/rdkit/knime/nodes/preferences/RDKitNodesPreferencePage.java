@@ -54,6 +54,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import org.RDKit.RDKFuncs;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -137,7 +138,7 @@ implements IWorkbenchPreferencePage {
 
 		// We use the pref store of the UI plugin
 		setPreferenceStore(RDKitNodePlugin.getDefault().getPreferenceStore());
-		setDescription("This section contains sub sections to control preferences for RDKit Nodes.");
+		setDescription("This section contains sub sections to control preferences for the RDKit Nodes.\nThe nodes are using version "+RDKFuncs.getRdkitVersion()+" of the RDKit backend.");
 	}
 
 	/** {@inheritDoc} */

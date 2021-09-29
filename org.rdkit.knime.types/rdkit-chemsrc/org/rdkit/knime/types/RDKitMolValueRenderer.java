@@ -275,6 +275,7 @@ implements SvgProvider {
 				MolDrawOptions opts = molDrawing.drawOptions();
 				// we've already prepared the molecule appropriately, so don't try again:
 				opts.setPrepareMolsBeforeDrawing(false);
+				opts.setAddStereoAnnotation(true);
 				molDrawing.drawMolecule((ROMol)mol);
 				molDrawing.finishDrawing();
 

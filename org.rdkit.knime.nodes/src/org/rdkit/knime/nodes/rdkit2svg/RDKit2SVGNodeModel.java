@@ -61,6 +61,7 @@ import org.RDKit.DrawColour;
 import org.RDKit.Int_Vect;
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolDrawOptions;
+import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
@@ -75,7 +76,10 @@ import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.PartitionInfo;
@@ -126,7 +130,55 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 	private final SettingsModelBoolean m_modelRemoveSourceColumns =
 			registerSettings(RDKit2SVGNodeDialog.createRemoveSourceColumnsOptionModel());
 
+	private final SettingsModelBoolean m_modelClearBackground =
+			registerSettings(RDKit2SVGNodeDialog.createClearBackgroundOptionModel());
+	private final SettingsModelBoolean m_modelDummiesAreAttachments =
+			registerSettings(RDKit2SVGNodeDialog.createDummiesAreAttachmentsOptionModel());
+	private final SettingsModelBoolean m_modelAddAtomIndices =
+			registerSettings(RDKit2SVGNodeDialog.createAddAtomIndicesOptionModel());
+	private final SettingsModelBoolean m_modelAddBondIndices =
+			registerSettings(RDKit2SVGNodeDialog.createAddBondIndicesOptionModel());
+	private final SettingsModelBoolean m_modelIsotopeLabels =
+			registerSettings(RDKit2SVGNodeDialog.createIsotopeLabelsOptionModel());
+	private final SettingsModelBoolean m_modelDummyIsotopeLabels =
+			registerSettings(RDKit2SVGNodeDialog.createDummyIsotopeLabelsOptionModel());
+	
+	private final SettingsModelBoolean m_modelAddStereoAnnotation =
+			registerSettings(RDKit2SVGNodeDialog.createAddStereoAnnotationOptionModel());
+	
+	private final SettingsModelBoolean m_modelCenterBeforeDrawing =
+			registerSettings(RDKit2SVGNodeDialog.createCenterBeforeDrawingOptionModel());
+	
+	private final SettingsModelBoolean m_modelPrepareBeforeDrawing =
+			registerSettings(RDKit2SVGNodeDialog.createPrepareBeforeDrawingOptionModel());
 
+	private final SettingsModelBoolean m_modelExplicitMethyl =
+			registerSettings(RDKit2SVGNodeDialog.createExplicitMethylOptionModel());
+	
+	private final SettingsModelBoolean m_modelIncludeRadicals =
+			registerSettings(RDKit2SVGNodeDialog.createIncludeRadicalsOptionModel());
+	
+	private final SettingsModelBoolean m_modelComicModeOption =
+			registerSettings(RDKit2SVGNodeDialog.createComicModeOptionModel());
+
+	private final SettingsModelBoolean m_modelBWModeOption =
+			registerSettings(RDKit2SVGNodeDialog.createBWModeOptionModel());
+	private final SettingsModelBoolean m_modelNoAtomLabelsOption =
+			registerSettings(RDKit2SVGNodeDialog.createNoAtomLabelsOptionModel());
+	private final SettingsModelBoolean m_modelIncludeChiralFlagOption =
+			registerSettings(RDKit2SVGNodeDialog.createIncludeChiralFlagOptionModel());
+	private final SettingsModelBoolean m_modelSimplifiedStereoGroupsOption =
+			registerSettings(RDKit2SVGNodeDialog.createSimplifiedStereoGroupsOptionModel());
+	private final SettingsModelBoolean m_modelSingleColorWedgeBondsOption =
+			registerSettings(RDKit2SVGNodeDialog.createSingleColorWedgeBondsOptionModel());
+	private final SettingsModelIntegerBounded m_modelBondLineWidthOption = 
+			registerSettings(RDKit2SVGNodeDialog.createBondLineWidthOptionModel());
+	private final SettingsModelIntegerBounded m_modelMinFontSizeOption = 
+			registerSettings(RDKit2SVGNodeDialog.createMinFontSizeOptionModel());
+	private final SettingsModelIntegerBounded m_modelMaxFontSizeOption = 
+			registerSettings(RDKit2SVGNodeDialog.createMaxFontSizeOptionModel());
+	private final SettingsModelDoubleBounded m_modelAnnotationFontScaleOption = 
+			registerSettings(RDKit2SVGNodeDialog.createAnnotationFontScaleOptionModel());
 	//
 	// Constructor
 	//
@@ -269,7 +321,30 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
 					MolDrawOptions opts = molDrawing.drawOptions();
-					opts.setAddStereoAnnotation(true);
+					opts.setClearBackground(m_modelClearBackground.getBooleanValue());
+					opts.setAddStereoAnnotation(m_modelAddStereoAnnotation.getBooleanValue());
+					opts.setAddAtomIndices(m_modelAddAtomIndices.getBooleanValue());
+					opts.setAddBondIndices(m_modelAddBondIndices.getBooleanValue());
+					opts.setIsotopeLabels(m_modelIsotopeLabels.getBooleanValue());
+					opts.setDummiesAreAttachments(m_modelDummiesAreAttachments.getBooleanValue());
+					opts.setDummyIsotopeLabels(m_modelDummyIsotopeLabels.getBooleanValue());
+					opts.setCentreMoleculesBeforeDrawing(m_modelCenterBeforeDrawing.getBooleanValue());
+					opts.setPrepareMolsBeforeDrawing(m_modelPrepareBeforeDrawing.getBooleanValue());
+					opts.setExplicitMethyl(m_modelExplicitMethyl.getBooleanValue());
+					opts.setIncludeRadicals(m_modelIncludeRadicals.getBooleanValue());
+					opts.setComicMode(m_modelComicModeOption.getBooleanValue());
+					opts.setNoAtomLabels(m_modelNoAtomLabelsOption.getBooleanValue());
+					opts.setIncludeChiralFlagLabel(m_modelIncludeChiralFlagOption.getBooleanValue());
+					opts.setSimplifiedStereoGroupLabel(m_modelSimplifiedStereoGroupsOption.getBooleanValue());
+					opts.setSingleColourWedgeBonds(m_modelSingleColorWedgeBondsOption.getBooleanValue());
+					opts.setBondLineWidth(m_modelBondLineWidthOption.getIntValue());
+					opts.setMinFontSize(m_modelMinFontSizeOption.getIntValue());
+					opts.setMaxFontSize(m_modelMaxFontSizeOption.getIntValue());
+					opts.setAnnotationFontScale(m_modelAnnotationFontScaleOption.getDoubleValue());
+					
+					if(m_modelBWModeOption.getBooleanValue()) {
+						RDKFuncs.assignBWPalette(opts.getAtomColourPalette());
+					}
 					molDrawing.drawMolecule(mol);
 					molDrawing.finishDrawing();
 

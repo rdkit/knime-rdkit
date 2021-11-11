@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
+    <name>RDKit Molecule to SVG</name>
+
+    <shortDescription>
+        Creates an SVG column showing a molecule
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            Creates an SVG column showing a molecule 
+            A molecule column needs to be provided. 
+        </intro>
+
+           <tab name="Options">
+            <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+            <option name="New column name">The name of the new column, which will contain the canonical SMILES.</option>
+            <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+        </tab>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Table with RDKit Molecules">Table with an RDKit Molecules.</inPort>
+        <outPort index="0" name="Table with SVGs">The input table with an additional column that shows the SVG molecule graphic.</outPort>
+    </ports>
+</knimeNode>

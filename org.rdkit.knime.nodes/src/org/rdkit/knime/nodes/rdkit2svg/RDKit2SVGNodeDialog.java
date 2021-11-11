@@ -139,36 +139,37 @@ public class RDKit2SVGNodeDialog extends DefaultNodeSettingsPane {
 				new DialogComponentBoolean(createRemoveSourceColumnsOptionModel(), "Remove source column"));
 
 		super.createNewTab("Drawing Options");
-		super.addDialogComponent(new DialogComponentBoolean(createClearBackgroundOptionModel(), "Clear background"));
-		super.addDialogComponent(
-				new DialogComponentBoolean(createDummiesAreAttachmentsOptionModel(), "Dummies are attachment points"));
-		super.addDialogComponent(new DialogComponentBoolean(createAddAtomIndicesOptionModel(), "Add atom indices"));
-		super.addDialogComponent(new DialogComponentBoolean(createAddBondIndicesOptionModel(), "Add bond indices"));
-		super.addDialogComponent(
-				new DialogComponentBoolean(createIsotopeLabelsOptionModel(), "Include isotope labels"));
-		super.addDialogComponent(
-				new DialogComponentBoolean(createDummyIsotopeLabelsOptionModel(), "Include isotope labels on dummies"));
-		super.addDialogComponent(
-				new DialogComponentBoolean(createAddStereoAnnotationOptionModel(), "Add stereo annotations"));
-		super.addDialogComponent(
-				new DialogComponentBoolean(createCenterBeforeDrawingOptionModel(), "Center before drawing"));
 		super.addDialogComponent(
 				new DialogComponentBoolean(createPrepareBeforeDrawingOptionModel(), "Prepare before drawing"));
 		super.addDialogComponent(
-				new DialogComponentBoolean(createExplicitMethylOptionModel(), "Draw explicit methyl groups"));
-		super.addDialogComponent(new DialogComponentBoolean(createIncludeRadicalsOptionModel(), "Draw radicals"));
-		super.addDialogComponent(new DialogComponentBoolean(createComicModeOptionModel(), "Comic mode"));
-		super.addDialogComponent(new DialogComponentBoolean(createBWModeOptionModel(), "Black&White mode"));
-		super.addDialogComponent(new DialogComponentBoolean(createNoAtomLabelsOptionModel(), "No atom labels"));
+				new DialogComponentBoolean(createCenterBeforeDrawingOptionModel(), "Center before drawing"));
+		super.addDialogComponent(new DialogComponentBoolean(createClearBackgroundOptionModel(), "Clear background"));
+		super.addDialogComponent(new DialogComponentBoolean(createAddAtomIndicesOptionModel(), "Add atom indices"));
+		super.addDialogComponent(new DialogComponentBoolean(createAddBondIndicesOptionModel(), "Add bond indices"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createAddStereoAnnotationOptionModel(), "Add stereo annotations"));
 		super.addDialogComponent(
 				new DialogComponentBoolean(createIncludeChiralFlagOptionModel(), "Include chiral flag"));
 		super.addDialogComponent(
 				new DialogComponentBoolean(createSimplifiedStereoGroupsOptionModel(), "Use simplified stereo groups"));
 		super.addDialogComponent(
 				new DialogComponentBoolean(createSingleColorWedgeBondsOptionModel(), "Single color wedge bonds"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createExplicitMethylOptionModel(), "Draw explicit methyl groups"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createDummiesAreAttachmentsOptionModel(), "Dummies are attachment points"));
+		super.addDialogComponent(new DialogComponentBoolean(createIncludeRadicalsOptionModel(), "Draw radicals"));
+		super.addDialogComponent(new DialogComponentBoolean(createNoAtomLabelsOptionModel(), "No atom labels"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createIsotopeLabelsOptionModel(), "Include isotope labels"));
+		super.addDialogComponent(
+				new DialogComponentBoolean(createDummyIsotopeLabelsOptionModel(), "Include isotope labels on dummies"));
+		super.addDialogComponent(new DialogComponentBoolean(createComicModeOptionModel(), "Comic mode"));
+		super.addDialogComponent(new DialogComponentBoolean(createBWModeOptionModel(), "Black&White mode"));
 
 		super.addDialogComponent(
 				new DialogComponentNumber(createBondLineWidthOptionModel(), "Line width for bonds", 1));
+
 		super.addDialogComponent(new DialogComponentNumber(createMinFontSizeOptionModel(), "Min font size", 1));
 		super.addDialogComponent(new DialogComponentNumber(createMaxFontSizeOptionModel(), "Max font size", 1));
 		super.addDialogComponent(

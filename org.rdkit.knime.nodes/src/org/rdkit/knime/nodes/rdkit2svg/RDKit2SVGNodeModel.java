@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
+ * Copyright (C) 2021
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -314,7 +314,6 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
-					// This is necessary for the RDKit changes in the SVG generation
 					if (mol.getNumConformers() == 0) {
 						mol.compute2DCoords();
 					}
@@ -348,7 +347,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					molDrawing.drawMolecule(mol);
 					molDrawing.finishDrawing();
 
-					final String xmlSvg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");
+					final String xmlSvg = molDrawing.getDrawingText();
 
 					
 					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {

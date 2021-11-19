@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -10,7 +11,7 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<revision>4.3.1</revision>
+		<revision>4.4.0</revision>
 		<changelist>-SNAPSHOT</changelist>
 		<knime.version>4.3</knime.version>
 		<tycho.version>1.5.1</tycho.version>
@@ -136,8 +137,9 @@
 
 		<plugins>
 			<plugin>
-				<!-- This plugin configuration block is only needed if the repository contains plug-ins that don't have any sources. If it is omitted
-		 		Tycho will complain. -->
+				<!-- This plugin configuration block is only needed if the repository 
+					contains plug-ins that don't have any sources. If it is omitted Tycho will 
+					complain. -->
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
 				<executions>
@@ -151,9 +153,9 @@
 				</executions>
 				<configuration>
 					<excludes>
-						<plugin id="org.rdkit.knime.bin.linux.x86_64"/>
-						<plugin id="org.rdkit.knime.bin.win32.x86_64"/>
-						<plugin id="org.rdkit.knime.bin.macosx.x86_64"/>
+						<plugin id="org.rdkit.knime.bin.linux.x86_64" />
+						<plugin id="org.rdkit.knime.bin.win32.x86_64" />
+						<plugin id="org.rdkit.knime.bin.macosx.x86_64" />
 					</excludes>
 				</configuration>
 			</plugin>

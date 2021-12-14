@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.testing.feature"
       label="RDKit Nodes Tests Feature"
-      version="4.3.1.qualifier"
+      version="4.4.1.qualifier"
       provider-name="NIBR">
 
    <description>

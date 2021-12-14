@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.wizards.feature"
       label="RDKit Nodes Creation Wizards Feature"
-      version="4.3.1.qualifier"
+      version="4.4.1.qualifier"
       provider-name="NIBR"
       plugin="org.rdkit.knime.wizards">
 

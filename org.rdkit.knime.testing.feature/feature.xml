@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.rdkit.knime.testing.feature"
-      label="RDKit KNIME JUnit Test"
-      version="4.2.0.qualifier"
+      label="RDKit Nodes Tests Feature"
+      version="4.5.0.qualifier"
       provider-name="NIBR">
 
    <description>
-      JUnit tests specially developed for RDKit.
+      Regression and unit tests used when automatically building the RDKit KNIME extensions to ensure high quality.
    </description>
 
    <copyright>
-      Copyright (C) 2012-2019 Novartis Institutes for BioMedical Research
+      Copyright (C) 2012-2021 Novartis Institutes for BioMedical Research
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

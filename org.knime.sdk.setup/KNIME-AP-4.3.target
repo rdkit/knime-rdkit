@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?>
-<target includeMode="feature" name="KNIME Analytics Platform 4.3">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target includeMode="feature" name="KNIME Analytics Platform 4.3">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="com.knime.features.explorer.serverspace.feature.group" version="0.0.0"/>
@@ -19,10 +17,6 @@
 <unit id="org.knime.features.xml.feature.group" version="0.0.0"/>
 <unit id="org.knime.targetPlatform.feature.group" version="0.0.0"/>
 <repository location="https://update.knime.org/analytics-platform/4.3/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="jp.co.infocom.cheminfo.marvin.feature.feature.group" version="0.0.0"/>
-<repository location="https://update.knime.com/partner/4.3/"/>
 </location>
 </locations>
 </target>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
+    <name>RDKit Molecule to SVG</name>
+
+    <shortDescription>
+        Creates an SVG column showing a molecule
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            Creates an SVG column showing a molecule 
+            A molecule column needs to be provided. 
+        </intro>
+
+           <tab name="Options">
+            <option name="RDKit Mol column">The input column with RDKit Molecules.</option>
+            <option name="New column name">The name of the new column which will contain the SVG.</option>
+            <option name="Remove source column">Set to true to remove the specified source column from the result table.</option>
+           </tab>
+           <tab name="Drawing Options">
+            <option name="Prepare before drawing">Perform a number of cleanup operations on the molecule before drawing it. The operations performed are:
+            <ol>
+            <li>Kekulization</li>
+            <li>Adding chiral Hs</li>
+            <li>Generating 2D coordinates (if necessary)</li>
+            <li>Wedging bonds around chiral centers</li>
+            <li>Adding wavy bonds around chiral centers which have been marked as unspecified</li>
+            </ol>
+            </option>
+            <option name="Center before drawing">Centers the molecule at the origin before drawing</option>
+            <option name="Clear background">Clears the background with the current background color before drawing</option>
+            <option name="Add atom indices">Includes atom indices in the drawing</option>
+            <option name="Add bond indices">Includes bond indices in the drawing</option>
+            <option name="Add stereo annotations">Adds R/S labels and enhanced stereo annotations to the drawing</option>
+            <option name="Include chiral flag">Adds the chiral flag if set on the molecule</option>
+            <option name="Use simplified stereo groups">Simplifies the drawing of molecules where all specified chiral centers are in one stereo group.</option>
+            <option name="Single color wedge bonds">Draws wedge bonds as single color</option>
+            <option name="Draw explicit methyl groups">Draws terminal methyl groups as CH3</option>
+            <option name="Dummies are attachment points">Draws dummies as attachment points - wavy lines perpendicular to the bond</option>
+            <option name="Draw radicals">Draws radical dots</option>
+            <option name="No atom labels">If set, no atom labels will be drawn</option>
+            <option name="Include isotope labels">Includes information about isotopes</option>
+            <option name="Include isotope labels on dummies">Includes information about isotopes on dummy atoms</option>
+            <option name="Comic mode">Activates "comic mode" - this simulates hand-drawn structures</option>
+            <option name="Black&amp;White mode">Activates black and white mode. No atom/bond coloring is used</option>
+            <option name="Line width for bonds">The line width to be used when drawing bonds</option>
+            <option name="Min font size">The minimum font size</option>
+            <option name="Max font size">The maximum font size</option>
+            <option name="Annotation font scale">The annotation font size is set as a fraction of the symbol font size. This determines that fraction.</option>
+           </tab>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Table with RDKit Molecules">Table with an RDKit Molecules.</inPort>
+        <outPort index="0" name="Table with SVGs">The input table with an additional column that shows the SVG molecule graphic.</outPort>
+    </ports>
+</knimeNode>

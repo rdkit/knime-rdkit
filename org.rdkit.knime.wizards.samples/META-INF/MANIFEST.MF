@@ -1,16 +1,16 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: RDKit Node Wizards Samples
+Bundle-Name: RDKit Nodes Creation Wizards Samples
 Bundle-SymbolicName: org.rdkit.knime.wizards.samples;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.wizards.samples
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.5.0.qualifier
 Bundle-Activator: org.rdkit.knime.wizards.samples.Activator
 Bundle-Vendor: NIBR
-Require-Bundle: org.knime.base;bundle-version="[3.6.2,5.0.0)",
- org.knime.chem.types;bundle-version="[3.6.0,5.0.0)",
- org.rdkit.knime.nodes;bundle-version="[4.0.0,5.0.0)",
- org.rdkit.knime.types;bundle-version="[4.0.0,5.0.0)",
- org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
- org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)"
+Require-Bundle: org.knime.base;bundle-version="[4.3.0,5.0.0)";resolution:=optional,
+ org.knime.chem.types;bundle-version="[4.3.0,5.0.0)";resolution:=optional,
+ org.rdkit.knime.nodes;bundle-version="[4.5.0,5.0.0)";resolution:=optional,
+ org.rdkit.knime.types;bundle-version="[4.5.0,5.0.0)";resolution:=optional,
+ org.eclipse.ui;bundle-version="[3.116.0,4.0.0)";resolution:=optional,
+ org.eclipse.core.runtime;bundle-version="[3.17.0,4.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

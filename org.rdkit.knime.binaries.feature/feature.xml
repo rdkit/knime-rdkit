@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.rdkit.knime.binaries.feature"
-      label="RDKit Binaries for Java"
-      version="4.2.0.qualifier"
+      label="RDKit Binaries and Chemistry Type Definitions Feature"
+      version="4.5.0.qualifier"
       provider-name="NIBR">
 
    <description>
-      This feature contains RDKit binaries for use as dependencies for other packages.
+      This feature contains RDKit binaries for use as dependencies for other packages as well as chemistry type definitions for KNIME.
    </description>
 
    <copyright>
-      Copyright (C) 2010-2019 Novartis Institutes for BioMedical Research
+      Copyright (C) 2010-2021 Novartis Institutes for BioMedical Research
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">
-      GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
+GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. &lt;https://fsf.org/&gt;
  Everyone is permitted to copy and distribute verbatim copies

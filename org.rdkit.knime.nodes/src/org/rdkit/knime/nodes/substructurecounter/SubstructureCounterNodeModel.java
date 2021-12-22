@@ -142,6 +142,10 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 	private final SettingsModelBoolean m_modelUseChirality =
 			registerSettings(SubstructureCounterNodeDialog.createUseChiralityModel(), true);
 
+	/** Settings model for the option to use enhanced stereo in the match. Added in March 2021. */
+	private final SettingsModelBoolean m_modelUseEnhancedStereo =
+			registerSettings(SubstructureCounterNodeDialog.createUseEnhancedStereoModel(m_modelUseChirality), true);
+
 	/** Settings model for the option to use a query name column. */
 	private final SettingsModelBoolean m_modelUseQueryNameColumn =
 			registerSettings(SubstructureCounterNodeDialog.createUseQueryNameColumnModel(), true);
@@ -522,6 +526,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 
 			final SubstructMatchParameters ps = markForCleanup(new SubstructMatchParameters());
 			ps.setUseChirality(m_modelUseChirality.getBooleanValue());
+    		ps.setUseEnhancedStereo(m_modelUseEnhancedStereo.getBooleanValue());
 			ps.setUniquify(m_modelUniqueMatchesOnly.getBooleanValue());
 			
 			// Generate factory
@@ -668,7 +673,7 @@ public class SubstructureCounterNodeModel extends AbstractRDKitCalculatorNodeMod
 
 				// Or a SMILES (or SMARTS conversion failed)
 				if (strQueryMolString == null) {
-					strQueryMolString = mol.MolToSmiles(true);
+					strQueryMolString = RDKFuncs.MolToCXSmiles(mol);					
 				}
 
 				// Fallback, if SMARTS/SMILES conversion failed

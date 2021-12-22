@@ -60,6 +60,7 @@ import org.RDKit.ColourPalette;
 import org.RDKit.DrawColour;
 import org.RDKit.Int_Vect;
 import org.RDKit.MolDraw2DSVG;
+import org.RDKit.MolDrawOptions;
 import org.RDKit.ROMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
@@ -417,6 +418,8 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					}
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
+					MolDrawOptions opts = molDrawing.drawOptions();
+					opts.setAddStereoAnnotation(true);
 					molDrawing.drawMolecule(mol, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 

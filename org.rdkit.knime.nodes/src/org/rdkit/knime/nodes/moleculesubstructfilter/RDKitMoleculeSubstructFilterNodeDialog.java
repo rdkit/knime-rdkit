@@ -102,8 +102,17 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 		final DialogComponent compQueryColumn = add(new DialogComponentColumnNameSelection(
 				createQueryColumnNameModel(), "Query Mol column: ", 1,
 				arrClassesQueryType));
-		final DialogComponent compUseChirality = add(new DialogComponentBoolean(createUseChiralityModel(),
+		
+
+		final SettingsModelBoolean modelUseChiralityOption = createUseChiralityModel();
+		final DialogComponent compUseChirality = add(new DialogComponentBoolean(modelUseChiralityOption,
 				"Use stereochemistry"));
+		final DialogComponent compUseEnhancedStereo = add(
+				new DialogComponentBoolean(createUseEnhancedStereoModel(modelUseChiralityOption),
+						"Use enhanced stereochemistry when matching"));
+
+		
+		
 		final SettingsModelEnumeration<MatchingCriteria> modelMatchingCriteria =
 				createMatchingCriteriaModel();
 		final DialogComponent compMatchingCriteria = add(new DialogComponentEnumButtonGroup<MatchingCriteria>(
@@ -133,6 +142,10 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
 				0, 10, 0, 10);
 		LayoutUtils.constrain(panel, compUseChirality.getComponentPanel(),
+				0, iRow++, LayoutUtils.REMAINDER, 1,
+				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
+				0, 10, 0, 10);
+		LayoutUtils.constrain(panel, compUseEnhancedStereo.getComponentPanel(),
 				0, iRow++, LayoutUtils.REMAINDER, 1,
 				LayoutUtils.NONE, LayoutUtils.CENTER, 0.0d, 0.0d,
 				0, 10, 0, 10);
@@ -268,6 +281,32 @@ public class RDKitMoleculeSubstructFilterNodeDialog extends DefaultNodeSettingsP
 	 */
 	static final SettingsModelBoolean createUseChiralityModel() {
 		return new SettingsModelBoolean("use_chirality", false);
+	}
+	
+	/**
+	 * Creates the settings model to be used to specify the option
+	 * to use enhanced stereo in the matching.
+	 * Added in March 2021.
+	 * 
+	 * @return Settings model for useEnhancedStereo option.
+	 */
+	static final SettingsModelBoolean createUseEnhancedStereoModel(final SettingsModelBoolean modelUseChiralityOption) {
+		final SettingsModelBoolean modelWithDependency = new SettingsModelBoolean("useEnhancedStereo", false);
+
+		// React on any changes
+		modelUseChiralityOption.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				// Enable or disable the model
+				modelWithDependency.setEnabled(modelUseChiralityOption.getBooleanValue());
+			}
+		});
+
+		// Enable this model based on the dependent model's state
+		modelWithDependency.setEnabled(modelUseChiralityOption.getBooleanValue());
+
+		return modelWithDependency;
 	}
 
 	/**

@@ -20,6 +20,7 @@
         <tab name="Search">
             <option name="Count Unique Matches Only?">This option is selected if user requires unique matches of the query molecule in an input molecule.</option>
             <option name="Use chirality">If this is set, information about stereochemistry will be used in the substructure search.</option>
+            <option name="Use enhanced stereochemistry">If this is set, information about enhanced stereochemistry will be used in the substructure search.</option>
         </tab>
         <tab name="Output">
             <option name="Instead of query molecules use names as result header titles (and tags)">

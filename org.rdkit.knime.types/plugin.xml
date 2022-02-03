@@ -14,6 +14,16 @@
    	   	  		cellClass="org.rdkit.knime.types.RDKitAdapterCell" 
    	   	  		serializerClass="org.rdkit.knime.types.RDKitAdapterCell$RDKitAdapterCellSerializer">
           </serializer>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitMolCell2"
+                valueFactoryClass="org.rdkit.knime.types.RDKitMolCellValueFactory">
+          </ValueFactory>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitAdapterCell"
+                valueFactoryClass="org.rdkit.knime.types.RDKitAdapterCellValueFactory">
+          </ValueFactory>
       </DataType>
    </extension>
    
@@ -23,6 +33,11 @@
                 cellClass="org.rdkit.knime.types.RDKitReactionCell"
                 serializerClass="org.rdkit.knime.types.RDKitReactionCell$RDKitReactionSerializer">
           </serializer>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitReactionCell"
+                valueFactoryClass="org.rdkit.knime.types.RDKitReactionCellValueFactory">
+          </ValueFactory>
    	   </DataType>
    </extension>
    
@@ -136,5 +151,48 @@
             python-serializer="python/RDKitLongSparseIntVectSerializer.py"
             java-deserializer-factory="org.rdkit.knime.types.RDKitCountBasedFingerprintDeserializer$Factory">
       	</type>   
+   </extension>
+   <extension
+         point="org.knime.python3.types.PythonValueFactory">
+      <Module
+            modulePath="python3" moduleName="knime.types.ext.rdkit">
+         <PythonValueFactory
+               PythonClassName="RDKitMolValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitMolCellValueFactory">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitMolAdapterValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitAdapterCellValueFactory">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitReactionValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitReactionCellValueFactory">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitFingerprintValueFactory"
+               ValueFactory="org.knime.core.data.v2.value.DenseBitVectorValueFactory"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryUInt"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryInt"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryULong"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryLong"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+      </Module>
    </extension>   
    </plugin>

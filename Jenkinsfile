@@ -192,7 +192,8 @@ pipeline {
 							reportDir: 'org.rdkit.knime.update/target/repository/reports',
 							reportFiles: [ 'dependency-check-report.html' ],
 							allowMissing: true,
-							alwaysLinkToLastBuild: true
+							alwaysLinkToLastBuild: true,
+							keepAll: false
 					
 					sh '''#!/bin/bash     
 						# Check for hs_err_XXX file, which would tell us that the test run crashed (e.g. because of RDKit) - in that case no error would be recorded

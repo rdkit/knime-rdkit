@@ -22,6 +22,14 @@ pipeline {
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"
     	M2_HOME = "/apps/knime/buildtools/apache-maven"
 		PATH = "${M2_HOME}/bin:${PATH}"
+
+		// OWASP Dependency Check settings
+		// Installation folder (optional, will just not run if it does not exist)
+		DC_HOME = "/apps/knime/buildtools/dependency-check"
+		// CVSS score threshold that is considered a failure (with this value or above)
+		CVSS_SCORE_THRESHOLD = 4
+		// File with exceptions (false positives that we accept)		
+		DC_SUPPRESSION_FILES = "${WORKSPACE}/check-dependencies-suppressions.xml"
 		
 		// Scripts required for testing and deployment
 		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
@@ -135,6 +143,17 @@ pipeline {
 		        }
 		    }    
         }
+        stage('OWASP Dependency Check') {
+        	when { expression { return fileExists ('${DC_HOME}/bin/dependency-check.sh') } }
+        	steps {
+				// Run OWASP Dependency Check CLI tool on created update site
+				sh '''#!/bin/bash
+					cd "${WORKSPACE}/org.rdkit.knime.update/target"
+					mkdir -p results
+					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./results" --format "HTML" --format "JSON" --format "JUNIT" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}"
+				'''
+			}                                 
+		}
         stage('Run Tests') {
         	steps {
 				// Installs with the Director tool a new minimal KNIME instance with the build artifacts (needs to run as bash script!)
@@ -165,10 +184,16 @@ pipeline {
 				'''
         	}
             post {
-				// Archive always the available test results
+				// Archive always the available test and OWASP dependency check results
                 always {
                     junit 'results/**/*.xml'
-	
+					
+					publishHTML reportName: 'OWASP Dependency Check Results',
+							reportDir: 'org.rdkit.knime.update/target/repository/reports',
+							reportFiles: [ 'dependency-check-report.html' ],
+							allowMissing: true,
+							alwaysLinkToLastBuild: true
+					
 					sh '''#!/bin/bash     
 						# Check for hs_err_XXX file, which would tell us that the test run crashed (e.g. because of RDKit) - in that case no error would be recorded
 						# and we would treat a test as successful, although it is not - Exit the script in that case

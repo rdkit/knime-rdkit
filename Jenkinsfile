@@ -144,7 +144,7 @@ pipeline {
 		    }    
         }
         stage('OWASP Dependency Check') {
-        	when { expression { return fileExists ('${DC_HOME}/bin/dependency-check.sh') } }
+        	when { expression { return fileExists ("${DC_HOME}/bin/dependency-check.sh") } }
         	steps {
 				// Run OWASP Dependency Check CLI tool on created update site
 				sh '''#!/bin/bash

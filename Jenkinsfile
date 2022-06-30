@@ -29,7 +29,7 @@ pipeline {
 		// CVSS score threshold that is considered a failure (with this value or above)
 		CVSS_SCORE_THRESHOLD = 4
 		// File with exceptions (false positives that we accept)		
-		DC_SUPPRESSION_FILES = "${WORKSPACE}/check-dependencies-suppressions.xml"
+		DC_SUPPRESSION_FILE = "${WORKSPACE}/check-dependencies-suppressions.xml"
 		
 		// Scripts required for testing and deployment
 		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"

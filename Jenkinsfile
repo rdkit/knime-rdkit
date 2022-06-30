@@ -149,15 +149,15 @@ pipeline {
 				// Run OWASP Dependency Check CLI tool on created update site
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}/org.rdkit.knime.update/target"
-					mkdir -p results
-					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./results" --format "HTML" --format "JSON" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
+					mkdir -p reports
+					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./reports" --format "HTML" --format "JSON" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
 				'''
 			}                                 
             post {
 				// Archive always the available OWASP dependency check results
                 always {
 					publishHTML reportName: 'OWASP Dependency Check Results',
-							reportDir: 'org.rdkit.knime.update/target/repository/reports',
+							reportDir: 'org.rdkit.knime.update/target/reports',
 							reportFiles: 'dependency-check-report.html',
 							allowMissing: true,
 							alwaysLinkToLastBuild: true,

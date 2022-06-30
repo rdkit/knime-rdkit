@@ -27,7 +27,7 @@ pipeline {
 		// Installation folder (optional, will just not run if it does not exist)
 		DC_HOME = "/apps/knime/buildtools/dependency-check"
 		// CVSS score threshold that is considered a failure (with this value or above)
-		CVSS_SCORE_THRESHOLD = 4
+		CVSS_SCORE_THRESHOLD = 7
 		// File with exceptions (false positives that we accept)		
 		DC_SUPPRESSION_FILE = "${WORKSPACE}/check-dependencies-suppressions.xml"
 		

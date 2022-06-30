@@ -150,7 +150,7 @@ pipeline {
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}/org.rdkit.knime.update/target"
 					mkdir -p results
-					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./results" --format "HTML" --format "JSON" --format "JUNIT" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE} --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
+					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./results" --format "HTML" --format "JSON" --format "JUNIT" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
 				'''
 			}                                 
 		}

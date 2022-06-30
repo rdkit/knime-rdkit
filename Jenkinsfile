@@ -153,6 +153,19 @@ pipeline {
 					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./results" --format "HTML" --format "JSON" --format "JUNIT" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
 				'''
 			}                                 
+            post {
+				// Archive always the available OWASP dependency check results
+                always {
+                    junit 'org.rdkit.knime.update/target/repository/reports/dependency-check-report.xml'
+                    
+					publishHTML reportName: 'OWASP Dependency Check Results',
+							reportDir: 'org.rdkit.knime.update/target/repository/reports',
+							reportFiles: 'dependency-check-report.html',
+							allowMissing: true,
+							alwaysLinkToLastBuild: true,
+							keepAll: false
+				}
+			}
 		}
         stage('Run Tests') {
         	steps {
@@ -184,17 +197,10 @@ pipeline {
 				'''
         	}
             post {
-				// Archive always the available test and OWASP dependency check results
+				// Archive always the available test results
                 always {
                     junit 'results/**/*.xml'
-					
-					publishHTML reportName: 'OWASP Dependency Check Results',
-							reportDir: 'org.rdkit.knime.update/target/repository/reports',
-							reportFiles: [ 'dependency-check-report.html' ],
-							allowMissing: true,
-							alwaysLinkToLastBuild: true,
-							keepAll: false
-					
+                    					
 					sh '''#!/bin/bash     
 						# Check for hs_err_XXX file, which would tell us that the test run crashed (e.g. because of RDKit) - in that case no error would be recorded
 						# and we would treat a test as successful, although it is not - Exit the script in that case

@@ -156,7 +156,7 @@ pipeline {
             post {
 				// Archive always the available OWASP dependency check results
                 always {
-                    junit 'org.rdkit.knime.update/target/repository/reports/dependency-check-report.xml'
+                    junit 'org.rdkit.knime.update/target/repository/reports/*.xml'
                     
 					publishHTML reportName: 'OWASP Dependency Check Results',
 							reportDir: 'org.rdkit.knime.update/target/repository/reports',

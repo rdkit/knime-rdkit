@@ -278,19 +278,19 @@ pipeline {
     }
 	post {
         failure {
-            emailext body: "Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}", 
+            mailto body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
                     recipientProviders: [developers(), requestor()],
-                    to: "${EMAIL_TO}", 
-                    subject: "Build failed in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
+                    to: '${EMAIL_TO}', 
+                    subject: 'Build failed in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER'
         }
         unstable {
-            emailext body: "Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}", 
+            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
                     recipientProviders: [developers(), requestor()],
                     to: "${EMAIL_TO}", 
                     subject: "Unstable build in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
         }
         fixed {
-            emailext body: "Check console output at $BUILD_URL to view the results.", 
+            emailext body: 'Check console output at $BUILD_URL to view the results.', 
                     recipientProviders: [developers(), requestor()],
                     to: "${EMAIL_TO}", 
                     subject: "Jenkins build started working again: $PROJECT_NAME - #$BUILD_NUMBER"

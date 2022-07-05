@@ -15,8 +15,8 @@ pipeline {
     	// Email addresses to be notified about failures, unstable tests or fixes
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
-		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "4.3"
+	// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
+    	KNIME_VERSION = "4.4"
 
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"

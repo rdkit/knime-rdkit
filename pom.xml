@@ -53,6 +53,19 @@
 			<plugins>
 				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-compiler-plugin</artifactId>
+					<version>${tycho.version}</version>
+					<configuration>
+						<compilerArgs>
+							<arg>--module-path</arg>
+							<arg>${java.home}/jmods</arg>
+							<arg>--add-modules</arg>
+							<arg>jdk.xml.dom</arg>
+						</compilerArgs>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>tycho-maven-plugin</artifactId>
 					<version>${tycho.version}</version>
 					<extensions>true</extensions>

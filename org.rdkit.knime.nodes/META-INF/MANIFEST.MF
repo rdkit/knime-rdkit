@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.nodes
-Bundle-Version: 4.5.0.qualifier
+Bundle-Version: 4.6.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
@@ -62,4 +62,3 @@ Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/opsin-core-3.0-SNAPSHOT-2022-07-04-jar-with-dependencies.jar
-Import-Package: org.w3c.dom.events;version="3.0.0"

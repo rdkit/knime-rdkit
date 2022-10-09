@@ -68,6 +68,7 @@ try:
         ULongSparseIntVect,
         LongSparseIntVect,
     )
+    from rdkit.DataStructs import CreateFromBinaryText, BitVectToBinaryText
 
 except ImportError as e:
     LOGGER.info(
@@ -153,19 +154,16 @@ class RDKitFingerprintValueFactory(kt.PythonValueFactory):
     def decode(self, storage):
         if storage is None:
             return None
-        import rdkit
 
-        length = int.from_bytes(storage[:8], byteorder="little")
-        fp = rdkit.DataStructs.CreateFromBinaryText(storage[8:])
+        fp = CreateFromBinaryText(storage[8:])
         return fp
 
     def encode(self, value):
         if value is None:
             return None
-        import rdkit
 
         length_bytes = len(value).to_bytes(length=8, byteorder="little")
-        return length_bytes + rdkit.DataStructs.BitVectToBinaryText(value)
+        return length_bytes + BitVectToBinaryText(value)
 
 
 class AbstractRDKitCountFingerprintValueFactory(kt.PythonValueFactory):
@@ -190,7 +188,7 @@ class AbstractRDKitCountFingerprintValueFactory(kt.PythonValueFactory):
 
         ba = bytearray(value.GetLength())
         for idx, v in value.GetNonzeroElements().items():
-            ba[idx] = v
+            ba[idx] = v % 256
         return ba
 
 

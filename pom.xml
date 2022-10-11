@@ -11,9 +11,9 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<revision>4.6.1</revision>
+		<revision>4.7.0</revision>
 		<changelist>-SNAPSHOT</changelist>
-		<knime.version>4.6</knime.version>
+		<knime.version>4.7</knime.version>
 		<tycho.version>2.7.3</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
 		<qualifier.prefix>v</qualifier.prefix>
@@ -51,6 +51,19 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-compiler-plugin</artifactId>
+					<version>${tycho.version}</version>
+					<configuration>
+						<compilerArgs>
+							<arg>--module-path</arg>
+							<arg>${java.home}/jmods</arg>
+							<arg>--add-modules</arg>
+							<arg>jdk.xml.dom</arg>
+						</compilerArgs>
+					</configuration>
+				</plugin>
 				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>tycho-maven-plugin</artifactId>

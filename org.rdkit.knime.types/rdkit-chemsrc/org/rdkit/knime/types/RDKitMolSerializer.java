@@ -2,7 +2,6 @@ package org.rdkit.knime.types;
 
 import java.io.IOException;
 
-import org.RDKit.ROMol;
 import org.knime.python.typeextension.Serializer;
 import org.knime.python.typeextension.SerializerFactory;
 
@@ -48,30 +47,6 @@ public class RDKitMolSerializer implements Serializer<RDKitMolValue> {
 	 */
 	@Override
 	public byte[] serialize(final RDKitMolValue value) throws IOException {
-		byte[] arrBinaryMolecule = null;
-
-		if (value != null) {
-			// Shortcut for the normal case that we have a normal RDKit Mol Cell
-			if (value instanceof RDKitMolCell2) {
-				arrBinaryMolecule = ((RDKitMolCell2)value).getBinaryValue();
-			}
-
-			// Longer way if we have a different implementation (e.g. Adapter Cell), which is slower but always works
-			else {
-				ROMol mol = null;
-
-				try {
-					mol = value.readMoleculeValue();
-					arrBinaryMolecule = RDKitMolCell2.toByteArray(mol);
-				}
-				finally {
-					if (mol != null) {
-						mol.delete();
-					}
-				}
-			}
-		}
-
-		return arrBinaryMolecule;
+		return RDKitTypeSerializationUtils.serializeMolValue(value);
 	}
 }

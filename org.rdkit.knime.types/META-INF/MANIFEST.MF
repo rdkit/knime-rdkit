@@ -5,29 +5,29 @@ Export-Package: org.RDKit,
  org.rdkit.knime.types,
  org.rdkit.knime.types.preferences,
  org.rdkit.knime.util
-Require-Bundle: org.knime.base;bundle-version="[4.2.0,5.0.0)",
+Require-Bundle: org.knime.base;bundle-version="[4.6.0,5.0.0)",
  org.eclipse.osgi;bundle-version="[3.12.100,4.0.0)",
  org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)",
  org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
- org.knime.ext.svg;bundle-version="[4.2.0,5.0.0)",
+ org.knime.ext.svg;bundle-version="[4.6.0,5.0.0)",
  org.apache.batik.dom.svg;bundle-version="[1.13.0,1.14.0)",
  org.apache.batik.util;bundle-version="[1.13.0,1.14.0)",
- org.knime.chem.types;bundle-version="[4.2.0,5.0.0)",
- org.knime.workbench.repository;bundle-version="[4.2.0,5.0.0)",
- org.knime.workbench.ui;bundle-version="[4.2.0,5.0.0)",
- org.knime.python.typeextensions;bundle-version="[4.2.0,5.0.0)";resolution:=optional
+ org.knime.chem.types;bundle-version="[4.6.0,5.0.0)",
+ org.knime.workbench.repository;bundle-version="[4.6.0,5.0.0)",
+ org.knime.workbench.ui;bundle-version="[4.6.0,5.0.0)",
+ org.knime.python.typeextensions;bundle-version="[4.6.0,5.0.0)";resolution:=optional
 Bundle-Vendor: NIBR
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
  lib/gson-2.10.jar,
  lib/org.RDKit.jar,
  lib/org.RDKitDoc.jar
-Bundle-Version: 4.6.0.qualifier
+Bundle-Version: 4.6.1.qualifier
 Bundle-Name: RDKit Chemistry Type Definitions
 Bundle-Activator: org.rdkit.knime.RDKitTypesPluginActivator
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.rdkit.knime.types;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.types
 Eclipse-RegisterBuddy: org.knime.base
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.w3c.dom.events;version="3.0.0"

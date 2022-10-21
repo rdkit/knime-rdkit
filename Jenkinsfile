@@ -17,7 +17,7 @@ pipeline {
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
 		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "4.3"
+    	KNIME_VERSION = "4.6"
     	
     	// The Java version to be used to compile and build - possible values are java8, java11 and java17
     	JAVA_VERSION = "java8"
@@ -138,12 +138,12 @@ pipeline {
 				// Cleanup old data from last build
 				sh "rm -rf tmp results mirrorWorkspace"
 			}
-		}	 
+		}	
         stage('Compile and Build') {
         	steps {
 	            // Compiles the plugin and builds an update site from it
 		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-					sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/${JAVA_VERSION} && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+					sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/java17 && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
 		        }
 		    }    
         }
@@ -278,7 +278,7 @@ pipeline {
 					  quietPeriod: 0, 
 					  wait: false
 			}
-        }
+        }		 
     }
 	post {
 		// Use only ${env.NODE_NAME}, ${env.BUILD_URL}, ${env.JOB_NAME} and ${env.BUILD_NUMBER} in parameters

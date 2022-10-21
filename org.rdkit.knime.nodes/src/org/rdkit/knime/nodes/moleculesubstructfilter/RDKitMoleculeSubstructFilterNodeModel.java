@@ -91,7 +91,6 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.nodes.rdkfingerprint.DefaultFingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintSettings;
 import org.rdkit.knime.nodes.rdkfingerprint.FingerprintType;
-import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeDialog;
 import org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeModel;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;

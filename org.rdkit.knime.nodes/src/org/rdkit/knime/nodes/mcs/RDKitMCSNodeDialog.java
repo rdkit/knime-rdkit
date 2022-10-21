@@ -112,7 +112,7 @@ public class RDKitMCSNodeDialog extends DefaultNodeSettingsPane {
 				RDKitMolValue.class));
 		super.addDialogComponent(new DialogComponentNumber(createThresholdModel(),
 				"Threshold:",
-				new Double(0.05d), 4));
+				Double.valueOf(0.05d), 4));
 		super.addDialogComponent(new DialogComponentBoolean(createRingMatchesRingOnlyOptionModel(),
 				"Ring matches ring only"));
 		super.addDialogComponent(new DialogComponentBoolean(createCompleteRingsOnlyOptionModel(),

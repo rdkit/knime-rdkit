@@ -158,39 +158,47 @@
             modulePath="python3" moduleName="knime.types.ext.rdkit">
          <PythonValueFactory
                PythonClassName="RDKitMolValueFactory"
-               ValueFactory="org.rdkit.knime.types.RDKitMolCellValueFactory">
+               ValueFactory="org.rdkit.knime.types.RDKitMolCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdchem.Mol">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitMolAdapterValueFactory"
-               ValueFactory="org.rdkit.knime.types.RDKitAdapterCellValueFactory">
+               ValueFactory="org.rdkit.knime.types.RDKitAdapterCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdchem.Mol">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitReactionValueFactory"
-               ValueFactory="org.rdkit.knime.types.RDKitReactionCellValueFactory">
+               ValueFactory="org.rdkit.knime.types.RDKitReactionCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdChemReactions.ChemicalReaction">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitFingerprintValueFactory"
                ValueFactory="org.knime.core.data.v2.value.DenseBitVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.ExplicitBitVect"
                isDefaultPythonRepresentation="false">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitCountFingerprintValueFactoryUInt"
                ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.UIntSparseIntVect"
                isDefaultPythonRepresentation="false">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitCountFingerprintValueFactoryInt"
                ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.IntSparseIntVect"
                isDefaultPythonRepresentation="false">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitCountFingerprintValueFactoryULong"
                ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.ULongSparseIntVect"
                isDefaultPythonRepresentation="false">
          </PythonValueFactory>
          <PythonValueFactory
                PythonClassName="RDKitCountFingerprintValueFactoryLong"
                ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.LongSparseIntVect"
                isDefaultPythonRepresentation="false">
          </PythonValueFactory>
       </Module>

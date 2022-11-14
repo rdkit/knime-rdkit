@@ -49,7 +49,7 @@ are read and written from/to the underlying table in Python.
 @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
 """
 import logging
-import knime_types as kt
+import knime.api.types as kt
 
 LOGGER = logging.getLogger(__name__)
 

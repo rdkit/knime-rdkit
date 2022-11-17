@@ -95,7 +95,7 @@ public class RDKitMolCellValueFactory implements ValueFactory<VarBinaryReadAcces
 
 		public void setValue(final RDKitMolValue value) {
 			try {
-				m_access.setByteArray(new RDKitMolSerializer().serialize(value));
+				m_access.setByteArray(RDKitTypeSerializationUtils.serializeMolValue(value));
 			} catch (IOException e) {
 				LOGGER.error("Error when serializing RDKitMolValue", e);
 			}
@@ -112,7 +112,7 @@ public class RDKitMolCellValueFactory implements ValueFactory<VarBinaryReadAcces
 		@Override
 		public DataCell getDataCell() {
 			try {
-				return new RDKitMolDeserializer().deserialize(m_access.getByteArray(), null);
+				return RDKitTypeSerializationUtils.deserializeMolCell2(m_access.getByteArray());
 			} catch (IOException e) {
 				LOGGER.error("Error when deserializing RDKitMolValue", e);
 				return null;

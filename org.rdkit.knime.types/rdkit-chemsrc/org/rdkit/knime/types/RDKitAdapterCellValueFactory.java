@@ -76,7 +76,7 @@ import org.knime.core.table.schema.VarBinaryDataSpec;
 public class RDKitAdapterCellValueFactory extends AbstractAdapterCellValueFactory {
 
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitAdapterCellValueFactory.class);
-	
+
 	@Override
 	public ReadValue createReadValue(StructReadAccess access) {
 		return new RDKitAdapterCellReadValue(access, m_dataRepository);
@@ -100,7 +100,7 @@ public class RDKitAdapterCellValueFactory extends AbstractAdapterCellValueFactor
 		@Override
 		protected void setPrimaryValue(final RDKitAdapterCell value, final WriteAccess writeAccess) {
 			try {
-				((VarBinaryWriteAccess) writeAccess).setByteArray(new RDKitMolSerializer().serialize(value));
+				((VarBinaryWriteAccess) writeAccess).setByteArray(RDKitTypeSerializationUtils.serializeMolValue(value));
 			} catch (IOException e) {
 				LOGGER.error("Error when serializing RDKitMolValue", e);
 			}
@@ -111,12 +111,12 @@ public class RDKitAdapterCellValueFactory extends AbstractAdapterCellValueFactor
 		private RDKitAdapterCellReadValue(final StructReadAccess access, final IDataRepository dataRepository) {
 			super(access, dataRepository);
 		}
-		
+
 		@Override
 		protected AdapterCell getAdapterCell(final ReadAccess readAccess) {
 			try {
-				return (AdapterCell) (new RDKitMolDeserializer()
-						.deserialize(((VarBinaryReadAccess) readAccess).getByteArray(), null));
+				return (AdapterCell) (RDKitTypeSerializationUtils
+						.deserializeMolCell2(((VarBinaryReadAccess) readAccess).getByteArray()));
 			} catch (IOException e) {
 				LOGGER.error("Error when deserializing RDKitMolValue", e);
 				return null;

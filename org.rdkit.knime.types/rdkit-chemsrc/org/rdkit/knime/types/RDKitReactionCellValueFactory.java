@@ -98,7 +98,7 @@ public class RDKitReactionCellValueFactory implements ValueFactory<VarBinaryRead
 
 		public void setValue(final RDKitReactionValue value) {
 			try {
-				m_access.setByteArray(new RDKitReactionSerializer().serialize(value));
+				m_access.setByteArray(RDKitTypeSerializationUtils.serializeReactionValue(value));
 			} catch (IOException e) {
 				LOGGER.error("Error when serializing RDKitReactionValue", e);
 			}
@@ -115,7 +115,7 @@ public class RDKitReactionCellValueFactory implements ValueFactory<VarBinaryRead
 		@Override
 		public DataCell getDataCell() {
 			try {
-				return new RDKitReactionDeserializer().deserialize(m_access.getByteArray(), null);
+				return RDKitTypeSerializationUtils.deserializeReactionCell(m_access.getByteArray());
 			} catch (IOException e) {
 				LOGGER.error("Error when deserializing RDKitMolValue", e);
 				return null;

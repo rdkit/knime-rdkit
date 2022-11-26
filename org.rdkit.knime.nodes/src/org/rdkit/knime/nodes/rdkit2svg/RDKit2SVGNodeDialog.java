@@ -48,58 +48,22 @@
  */
 package org.rdkit.knime.nodes.rdkit2svg;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.BorderFactory;
-import javax.swing.DefaultCellEditor;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
-
-import org.RDKit.EmbedParameters;
 import org.RDKit.MolDrawOptions;
-import org.RDKit.RDKFuncs;
-import org.knime.base.data.aggregation.dialogutil.DataColumnSpecTableCellRenderer;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentButton;
-import org.knime.core.node.defaultnodesettings.DialogComponentDoubleRange;
-import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.util.ColumnFilter;
-import org.knime.core.node.util.ColumnSelectionPanel;
-import org.rdkit.knime.nodes.highlighting.HighlightingDefinition.Type;
+import org.knime.core.node.port.PortObjectSpec;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
-import org.rdkit.knime.util.DialogComponentSeparator;
-import org.rdkit.knime.util.DialogComponentTable;
-import org.rdkit.knime.util.LayoutUtils;
-import org.rdkit.knime.util.TableCellAction;
-import org.rdkit.knime.util.TableColorCellEditor;
 
 /**
  * <code>NodeDialog</code> for the "RDKit2SVG" Node. Creates a SVG column
@@ -120,6 +84,9 @@ public class RDKit2SVGNodeDialog extends DefaultNodeSettingsPane {
 
 	/** Default values, directly taken from RDKit binaries. */
 	public static final MolDrawOptions RDKIT_DEFAULT_PARAMETERS = new MolDrawOptions();
+
+	/** The logger instance. */
+	protected static final NodeLogger LOGGER = NodeLogger.getLogger(RDKit2SVGNodeDialog.class);
 	
 	//
 	// Constructor
@@ -168,7 +135,7 @@ public class RDKit2SVGNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(new DialogComponentBoolean(createBWModeOptionModel(), "Black&White mode"));
 
 		super.addDialogComponent(
-				new DialogComponentNumber(createBondLineWidthOptionModel(), "Line width for bonds", 1));
+				new DialogComponentNumber(createBondLineWidthOptionModel(), "Line width for bonds", 0.1d));
 
 		super.addDialogComponent(new DialogComponentNumber(createMinFontSizeOptionModel(), "Min font size", 1));
 		super.addDialogComponent(new DialogComponentNumber(createMaxFontSizeOptionModel(), "Max font size", 1));
@@ -292,9 +259,68 @@ public class RDKit2SVGNodeDialog extends DefaultNodeSettingsPane {
 				RDKIT_DEFAULT_PARAMETERS.getSingleColourWedgeBonds());
 	}
 
-	static final SettingsModelIntegerBounded createBondLineWidthOptionModel() {
-		return new SettingsModelIntegerBounded("bond_line_width", 
-				RDKIT_DEFAULT_PARAMETERS.getBondLineWidth(), 0, 100);
+	static final SettingsModelDoubleBounded createBondLineWidthOptionModel() {
+		// This value was an integer until version 4.5.0 and has been changed to double
+		// to support finer bond lines
+		return new SettingsModelDoubleBounded("bond_line_width", RDKIT_DEFAULT_PARAMETERS.getBondLineWidth(), 0.05d,
+				100.0d)
+		{
+			@Override
+			protected void loadSettingsForDialog(NodeSettingsRO settings, PortObjectSpec[] specs)
+					throws NotConfigurableException {
+				try {
+					// Try to load a double setting (since version 4.6.0)
+					super.loadSettingsForDialog(settings, specs);
+				}
+				catch (NotConfigurableException exc) {
+					try {
+						// Fallback to load an old integer setting (until version 4.5.0)
+						// Use the current value, if no value value is stored in the settings
+						int iOldValue = settings.getInt(getConfigName(), -1 /* Invalid */);
+						setDoubleValue(iOldValue == -1 ? getDoubleValue() : (double) iOldValue);
+					}
+					catch (IllegalArgumentException e) {
+						// If the value is not accepted, keep the old value.
+					}
+				}
+			}
+
+			@Override
+			protected void loadSettingsForModel(NodeSettingsRO settings) throws InvalidSettingsException {
+				try {
+					// Try to load a double setting (since version 4.6.0)
+					super.loadSettingsForModel(settings);
+				}
+				catch (InvalidSettingsException exc) {
+					try {
+						// Fallback to load an old integer setting (until version 4.5.0)
+						setDoubleValue((double) settings.getInt(getConfigName()));
+					}
+					catch (IllegalArgumentException iae) {
+						// Throw the original error message from loading the double value
+						throw new InvalidSettingsException(exc.getMessage());
+					}
+				}
+			}
+
+			@Override
+			protected void validateSettingsForModel(NodeSettingsRO settings) throws InvalidSettingsException {
+				try {
+					// Try to validate a double setting (since version 4.6.0)
+					super.validateSettingsForModel(settings);
+				}
+				catch (InvalidSettingsException exc) {
+					try {
+						// Fallback to validate an old integer setting (until version 4.5.0)
+						validateValue((double) settings.getInt(getConfigName()));
+					}
+					catch (IllegalArgumentException iae) {
+						// Throw the original error message from validating the double value
+						throw new InvalidSettingsException(exc.getMessage());
+					}
+				}
+			}
+		};
 	}
 
 	static final SettingsModelIntegerBounded createMinFontSizeOptionModel() {

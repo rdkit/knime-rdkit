@@ -48,35 +48,21 @@
  */
 package org.rdkit.knime.nodes.rdkit2svg;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.RDKit.Bond;
-import org.RDKit.BondIterator;
-import org.RDKit.ColourPalette;
-import org.RDKit.DrawColour;
-import org.RDKit.Int_Vect;
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolDrawOptions;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
-import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
@@ -86,8 +72,6 @@ import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
-import org.rdkit.knime.nodes.canonsmiles.RDKitCanonicalSmilesNodeDialog;
-import org.rdkit.knime.nodes.highlighting.HighlightingDefinition.Type;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
@@ -171,7 +155,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 			registerSettings(RDKit2SVGNodeDialog.createSimplifiedStereoGroupsOptionModel());
 	private final SettingsModelBoolean m_modelSingleColorWedgeBondsOption =
 			registerSettings(RDKit2SVGNodeDialog.createSingleColorWedgeBondsOptionModel());
-	private final SettingsModelIntegerBounded m_modelBondLineWidthOption = 
+	private final SettingsModelDoubleBounded m_modelBondLineWidthOption = 
 			registerSettings(RDKit2SVGNodeDialog.createBondLineWidthOptionModel());
 	private final SettingsModelIntegerBounded m_modelMinFontSizeOption = 
 			registerSettings(RDKit2SVGNodeDialog.createMinFontSizeOptionModel());
@@ -219,7 +203,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 				"Auto guessing: Using column %COLUMN_NAME%.",
 				"No RDKit Mol, SMILES or SDF compatible column in input table. Use the \"RDKit from Molecule\" "
 						+ "node to convert SMARTS.",
-				getWarningConsolidator());
+						warnings);
 
 		// Determines, if the input mol column exists - fails if it does not
 		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, RDKitMolValue.class,
@@ -278,8 +262,6 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 	@Override
 	protected AbstractRDKitCellFactory[] createOutputFactories(final int outPort, final DataTableSpec inSpec)
 			throws InvalidSettingsException {
-
-		final WarningConsolidator warnings = getWarningConsolidator();
 		AbstractRDKitCellFactory[] arrOutputFactories = null;
 
 		// Specify output of table 1
@@ -336,7 +318,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					opts.setIncludeChiralFlagLabel(m_modelIncludeChiralFlagOption.getBooleanValue());
 					opts.setSimplifiedStereoGroupLabel(m_modelSimplifiedStereoGroupsOption.getBooleanValue());
 					opts.setSingleColourWedgeBonds(m_modelSingleColorWedgeBondsOption.getBooleanValue());
-					opts.setBondLineWidth(m_modelBondLineWidthOption.getIntValue());
+					opts.setBondLineWidth(m_modelBondLineWidthOption.getDoubleValue());
 					opts.setMinFontSize(m_modelMinFontSizeOption.getIntValue());
 					opts.setMaxFontSize(m_modelMaxFontSizeOption.getIntValue());
 					opts.setAnnotationFontScale(m_modelAnnotationFontScaleOption.getDoubleValue());

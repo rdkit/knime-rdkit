@@ -2,7 +2,8 @@ pipeline {
     agent {
         node {
             // This job needs to run on the KNIME server that hosts also the target update site 
-            label 'knime-dev-basel-c7'
+            // The following values are possible: knime-dev-chbs-c7, knime-test-basel-c7
+            label 'knime-dev-chbs-c7'
         }
     }
     
@@ -16,7 +17,7 @@ pipeline {
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
 		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "4.3"
+    	KNIME_VERSION = "4.6"
 
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"

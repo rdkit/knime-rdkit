@@ -99,9 +99,6 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	 * different supported platforms.
 	 */
 	static {
-      LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86,
-            new String[] { "boost_serialization-vc140-mt-1_65_1",
-      "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86_64,
             new String[] { "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86,
@@ -109,6 +106,8 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86_64,
             new String[] { "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_MACOSX + "." + Platform.ARCH_X86_64,
+            new String[] { "GraphMolWrap" });
+      LIBRARIES.put(Platform.OS_MACOSX + "." + "aarch64" /* Platform.ARCH_AARCH64, only available in Eclipse 3.22+ (06/2021) */,
             new String[] { "GraphMolWrap" });
 	}
 

@@ -63,6 +63,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
@@ -116,14 +117,19 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	private final SettingsModelBoolean m_modelClearBackground =
 			registerSettings(RDKit2SVGNodeDialog.createClearBackgroundOptionModel());
+	
 	private final SettingsModelBoolean m_modelDummiesAreAttachments =
 			registerSettings(RDKit2SVGNodeDialog.createDummiesAreAttachmentsOptionModel());
+	
 	private final SettingsModelBoolean m_modelAddAtomIndices =
 			registerSettings(RDKit2SVGNodeDialog.createAddAtomIndicesOptionModel());
+	
 	private final SettingsModelBoolean m_modelAddBondIndices =
 			registerSettings(RDKit2SVGNodeDialog.createAddBondIndicesOptionModel());
+	
 	private final SettingsModelBoolean m_modelIsotopeLabels =
 			registerSettings(RDKit2SVGNodeDialog.createIsotopeLabelsOptionModel());
+	
 	private final SettingsModelBoolean m_modelDummyIsotopeLabels =
 			registerSettings(RDKit2SVGNodeDialog.createDummyIsotopeLabelsOptionModel());
 	
@@ -147,22 +153,43 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 
 	private final SettingsModelBoolean m_modelBWModeOption =
 			registerSettings(RDKit2SVGNodeDialog.createBWModeOptionModel());
+	
 	private final SettingsModelBoolean m_modelNoAtomLabelsOption =
 			registerSettings(RDKit2SVGNodeDialog.createNoAtomLabelsOptionModel());
+	
 	private final SettingsModelBoolean m_modelIncludeChiralFlagOption =
 			registerSettings(RDKit2SVGNodeDialog.createIncludeChiralFlagOptionModel());
+	
 	private final SettingsModelBoolean m_modelSimplifiedStereoGroupsOption =
 			registerSettings(RDKit2SVGNodeDialog.createSimplifiedStereoGroupsOptionModel());
+	
 	private final SettingsModelBoolean m_modelSingleColorWedgeBondsOption =
 			registerSettings(RDKit2SVGNodeDialog.createSingleColorWedgeBondsOptionModel());
-	private final SettingsModelDoubleBounded m_modelBondLineWidthOption = 
-			registerSettings(RDKit2SVGNodeDialog.createBondLineWidthOptionModel());
+	
+	/** 
+	 * Bond line width setting for backward compatibility reasons. Not directly used anymore, but converted
+	 * into {@link #m_modelBondLineWidthDoubleOption} (double for finer lines).
+	 */
+	private final SettingsModelIntegerBounded m_modelBondLineWidthIntegerOption = 
+			registerSettings(RDKit2SVGNodeDialog.createBondLineWidthIntegerOptionModel(), 
+					true /* We do not save this setting anymore in the dialog, hence we need to ignore the missing setting */);
+	
+	/**
+	 * Bond line width settings as doubles for finer lines. We ignore a missing setting for old nodes
+	 * and convert the old setting to the new one.
+	 */
+	private final SettingsModelDoubleBounded m_modelBondLineWidthDoubleOption = 
+			registerSettings(RDKit2SVGNodeDialog.createBondLineWidthDoubleOptionModel(), true);
+	
 	private final SettingsModelIntegerBounded m_modelMinFontSizeOption = 
 			registerSettings(RDKit2SVGNodeDialog.createMinFontSizeOptionModel());
+	
 	private final SettingsModelIntegerBounded m_modelMaxFontSizeOption = 
 			registerSettings(RDKit2SVGNodeDialog.createMaxFontSizeOptionModel());
+	
 	private final SettingsModelDoubleBounded m_modelAnnotationFontScaleOption = 
 			registerSettings(RDKit2SVGNodeDialog.createAnnotationFontScaleOptionModel());
+	
 	//
 	// Constructor
 	//
@@ -318,7 +345,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					opts.setIncludeChiralFlagLabel(m_modelIncludeChiralFlagOption.getBooleanValue());
 					opts.setSimplifiedStereoGroupLabel(m_modelSimplifiedStereoGroupsOption.getBooleanValue());
 					opts.setSingleColourWedgeBonds(m_modelSingleColorWedgeBondsOption.getBooleanValue());
-					opts.setBondLineWidth(m_modelBondLineWidthOption.getDoubleValue());
+					opts.setBondLineWidth(m_modelBondLineWidthDoubleOption.getDoubleValue());
 					opts.setMinFontSize(m_modelMinFontSizeOption.getIntValue());
 					opts.setMaxFontSize(m_modelMaxFontSizeOption.getIntValue());
 					opts.setAnnotationFontScale(m_modelAnnotationFontScaleOption.getDoubleValue());
@@ -368,4 +395,24 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 		}
 
 		return result;
-	}}
+	}
+	
+	/**
+	 * Corrects the bond line width setting of old nodes, which had stored this value as integer.
+	 */
+	@Override
+	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		try {
+			super.loadValidatedSettingsFrom(settings);
+		}
+		finally {
+			// Adapt bond line width settings of old nodes, which stored it as integer
+			int iBondLineWidth = m_modelBondLineWidthIntegerOption.getIntValue();
+			if (iBondLineWidth >= 0) {
+				LOGGER.warn("Converting integer bond line width into double: " + iBondLineWidth + " => " + (double)iBondLineWidth);
+				m_modelBondLineWidthDoubleOption.setDoubleValue((double)iBondLineWidth);
+				m_modelBondLineWidthIntegerOption.setIntValue(-1); // Will be saved next time as -1
+			}
+		}		
+	}
+}

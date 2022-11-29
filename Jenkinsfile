@@ -281,23 +281,30 @@ pipeline {
         }
     }
 	post {
-        failure {
-            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
-                    recipientProviders: [developers(), requestor()],
+		// Use only ${env.NODE_NAME}, ${env.BUILD_URL}, ${env.JOB_NAME} and ${env.BUILD_NUMBER} in parameters
+        always {
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Build failed in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job finished: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
+        }
+        failure {
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.", 
+                    recipientProviders: [developers(), requestor(), culprits()],
+                    to: "${EMAIL_TO}", 
+                    subject: "Jenkins job failed: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
         unstable {
-            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
-                    recipientProviders: [developers(), requestor()],
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",  
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Unstable build in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job is unstable: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
         fixed {
-            emailext body: 'Check console output at $BUILD_URL to view the results.', 
-                    recipientProviders: [developers(), requestor()],
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",  
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Jenkins build started working again: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job is fixed: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
     }   
 }

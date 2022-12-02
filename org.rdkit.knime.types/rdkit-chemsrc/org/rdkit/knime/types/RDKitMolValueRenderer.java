@@ -93,7 +93,7 @@ public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
 implements SvgProvider {
 
 	/**
-	 * Factory for {@link RDKitMolValueRenderer2}.
+	 * Factory for {@link RDKitMolValueRenderer}.
 	 */
 	public static final class Factory extends AbstractDataValueRendererFactory {
 		/**

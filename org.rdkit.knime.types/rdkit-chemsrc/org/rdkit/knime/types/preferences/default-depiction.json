@@ -1,5 +1,5 @@
 {
-  "bondLineWidth": 0.7,
+  "bondLineWidth": 1.3,
   "multipleBondOffset": 0.25,
   "baseFontSize": 1,
   "minFontSize": -1,
@@ -7,6 +7,7 @@
   "annotationFontScale": 0.7,
   "highlightBondWidthMultiplier": 12,
   "dummyIsotopeLabels": false,
+  "addStereoAnnotation": true,
   "atomColourPalette": {
     "0": [
       0.1,

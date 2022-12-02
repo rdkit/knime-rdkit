@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2013
+ * Copyright (C) 2022
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -156,7 +156,7 @@ implements IWorkbenchPreferencePage {
 				}
 			}
 			catch (final Exception exc) {
-				LOGGER.error("Default values could not be set for the RDKit Types preferences. Plug-In or Preference Store not found.");
+				LOGGER.error("Default values could not be set for the RDKit Types preferences. Plug-In or Preference Store not found.", exc);
 			}
 		}
 	}

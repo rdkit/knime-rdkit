@@ -19,6 +19,7 @@ Require-Bundle: org.knime.base;bundle-version="[4.2.0,5.0.0)",
 Bundle-Vendor: NIBR
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
+ lib/gson-2.10.jar,
  lib/org.RDKit.jar,
  lib/org.RDKitDoc.jar
 Bundle-Version: 4.6.0.qualifier

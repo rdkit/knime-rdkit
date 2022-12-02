@@ -238,8 +238,8 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	@Override
 	protected void createFieldEditors() {
 		LabelField linkDocs = new LabelField(getFieldEditorParent(), 
-				"<a href=\"http://rdkit.org/docs/source/rdkit.Chem.Draw.rdMolDraw2D.html?highlight=moldrawoptions"
-				+ "#rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions.addStereoAnnotation\">Click here</a>"
+				"<a href=\"http://rdkit.org/docs/source/rdkit.Chem.Draw.rdMolDraw2D.html?"
+				+ "highlight=moldrawoptions#rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions\">Click here</a>"
 				+ " for RDKit 2D Depiction options (RDKit API docs).");
 		addField(linkDocs);
 		

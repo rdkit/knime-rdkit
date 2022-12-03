@@ -32,8 +32,17 @@
    	<extension point="org.eclipse.core.runtime.preferences">
 		<initializer class="org.rdkit.knime.types.preferences.RDKitTypesPreferenceInitializer"/>
    	</extension>
+
+   	<extension point="org.eclipse.core.runtime.preferences">
+		<initializer class="org.rdkit.knime.types.preferences.RDKitDepicterPreferenceInitializer"/>
+   	</extension>
    
-   <extension point="org.knime.core.DataValueRenderer">
+    <extension point="org.eclipse.ui.preferencePages">
+       <page category="org.rdkit.knime.nodes.preferences" class="org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage" 
+             id="org.rdkit.knime.types.preferences.RDKit2DDepiction" name="RDKit 2D Depiction"/>
+    </extension>
+   
+    <extension point="org.knime.core.DataValueRenderer">
       <dataValue
             valueClass="org.rdkit.knime.types.RDKitMolValue">
          <renderer

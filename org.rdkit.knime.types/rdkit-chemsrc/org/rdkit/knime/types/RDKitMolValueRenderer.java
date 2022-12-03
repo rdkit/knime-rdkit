@@ -1,10 +1,11 @@
 /*
- * ------------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
  *
- *  Copyright (C) 2003 - 2010
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ * Copyright (C) 2022
+ * Novartis Institutes for BioMedical Research
+ *
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -44,9 +45,6 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   19.12.2010 (meinl): created
  */
 package org.rdkit.knime.types;
 
@@ -56,8 +54,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.StringReader;
+import java.util.concurrent.locks.ReentrantLock;
 
-import org.RDKit.GenericRDKitException;
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolDrawOptions;
 import org.RDKit.MolSanitizeException;
@@ -68,6 +66,10 @@ import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
 import org.knime.base.data.xml.SvgValueRenderer;
+import org.knime.chem.types.MolValue;
+import org.knime.chem.types.SdfValue;
+import org.knime.chem.types.SmartsValue;
+import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -75,12 +77,9 @@ import org.knime.core.data.MissingCell;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.util.LockedSupplier;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 import org.w3c.dom.svg.SVGDocument;
-
-import org.knime.chem.types.MolValue;
-import org.knime.chem.types.SdfValue;
-import org.knime.chem.types.SmartsValue;
-import org.knime.chem.types.SmilesValue;
 
 
 /**
@@ -88,6 +87,7 @@ import org.knime.chem.types.SmilesValue;
  *
  * @author Thorsten Meinl, University of Konstanz
  * @author Manuel Schwarze, Novartis
+ * @author Paolo Tosco, Novartis
  */
 public class RDKitMolValueRenderer extends AbstractPainterDataValueRenderer
 implements SvgProvider {
@@ -131,7 +131,7 @@ implements SvgProvider {
 
 	/** The font used for drawing Smiles in error conditions, if available. */
 	private static final Font SMILES_FONT = new Font("Helvetica", Font.PLAIN, 12);
-
+	
 	//
 	// Members
 	//
@@ -148,20 +148,31 @@ implements SvgProvider {
 	/** The SVG structure to paint, if it could be determined properly. */
 	private SVGDocument m_svgDocument;
 
+	/** The molecule to be rendered next. */
+	private transient ROMol m_molecule;
+	
+	/** A special lock used for the interface. */
+	private ReentrantLock m_reentrantLock = new ReentrantLock();
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void setValue(final Object value) {
+	protected synchronized void setValue(final Object value) {
 		// Reset values important for painting
 		m_svgDocument = null;
 		m_strSmiles = null;
 		m_strError = null;
 		m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
+		
+		if (m_molecule != null) {
+			m_molecule.delete();
+		}
 
 		RDKitMolValue molCell = null;
 		ROMol omol = null;
 		boolean trySanitizing = true;
+
 		try {
 			// We have an old plain RDKit Mol Value
 			if (value instanceof RDKitMolValue) {
@@ -192,46 +203,53 @@ implements SvgProvider {
 					m_strError = ((MissingCell)value).getError();
 				}
 			}
-		} catch (final Exception ex) {
+		} 
+		catch (final Exception ex) {
 			// If conversion fails we set a null value, which will show up as error messgae
 			omol = null;
 			// Logging something here may swamp the log files - not desired.
-
 		}
+		
 		if (molCell != null) {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
-		} else {
-			// see if we have a value that we can understand
+			
+			// Store the prepared molecule for drawing next
+			m_molecule = omol;
+		} 
+		else {
+			// See if we have a value that we can understand
 			try {
 				RWMol tmol = null;
 				if (value instanceof SmilesValue) {
 		            String val = ((SmilesValue) value).getSmilesValue();
-		            tmol = RWMol.MolFromSmiles(val,0,false);
-		        }
+		            tmol = RWMol.MolFromSmiles(val, 0, false);
+		      }
 				else if (value instanceof SdfValue) {
 		            String val = ((SdfValue) value).getSdfValue();
-		            tmol = RWMol.MolFromMolBlock(val,false);
-		        }
+		            tmol = RWMol.MolFromMolBlock(val, false);
+		      }
 				else if (value instanceof MolValue) {
 		            String val = ((MolValue) value).getMolValue();
-		            tmol = RWMol.MolFromMolBlock(val,false);
-		        }
+		            tmol = RWMol.MolFromMolBlock(val, false);
+		      }
 				else if (value instanceof SmartsValue) {
 		            String val = ((SmartsValue) value).getSmartsValue();
 		            tmol = RWMol.MolFromSmarts(val);
-		            trySanitizing=false;
-		        }
-				if(tmol != null) {
+		            trySanitizing = false;
+		      }
+				
+				if (tmol != null) {
 					// save a copy in case something goes badly wrong in the sanitization
 					omol = new ROMol(tmol);
-					if(trySanitizing) {
+					if (trySanitizing) {
 						try {
 							RDKFuncs.sanitizeMol(tmol);
 							omol.delete();
 							omol = tmol;
-						} catch (final Exception ex) {
-							trySanitizing=false;					
+						} 
+						catch (final Exception ex) {
+							trySanitizing = false;					
 							tmol.delete();
 							tmol = null;
 						}
@@ -245,72 +263,49 @@ implements SvgProvider {
 						tmol.delete();
 					}
 				}
-			} catch (final Exception ex) {
-				omol = null;
-			}
-		}
-		if(omol != null) {
-			// Try to render the cell
-			final Thread t = Thread.currentThread();
-			final ClassLoader contextClassLoader = t.getContextClassLoader();
-			t.setContextClassLoader(getClass().getClassLoader());
-
-			try {
-				RWMol mol;
-				mol = new RWMol(omol);
-				if(trySanitizing) {
-					try {
-						RDKFuncs.prepareMolForDrawing(mol);
-					} catch(final MolSanitizeException ex) {
-						mol.delete();
-						mol = new RWMol(omol);
-						// skip kekulization. If this still fails we throw up our hands
-						RDKFuncs.prepareMolForDrawing(mol,false);
-					}
-				} else {
-					// skip kekulization
-					RDKFuncs.prepareMolForDrawing(mol,false);
-				}
-				final MolDraw2DSVG molDrawing = new MolDraw2DSVG(300, 300);
-				MolDrawOptions opts = molDrawing.drawOptions();
-				// we've already prepared the molecule appropriately, so don't try again:
-				opts.setPrepareMolsBeforeDrawing(false);
-				opts.setAddStereoAnnotation(true);
-				molDrawing.drawMolecule((ROMol)mol);
-				molDrawing.finishDrawing();
-
-				final String svg = molDrawing.getDrawingText();
-				if(mol != omol){
-					mol.delete();
-				}
-				molDrawing.delete();
-				
-				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
-				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
-
-				/*
-				 * The document factory loads the XML parser
-				 * (org.apache.xerces.parsers.SAXParser), using the thread's context
-				 * class loader. In KNIME desktop (and batch) this is correctly set, in
-				 * the KNIME server the thread is some TCP-socket-listener-thread, which
-				 * fails to load the parser class (class loading happens in
-				 * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
-				 * follow the call)
-				 */
-				m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
-				// remove xml:space='preserved' attribute because it causes atom
-				// labels to be printed off their places
-				m_svgDocument.getRootElement().removeAttributeNS(
-						"http://www.w3.org/XML/1998/namespace", "space");
-			}catch (final Exception ex) {
-				// If conversion fails we set a null value, which will show up as error messgae
-				m_svgDocument = null;
-				// Logging something here may swam the log files - not desired.
-			}
-			finally {
-				t.setContextClassLoader(contextClassLoader);
+			} 
+			catch (final Exception ex) {
 				if (omol != null) {
 					omol.delete();
+				}
+				omol = null;
+			}
+
+			if (omol != null) {
+				final Thread t = Thread.currentThread();
+				final ClassLoader contextClassLoader = t.getContextClassLoader();
+				t.setContextClassLoader(getClass().getClassLoader());
+	
+				try {
+					RWMol mol = new RWMol(omol);
+					if (trySanitizing) {
+						try {
+							RDKFuncs.prepareMolForDrawing(mol);
+						} 
+						catch(final MolSanitizeException ex) {
+							mol.delete();
+							mol = new RWMol(omol);
+							// Skip kekulization. If this still fails we throw up our hands
+							RDKFuncs.prepareMolForDrawing(mol, false);
+						}
+					} 
+					else {
+						// Skip kekulization
+						RDKFuncs.prepareMolForDrawing(mol, false);
+					}			
+	
+					// Store the prepared molecule for drawing next
+					m_molecule = mol;
+				}
+				catch (final Exception ex) {
+					// If conversion fails we will not set the molecule, which will show up as error message later
+					// Logging something here may swam the log files - not desired.
+				}
+				finally {
+					t.setContextClassLoader(contextClassLoader);
+					if (omol != m_molecule) {
+						omol.delete();
+					}
 				}
 			}
 		}
@@ -339,6 +334,8 @@ implements SvgProvider {
 	protected void paintComponent(final Graphics g) {
 		super.paintComponent(g);
 
+		m_svgDocument = getSvg();
+		
 		// Set default color
 		g.setColor(Color.black);
 
@@ -382,12 +379,72 @@ implements SvgProvider {
 			g.setColor(Color.black);
 		}
 	}
+	
+	@Override
+	public LockedSupplier<SVGDocument> getSvgSupplier() {
+      return new LockedSupplier<SVGDocument>(getSvg(), m_reentrantLock);
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public SVGDocument getSvg() {
+	public synchronized SVGDocument getSvg() {
+		if (m_molecule != null) {
+			try {
+				final MolDraw2DSVG molDrawing = new MolDraw2DSVG(-1, -1);
+				
+				// Apply config from preferences (since RDKit Types version 4.6.0), if available
+				String strJsonConfig = RDKitDepicterPreferencePage.getJsonConfig();
+				if (strJsonConfig != null) {
+					RDKFuncs.updateDrawerParamsFromJSON(molDrawing, strJsonConfig);
+				}
+				
+				MolDrawOptions opts = molDrawing.drawOptions();
+				
+				// We've already prepared the molecule appropriately, so don't try again
+				opts.setPrepareMolsBeforeDrawing(false);
+				
+				// Apply old config, if no JSON config is provided (before RDKit Types version 4.6.0)
+				if (strJsonConfig == null) {
+					opts.setAddStereoAnnotation(true);
+				}
+				
+				molDrawing.drawMolecule(m_molecule);
+				molDrawing.finishDrawing();
+
+				// Use flexicanvas 
+				String svg = molDrawing.getDrawingText();
+				svg = svg.replaceAll("(width|height)(=[\"'])(\\d+px)([\"'])", "$1$2100%$4");
+
+				molDrawing.delete();
+				
+				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
+				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
+
+				/*
+				 * The document factory loads the XML parser
+				 * (org.apache.xerces.parsers.SAXParser), using the thread's context
+				 * class loader. In KNIME desktop (and batch) this is correctly set, in
+				 * the KNIME server the thread is some TCP-socket-listener-thread, which
+				 * fails to load the parser class (class loading happens in
+				 * org.xml.sax.helpers.XMLReaderFactory# createXMLReader(String) ...
+				 * follow the call)
+				 */
+				m_svgDocument = f.createSVGDocument(null, new StringReader(svg));
+			}
+			catch (final Exception ex) {
+				// If conversion fails we set a null value, which will show up as error messgae
+				m_svgDocument = null;
+				// Logging something here may swam the log files - not desired.
+			}
+			finally {
+				if (m_molecule != null) {
+					m_molecule.delete();
+				}
+			}
+		}
+		
 		return m_svgDocument;
 	}
 
@@ -417,5 +474,4 @@ implements SvgProvider {
 			}
 		}
 	}
-
 }

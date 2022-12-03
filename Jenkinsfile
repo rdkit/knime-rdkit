@@ -2,7 +2,8 @@ pipeline {
     agent {
         node {
             // This job needs to run on the KNIME server that hosts also the target update site 
-            label 'knime-dev-basel-c7'
+            // The following values are possible: knime-dev-chbs-c7, knime-test-basel-c7
+            label 'knime-dev-chbs-c7'
         }
     }
     
@@ -17,6 +18,9 @@ pipeline {
     	
 		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
     	KNIME_VERSION = "4.3"
+    	
+    	// The Java version to be used to compile and build - possible values are java8, java11 and java17
+    	JAVA_VERSION = "java8"
 
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"
@@ -69,7 +73,7 @@ pipeline {
 		//     -save <directory_name>: optional, specifies the directory  into which each testflow is saved after execution. If not specified the workflows are not saved.
 		//     -timeout <seconds>: optional, specifies the timeout for each individual workflow.
 		//     -stacktraceOnTimeout: optional, if specified output a full stack trace in case of timeouts.
-		//     -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for each testflow. If not specified no test for memory leaks is performed.
+		//     -memLeaks <bytes>: optional, specifies the maximum allowed increases in heap usage for each testflow. If not specified no test for memory leaks is performed.
 		//     -streaming: optional, enables additional streaming test for workflows configured accordingly. The test streaming job manager is set and used for each single node.
 		//     -preferences <file_name>: optional, specifies an exported preferences file that should be used to initialize preferences
 		//     -workflow.variable <variable-declaration>: optional, defines or overwrites workflow variable 'name' with value 'value' (possibly enclosed by quotes). The 'type' must be one of "String", "int" or "double".
@@ -139,7 +143,7 @@ pipeline {
         	steps {
 	            // Compiles the plugin and builds an update site from it
 		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-					sh(label: "Compile and Build", script: "mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
+					sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/${JAVA_VERSION} && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
 		        }
 		    }    
         }
@@ -277,23 +281,30 @@ pipeline {
         }
     }
 	post {
-        failure {
-            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
-                    recipientProviders: [developers(), requestor()],
+		// Use only ${env.NODE_NAME}, ${env.BUILD_URL}, ${env.JOB_NAME} and ${env.BUILD_NUMBER} in parameters
+        always {
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Build failed in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job finished: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
+        }
+        failure {
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.", 
+                    recipientProviders: [developers(), requestor(), culprits()],
+                    to: "${EMAIL_TO}", 
+                    subject: "Jenkins job failed: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
         unstable {
-            emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}', 
-                    recipientProviders: [developers(), requestor()],
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",  
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Unstable build in Jenkins: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job is unstable: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
         fixed {
-            emailext body: 'Check console output at $BUILD_URL to view the results.', 
-                    recipientProviders: [developers(), requestor()],
+            emailext body: "The job ran on ${env.NODE_NAME}. Check console output at ${env.BUILD_URL} to view the results.",  
+                    recipientProviders: [developers(), requestor(), culprits()],
                     to: "${EMAIL_TO}", 
-                    subject: "Jenkins build started working again: $PROJECT_NAME - #$BUILD_NUMBER"
+                    subject: "Jenkins job is fixed: ${env.JOB_NAME} - #${env.BUILD_NUMBER}"
         }
     }   
 }

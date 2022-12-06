@@ -1,0 +1,1 @@
+instructions.install = org.eclipse.equinox.p2.touchpoint.natives.ln(targetDir:${artifact.location}/os/macosx/aarch64,linkTarget:libGraphMolWrap.jnilib,linkName:libGraphMolWrap.dylib);

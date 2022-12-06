@@ -1,86 +1,406 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.pde.ui.RuntimeWorkbench">
-<setAttribute key="additional_plugins"/>
-<booleanAttribute key="append.args" value="true"/>
-<stringAttribute key="application" value="org.knime.testing.NGUnittestRunner"/>
-<booleanAttribute key="askclear" value="true"/>
-<booleanAttribute key="automaticAdd" value="true"/>
-<booleanAttribute key="automaticValidate" value="false"/>
-<stringAttribute key="bootstrap" value=""/>
-<stringAttribute key="checked" value="[NONE]"/>
-<booleanAttribute key="clearConfig" value="true"/>
-<booleanAttribute key="clearws" value="false"/>
-<booleanAttribute key="clearwslog" value="false"/>
-<stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/RDKIT KNIME JUNIT TEST (AUTOMATICALLY NON-GUI)"/>
-<booleanAttribute key="default" value="true"/>
-<stringAttribute key="deselected_workspace_plugins" value="com.novartis.nibr.knime,com.novartis.nibr.knime.testing"/>
-<stringAttribute key="featureDefaultLocation" value="workspace"/>
-<stringAttribute key="featurePluginResolution" value="workspace"/>
-<booleanAttribute key="includeOptional" value="true"/>
-<stringAttribute key="location" value="${workspace_loc:org.rdkit.knime.testing/junit-tests/workspace}"/>
-<listAttribute key="org.eclipse.debug.ui.favoriteGroups">
-<listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
-<listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
-</listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/KNIME 3.3 64bit SDK"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -xmlResultDir &quot;${workspace_loc:org.rdkit.knime.testing/junit-tests}/test-results&quot;"/>
-<stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx1200m -XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dknime.enable.fastload=true -Dknime.user.env=dev"/>
-<stringAttribute key="pde.version" value="3.3"/>
-<stringAttribute key="product" value="org.eclipse.sdk.ide"/>
-<setAttribute key="selected_features">
-<setEntry value="com.collabnet.subversion.merge.feature:default"/>
-<setEntry value="com.knime.features.enterprise.client.exampleserver:default"/>
-<setEntry value="com.knime.features.enterprise.client:default"/>
-<setEntry value="com.knime.features.enterprise.server.ws.client:default"/>
-<setEntry value="com.knime.features.explorer.serverspace:default"/>
-<setEntry value="jp.co.infocom.cheminfo.marvin.feature:default"/>
-<setEntry value="org.eclipse.cvs.source:default"/>
-<setEntry value="org.eclipse.cvs:default"/>
-<setEntry value="org.eclipse.draw2d:default"/>
-<setEntry value="org.eclipse.equinox.p2.core.feature.source:default"/>
-<setEntry value="org.eclipse.equinox.p2.core.feature:default"/>
-<setEntry value="org.eclipse.equinox.p2.extras.feature.source:default"/>
-<setEntry value="org.eclipse.equinox.p2.extras.feature:default"/>
-<setEntry value="org.eclipse.equinox.p2.rcp.feature.source:default"/>
-<setEntry value="org.eclipse.equinox.p2.rcp.feature:default"/>
-<setEntry value="org.eclipse.equinox.p2.user.ui.source:default"/>
-<setEntry value="org.eclipse.equinox.p2.user.ui:default"/>
-<setEntry value="org.eclipse.gef:default"/>
-<setEntry value="org.eclipse.help.source:default"/>
-<setEntry value="org.eclipse.help:default"/>
-<setEntry value="org.eclipse.jdt.source:default"/>
-<setEntry value="org.eclipse.jdt:default"/>
-<setEntry value="org.eclipse.pde.source:default"/>
-<setEntry value="org.eclipse.pde:default"/>
-<setEntry value="org.eclipse.platform.source:default"/>
-<setEntry value="org.eclipse.platform:default"/>
-<setEntry value="org.eclipse.rcp.source:default"/>
-<setEntry value="org.eclipse.rcp:default"/>
-<setEntry value="org.eclipse.sdk:default"/>
-<setEntry value="org.knime.binary.jre.win32.win32.x86_64:default"/>
-<setEntry value="org.knime.binary.jre:default"/>
-<setEntry value="org.knime.features.base.source:default"/>
-<setEntry value="org.knime.features.base:default"/>
-<setEntry value="org.knime.features.chem.types:default"/>
-<setEntry value="org.knime.features.ext.chem.tools:default"/>
-<setEntry value="org.knime.features.sdk:default"/>
-<setEntry value="org.knime.features.testingapplication:default"/>
-<setEntry value="org.knime.features.wizard:default"/>
-<setEntry value="org.rdkit.knime.feature:default"/>
-<setEntry value="org.rdkit.knime.testing.feature:default"/>
-<setEntry value="org.tigris.subversion.clientadapter.feature:default"/>
-<setEntry value="org.tigris.subversion.subclipse.graph.feature:default"/>
-<setEntry value="org.tigris.subversion.subclipse:default"/>
-<setEntry value="org.tmatesoft.svnkit:default"/>
-</setAttribute>
-<stringAttribute key="selected_target_plugins" value="com.collabnet.subversion.merge@default:default,com.ibm.icu@default:default,com.jcraft.jsch@default:default,com.knime.enterprise.client.filesystem@default:default,com.knime.enterprise.client.glassfish@default:default,com.knime.enterprise.server.ws.client@default:default,com.knime.enterprise.utility@default:default,com.knime.explorer.server@default:default,com.knime.explorer.serverspace@default:default,com.knime.explorer.sharedspace@default:default,com.trilead.ssh2@default:default,java_cup.runtime@default:default,javax.servlet.jsp@default:default,javax.servlet@default:default,javax.xml.rpc@default:default,javax.xml@default:default,jp.co.infocom.cheminfo.jchemlib.bin.win32.x86_64@default:false,jp.co.infocom.cheminfo.jchemlib@default:default,jp.co.infocom.cheminfo.marvin@default:default,net.java.dev.jna@default:default,org.apache.ant@default:default,org.apache.batik.bridge@default:default,org.apache.batik.css@default:default,org.apache.batik.dom.svg@default:default,org.apache.batik.dom@default:default,org.apache.batik.ext.awt@default:default,org.apache.batik.parser@default:default,org.apache.batik.svggen@default:default,org.apache.batik.swing@default:default,org.apache.batik.transcoder@default:default,org.apache.batik.util.gui@default:default,org.apache.batik.util@default:default,org.apache.batik.xml@default:default,org.apache.bcel@default:default,org.apache.commons.codec*1.3.0.v201101211617@default:default,org.apache.commons.codec*1.7.0@default:default,org.apache.commons.el@default:default,org.apache.commons.httpclient@default:default,org.apache.commons.io@default:default,org.apache.commons.lang@default:default,org.apache.commons.logging*1.0.4.v201101211617@default:default,org.apache.commons.logging*1.1.1.v201101211721@default:default,org.apache.commons.math@default:default,org.apache.jasper@default:default,org.apache.log4j@default:default,org.apache.lucene.analysis@default:default,org.apache.lucene.core@default:default,org.apache.lucene.highlighter@default:default,org.apache.lucene.memory@default:default,org.apache.lucene.misc@default:default,org.apache.lucene.queries@default:default,org.apache.lucene.snowball@default:default,org.apache.lucene.spellchecker@default:default,org.apache.lucene@default:default,org.apache.xalan@default:default,org.apache.xerces@default:default,org.apache.xml.resolver@default:default,org.apache.xml.serializer@default:default,org.apache.xmlbeans@default:default,org.eclipse.ant.core@default:default,org.eclipse.ant.launching@default:default,org.eclipse.ant.optional.junit@default:false,org.eclipse.ant.ui@default:default,org.eclipse.compare.core@default:default,org.eclipse.compare.win32@default:default,org.eclipse.compare@default:default,org.eclipse.core.boot@default:default,org.eclipse.core.commands@default:default,org.eclipse.core.contenttype@default:default,org.eclipse.core.databinding.beans@default:default,org.eclipse.core.databinding.observable@default:default,org.eclipse.core.databinding.property@default:default,org.eclipse.core.databinding@default:default,org.eclipse.core.expressions@default:default,org.eclipse.core.externaltools@default:default,org.eclipse.core.filebuffers@default:default,org.eclipse.core.filesystem.win32.x86_64@default:false,org.eclipse.core.filesystem@default:default,org.eclipse.core.jobs@default:default,org.eclipse.core.net.win32.x86_64@default:false,org.eclipse.core.net@default:default,org.eclipse.core.resources@default:default,org.eclipse.core.runtime.compatibility.auth@default:default,org.eclipse.core.runtime.compatibility.registry@default:false,org.eclipse.core.runtime.compatibility@default:default,org.eclipse.core.runtime@default:true,org.eclipse.core.variables@default:default,org.eclipse.cvs@default:default,org.eclipse.debug.core@default:default,org.eclipse.debug.ui@default:default,org.eclipse.draw2d@default:default,org.eclipse.ecf.filetransfer@default:default,org.eclipse.ecf.identity@default:default,org.eclipse.ecf.provider.filetransfer.httpclient.ssl@default:false,org.eclipse.ecf.provider.filetransfer.httpclient@default:default,org.eclipse.ecf.provider.filetransfer.ssl@default:false,org.eclipse.ecf.provider.filetransfer@default:default,org.eclipse.ecf.ssl@default:false,org.eclipse.ecf@default:default,org.eclipse.equinox.app@default:default,org.eclipse.equinox.common@2:true,org.eclipse.equinox.concurrent@default:default,org.eclipse.equinox.ds@1:true,org.eclipse.equinox.event@default:default,org.eclipse.equinox.frameworkadmin.equinox@default:default,org.eclipse.equinox.frameworkadmin@default:default,org.eclipse.equinox.http.jetty@default:default,org.eclipse.equinox.http.registry@default:default,org.eclipse.equinox.http.servlet@default:default,org.eclipse.equinox.jsp.jasper.registry@default:default,org.eclipse.equinox.jsp.jasper@default:default,org.eclipse.equinox.launcher.win32.win32.x86_64@default:false,org.eclipse.equinox.launcher@default:default,org.eclipse.equinox.p2.artifact.repository@default:default,org.eclipse.equinox.p2.console@default:default,org.eclipse.equinox.p2.core@default:default,org.eclipse.equinox.p2.director.app@default:default,org.eclipse.equinox.p2.director@default:default,org.eclipse.equinox.p2.directorywatcher@default:default,org.eclipse.equinox.p2.engine@default:default,org.eclipse.equinox.p2.extensionlocation@default:default,org.eclipse.equinox.p2.garbagecollector@default:default,org.eclipse.equinox.p2.jarprocessor@default:default,org.eclipse.equinox.p2.metadata.repository@default:default,org.eclipse.equinox.p2.metadata@default:default,org.eclipse.equinox.p2.operations@default:default,org.eclipse.equinox.p2.publisher.eclipse@default:default,org.eclipse.equinox.p2.publisher@default:default,org.eclipse.equinox.p2.ql@default:default,org.eclipse.equinox.p2.reconciler.dropins@default:default,org.eclipse.equinox.p2.repository.tools@default:default,org.eclipse.equinox.p2.repository@default:default,org.eclipse.equinox.p2.touchpoint.eclipse@default:default,org.eclipse.equinox.p2.touchpoint.natives@default:default,org.eclipse.equinox.p2.transport.ecf@default:default,org.eclipse.equinox.p2.ui.importexport@default:default,org.eclipse.equinox.p2.ui.sdk.scheduler@default:default,org.eclipse.equinox.p2.ui.sdk@default:default,org.eclipse.equinox.p2.ui@default:default,org.eclipse.equinox.p2.updatechecker@default:default,org.eclipse.equinox.p2.updatesite@default:default,org.eclipse.equinox.preferences@default:default,org.eclipse.equinox.registry@default:default,org.eclipse.equinox.security.ui@default:default,org.eclipse.equinox.security.win32.x86_64@default:false,org.eclipse.equinox.security@default:default,org.eclipse.equinox.simpleconfigurator.manipulator@default:default,org.eclipse.equinox.simpleconfigurator@1:true,org.eclipse.equinox.util@default:default,org.eclipse.gef@default:default,org.eclipse.help.appserver@default:default,org.eclipse.help.base@default:default,org.eclipse.help.ui@default:default,org.eclipse.help.webapp@default:default,org.eclipse.help@default:default,org.eclipse.jdt.apt.core@default:default,org.eclipse.jdt.apt.pluggable.core@default:default,org.eclipse.jdt.apt.ui@default:default,org.eclipse.jdt.compiler.apt@default:false,org.eclipse.jdt.compiler.tool@default:false,org.eclipse.jdt.core.manipulation@default:default,org.eclipse.jdt.core@default:default,org.eclipse.jdt.debug.ui@default:default,org.eclipse.jdt.debug@default:default,org.eclipse.jdt.doc.isv@default:default,org.eclipse.jdt.doc.user@default:default,org.eclipse.jdt.junit.core@default:default,org.eclipse.jdt.junit.runtime@default:default,org.eclipse.jdt.junit4.runtime@default:default,org.eclipse.jdt.junit@default:default,org.eclipse.jdt.launching@default:default,org.eclipse.jdt.ui@default:default,org.eclipse.jdt@default:default,org.eclipse.jface.databinding@default:default,org.eclipse.jface.text@default:default,org.eclipse.jface@default:default,org.eclipse.jsch.core@default:default,org.eclipse.jsch.ui@default:default,org.eclipse.ltk.core.refactoring@default:default,org.eclipse.ltk.ui.refactoring@default:default,org.eclipse.osgi.services@default:default,org.eclipse.osgi.util@default:default,org.eclipse.osgi@-1:true,org.eclipse.pde.api.tools.ui@default:default,org.eclipse.pde.api.tools@default:default,org.eclipse.pde.build@default:default,org.eclipse.pde.core@default:default,org.eclipse.pde.doc.user@default:default,org.eclipse.pde.ds.core@default:default,org.eclipse.pde.ds.ui@default:default,org.eclipse.pde.junit.runtime@default:default,org.eclipse.pde.launching@default:default,org.eclipse.pde.runtime@default:default,org.eclipse.pde.ua.core@default:default,org.eclipse.pde.ua.ui@default:default,org.eclipse.pde.ui.templates@default:default,org.eclipse.pde.ui@default:default,org.eclipse.pde@default:default,org.eclipse.platform.doc.isv@default:default,org.eclipse.platform.doc.user@default:default,org.eclipse.platform@default:default,org.eclipse.rcp@default:default,org.eclipse.sdk@default:default,org.eclipse.search@default:default,org.eclipse.swt.win32.win32.x86_64@default:false,org.eclipse.swt@default:default,org.eclipse.team.core@default:default,org.eclipse.team.cvs.core@default:default,org.eclipse.team.cvs.ssh2@default:default,org.eclipse.team.cvs.ui@default:default,org.eclipse.team.ui@default:default,org.eclipse.text@default:default,org.eclipse.ui.browser@default:default,org.eclipse.ui.cheatsheets@default:default,org.eclipse.ui.console@default:default,org.eclipse.ui.editors@default:default,org.eclipse.ui.externaltools@default:default,org.eclipse.ui.forms@default:default,org.eclipse.ui.ide.application@default:default,org.eclipse.ui.ide@default:default,org.eclipse.ui.intro.universal@default:default,org.eclipse.ui.intro@default:default,org.eclipse.ui.navigator.resources@default:default,org.eclipse.ui.navigator@default:default,org.eclipse.ui.net@default:default,org.eclipse.ui.presentations.r21@default:default,org.eclipse.ui.views.log@default:default,org.eclipse.ui.views.properties.tabbed@default:default,org.eclipse.ui.views@default:default,org.eclipse.ui.win32@default:false,org.eclipse.ui.workbench.compatibility@default:false,org.eclipse.ui.workbench.texteditor@default:default,org.eclipse.ui.workbench@default:default,org.eclipse.ui@default:default,org.eclipse.update.configurator@3:true,org.eclipse.update.core.win32@default:false,org.eclipse.update.core@default:default,org.eclipse.update.scheduler@default:default,org.eclipse.update.ui@default:default,org.fife.rsyntaxtextarea@default:default,org.hamcrest.core@default:default,org.junit*3.8.2.v3_8_2_v20100427-1100@default:default,org.junit*4.8.2.v4_8_2_v20110321-1705@default:default,org.junit4@default:default,org.knime.base@default:default,org.knime.bio.types@default:default,org.knime.build.tools@default:default,org.knime.build@default:default,org.knime.chem.base.deprecated@default:false,org.knime.chem.base@default:default,org.knime.chem.types@default:default,org.knime.core.data.uritype@default:default,org.knime.core.pmml@default:default,org.knime.core.util@default:default,org.knime.core@default:default,org.knime.deprecated@default:false,org.knime.distmatrix@default:default,org.knime.ext.chem.moss@default:default,org.knime.ext.chem.openbabel.bin.win32.x86@default:false,org.knime.ext.chem.openbabel@default:default,org.knime.ext.sun@default:default,org.knime.ext.svg@default:default,org.knime.jsnippets@default:default,org.knime.product@default:default,org.knime.stats@default:default,org.knime.testing.headless@default:false,org.knime.testing.ui@default:false,org.knime.testing@default:default,org.knime.timeseries@default:default,org.knime.workbench.core@default:default,org.knime.workbench.editor@default:default,org.knime.workbench.explorer.view@default:default,org.knime.workbench.extension@default:default,org.knime.workbench.help@default:default,org.knime.workbench.repository@default:default,org.knime.workbench.ui.layout@default:default,org.knime.workbench.ui@default:default,org.knime.workbench@default:default,org.mortbay.jetty.server@default:default,org.mortbay.jetty.util@default:default,org.objectweb.asm@default:default,org.sat4j.core@default:default,org.sat4j.pb@default:default,org.tigris.subversion.clientadapter.svnkit@default:default,org.tigris.subversion.clientadapter@default:default,org.tigris.subversion.subclipse.core@default:default,org.tigris.subversion.subclipse.doc@default:default,org.tigris.subversion.subclipse.graph@default:default,org.tigris.subversion.subclipse.tools.usage@default:default,org.tigris.subversion.subclipse.ui@default:default,org.tmatesoft.sqljet@default:default,org.tmatesoft.svnkit@default:default,org.w3c.css.sac@default:default,org.w3c.dom.smil@default:default,org.w3c.dom.svg@default:default,org.w3c.sac@default:default"/>
-<stringAttribute key="selected_workspace_plugins" value="com.novartis.nibr.cix.knime.belief.plugin@default:default,com.novartis.nibr.cix.knime.multiscaling@default:default,com.novartis.nibr.cix.knime.sba.plugin@default:default,com.novartis.nibr.cix.knime.sctree.plugin@default:default,com.novartis.nibr.cix.knime.t4v.plugin@default:default,org.knime.workbench.help@default:default,org.rdkit.knime.bin.linux.x86@default:false,org.rdkit.knime.bin.linux.x86_64@default:false,org.rdkit.knime.bin.macosx.x86_64@default:false,org.rdkit.knime.bin.win32.x86@default:false,org.rdkit.knime.bin.win32.x86_64@default:false,org.rdkit.knime.nodes@default:default,org.rdkit.knime.testing@default:false,org.rdkit.knime.types@default:default,org.rdkit.knime.wizards.samples@default:default,org.rdkit.knime.wizards@default:default"/>
-<booleanAttribute key="show_selected_only" value="false"/>
-<stringAttribute key="templateConfig" value="${target_home}\configuration\config.ini"/>
-<booleanAttribute key="tracing" value="false"/>
-<booleanAttribute key="useCustomFeatures" value="false"/>
-<booleanAttribute key="useDefaultConfig" value="true"/>
-<booleanAttribute key="useDefaultConfigArea" value="true"/>
-<booleanAttribute key="useProduct" value="false"/>
+    <setAttribute key="additional_plugins"/>
+    <booleanAttribute key="append.args" value="true"/>
+    <stringAttribute key="application" value="org.knime.testing.NGUnittestRunner"/>
+    <booleanAttribute key="askclear" value="true"/>
+    <booleanAttribute key="automaticAdd" value="true"/>
+    <booleanAttribute key="automaticValidate" value="false"/>
+    <stringAttribute key="bootstrap" value=""/>
+    <stringAttribute key="checked" value="[NONE]"/>
+    <booleanAttribute key="clearConfig" value="true"/>
+    <booleanAttribute key="clearws" value="false"/>
+    <booleanAttribute key="clearwslog" value="false"/>
+    <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/RDKIT KNIME JUNIT TEST (AUTOMATICALLY NON-GUI)"/>
+    <booleanAttribute key="default" value="true"/>
+    <setAttribute key="deselected_workspace_bundles">
+        <setEntry value="com.novartis.nibr.knime"/>
+        <setEntry value="com.novartis.nibr.knime.testing"/>
+    </setAttribute>
+    <stringAttribute key="featureDefaultLocation" value="workspace"/>
+    <stringAttribute key="featurePluginResolution" value="workspace"/>
+    <booleanAttribute key="includeOptional" value="true"/>
+    <stringAttribute key="location" value="${workspace_loc:org.rdkit.knime.testing/junit-tests/workspace}"/>
+    <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
+    <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+        <listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
+        <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
+    </listAttribute>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
+    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -xmlResultDir &quot;${workspace_loc:org.rdkit.knime.testing/junit-tests}/test-results&quot;"/>
+    <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx1200m -XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dknime.enable.fastload=true -Dknime.user.env=dev"/>
+    <stringAttribute key="pde.version" value="3.3"/>
+    <stringAttribute key="product" value="org.eclipse.sdk.ide"/>
+    <setAttribute key="selected_features">
+        <setEntry value="com.collabnet.subversion.merge.feature:default"/>
+        <setEntry value="com.knime.features.enterprise.client.exampleserver:default"/>
+        <setEntry value="com.knime.features.enterprise.client:default"/>
+        <setEntry value="com.knime.features.enterprise.server.ws.client:default"/>
+        <setEntry value="com.knime.features.explorer.serverspace:default"/>
+        <setEntry value="jp.co.infocom.cheminfo.marvin.feature:default"/>
+        <setEntry value="org.eclipse.cvs.source:default"/>
+        <setEntry value="org.eclipse.cvs:default"/>
+        <setEntry value="org.eclipse.draw2d:default"/>
+        <setEntry value="org.eclipse.equinox.p2.core.feature.source:default"/>
+        <setEntry value="org.eclipse.equinox.p2.core.feature:default"/>
+        <setEntry value="org.eclipse.equinox.p2.extras.feature.source:default"/>
+        <setEntry value="org.eclipse.equinox.p2.extras.feature:default"/>
+        <setEntry value="org.eclipse.equinox.p2.rcp.feature.source:default"/>
+        <setEntry value="org.eclipse.equinox.p2.rcp.feature:default"/>
+        <setEntry value="org.eclipse.equinox.p2.user.ui.source:default"/>
+        <setEntry value="org.eclipse.equinox.p2.user.ui:default"/>
+        <setEntry value="org.eclipse.gef:default"/>
+        <setEntry value="org.eclipse.help.source:default"/>
+        <setEntry value="org.eclipse.help:default"/>
+        <setEntry value="org.eclipse.jdt.source:default"/>
+        <setEntry value="org.eclipse.jdt:default"/>
+        <setEntry value="org.eclipse.pde.source:default"/>
+        <setEntry value="org.eclipse.pde:default"/>
+        <setEntry value="org.eclipse.platform.source:default"/>
+        <setEntry value="org.eclipse.platform:default"/>
+        <setEntry value="org.eclipse.rcp.source:default"/>
+        <setEntry value="org.eclipse.rcp:default"/>
+        <setEntry value="org.eclipse.sdk:default"/>
+        <setEntry value="org.knime.binary.jre.win32.win32.x86_64:default"/>
+        <setEntry value="org.knime.binary.jre:default"/>
+        <setEntry value="org.knime.features.base.source:default"/>
+        <setEntry value="org.knime.features.base:default"/>
+        <setEntry value="org.knime.features.chem.types:default"/>
+        <setEntry value="org.knime.features.ext.chem.tools:default"/>
+        <setEntry value="org.knime.features.sdk:default"/>
+        <setEntry value="org.knime.features.testingapplication:default"/>
+        <setEntry value="org.knime.features.wizard:default"/>
+        <setEntry value="org.rdkit.knime.feature:default"/>
+        <setEntry value="org.rdkit.knime.testing.feature:default"/>
+        <setEntry value="org.tigris.subversion.clientadapter.feature:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.graph.feature:default"/>
+        <setEntry value="org.tigris.subversion.subclipse:default"/>
+        <setEntry value="org.tmatesoft.svnkit:default"/>
+    </setAttribute>
+    <setAttribute key="selected_target_bundles">
+        <setEntry value="com.collabnet.subversion.merge@default:default"/>
+        <setEntry value="com.ibm.icu@default:default"/>
+        <setEntry value="com.jcraft.jsch@default:default"/>
+        <setEntry value="com.knime.enterprise.client.filesystem@default:default"/>
+        <setEntry value="com.knime.enterprise.client.glassfish@default:default"/>
+        <setEntry value="com.knime.enterprise.server.ws.client@default:default"/>
+        <setEntry value="com.knime.enterprise.utility@default:default"/>
+        <setEntry value="com.knime.explorer.server@default:default"/>
+        <setEntry value="com.knime.explorer.serverspace@default:default"/>
+        <setEntry value="com.knime.explorer.sharedspace@default:default"/>
+        <setEntry value="com.trilead.ssh2@default:default"/>
+        <setEntry value="java_cup.runtime@default:default"/>
+        <setEntry value="javax.servlet.jsp@default:default"/>
+        <setEntry value="javax.servlet@default:default"/>
+        <setEntry value="javax.xml.rpc@default:default"/>
+        <setEntry value="javax.xml@default:default"/>
+        <setEntry value="jp.co.infocom.cheminfo.jchemlib.bin.win32.x86_64@default:false"/>
+        <setEntry value="jp.co.infocom.cheminfo.jchemlib@default:default"/>
+        <setEntry value="jp.co.infocom.cheminfo.marvin@default:default"/>
+        <setEntry value="net.java.dev.jna@default:default"/>
+        <setEntry value="org.apache.ant@default:default"/>
+        <setEntry value="org.apache.batik.bridge@default:default"/>
+        <setEntry value="org.apache.batik.css@default:default"/>
+        <setEntry value="org.apache.batik.dom.svg@default:default"/>
+        <setEntry value="org.apache.batik.dom@default:default"/>
+        <setEntry value="org.apache.batik.ext.awt@default:default"/>
+        <setEntry value="org.apache.batik.parser@default:default"/>
+        <setEntry value="org.apache.batik.svggen@default:default"/>
+        <setEntry value="org.apache.batik.swing@default:default"/>
+        <setEntry value="org.apache.batik.transcoder@default:default"/>
+        <setEntry value="org.apache.batik.util.gui@default:default"/>
+        <setEntry value="org.apache.batik.util@default:default"/>
+        <setEntry value="org.apache.batik.xml@default:default"/>
+        <setEntry value="org.apache.bcel@default:default"/>
+        <setEntry value="org.apache.commons.codec*1.3.0.v201101211617@default:default"/>
+        <setEntry value="org.apache.commons.codec*1.7.0@default:default"/>
+        <setEntry value="org.apache.commons.el@default:default"/>
+        <setEntry value="org.apache.commons.httpclient@default:default"/>
+        <setEntry value="org.apache.commons.io@default:default"/>
+        <setEntry value="org.apache.commons.lang@default:default"/>
+        <setEntry value="org.apache.commons.logging*1.0.4.v201101211617@default:default"/>
+        <setEntry value="org.apache.commons.logging*1.1.1.v201101211721@default:default"/>
+        <setEntry value="org.apache.commons.math@default:default"/>
+        <setEntry value="org.apache.jasper@default:default"/>
+        <setEntry value="org.apache.log4j@default:default"/>
+        <setEntry value="org.apache.lucene.analysis@default:default"/>
+        <setEntry value="org.apache.lucene.core@default:default"/>
+        <setEntry value="org.apache.lucene.highlighter@default:default"/>
+        <setEntry value="org.apache.lucene.memory@default:default"/>
+        <setEntry value="org.apache.lucene.misc@default:default"/>
+        <setEntry value="org.apache.lucene.queries@default:default"/>
+        <setEntry value="org.apache.lucene.snowball@default:default"/>
+        <setEntry value="org.apache.lucene.spellchecker@default:default"/>
+        <setEntry value="org.apache.lucene@default:default"/>
+        <setEntry value="org.apache.xalan@default:default"/>
+        <setEntry value="org.apache.xerces@default:default"/>
+        <setEntry value="org.apache.xml.resolver@default:default"/>
+        <setEntry value="org.apache.xml.serializer@default:default"/>
+        <setEntry value="org.apache.xmlbeans@default:default"/>
+        <setEntry value="org.eclipse.ant.core@default:default"/>
+        <setEntry value="org.eclipse.ant.launching@default:default"/>
+        <setEntry value="org.eclipse.ant.optional.junit@default:false"/>
+        <setEntry value="org.eclipse.ant.ui@default:default"/>
+        <setEntry value="org.eclipse.compare.core@default:default"/>
+        <setEntry value="org.eclipse.compare.win32@default:default"/>
+        <setEntry value="org.eclipse.compare@default:default"/>
+        <setEntry value="org.eclipse.core.boot@default:default"/>
+        <setEntry value="org.eclipse.core.commands@default:default"/>
+        <setEntry value="org.eclipse.core.contenttype@default:default"/>
+        <setEntry value="org.eclipse.core.databinding.beans@default:default"/>
+        <setEntry value="org.eclipse.core.databinding.observable@default:default"/>
+        <setEntry value="org.eclipse.core.databinding.property@default:default"/>
+        <setEntry value="org.eclipse.core.databinding@default:default"/>
+        <setEntry value="org.eclipse.core.expressions@default:default"/>
+        <setEntry value="org.eclipse.core.externaltools@default:default"/>
+        <setEntry value="org.eclipse.core.filebuffers@default:default"/>
+        <setEntry value="org.eclipse.core.filesystem.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.core.filesystem@default:default"/>
+        <setEntry value="org.eclipse.core.jobs@default:default"/>
+        <setEntry value="org.eclipse.core.net.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.core.net@default:default"/>
+        <setEntry value="org.eclipse.core.resources@default:default"/>
+        <setEntry value="org.eclipse.core.runtime.compatibility.auth@default:default"/>
+        <setEntry value="org.eclipse.core.runtime.compatibility.registry@default:false"/>
+        <setEntry value="org.eclipse.core.runtime.compatibility@default:default"/>
+        <setEntry value="org.eclipse.core.runtime@default:true"/>
+        <setEntry value="org.eclipse.core.variables@default:default"/>
+        <setEntry value="org.eclipse.cvs@default:default"/>
+        <setEntry value="org.eclipse.debug.core@default:default"/>
+        <setEntry value="org.eclipse.debug.ui@default:default"/>
+        <setEntry value="org.eclipse.draw2d@default:default"/>
+        <setEntry value="org.eclipse.ecf.filetransfer@default:default"/>
+        <setEntry value="org.eclipse.ecf.identity@default:default"/>
+        <setEntry value="org.eclipse.ecf.provider.filetransfer.httpclient.ssl@default:false"/>
+        <setEntry value="org.eclipse.ecf.provider.filetransfer.httpclient@default:default"/>
+        <setEntry value="org.eclipse.ecf.provider.filetransfer.ssl@default:false"/>
+        <setEntry value="org.eclipse.ecf.provider.filetransfer@default:default"/>
+        <setEntry value="org.eclipse.ecf.ssl@default:false"/>
+        <setEntry value="org.eclipse.ecf@default:default"/>
+        <setEntry value="org.eclipse.equinox.app@default:default"/>
+        <setEntry value="org.eclipse.equinox.common@2:true"/>
+        <setEntry value="org.eclipse.equinox.concurrent@default:default"/>
+        <setEntry value="org.eclipse.equinox.ds@1:true"/>
+        <setEntry value="org.eclipse.equinox.event@default:default"/>
+        <setEntry value="org.eclipse.equinox.frameworkadmin.equinox@default:default"/>
+        <setEntry value="org.eclipse.equinox.frameworkadmin@default:default"/>
+        <setEntry value="org.eclipse.equinox.http.jetty@default:default"/>
+        <setEntry value="org.eclipse.equinox.http.registry@default:default"/>
+        <setEntry value="org.eclipse.equinox.http.servlet@default:default"/>
+        <setEntry value="org.eclipse.equinox.jsp.jasper.registry@default:default"/>
+        <setEntry value="org.eclipse.equinox.jsp.jasper@default:default"/>
+        <setEntry value="org.eclipse.equinox.launcher.win32.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.equinox.launcher@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.artifact.repository@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.console@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.core@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.director.app@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.director@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.directorywatcher@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.engine@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.extensionlocation@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.garbagecollector@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.jarprocessor@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.metadata.repository@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.metadata@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.operations@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.publisher.eclipse@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.publisher@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.ql@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.reconciler.dropins@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.repository.tools@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.repository@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.touchpoint.eclipse@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.touchpoint.natives@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.transport.ecf@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.ui.importexport@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.ui.sdk.scheduler@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.ui.sdk@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.ui@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.updatechecker@default:default"/>
+        <setEntry value="org.eclipse.equinox.p2.updatesite@default:default"/>
+        <setEntry value="org.eclipse.equinox.preferences@default:default"/>
+        <setEntry value="org.eclipse.equinox.registry@default:default"/>
+        <setEntry value="org.eclipse.equinox.security.ui@default:default"/>
+        <setEntry value="org.eclipse.equinox.security.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.equinox.security@default:default"/>
+        <setEntry value="org.eclipse.equinox.simpleconfigurator.manipulator@default:default"/>
+        <setEntry value="org.eclipse.equinox.simpleconfigurator@1:true"/>
+        <setEntry value="org.eclipse.equinox.util@default:default"/>
+        <setEntry value="org.eclipse.gef@default:default"/>
+        <setEntry value="org.eclipse.help.appserver@default:default"/>
+        <setEntry value="org.eclipse.help.base@default:default"/>
+        <setEntry value="org.eclipse.help.ui@default:default"/>
+        <setEntry value="org.eclipse.help.webapp@default:default"/>
+        <setEntry value="org.eclipse.help@default:default"/>
+        <setEntry value="org.eclipse.jdt.apt.core@default:default"/>
+        <setEntry value="org.eclipse.jdt.apt.pluggable.core@default:default"/>
+        <setEntry value="org.eclipse.jdt.apt.ui@default:default"/>
+        <setEntry value="org.eclipse.jdt.compiler.apt@default:false"/>
+        <setEntry value="org.eclipse.jdt.compiler.tool@default:false"/>
+        <setEntry value="org.eclipse.jdt.core.manipulation@default:default"/>
+        <setEntry value="org.eclipse.jdt.core@default:default"/>
+        <setEntry value="org.eclipse.jdt.debug.ui@default:default"/>
+        <setEntry value="org.eclipse.jdt.debug@default:default"/>
+        <setEntry value="org.eclipse.jdt.doc.isv@default:default"/>
+        <setEntry value="org.eclipse.jdt.doc.user@default:default"/>
+        <setEntry value="org.eclipse.jdt.junit.core@default:default"/>
+        <setEntry value="org.eclipse.jdt.junit.runtime@default:default"/>
+        <setEntry value="org.eclipse.jdt.junit4.runtime@default:default"/>
+        <setEntry value="org.eclipse.jdt.junit@default:default"/>
+        <setEntry value="org.eclipse.jdt.launching@default:default"/>
+        <setEntry value="org.eclipse.jdt.ui@default:default"/>
+        <setEntry value="org.eclipse.jdt@default:default"/>
+        <setEntry value="org.eclipse.jface.databinding@default:default"/>
+        <setEntry value="org.eclipse.jface.text@default:default"/>
+        <setEntry value="org.eclipse.jface@default:default"/>
+        <setEntry value="org.eclipse.jsch.core@default:default"/>
+        <setEntry value="org.eclipse.jsch.ui@default:default"/>
+        <setEntry value="org.eclipse.ltk.core.refactoring@default:default"/>
+        <setEntry value="org.eclipse.ltk.ui.refactoring@default:default"/>
+        <setEntry value="org.eclipse.osgi.services@default:default"/>
+        <setEntry value="org.eclipse.osgi.util@default:default"/>
+        <setEntry value="org.eclipse.osgi@-1:true"/>
+        <setEntry value="org.eclipse.pde.api.tools.ui@default:default"/>
+        <setEntry value="org.eclipse.pde.api.tools@default:default"/>
+        <setEntry value="org.eclipse.pde.build@default:default"/>
+        <setEntry value="org.eclipse.pde.core@default:default"/>
+        <setEntry value="org.eclipse.pde.doc.user@default:default"/>
+        <setEntry value="org.eclipse.pde.ds.core@default:default"/>
+        <setEntry value="org.eclipse.pde.ds.ui@default:default"/>
+        <setEntry value="org.eclipse.pde.junit.runtime@default:default"/>
+        <setEntry value="org.eclipse.pde.launching@default:default"/>
+        <setEntry value="org.eclipse.pde.runtime@default:default"/>
+        <setEntry value="org.eclipse.pde.ua.core@default:default"/>
+        <setEntry value="org.eclipse.pde.ua.ui@default:default"/>
+        <setEntry value="org.eclipse.pde.ui.templates@default:default"/>
+        <setEntry value="org.eclipse.pde.ui@default:default"/>
+        <setEntry value="org.eclipse.pde@default:default"/>
+        <setEntry value="org.eclipse.platform.doc.isv@default:default"/>
+        <setEntry value="org.eclipse.platform.doc.user@default:default"/>
+        <setEntry value="org.eclipse.platform@default:default"/>
+        <setEntry value="org.eclipse.rcp@default:default"/>
+        <setEntry value="org.eclipse.sdk@default:default"/>
+        <setEntry value="org.eclipse.search@default:default"/>
+        <setEntry value="org.eclipse.swt.win32.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.swt@default:default"/>
+        <setEntry value="org.eclipse.team.core@default:default"/>
+        <setEntry value="org.eclipse.team.cvs.core@default:default"/>
+        <setEntry value="org.eclipse.team.cvs.ssh2@default:default"/>
+        <setEntry value="org.eclipse.team.cvs.ui@default:default"/>
+        <setEntry value="org.eclipse.team.ui@default:default"/>
+        <setEntry value="org.eclipse.text@default:default"/>
+        <setEntry value="org.eclipse.ui.browser@default:default"/>
+        <setEntry value="org.eclipse.ui.cheatsheets@default:default"/>
+        <setEntry value="org.eclipse.ui.console@default:default"/>
+        <setEntry value="org.eclipse.ui.editors@default:default"/>
+        <setEntry value="org.eclipse.ui.externaltools@default:default"/>
+        <setEntry value="org.eclipse.ui.forms@default:default"/>
+        <setEntry value="org.eclipse.ui.ide.application@default:default"/>
+        <setEntry value="org.eclipse.ui.ide@default:default"/>
+        <setEntry value="org.eclipse.ui.intro.universal@default:default"/>
+        <setEntry value="org.eclipse.ui.intro@default:default"/>
+        <setEntry value="org.eclipse.ui.navigator.resources@default:default"/>
+        <setEntry value="org.eclipse.ui.navigator@default:default"/>
+        <setEntry value="org.eclipse.ui.net@default:default"/>
+        <setEntry value="org.eclipse.ui.presentations.r21@default:default"/>
+        <setEntry value="org.eclipse.ui.views.log@default:default"/>
+        <setEntry value="org.eclipse.ui.views.properties.tabbed@default:default"/>
+        <setEntry value="org.eclipse.ui.views@default:default"/>
+        <setEntry value="org.eclipse.ui.win32@default:false"/>
+        <setEntry value="org.eclipse.ui.workbench.compatibility@default:false"/>
+        <setEntry value="org.eclipse.ui.workbench.texteditor@default:default"/>
+        <setEntry value="org.eclipse.ui.workbench@default:default"/>
+        <setEntry value="org.eclipse.ui@default:default"/>
+        <setEntry value="org.eclipse.update.configurator@3:true"/>
+        <setEntry value="org.eclipse.update.core.win32@default:false"/>
+        <setEntry value="org.eclipse.update.core@default:default"/>
+        <setEntry value="org.eclipse.update.scheduler@default:default"/>
+        <setEntry value="org.eclipse.update.ui@default:default"/>
+        <setEntry value="org.fife.rsyntaxtextarea@default:default"/>
+        <setEntry value="org.hamcrest.core@default:default"/>
+        <setEntry value="org.junit*3.8.2.v3_8_2_v20100427-1100@default:default"/>
+        <setEntry value="org.junit*4.8.2.v4_8_2_v20110321-1705@default:default"/>
+        <setEntry value="org.junit4@default:default"/>
+        <setEntry value="org.knime.base@default:default"/>
+        <setEntry value="org.knime.bio.types@default:default"/>
+        <setEntry value="org.knime.build.tools@default:default"/>
+        <setEntry value="org.knime.build@default:default"/>
+        <setEntry value="org.knime.chem.base.deprecated@default:false"/>
+        <setEntry value="org.knime.chem.base@default:default"/>
+        <setEntry value="org.knime.chem.types@default:default"/>
+        <setEntry value="org.knime.core.data.uritype@default:default"/>
+        <setEntry value="org.knime.core.pmml@default:default"/>
+        <setEntry value="org.knime.core.util@default:default"/>
+        <setEntry value="org.knime.core@default:default"/>
+        <setEntry value="org.knime.deprecated@default:false"/>
+        <setEntry value="org.knime.distmatrix@default:default"/>
+        <setEntry value="org.knime.ext.chem.moss@default:default"/>
+        <setEntry value="org.knime.ext.chem.openbabel.bin.win32.x86@default:false"/>
+        <setEntry value="org.knime.ext.chem.openbabel@default:default"/>
+        <setEntry value="org.knime.ext.sun@default:default"/>
+        <setEntry value="org.knime.ext.svg@default:default"/>
+        <setEntry value="org.knime.jsnippets@default:default"/>
+        <setEntry value="org.knime.product@default:default"/>
+        <setEntry value="org.knime.stats@default:default"/>
+        <setEntry value="org.knime.testing.headless@default:false"/>
+        <setEntry value="org.knime.testing.ui@default:false"/>
+        <setEntry value="org.knime.testing@default:default"/>
+        <setEntry value="org.knime.timeseries@default:default"/>
+        <setEntry value="org.knime.workbench.core@default:default"/>
+        <setEntry value="org.knime.workbench.editor@default:default"/>
+        <setEntry value="org.knime.workbench.explorer.view@default:default"/>
+        <setEntry value="org.knime.workbench.extension@default:default"/>
+        <setEntry value="org.knime.workbench.help@default:default"/>
+        <setEntry value="org.knime.workbench.repository@default:default"/>
+        <setEntry value="org.knime.workbench.ui.layout@default:default"/>
+        <setEntry value="org.knime.workbench.ui@default:default"/>
+        <setEntry value="org.knime.workbench@default:default"/>
+        <setEntry value="org.mortbay.jetty.server@default:default"/>
+        <setEntry value="org.mortbay.jetty.util@default:default"/>
+        <setEntry value="org.objectweb.asm@default:default"/>
+        <setEntry value="org.sat4j.core@default:default"/>
+        <setEntry value="org.sat4j.pb@default:default"/>
+        <setEntry value="org.tigris.subversion.clientadapter.svnkit@default:default"/>
+        <setEntry value="org.tigris.subversion.clientadapter@default:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.core@default:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.doc@default:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.graph@default:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.tools.usage@default:default"/>
+        <setEntry value="org.tigris.subversion.subclipse.ui@default:default"/>
+        <setEntry value="org.tmatesoft.sqljet@default:default"/>
+        <setEntry value="org.tmatesoft.svnkit@default:default"/>
+        <setEntry value="org.w3c.css.sac@default:default"/>
+        <setEntry value="org.w3c.dom.smil@default:default"/>
+        <setEntry value="org.w3c.dom.svg@default:default"/>
+        <setEntry value="org.w3c.sac@default:default"/>
+    </setAttribute>
+    <setAttribute key="selected_workspace_bundles">
+        <setEntry value="com.novartis.nibr.cix.knime.belief.plugin@default:default"/>
+        <setEntry value="com.novartis.nibr.cix.knime.multiscaling@default:default"/>
+        <setEntry value="com.novartis.nibr.cix.knime.sba.plugin@default:default"/>
+        <setEntry value="com.novartis.nibr.cix.knime.sctree.plugin@default:default"/>
+        <setEntry value="com.novartis.nibr.cix.knime.t4v.plugin@default:default"/>
+        <setEntry value="org.knime.workbench.help@default:default"/>
+        <setEntry value="org.rdkit.knime.bin.linux.x86@default:false"/>
+        <setEntry value="org.rdkit.knime.bin.linux.x86_64@default:false"/>
+        <setEntry value="org.rdkit.knime.bin.macosx.x86_64@default:false"/>
+        <setEntry value="org.rdkit.knime.bin.win32.x86@default:false"/>
+        <setEntry value="org.rdkit.knime.bin.win32.x86_64@default:false"/>
+        <setEntry value="org.rdkit.knime.nodes@default:default"/>
+        <setEntry value="org.rdkit.knime.testing@default:false"/>
+        <setEntry value="org.rdkit.knime.types@default:default"/>
+        <setEntry value="org.rdkit.knime.wizards.samples@default:default"/>
+        <setEntry value="org.rdkit.knime.wizards@default:default"/>
+    </setAttribute>
+    <booleanAttribute key="show_selected_only" value="false"/>
+    <stringAttribute key="templateConfig" value="${target_home}\configuration\config.ini"/>
+    <booleanAttribute key="tracing" value="false"/>
+    <booleanAttribute key="useCustomFeatures" value="false"/>
+    <booleanAttribute key="useDefaultConfig" value="true"/>
+    <booleanAttribute key="useDefaultConfigArea" value="true"/>
+    <booleanAttribute key="useProduct" value="false"/>
 </launchConfiguration>

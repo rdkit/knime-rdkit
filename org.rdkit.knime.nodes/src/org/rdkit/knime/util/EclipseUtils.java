@@ -49,9 +49,7 @@
 package org.rdkit.knime.util;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
@@ -59,19 +57,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import javax.swing.JApplet;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTError;
 import org.eclipse.swt.SWTException;
-import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
@@ -316,43 +309,6 @@ public class EclipseUtils {
 
 		return lbOpenViewLink;
 	}
-
-	/**
-	 * Creates an Eclipse composite control from an AWT component.
-	 * 
-	 * @param parent Parent composite. Must not be null.
-	 * @param comp AWT component to be wrapped. Must not be null.
-	 * 
-	 * @return Composite or null, if creation failed.
-	 */
-	public static Composite createAwtComposite(final Composite parent, final Component comp) {
-		Composite compositeBridge = null;
-
-		// Pre-checks
-		if (parent == null) {
-			throw new IllegalArgumentException("Composite parent must not be null.");
-		}
-
-		if (comp == null) {
-			throw new IllegalArgumentException("AWT component must not be null.");
-		}
-
-		try {
-			compositeBridge = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
-			final Frame frame = SWT_AWT.new_Frame(compositeBridge);
-			final JApplet panelHeavyWeight = new JApplet();
-			frame.add(panelHeavyWeight);
-			panelHeavyWeight.add(comp);
-
-			frame.add(comp);
-		}
-		catch (final SWTError e) {
-			LOGGER.warn("Cannot create Eclipse widget from this AWT component.", e);
-		}
-
-		return compositeBridge;
-	}
-
 
 	/**
 	 * Shows an Eclipse view with the specified id in the specified page. If null

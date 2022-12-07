@@ -173,7 +173,7 @@ public class StreamingOperatorInternalsBag extends StreamableOperatorInternals
          String strName = configItem.getKey();
          try {
             String strClass = configItem.getString("internals.class");
-            Object objInternals = Class.forName(strClass).newInstance();
+            Object objInternals = Class.forName(strClass).getDeclaredConstructor().newInstance();
             if (objInternals instanceof RDKitInternals) {
                ((RDKitInternals<?>)objInternals).load(configItem);
                m_mapInterals.put(strName, (RDKitInternals<?>)objInternals);
@@ -218,11 +218,11 @@ public class StreamingOperatorInternalsBag extends StreamableOperatorInternals
          }
          if (listItems.size() > 0) {
             try {
-               RDKitInternals<?> onTheFly = listItems.get(0).getClass().newInstance();
+               RDKitInternals<?> onTheFly = listItems.get(0).getClass().getDeclaredConstructor().newInstance();
                RDKitInternals<?> mergedItem = (RDKitInternals<?>)onTheFly.merge(listItems);
                merged.withItem(strName, mergedItem);
             }
-            catch (InstantiationException | IllegalAccessException exc) {
+            catch (Exception exc) {
                LOGGER.error("Unable to merge internal states for " + strName + " ... skipping it.", exc);
             }
          }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2010-2017
+ *  Copyright (C) 2010-2022
  *  Novartis Institutes for BioMedical Research
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,6 +56,8 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.osgi.internal.framework.EquinoxBundle;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.InvalidSettingsException;
@@ -63,6 +65,7 @@ import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 
 /**
  * This is the activator for this plugin that is instantiated by the Eclipse
@@ -99,9 +102,6 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 	 * different supported platforms.
 	 */
 	static {
-      LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86,
-            new String[] { "boost_serialization-vc140-mt-1_65_1",
-      "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_WIN32 + "." + Platform.ARCH_X86_64,
             new String[] { "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86,
@@ -109,6 +109,8 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
       LIBRARIES.put(Platform.OS_LINUX + "." + Platform.ARCH_X86_64,
             new String[] { "GraphMolWrap" });
       LIBRARIES.put(Platform.OS_MACOSX + "." + Platform.ARCH_X86_64,
+            new String[] { "GraphMolWrap" });
+      LIBRARIES.put(Platform.OS_MACOSX + "." + "aarch64" /* Platform.ARCH_AARCH64, only available in Eclipse 3.22+ (06/2021) */,
             new String[] { "GraphMolWrap" });
 	}
 
@@ -174,6 +176,26 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 			Platform.getLog(context.getBundle()).log(g_error);
 			investigateBinariesIssue();
 		}
+		
+		// Setup preference change listeners for our own preferences
+		getPreferenceStore()
+				.addPropertyChangeListener(new IPropertyChangeListener() {
+
+					/**
+					 * Called whenever a preference of the RDKit Types
+					 * Plug-In changes. 
+					 */
+					@Override
+					public void propertyChange(
+							final PropertyChangeEvent event) {
+						switch (event.getProperty()) {
+							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_FILE:
+							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_JSON:
+								RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
+								break;
+						}
+					}
+				});
 	}
 
 	/**

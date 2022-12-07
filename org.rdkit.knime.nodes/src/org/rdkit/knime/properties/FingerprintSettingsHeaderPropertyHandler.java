@@ -142,7 +142,7 @@ public class FingerprintSettingsHeaderPropertyHandler extends AbstractHeaderProp
 		// Do it the old way using a default constructor
 		if (scope == null) {
 			try {
-				scope = (InstanceScope)clazz.newInstance();
+				scope = (InstanceScope)clazz.getDeclaredConstructor().newInstance();
 			}
 			catch (final Exception exc) {
 				LOGGER.error("Unable to create instance preference scope instance.");

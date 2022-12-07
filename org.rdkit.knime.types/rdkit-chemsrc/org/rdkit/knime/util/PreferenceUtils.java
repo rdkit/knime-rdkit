@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2017
+ * Copyright (C) 2022
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -135,6 +135,17 @@ public class PreferenceUtils {
       }
       
       return listPrefs.toArray(new Preference[listPrefs.size()]);
+   }
+   
+   /**
+    * Checks, if the specific preference value is defined and not empty.
+    * 
+    * @param strValue The value to check. Can be null.
+    * 
+    * @return True, if the value has a non-empty value (trimming white spaces), otherwise false.
+    */
+   public static boolean isSet(String strValue) {
+	   return strValue != null && !strValue.trim().isEmpty();
    }
    
    //

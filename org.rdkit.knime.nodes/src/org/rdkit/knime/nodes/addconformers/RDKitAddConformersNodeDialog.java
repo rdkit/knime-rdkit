@@ -166,9 +166,9 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 
 		createNewGroup("Conformer Calculation");
 		super.addDialogComponent(new DialogComponentNumber(
-				createNumberOfConformersModel(), "Number of conformers: ", new Integer(1), 3));
+				createNumberOfConformersModel(), "Number of conformers: ", Integer.valueOf(1), 3));
 		super.addDialogComponent(new DialogComponentNumber(
-				createMaxIterationsModel(), "Maximum number of tries to generate conformers: ", new Integer(1), 3));
+				createMaxIterationsModel(), "Maximum number of tries to generate conformers: ", Integer.valueOf(1), 3));
 		super.addDialogComponent(new DialogComponentNumberEdit(
 				createRandomSeedModel(), "Random seed: ", 10));
 		super.addDialogComponent(new DialogComponentNumberEdit(
@@ -187,7 +187,7 @@ public class RDKitAddConformersNodeDialog extends DefaultNodeSettingsPane {
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseExpTorsionAnglesOptionModel(), "Use experimental torsion angle terms"));
 		super.addDialogComponent(new DialogComponentNumber(
-				createETversionModel(), "Experimental torsion angles version ", new Integer(1), 1));
+				createETversionModel(), "Experimental torsion angles version ", Integer.valueOf(1), 1));
 		super.addDialogComponent(new DialogComponentBoolean(
 				createUseSmallRingTorsionsOptionModel(), "Use experimental torsion angle terms for small rings"));
 		super.addDialogComponent(new DialogComponentBoolean(

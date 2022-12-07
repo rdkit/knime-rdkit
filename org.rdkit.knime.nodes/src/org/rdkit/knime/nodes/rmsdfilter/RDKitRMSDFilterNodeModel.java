@@ -551,7 +551,7 @@ public class RDKitRMSDFilterNodeModel extends AbstractRDKitNodeModel {
 			else {
 				iRet = count.intValue() + 1;
 			}
-			mapReferenceToCount.put(strRef, new Integer(iRet));
+			mapReferenceToCount.put(strRef, Integer.valueOf(iRet));
 		}
 
 		return iRet;

@@ -17,10 +17,10 @@ pipeline {
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
 		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "4.3"
+    	KNIME_VERSION = "4.6"
     	
     	// The Java version to be used to compile and build - possible values are java8, java11 and java17
-    	JAVA_VERSION = "java8"
+    	JAVA_VERSION = "java17"
 
     	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"
@@ -138,7 +138,7 @@ pipeline {
 				// Cleanup old data from last build
 				sh "rm -rf tmp results mirrorWorkspace"
 			}
-		}	 
+		}	
         stage('Compile and Build') {
         	steps {
 	            // Compiles the plugin and builds an update site from it
@@ -278,7 +278,7 @@ pipeline {
 					  quietPeriod: 0, 
 					  wait: false
 			}
-        }
+        }		 
     }
 	post {
 		// Use only ${env.NODE_NAME}, ${env.BUILD_URL}, ${env.JOB_NAME} and ${env.BUILD_NUMBER} in parameters

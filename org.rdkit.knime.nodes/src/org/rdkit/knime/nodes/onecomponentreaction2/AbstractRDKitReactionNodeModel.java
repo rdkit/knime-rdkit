@@ -599,7 +599,7 @@ extends AbstractRDKitNodeModel {
 			ret = sb.toString();
 		}
 		else {
-			ret = new Long(indexes[0]);
+			ret = Long.valueOf(indexes[0]);
 		}
 
 		return ret;

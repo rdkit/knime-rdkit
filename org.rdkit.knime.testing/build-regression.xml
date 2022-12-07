@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="org.rdkit.knime.nodes.testing" default="unzipAllTests">
 	<scriptdef name="splitpath" language="javascript">
+		<classpath>
+			<pathelement location="lib/javascript/nashorn-core-15.4.jar"/>
+			<pathelement location="lib/javascript/asm-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-commons-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-tree-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-util-9.4.jar"/>
+		</classpath>	
 		<attribute name="path" />
 		<attribute name="propertyPath" />
 		<attribute name="propertyFile" />
@@ -32,6 +39,13 @@
 	</scriptdef>
 	
 	<scriptdef name="splitnamewithextension" language="javascript">
+		<classpath>
+			<pathelement location="lib/javascript/nashorn-core-15.4.jar"/>
+			<pathelement location="lib/javascript/asm-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-commons-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-tree-9.4.jar"/>
+			<pathelement location="lib/javascript/asm-util-9.4.jar"/>
+		</classpath>	
 		<attribute name="file" />
 		<attribute name="propertyname" />
 		<attribute name="propertyextension" />

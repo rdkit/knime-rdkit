@@ -49,7 +49,6 @@
 package org.rdkit.knime.nodes.rdkit2svg;
 
 import org.RDKit.MolDrawOptions;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
@@ -80,9 +79,6 @@ public class RDKit2SVGNodeDialog extends DefaultNodeSettingsPane {
 
 	/** Default values, directly taken from RDKit binaries. */
 	public static final MolDrawOptions RDKIT_DEFAULT_PARAMETERS = new MolDrawOptions();
-
-	/** The logger instance. */
-	protected static final NodeLogger LOGGER = NodeLogger.getLogger(RDKit2SVGNodeDialog.class);
 	
 	//
 	// Constructor

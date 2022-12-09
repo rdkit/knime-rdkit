@@ -30,8 +30,9 @@
 		<module>org.rdkit.knime.testing.feature</module>
 		<module>org.rdkit.knime.types</module>
 		<module>org.rdkit.knime.bin.linux.x86_64</module>
-		<module>org.rdkit.knime.bin.macosx.x86_64</module>
 		<module>org.rdkit.knime.bin.win32.x86_64</module>
+		<module>org.rdkit.knime.bin.macosx.x86_64</module>
+		<module>org.rdkit.knime.bin.macosx.aarch64</module>
 		<module>org.rdkit.knime.wizards</module>
 		<module>org.rdkit.knime.wizards.feature</module>
 		<module>org.rdkit.knime.wizards.samples</module>
@@ -169,6 +170,7 @@
 						<plugin id="org.rdkit.knime.bin.linux.x86_64" />
 						<plugin id="org.rdkit.knime.bin.win32.x86_64" />
 						<plugin id="org.rdkit.knime.bin.macosx.x86_64" />
+						<plugin id="org.rdkit.knime.bin.macosx.aarch64" />
 					</excludes>
 				</configuration>
 			</plugin>
@@ -223,6 +225,11 @@
 							<os>macosx</os>
 							<ws>cocoa</ws>
 							<arch>x86_64</arch>
+						</environment>
+						<environment>
+							<os>macosx</os>
+							<ws>cocoa</ws>
+							<arch>aarch64</arch>
 						</environment>
 					</environments>
 				</configuration>

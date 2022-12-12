@@ -2,7 +2,6 @@ package org.rdkit.knime.types;
 
 import java.io.IOException;
 
-import org.RDKit.ChemicalReaction;
 import org.knime.python.typeextension.Serializer;
 import org.knime.python.typeextension.SerializerFactory;
 
@@ -48,14 +47,6 @@ public class RDKitReactionSerializer implements Serializer<RDKitReactionValue> {
 	 */
 	@Override
 	public byte[] serialize(final RDKitReactionValue value) throws IOException {
-		byte[] arrBinaryReaction = null;
-
-		if (value != null) {
-			final ChemicalReaction reaction = value.getReactionValue();
-			arrBinaryReaction = RDKitReactionCell.toByteArray(reaction);
-			// Note: Do not delete the reaction object here, because it is a reference to real cell content
-		}
-
-		return arrBinaryReaction;
+		return RDKitTypeSerializationUtils.serializeReactionValue(value);
 	}
 }

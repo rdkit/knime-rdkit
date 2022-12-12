@@ -1,5 +1,6 @@
 bin
 /org.rdkit.knime.types/python/*.pyc
+**/__pycache__/
 /.metadata/
 .polyglot.feature.xml.takari_issue_192
 .polyglot..META-INF_MANIFEST.MF

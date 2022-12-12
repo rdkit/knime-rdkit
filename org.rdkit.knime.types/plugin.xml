@@ -14,6 +14,16 @@
    	   	  		cellClass="org.rdkit.knime.types.RDKitAdapterCell" 
    	   	  		serializerClass="org.rdkit.knime.types.RDKitAdapterCell$RDKitAdapterCellSerializer">
           </serializer>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitMolCell2"
+                valueFactoryClass="org.rdkit.knime.types.RDKitMolCellValueFactory">
+          </ValueFactory>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitAdapterCell"
+                valueFactoryClass="org.rdkit.knime.types.RDKitAdapterCellValueFactory">
+          </ValueFactory>
       </DataType>
    </extension>
    
@@ -23,6 +33,11 @@
                 cellClass="org.rdkit.knime.types.RDKitReactionCell"
                 serializerClass="org.rdkit.knime.types.RDKitReactionCell$RDKitReactionSerializer">
           </serializer>
+          <ValueFactory
+                deprecated="false"
+                cellClass="org.rdkit.knime.types.RDKitReactionCell"
+                valueFactoryClass="org.rdkit.knime.types.RDKitReactionCellValueFactory">
+          </ValueFactory>
    	   </DataType>
    </extension>
    
@@ -145,5 +160,56 @@
             python-serializer="python/RDKitLongSparseIntVectSerializer.py"
             java-deserializer-factory="org.rdkit.knime.types.RDKitCountBasedFingerprintDeserializer$Factory">
       	</type>   
+   </extension>
+   <extension
+         point="org.knime.python3.types.PythonValueFactory">
+      <Module
+            modulePath="python3" moduleName="knime.types.ext.rdkit">
+         <PythonValueFactory
+               PythonClassName="RDKitMolValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitMolCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdchem.Mol">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitMolAdapterValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitAdapterCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdchem.Mol">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitReactionValueFactory"
+               ValueFactory="org.rdkit.knime.types.RDKitReactionCellValueFactory"
+               ValueTypeName="rdkit.Chem.rdChemReactions.ChemicalReaction">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitFingerprintValueFactory"
+               ValueFactory="org.knime.core.data.v2.value.DenseBitVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.ExplicitBitVect"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryUInt"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.UIntSparseIntVect"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryInt"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.IntSparseIntVect"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryULong"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.ULongSparseIntVect"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+         <PythonValueFactory
+               PythonClassName="RDKitCountFingerprintValueFactoryLong"
+               ValueFactory="org.knime.core.data.v2.value.DenseByteVectorValueFactory"
+               ValueTypeName="rdkit.DataStructs.cDataStructs.LongSparseIntVect"
+               isDefaultPythonRepresentation="false">
+         </PythonValueFactory>
+      </Module>
    </extension>   
    </plugin>

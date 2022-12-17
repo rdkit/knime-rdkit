@@ -215,7 +215,9 @@ implements SvgProvider {
 			omol = molCell.readMoleculeValue();
 			
 			// Normalize scale
-			omol.normalizeDepiction(-1, 0);
+			if (omol.getNumConformers() > 0) {
+				omol.normalizeDepiction(-1, 0);
+			}
 			
 			// Store the prepared molecule for drawing next
 			m_molecule = omol;
@@ -301,7 +303,9 @@ implements SvgProvider {
 					}			
 	
 					// Normalize scale
-					mol.normalizeDepiction(-1, 0);
+					if (omol.getNumConformers() > 0) {
+						mol.normalizeDepiction(-1, 0);
+					}
 
 					// Store the prepared molecule for drawing next
 					m_molecule = mol;

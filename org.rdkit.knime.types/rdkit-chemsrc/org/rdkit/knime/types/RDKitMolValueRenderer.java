@@ -214,6 +214,9 @@ implements SvgProvider {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
 			
+			// Normalize scale
+			omol.normalizeDepiction(-1, 0);
+			
 			// Store the prepared molecule for drawing next
 			m_molecule = omol;
 		} 
@@ -260,7 +263,10 @@ implements SvgProvider {
 						omol.updatePropertyCache(false);
 						RDKFuncs.symmetrizeSSSR(omol);
 						RDKFuncs.setHybridization(omol);
-						tmol.delete();
+						if (tmol != null) {
+							tmol.delete();
+							tmol = null;
+						}
 					}
 				}
 			} 
@@ -294,6 +300,9 @@ implements SvgProvider {
 						RDKFuncs.prepareMolForDrawing(mol, false);
 					}			
 	
+					// Normalize scale
+					mol.normalizeDepiction(-1, 0);
+
 					// Store the prepared molecule for drawing next
 					m_molecule = mol;
 				}

@@ -351,8 +351,8 @@ implements SvgProvider {
 		// Case 1: A missing cell
 		if (m_bIsMissingCell || m_strError != null) {
 			g.setFont(MISSING_CELL_FONT);
+			g.setColor(Color.red);
 			if (m_strError != null) {
-				g.setColor(Color.red);
 				drawString(g, m_strError, 2, 12);
 			}
 			else {

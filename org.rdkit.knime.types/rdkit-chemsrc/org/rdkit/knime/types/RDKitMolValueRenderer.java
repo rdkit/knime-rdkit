@@ -79,8 +79,8 @@ import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.util.LockedSupplier;
 import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
+import org.rdkit.knime.types.preferences.RDKitTypesPreferencePage;
 import org.w3c.dom.svg.SVGDocument;
-
 
 /**
  * This a renderer that draws nice 2D depictions of RDKit molecules.
@@ -227,11 +227,13 @@ implements SvgProvider {
 		      }
 				else if (value instanceof SdfValue) {
 		            String val = ((SdfValue) value).getSdfValue();
-		            tmol = RWMol.MolFromMolBlock(val, false);
+		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */, 
+		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
 		      }
 				else if (value instanceof MolValue) {
 		            String val = ((MolValue) value).getMolValue();
-		            tmol = RWMol.MolFromMolBlock(val, false);
+		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */, 
+		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
 		      }
 				else if (value instanceof SmartsValue) {
 		            String val = ((SmartsValue) value).getSmartsValue();

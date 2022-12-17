@@ -48,18 +48,20 @@
  */
 package org.rdkit.knime.types.preferences;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.node.NodeLogger;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.headers.HeaderPropertyHandlerRegistry;
+import org.rdkit.knime.util.EclipseUtils;
 
 /**
- * This is the preference page for the RDKit chemistry type definition. It
- * allows the user to change preferred renderer for all types listed in
- * {@link RDKitTypesPluginActivator#getCustomizableTypeList()}.
+ * This is the preference page for the RDKit chemistry type definition.
  *
  * @author Greg Landrum
  * @author Manuel Schwarze
@@ -70,6 +72,9 @@ implements IWorkbenchPreferencePage {
 	//
 	// Constants
 	//
+
+	/** The id of this preference page. */
+	public static final String ID = "org.rdkit.knime.types.preferences.RDKitTypes";
 
 	/** The preference key that stores a semicolon separated list of handlers for tooltip renderings. */
 	public static final String PREF_KEY_HANDLERS_RENDERING_HEADERS =
@@ -83,6 +88,24 @@ implements IWorkbenchPreferencePage {
 	public static final String PREF_KEY_HANDLERS_DISABLED =
 			HeaderPropertyHandlerRegistry.PREF_KEY_HANDLERS_DISABLED;
 
+	/** The preference key that stores the flag to enable/disable strict parsing for mol blocks when auto-converting SDFs. */
+	public static final String PREF_KEY_STRICT_PARSING_AUTO_CONVERSION = "mol2rdkit.strictparsing.autoconversion";
+
+	/** The preference key that stores the flag to enable/disable strict parsing for mol blocks when rendering. */
+	public static final String PREF_KEY_STRICT_PARSING_RENDERING = "mol2rdkit.strictparsing.rendering";
+
+	/** The preference key that stores the default flag to enable/disable strict parsing for mol blocks in node settings (new nodes). */
+	public static final String PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT = "mol2rdkit.strictparsing.nodesettings.default";
+	
+	/** The default for the flag to enable/disable strict parsing for mol blocks when auto-converting SDFs. */
+	public static final boolean DEFAULT_STRICT_PARSING_AUTO_CONVERSION = true;
+	
+	/** The default for the flag to enable/disable strict parsing for mol blocks when rendering. */
+	public static final boolean DEFAULT_STRICT_PARSING_RENDERING = true;
+	
+	/** The default for the flag to enable/disable strict parsing for mol blocks in node settings (new nodes). */
+	public static final boolean DEFAULT_STRICT_PARSING_NODE_SETTINGS = true;
+	
 	/** The logger instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(
 			RDKitTypesPreferencePage.class);
@@ -97,6 +120,28 @@ implements IWorkbenchPreferencePage {
 	 */
 	private static boolean g_bDefaultInitializationDone = false;
 
+	/** Cached setting. */
+	private static boolean g_bStrictParsingAutoConversion = DEFAULT_STRICT_PARSING_AUTO_CONVERSION;
+
+	/** Cached setting. */
+	private static boolean g_bStrictParsingRendering = DEFAULT_STRICT_PARSING_RENDERING;
+
+	/** Cached setting. */
+	private static boolean g_bStrictParsingNodeSettingsDefault = DEFAULT_STRICT_PARSING_NODE_SETTINGS;
+	
+	//
+	// Members
+	//
+	
+	/** The editor for setting strict parsing for auto conversion. */
+	private BooleanFieldEditor m_editorStrictParsingAutoConversion;
+	
+	/** The editor for setting strict parsing for rendering. */
+	private BooleanFieldEditor m_editorStrictParsingRendering;
+	
+	/** The editor for setting strict parsing for node settings defaults (new nodes). */
+	private BooleanFieldEditor m_editorStrictParsingNodeSettings;
+
 	//
 	// Constructors
 	//
@@ -106,15 +151,48 @@ implements IWorkbenchPreferencePage {
 	 */
 	public RDKitTypesPreferencePage() {
 		super(GRID);
-		// we use the pref store of the UI plugin
-		setPreferenceStore(RDKitTypesPluginActivator.getDefault()
-				.getPreferenceStore());
-		setDescription("RDKit Preferred Renderer");
+
+		// We use the preference store that is defined in the UI plug-in
+		final RDKitTypesPluginActivator plugin = RDKitTypesPluginActivator.getDefault();
+
+		if (plugin == null) {
+			setErrorMessage("The RDKit Types Plug-In could not be loaded.");
+		} else {
+			// Set the preference store
+			final IPreferenceStore prefStore = plugin.getPreferenceStore();
+			setPreferenceStore(prefStore);
+		}
+
+		setImageDescriptor(new ImageDescriptor() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public ImageData getImageData() {
+				return EclipseUtils.loadImageData(RDKitDepicterPreferencePage.class, "/icons/category_rdkit.png");
+			}
+		});
+
+		setDescription(
+				"The RDKit Nodes use their own molecule representation. When parsing mol blocks from SDF format in different "
+				+ "scenarios the tolerance level for correctness can be set here and in some nodes.");
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	protected void createFieldEditors() {
+		m_editorStrictParsingAutoConversion = new BooleanFieldEditor(PREF_KEY_STRICT_PARSING_AUTO_CONVERSION,
+				"Enable strict parsing when auto-converting SDF format to RDKit Molecules", getFieldEditorParent());
+		addField(m_editorStrictParsingAutoConversion);
+
+		m_editorStrictParsingRendering = new BooleanFieldEditor(PREF_KEY_STRICT_PARSING_RENDERING,
+				"Enable strict parsing when rendering SDF molecules with RDKit 2D Depiction", getFieldEditorParent());
+		addField(m_editorStrictParsingRendering);
+
+		m_editorStrictParsingNodeSettings = new BooleanFieldEditor(PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT,
+				"Enable strict parsing by default when creating new nodes that support this option", getFieldEditorParent());
+		addField(m_editorStrictParsingNodeSettings);
 	}
 
 	/**
@@ -123,6 +201,54 @@ implements IWorkbenchPreferencePage {
 	@Override
 	public void init(final IWorkbench workbench) {
 		// nothing to do
+	}
+
+	//
+	// Static Methods
+	//
+	
+	/**
+	 * Updates the cache for boolean strict parsing values from the configuration. We store them for performance reasons
+	 * separately as static members to access to very quickly without accessing the preference store again and again, 
+	 * e.g. during auto-conversion or rendering, when speed matters.
+	 */
+	public static void updateConfigCache() {
+		// We use the preference store that is defined in the UI plug-in
+		final RDKitTypesPluginActivator plugin = RDKitTypesPluginActivator.getDefault();
+
+		if (plugin != null) {
+			final IPreferenceStore prefStore = plugin.getPreferenceStore();
+			g_bStrictParsingAutoConversion = prefStore.getBoolean(PREF_KEY_STRICT_PARSING_AUTO_CONVERSION); 
+			g_bStrictParsingRendering = prefStore.getBoolean(PREF_KEY_STRICT_PARSING_RENDERING); 
+			g_bStrictParsingNodeSettingsDefault = prefStore.getBoolean(PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT); 
+		}
+	}
+	
+	/**
+	 * Returns the current preference for strict parsing when auto-converting SDF into RDKit Molecules.
+	 * 
+	 * @return Strict parsing option.
+	 */
+	public static boolean isStrictParsingForAutoConversion() {
+		return g_bStrictParsingAutoConversion;
+	}
+
+	/**
+	 * Returns the current preference for strict parsing when rendering SDF Molecules.
+	 * 
+	 * @return Strict parsing option.
+	 */
+	public static boolean isStrictParsingForRendering() {
+		return g_bStrictParsingRendering;
+	}
+
+	/**
+	 * Returns the current preference for the default value of strict parsing when creating new nodes with this settings.
+	 * 
+	 * @return Strict parsing option.
+	 */
+	public static boolean isStrictParsingForNodeSettingsDefault() {
+		return g_bStrictParsingNodeSettingsDefault;
 	}
 
 	/**
@@ -153,6 +279,13 @@ implements IWorkbenchPreferencePage {
 					prefStore.setDefault(
 							HeaderPropertyHandlerRegistry.PREF_KEY_HANDLERS_DISABLED,
 							HeaderPropertyHandlerRegistry.getInstance().getDefaultDisabledColumnRenderers());
+					prefStore.setDefault(
+							PREF_KEY_STRICT_PARSING_AUTO_CONVERSION, DEFAULT_STRICT_PARSING_AUTO_CONVERSION);
+					prefStore.setDefault(
+							PREF_KEY_STRICT_PARSING_RENDERING, DEFAULT_STRICT_PARSING_RENDERING);
+					prefStore.setDefault(
+							PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT, DEFAULT_STRICT_PARSING_NODE_SETTINGS);
+					updateConfigCache();	
 				}
 			}
 			catch (final Exception exc) {

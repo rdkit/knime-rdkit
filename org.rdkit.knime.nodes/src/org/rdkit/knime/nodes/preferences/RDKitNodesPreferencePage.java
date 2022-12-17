@@ -183,7 +183,7 @@ implements IWorkbenchPreferencePage {
                                   String factoryClass = element.getAttribute("factory-class");
                                   String categoryPath = element.getAttribute("category-path");
                                   Class<?> factory = Class.forName(factoryClass);
-                                  NodeFactory<?> nodeFactory = (NodeFactory<?>)factory.newInstance();
+                                  NodeFactory<?> nodeFactory = (NodeFactory<?>)factory.getDeclaredConstructor().newInstance();
                                   NodeModel nodeModel = nodeFactory.createNodeModel();
                                   InputPortRole[] inPortRoles = nodeModel.getInputPortRoles();
                                   OutputPortRole[] outPortRoles = nodeModel.getOutputPortRoles();
@@ -243,7 +243,7 @@ implements IWorkbenchPreferencePage {
                                   for (final Method m : nodeModel.getClass().getDeclaredMethods()) {
                                      final String strMethodName = m.getName();
                                      if ("getPreProcessingPercentage".equals(strMethodName)) {
-                                        boolean bPreAccess = m.isAccessible();
+                                        boolean bPreAccess = m.canAccess(nodeModel);
                                         m.setAccessible(true);
                                         preProcessing = (Double)m.invoke(nodeModel);
                                         m.setAccessible(bPreAccess);
@@ -255,7 +255,7 @@ implements IWorkbenchPreferencePage {
                                   for (final Method m : nodeModel.getClass().getDeclaredMethods()) {
                                      final String strMethodName = m.getName();
                                      if ("getPostProcessingPercentage".equals(strMethodName)) {
-                                        boolean bPreAccess = m.isAccessible();
+                                        boolean bPreAccess = m.canAccess(nodeModel);
                                         m.setAccessible(true);
                                         postProcessing = (Double)m.invoke(nodeModel);
                                         m.setAccessible(bPreAccess);

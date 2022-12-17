@@ -117,7 +117,7 @@ public final class ChemUtils {
 
 		if (value != null) {
 			try {
-				final ROMol mol = RWMol.MolFromMolBlock(value);
+				final ROMol mol = RWMol.MolFromMolBlock(value, false /* sanitize */, false /* removeHs */, false /* strictParsing */);
 				mol.delete();
 				bRet = true;
 			}

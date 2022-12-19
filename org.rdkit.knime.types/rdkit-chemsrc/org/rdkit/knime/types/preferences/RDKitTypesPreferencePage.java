@@ -97,13 +97,13 @@ implements IWorkbenchPreferencePage {
 	/** The preference key that stores the default flag to enable/disable strict parsing for mol blocks in node settings (new nodes). */
 	public static final String PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT = "mol2rdkit.strictparsing.nodesettings.default";
 	
-	/** The default for the flag to enable/disable strict parsing for mol blocks when auto-converting SDFs. */
+	/** The default for the flag to enable/disable strict parsing for mol blocks when auto-converting SDFs (true). */
 	public static final boolean DEFAULT_STRICT_PARSING_AUTO_CONVERSION = true;
 	
-	/** The default for the flag to enable/disable strict parsing for mol blocks when rendering. */
-	public static final boolean DEFAULT_STRICT_PARSING_RENDERING = true;
+	/** The default for the flag to enable/disable strict parsing for mol blocks when rendering (false). */
+	public static final boolean DEFAULT_STRICT_PARSING_RENDERING = false;
 	
-	/** The default for the flag to enable/disable strict parsing for mol blocks in node settings (new nodes). */
+	/** The default for the flag to enable/disable strict parsing for mol blocks in node settings (new nodes) (true). */
 	public static final boolean DEFAULT_STRICT_PARSING_NODE_SETTINGS = true;
 	
 	/** The logger instance. */

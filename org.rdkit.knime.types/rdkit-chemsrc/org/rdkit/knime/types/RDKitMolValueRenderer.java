@@ -172,7 +172,8 @@ implements SvgProvider {
 		RDKitMolValue molCell = null;
 		ROMol omol = null;
 		boolean trySanitizing = true;
-
+		boolean bNormalize = RDKitDepicterPreferencePage.isNormalizeDepictions();
+		
 		try {
 			// We have an old plain RDKit Mol Value
 			if (value instanceof RDKitMolValue) {
@@ -215,7 +216,7 @@ implements SvgProvider {
 			omol = molCell.readMoleculeValue();
 			
 			// Normalize scale
-			if (omol.getNumConformers() > 0) {
+			if (bNormalize && omol.getNumConformers() > 0) {
 				omol.normalizeDepiction(-1, 0);
 			}
 			
@@ -303,7 +304,7 @@ implements SvgProvider {
 					}			
 	
 					// Normalize scale
-					if (omol.getNumConformers() > 0) {
+					if (bNormalize && omol.getNumConformers() > 0) {
 						mol.normalizeDepiction(-1, 0);
 					}
 

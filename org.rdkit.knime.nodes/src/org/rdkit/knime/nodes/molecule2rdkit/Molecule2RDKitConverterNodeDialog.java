@@ -66,6 +66,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.molecule2rdkit.Molecule2RDKitConverterNodeModel.ParseErrorPolicy;
+import org.rdkit.knime.types.preferences.RDKitTypesPreferencePage;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 
 /**
@@ -85,6 +86,9 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 
 	/** The model for the option to keep hydrogens (only valid for SDF input). */
 	private SettingsModelBoolean m_modelKeepHs;
+
+	/** The model for the option for strict parsing (only valid for SDF input). */
+	private SettingsModelBoolean m_modelStrictParsing;
 
 	/** The model for the option to perform partial sanitization. */
 	private final SettingsModelBoolean m_modelPartialSanitization;
@@ -161,6 +165,8 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 				m_modelKeepHs = createKeepHsOptionModel(), "Keep Hydrogens"));
 		super.addDialogComponent(new DialogComponentBoolean(
 				m_modelPartialSanitization, "Partial Sanitization"));
+		super.addDialogComponent(new DialogComponentBoolean(
+				m_modelStrictParsing = createStrictParsingOptionModel(), "Strict Parsing of Mol Blocks"));
 		super.createNewGroup("Partial Sanitization Options");
 		super.addDialogComponent(new DialogComponentBoolean(
 				m_modelAromatization = createAromatizationModel(m_modelPartialSanitization), "Reperceive Aromaticity"));
@@ -201,6 +207,8 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 		final boolean bEnableKeepHsOption = (specInput != null &&
 		      (dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class))) &&
 				(!bEnableTreatAsQuery || !m_modelTreatAsQuery.getBooleanValue());
+		final boolean bEnableStrictParsingOption = (specInput != null &&
+		      (dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class)));
 
 		// Enable Treat as Query option only for SMILES and SDF input
 		m_modelTreatAsQuery.setEnabled(bEnableTreatAsQuery);
@@ -212,6 +220,9 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 
 		// Enable Keep Hs option only for SDF input and only, if Treat as Query option is disabled
 		m_modelKeepHs.setEnabled(bEnableKeepHsOption);
+		
+		// Enable Strict Parsing option only for SDF input
+		m_modelStrictParsing.setEnabled(bEnableStrictParsingOption);
 	}
 
 	//
@@ -390,4 +401,16 @@ public class Molecule2RDKitConverterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	static final SettingsModelBoolean createKeepHsOptionModel() {
 		return new SettingsModelBoolean("keepHs", false);
-	}}
+	}
+
+	/**
+	 * Creates the model to select the option Strict Parsing.
+	 * The default is taken from the RDKit Types preferences.
+	 * 
+	 * @return The Strict Parsing option model.
+	 */
+	static final SettingsModelBoolean createStrictParsingOptionModel() {
+		return new SettingsModelBoolean("strict_parsing", 
+				RDKitTypesPreferencePage.isStrictParsingForNodeSettingsDefault());
+	}
+}

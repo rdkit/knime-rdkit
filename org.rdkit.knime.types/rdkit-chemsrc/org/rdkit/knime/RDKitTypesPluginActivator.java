@@ -66,6 +66,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
+import org.rdkit.knime.types.preferences.RDKitTypesPreferencePage;
 
 /**
  * This is the activator for this plugin that is instantiated by the Eclipse
@@ -191,11 +192,19 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						switch (event.getProperty()) {
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_FILE:
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_JSON:
+							case RDKitDepicterPreferencePage.PREF_KEY_NORMALIZE_DEPICTIONS:
 								RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
+								break;
+							case RDKitTypesPreferencePage.PREF_KEY_STRICT_PARSING_AUTO_CONVERSION:
+							case RDKitTypesPreferencePage.PREF_KEY_STRICT_PARSING_RENDERING:
+							case RDKitTypesPreferencePage.PREF_KEY_STRICT_PARSING_NODE_SETTINGS_DEFAULT:
+								RDKitTypesPreferencePage.updateConfigCache();
 								break;
 						}
 					}
 				});
+		RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
+		RDKitTypesPreferencePage.updateConfigCache();
 	}
 
 	/**

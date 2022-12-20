@@ -59,6 +59,9 @@
                chemically reasonable and correct. This is called sanitization. When switching on
                partial sanitization the following options allow specific aspects of the sanitization to be turned off:
             </option>
+            <option name="Strict Parsing of Mol Blocks">When SDF molecules are converted into RDKit molecules, 
+            	this option sets the tolerance level for parsing mol blocks. The default value
+            	for new nodes is defined in RDKit Nodes / RDKit Types preferences. (Introduced in December 2022)</option>
             <option name="Partial Sanitization Option - Reperceive Aromaticity">
                If enabled (the default) all molecules are converted to a Kekule form and then Hueckel's
                rules are applied to determine aromaticity. If disabled, whatever aromaticity information

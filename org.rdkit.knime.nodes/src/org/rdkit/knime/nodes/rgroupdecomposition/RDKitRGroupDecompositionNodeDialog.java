@@ -58,6 +58,10 @@ import org.RDKit.RGroupDecompositionParameters;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmartsValue;
 import org.knime.chem.types.SmilesValue;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -69,6 +73,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.rdkit.knime.nodes.AbstractRDKitNodeSettingsPane;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.types.preferences.RDKitTypesPreferencePage;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.DialogComponentEnumFilterPanel;
 import org.rdkit.knime.util.DialogComponentEnumSelection;
@@ -94,9 +99,15 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	//
 	// Members
 	//
-	
+
+	/** The model for the option for strict parsing (only valid for SDF input). */
+	private SettingsModelBoolean m_modelStrictParsing;
+
 	/** Setting model component for the additional column selector. */
-	private final DialogComponent m_compCoreInputColumnName;
+	private final DialogComponentColumnNameSelection m_compCoreInputColumnName;
+	
+	/** Setting model component for the strict parsing options for cores. */
+	private final DialogComponent m_compCoreStrictParsing;
 
 	/** Setting model component for the cores input text field. */
 	private final DialogComponent m_compCoreInputTextField;
@@ -119,10 +130,18 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 				createInputColumnNameModel(), "RDKit Mol column: ", 0,
 				RDKitMolValue.class));
 		super.createNewGroup("Input Scaffolds");
+		super.setHorizontalPlacement(true);
 		super.addDialogComponent(m_compHintToConnectSecondTable = new DialogComponentLabel(
 				"<html><body>You may connect a second input table with molecules to be used as cores<br>or you specify one or more cores in the text field below.</body></html>"));
+		SettingsModelString modelCoreInputColumnName = createCoresInputColumnNameModel();
+		modelCoreInputColumnName.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				updateOptionsAvailability();
+			}
+		});
 		super.addDialogComponent(m_compCoreInputColumnName = new DialogComponentColumnNameSelection(
-				createCoresInputColumnNameModel(), "Core Input Column: ", 1, false, false, 
+				modelCoreInputColumnName, "Core Input Column: ", 1, false, false, 
 				RDKitMolValue.class, SmilesValue.class, SmartsValue.class, SdfValue.class) {
 
 			/**
@@ -146,6 +165,9 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 				updateVisibilityOfOptionalComponents(bHasAdditionalInputTable);
 			}
 		});
+		super.addDialogComponent(m_compCoreStrictParsing = new DialogComponentBoolean(
+				m_modelStrictParsing = createStrictParsingOptionModel(), "Strict Parsing of Mol Blocks"));
+		super.setHorizontalPlacement(false);
 		super.addDialogComponent(m_compCoreInputTextField = new DialogComponentMultiLineString(
 				createSmartsModel(), "Core SMARTS (separate by new line to specify multiple cores): ", 
 				false, 50, 5));
@@ -224,6 +246,8 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 		super.setHorizontalPlacement(true);
 		super.addDialogComponent(new DialogComponentBoolean(createRemoveHydrogenOnlyRGroupsModel(), "Remove hydrogen only R-Groups"));
 		super.addDialogComponent(new DialogComponentBoolean(createRemoveHydrogensPostMatchModel(), "Remove hydrogens post match"));
+		
+		updateOptionsAvailability();
 }
 
 	//
@@ -239,7 +263,31 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	protected void updateVisibilityOfOptionalComponents(final boolean bHasAdditionalInputTable) {
 		m_compHintToConnectSecondTable.getComponentPanel().setVisible(!bHasAdditionalInputTable);
 		m_compCoreInputColumnName.getComponentPanel().setVisible(bHasAdditionalInputTable);
+		m_compCoreStrictParsing.getComponentPanel().setVisible(bHasAdditionalInputTable);
 		m_compCoreInputTextField.getComponentPanel().setVisible(!bHasAdditionalInputTable);
+	}
+	
+	/**
+	 * Enables or disables options based on the selected input column for cores.
+	 * Only for SDF compatible input columns the Strict Parsing option will be enabled.
+	 */
+	protected void updateOptionsAvailability() {
+		final DataColumnSpec specInput = m_compCoreInputColumnName.getSelectedAsSpec();
+		final DataType dataType = specInput != null ? specInput.getType() : null;
+		
+		// Determine core options availability based on input type
+		final boolean bEnableStrictParsingOption = (specInput != null && !dataType.isCompatible(RDKitMolValue.class) && 
+		      (dataType.isCompatible(SdfValue.class) || dataType.isAdaptable(SdfValue.class)));
+		
+		// Enable Strict Parsing option only for SDF input
+		m_modelStrictParsing.setEnabled(bEnableStrictParsingOption);
+	}
+	
+	@Override
+	public void loadAdditionalSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs)
+			throws NotConfigurableException {
+		super.loadAdditionalSettingsFrom(settings, specs);
+		updateOptionsAvailability();
 	}
 
 	//
@@ -460,5 +508,16 @@ public class RDKitRGroupDecompositionNodeDialog extends AbstractRDKitNodeSetting
 	static final SettingsModelBoolean createRemoveHydrogensPostMatchModel() {
 		return new SettingsModelBoolean("remove_hydrogens_post_match", 
 				DEFAULT_RGROUP_DECOMPOSITION_PARAMETERS.getRemoveHydrogensPostMatch());
+	}
+
+	/**
+	 * Creates the model to select the option Strict Parsing for core input SDFs.
+	 * The default is taken from the RDKit Types preferences.
+	 * 
+	 * @return The Strict Parsing option model.
+	 */
+	static final SettingsModelBoolean createStrictParsingOptionModel() {
+		return new SettingsModelBoolean("strict_parsing", 
+				RDKitTypesPreferencePage.isStrictParsingForNodeSettingsDefault());
 	}
 }

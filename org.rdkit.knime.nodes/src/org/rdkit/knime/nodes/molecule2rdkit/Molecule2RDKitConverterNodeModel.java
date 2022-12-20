@@ -69,6 +69,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
@@ -252,6 +253,10 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	private final SettingsModelBoolean m_modelKeepHs =
 			registerSettings(Molecule2RDKitConverterNodeDialog.createKeepHsOptionModel(), true);
 
+	/** Settings model for the option to do strict parsing of mol blocks. */
+	private final SettingsModelBoolean m_modelStrictParsing =
+			registerSettings(Molecule2RDKitConverterNodeDialog.createStrictParsingOptionModel(), true);
+
 	//
 	// Internals
 	//
@@ -267,6 +272,9 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 	/** This variable is used during execution for performance reasons. */
 	private boolean m_bRemoveHs = false;
+
+	/** This variable is used during execution for performance reasons. */
+	private boolean m_bStrictParsing = false;
 
 	//
 	// Constructor
@@ -527,7 +535,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 				try {
 				   if (m_inputType == InputType.SDF) {
                   final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-                  mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs), lUniqueWaveId);
+                  mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs, m_bStrictParsing), lUniqueWaveId);
                }
 				   else if (m_inputType == InputType.SMILES) {
 						final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
@@ -718,6 +726,7 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 		// Defines the options and ensure they are valid for the input molecule type we process
 		m_bSanitize = !m_modelQuickAndDirty.getBooleanValue();
 		m_bRemoveHs = !m_modelKeepHs.getBooleanValue();
+		m_bStrictParsing = m_modelStrictParsing.getBooleanValue();
 
 		m_bTreatAsQuery = (m_modelTreatAsQuery.getBooleanValue() &&
 				(m_inputType == InputType.SMILES || m_inputType == InputType.SDF));
@@ -809,4 +818,21 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 		return new BufferedDataTable[] { port0.getTable(), port1.getTable() };
 	}
+	
+	/**
+	 * Corrects the strict parsing setting to "true" for all old nodes that did not have that setting.
+	 * Without it we would change the behavior of existing workflows, which might not be desired.
+	 */
+	@Override
+	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		try {
+			super.loadValidatedSettingsFrom(settings);
+		}
+		finally {
+			if (!settings.containsKey("strict_parsing")) {
+				m_modelStrictParsing.setBooleanValue(true); // The old default of RDKit
+			}
+		}		
+	}
+	
 }

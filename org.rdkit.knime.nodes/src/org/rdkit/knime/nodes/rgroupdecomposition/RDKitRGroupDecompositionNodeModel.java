@@ -85,6 +85,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -159,6 +160,10 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 	/** Settings model for the column name of the SMARTS input column (cores). */
 	private final SettingsModelString m_modelCoresInputColumnName =
 			registerSettings(RDKitRGroupDecompositionNodeDialog.createCoresInputColumnNameModel());
+
+	/** Settings model for the option to do strict parsing of mol blocks. */
+	private final SettingsModelBoolean m_modelStrictParsing =
+			registerSettings(RDKitRGroupDecompositionNodeDialog.createStrictParsingOptionModel(), true);
 
 	/** Settings model for the core smarts to be used for the R-Group Decomposition. */
 	private final SettingsModelString m_modelCoreSmarts =
@@ -710,6 +715,7 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 				(type.isCompatible(AdapterValue.class) && type.isAdaptable(SmilesValue.class)));
 		boolean bSdf = (type.isCompatible(SdfValue.class) || 
 				(type.isCompatible(AdapterValue.class) && type.isAdaptable(SdfValue.class)));
+		boolean bStrictParsing = m_modelStrictParsing.getBooleanValue();
 		
 		WarningConsolidator warnings = getWarningConsolidator();
 		List<ROMol> listCores = new ArrayList<>();
@@ -745,7 +751,8 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 						String strSdf = inputDataInfo.getSdfValue(row);
 						if (strSdf != null) {
 							// Do not sanitize, do not remove Hs
-							molCore = markForCleanup(RWMol.MolFromMolBlock(strSdf, false, false));
+							molCore = markForCleanup(RWMol.MolFromMolBlock(strSdf, false /* sanitize */, false /* removeHs */, 
+									bStrictParsing));
 						}
 					}
 				}
@@ -915,7 +922,22 @@ public class RDKitRGroupDecompositionNodeModel extends AbstractRDKitNodeModel {
 
 		return mapContextOccurrences;
 	}
-
+	
+	/**
+	 * Corrects the strict parsing setting to "true" for all old nodes that did not have that setting.
+	 * Without it we would change the behavior of existing workflows, which might not be desired.
+	 */
+	@Override
+	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		try {
+			super.loadValidatedSettingsFrom(settings);
+		}
+		finally {
+			if (!settings.containsKey("strict_parsing")) {
+				m_modelStrictParsing.setBooleanValue(true); // The old default of RDKit
+			}
+		}		
+	}
 	//
 	// Static Public Methods
 	//

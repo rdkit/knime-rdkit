@@ -16,6 +16,8 @@
         <tab name="Options">
             <option name="Input Molecules - RDKit Mol column (1st table)">The column containing molecules.</option>
             <option name="Input Scaffolds - Core Input Column (2nd table)">If second table is connected, the column containing cores as RDKit Molecules, SMARTS, SMILES or SDF.</option>
+            <option name="Input Scaffolds - Strict Parsing of Mol Blocks">When SDF molecules are used as cores, this option sets the tolerance level for parsing mol blocks. The default value
+            	for new nodes is defined in RDKit Nodes / RDKit Types preferences. (Introduced in December 2022)</option>
             <option name="Input Scaffolds - Core SMARTS">If no second table is connected, one or multiple new-line separated SMARTS can be defined as the cores to be used.</option>
             <option name="Output Handling - Add matching SMARTS core">Flag to be set to add a column that contains the matching core from SMARTS input.</option>
             <option name="Output Handling - Core column name">The column name for the SMARTS core column, if it is set to be added.</option>

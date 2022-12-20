@@ -1,3 +1,12 @@
+# JRebel plugin configuration files
+rebel.xml
+
+# JetBrains IDEA project files
+.idea/
+*.iws
+*.ipr
+*.iml
+
 bin
 /org.rdkit.knime.types/python/*.pyc
 /.metadata/

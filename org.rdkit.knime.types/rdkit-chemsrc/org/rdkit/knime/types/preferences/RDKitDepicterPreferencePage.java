@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -77,11 +78,19 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	public static final String PREF_KEY_RETRY_INTERVAL = "configLoadingRetryInterval";
 
+	/**
+	 * The flag to enable normalization of structures before they are being depicted.
+	 */
+	public static final String PREF_KEY_NORMALIZE_DEPICTIONS = "normalizeDepictions";
+
 	/** The default filename for the depiction settings, which is referring to our internal file. */
 	public static final String DEFAULT_CONFIG_FILE = "[default built-in]";
 	
 	/** The default retry interval (10 minutes = 60000 millis). */
 	public static final int DEFAULT_RETRY_INTERVAL = 60000; // 10 minutes
+	
+	/** The default flag for normalizing depictions (false). */
+	public static final boolean DEFAULT_NORMALIZE_DEPICTIONS = false;
 	
 	/** The logger instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitDepicterPreferencePage.class);
@@ -101,6 +110,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	private static String g_jsonConfig = null;
 	
+	/**
+	 * The normalize depiction flag.
+	 */
+	private static boolean g_bNormalizeDepiction = DEFAULT_NORMALIZE_DEPICTIONS;
+	
 	/** The timestamp of last failure of reading the JSON config file or -1, if not set. */
 	private static long g_lLastFailure = -1;
 
@@ -115,6 +129,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 * The editor for setting the JSON config for the RDKit 2D depiction directly.
 	 */
 	private StringFieldEditor m_editorConfigJson;
+
+	/**
+	 * The editor for setting the flag to enable normalizing depictions.
+	 */
+	private BooleanFieldEditor m_editorNormalizeDepictions;
 
 	//
 	// Constructor
@@ -285,6 +304,9 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 			}
 		};
 		addField(btnClear);
+		
+		m_editorNormalizeDepictions = new BooleanFieldEditor(PREF_KEY_NORMALIZE_DEPICTIONS, "Normalize depictions", getFieldEditorParent());
+		addField(m_editorNormalizeDepictions);
 	}
 
 	//
@@ -300,6 +322,14 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		g_jsonConfig = null;
 		g_lLastFailure = -1;
 		getJsonConfig();
+		
+		// Read current normalize depictions flag
+		final RDKitTypesPluginActivator plugin = RDKitTypesPluginActivator.getDefault();
+
+		if (plugin != null) {
+			final IPreferenceStore prefStore = plugin.getPreferenceStore();
+			g_bNormalizeDepiction = prefStore.getBoolean(PREF_KEY_NORMALIZE_DEPICTIONS);
+		}
 	}
 
 	/**
@@ -381,6 +411,15 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 
 		return strJsonConfig;
 	}
+	
+	/**
+	 * Returns the current setting for normalizing depictions.
+	 * 
+	 * @return Normalize depictions flag.
+	 */
+	public static boolean isNormalizeDepictions() {
+		return g_bNormalizeDepiction;
+	}
 
 	/**
 	 * Gets the appropriate preference store and initializes its default values.
@@ -405,12 +444,15 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 					prefStore.setDefault(PREF_KEY_CONFIG_FILE, DEFAULT_CONFIG_FILE);
 					prefStore.setDefault(PREF_KEY_CONFIG_JSON, "");
 					prefStore.setDefault(PREF_KEY_RETRY_INTERVAL, DEFAULT_RETRY_INTERVAL);
+					prefStore.setDefault(PREF_KEY_NORMALIZE_DEPICTIONS, DEFAULT_NORMALIZE_DEPICTIONS);
 				}
 			} 
 			catch (final Exception exc) {
 				LOGGER.error(
 						"Default values could not be set for the RDKit 2D Depiction preferences. Plug-In or Preference Store not found.", exc);
 			}
+			
+			RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 		}
 	}
 

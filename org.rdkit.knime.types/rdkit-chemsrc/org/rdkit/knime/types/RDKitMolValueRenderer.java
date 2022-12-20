@@ -172,7 +172,8 @@ implements SvgProvider {
 		RDKitMolValue molCell = null;
 		ROMol omol = null;
 		boolean trySanitizing = true;
-
+		boolean bNormalize = RDKitDepicterPreferencePage.isNormalizeDepictions();
+		
 		try {
 			// We have an old plain RDKit Mol Value
 			if (value instanceof RDKitMolValue) {
@@ -213,6 +214,11 @@ implements SvgProvider {
 		if (molCell != null) {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
+			
+			// Normalize scale
+			if (bNormalize && omol.getNumConformers() > 0) {
+				omol.normalizeDepiction(-1, 0);
+			}
 			
 			// Store the prepared molecule for drawing next
 			m_molecule = omol;
@@ -260,7 +266,10 @@ implements SvgProvider {
 						omol.updatePropertyCache(false);
 						RDKFuncs.symmetrizeSSSR(omol);
 						RDKFuncs.setHybridization(omol);
-						tmol.delete();
+						if (tmol != null) {
+							tmol.delete();
+							tmol = null;
+						}
 					}
 				}
 			} 
@@ -294,6 +303,11 @@ implements SvgProvider {
 						RDKFuncs.prepareMolForDrawing(mol, false);
 					}			
 	
+					// Normalize scale
+					if (bNormalize && omol.getNumConformers() > 0) {
+						mol.normalizeDepiction(-1, 0);
+					}
+
 					// Store the prepared molecule for drawing next
 					m_molecule = mol;
 				}
@@ -342,8 +356,8 @@ implements SvgProvider {
 		// Case 1: A missing cell
 		if (m_bIsMissingCell || m_strError != null) {
 			g.setFont(MISSING_CELL_FONT);
+			g.setColor(Color.red);
 			if (m_strError != null) {
-				g.setColor(Color.red);
 				drawString(g, m_strError, 2, 12);
 			}
 			else {

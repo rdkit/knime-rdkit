@@ -192,6 +192,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						switch (event.getProperty()) {
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_FILE:
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_JSON:
+							case RDKitDepicterPreferencePage.PREF_KEY_NORMALIZE_DEPICTIONS:
 								RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 								break;
 							case RDKitTypesPreferencePage.PREF_KEY_STRICT_PARSING_AUTO_CONVERSION:
@@ -202,6 +203,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						}
 					}
 				});
+		RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 		RDKitTypesPreferencePage.updateConfigCache();
 	}
 

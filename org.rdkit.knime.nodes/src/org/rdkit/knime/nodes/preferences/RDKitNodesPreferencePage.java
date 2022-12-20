@@ -243,7 +243,7 @@ implements IWorkbenchPreferencePage {
                                   for (final Method m : nodeModel.getClass().getDeclaredMethods()) {
                                      final String strMethodName = m.getName();
                                      if ("getPreProcessingPercentage".equals(strMethodName)) {
-                                        boolean bPreAccess = m.canAccess(nodeModel);
+                                        boolean bPreAccess = m.isAccessible();
                                         m.setAccessible(true);
                                         preProcessing = (Double)m.invoke(nodeModel);
                                         m.setAccessible(bPreAccess);
@@ -255,7 +255,7 @@ implements IWorkbenchPreferencePage {
                                   for (final Method m : nodeModel.getClass().getDeclaredMethods()) {
                                      final String strMethodName = m.getName();
                                      if ("getPostProcessingPercentage".equals(strMethodName)) {
-                                        boolean bPreAccess = m.canAccess(nodeModel);
+                                        boolean bPreAccess = m.isAccessible();
                                         m.setAccessible(true);
                                         postProcessing = (Double)m.invoke(nodeModel);
                                         m.setAccessible(bPreAccess);

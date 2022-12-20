@@ -67,6 +67,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.RWAdapterValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.NodeLogger;
+import org.rdkit.knime.types.preferences.RDKitTypesPreferencePage;
 import org.rdkit.knime.util.InputDataInfo;
 
 /**
@@ -464,7 +465,8 @@ public abstract class RDKitTypeConverter extends DataCellTypeConverter implement
 
 				// As first step try to parse the input molecule format
 				try {
-					mol = RWMol.MolFromMolBlock(strSdf, true);
+					mol = RWMol.MolFromMolBlock(strSdf, true /* sanitize */, true /* removeHs */, 
+							RDKitTypesPreferencePage.isStrictParsingForAutoConversion() /* strictParsing */);
 				}
 				catch (final Exception exc) {
 					// Parsing failed and RDKit molecule is null

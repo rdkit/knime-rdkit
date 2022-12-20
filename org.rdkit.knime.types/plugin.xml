@@ -38,6 +38,11 @@
    	</extension>
    
     <extension point="org.eclipse.ui.preferencePages">
+       <page category="org.rdkit.knime.nodes.preferences" class="org.rdkit.knime.types.preferences.RDKitTypesPreferencePage" 
+             id="org.rdkit.knime.types.preferences.RDKitTypes" name="RDKit Types"/>
+    </extension>
+   
+    <extension point="org.eclipse.ui.preferencePages">
        <page category="org.rdkit.knime.nodes.preferences" class="org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage" 
              id="org.rdkit.knime.types.preferences.RDKit2DDepiction" name="RDKit 2D Depiction"/>
     </extension>

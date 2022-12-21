@@ -261,7 +261,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 				+ "highlight=moldrawoptions#rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions\">Click here</a>"
 				+ " for RDKit 2D Depiction options (RDKit API docs).");
 		addField(linkDocs);
-		
+
 		m_editorConfigFile = new StringFieldEditor(PREF_KEY_CONFIG_FILE, "File or URL with JSON Configuration",
 				getFieldEditorParent());
 		addField(m_editorConfigFile);
@@ -445,14 +445,13 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 					prefStore.setDefault(PREF_KEY_CONFIG_JSON, "");
 					prefStore.setDefault(PREF_KEY_RETRY_INTERVAL, DEFAULT_RETRY_INTERVAL);
 					prefStore.setDefault(PREF_KEY_NORMALIZE_DEPICTIONS, DEFAULT_NORMALIZE_DEPICTIONS);
+					RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 				}
 			} 
 			catch (final Exception exc) {
 				LOGGER.error(
 						"Default values could not be set for the RDKit 2D Depiction preferences. Plug-In or Preference Store not found.", exc);
 			}
-			
-			RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 		}
 	}
 

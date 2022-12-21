@@ -203,8 +203,6 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 						}
 					}
 				});
-		RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
-		RDKitTypesPreferencePage.updateConfigCache();
 	}
 
 	/**

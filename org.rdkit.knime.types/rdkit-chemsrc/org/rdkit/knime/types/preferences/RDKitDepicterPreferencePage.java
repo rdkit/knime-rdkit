@@ -33,7 +33,6 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.ui.preferences.LabelField;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.util.EclipseUtils;
 import org.rdkit.knime.util.PreferenceButton;
@@ -256,11 +255,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	@Override
 	protected void createFieldEditors() {
-		LabelField linkDocs = new LabelField(getFieldEditorParent(), 
-				"<a href=\"http://rdkit.org/docs/source/rdkit.Chem.Draw.rdMolDraw2D.html?"
-				+ "highlight=moldrawoptions#rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions\">Click here</a>"
-				+ " for RDKit 2D Depiction options (RDKit API docs).");
-		addField(linkDocs);
+		// LabelField linkDocs = new LabelField(getFieldEditorParent(), 
+		//		"<a href=\"http://rdkit.org/docs/source/rdkit.Chem.Draw.rdMolDraw2D.html?"
+		//		+ "highlight=moldrawoptions#rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions\">Click here</a>"
+		//		+ " for RDKit 2D Depiction options (RDKit API docs).");
+		//addField(linkDocs);
 
 		m_editorConfigFile = new StringFieldEditor(PREF_KEY_CONFIG_FILE, "File or URL with JSON Configuration",
 				getFieldEditorParent());

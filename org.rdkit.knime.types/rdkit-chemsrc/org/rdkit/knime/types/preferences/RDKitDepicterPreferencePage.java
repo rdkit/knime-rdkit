@@ -33,9 +33,9 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.ui.preferences.LabelField;
 import org.rdkit.knime.RDKitTypesPluginActivator;
 import org.rdkit.knime.util.EclipseUtils;
+import org.rdkit.knime.util.LabelField;
 import org.rdkit.knime.util.PreferenceButton;
 import org.rdkit.knime.util.PreferenceUtils;
 

@@ -15,7 +15,34 @@
 		   		The vulnerability targets only an Amazon Hotfix, not the log4j version per se.
 		   		We are not using the Amazon Hotfix in context of RDKit nodes in KNIME.
 		   ]]></notes>
-		   <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-api@.*$</packageUrl>
-		   <cve>CVE-2022-33915</cve>
-		</suppress>
+		<packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-api@.*$
+		</packageUrl>
+		<cve>CVE-2022-33915</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: commons-io:commons-io:2.11.0)
+			   The vulnerability is categorized as MEDIUM, and OPSIN has per Dec 08, 2022 not provided a fix yet.
+   			]]></notes>
+		<packageUrl regex="true">^pkg:maven/commons\-io/commons\-io@.*$
+		</packageUrl>
+		<cpe>cpe:/a:apache:commons_io</cpe>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+		   	   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: commons-io:commons-io:2.11.0)
+			   The vulnerability is categorized as MEDIUM, and OPSIN has per Dec 08, 2022 not provided a fix yet.
+		   ]]></notes>
+		<packageUrl regex="true">^pkg:maven/commons\-io/commons\-io@.*$
+		</packageUrl>
+		<cpe>cpe:/a:apache:commons_net</cpe>
+	</suppress>
+	<suppress>
+	   <notes><![CDATA[
+	   		   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: org.codehaus.woodstox:stax2-api:4.2.1)
+	   		   False positive. 4.2.1 is the latest version and free of known vulnerabilities as of March 07, 2023.
+	   ]]></notes>
+	   <packageUrl regex="true">^pkg:maven/org\.codehaus\.woodstox/stax2\-api@.*$</packageUrl>
+	   <cve>CVE-2022-40152</cve>
+	</suppress>
 </suppressions>

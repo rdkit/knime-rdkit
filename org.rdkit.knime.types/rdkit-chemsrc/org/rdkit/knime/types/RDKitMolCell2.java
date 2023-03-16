@@ -60,6 +60,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 
 /**
  * Implementation of an RDKit Molecule Cell. 
@@ -175,8 +176,8 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 
 		try {
 			// Convert to SDF
-			if(mol.getNumConformers() == 0){
-				mol.compute2DCoords();
+			if (mol.getNumConformers() == 0) {
+				RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
 			}
 
 			value = RDKFuncs.MolToMolBlock(mol);

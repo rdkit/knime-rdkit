@@ -73,6 +73,8 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.types.RDKitMolValueRenderer;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 import org.rdkit.knime.util.SettingsUtils;
@@ -125,8 +127,8 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 			@Override
 			public DataCell convertRdkitMolecule(final ROMol mol) {
 				// Calculate 2D Coordinates, if necessary
-				if(mol.getNumConformers() == 0) {
-					mol.compute2DCoords();
+				if (mol.getNumConformers() == 0) {
+					RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
 				}
 
 				// Fix SDF value

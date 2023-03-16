@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.RDKit.RDKFuncs;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -178,6 +179,9 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 			investigateBinariesIssue();
 		}
 		
+		// Setup default settings for RDKit
+		RDKFuncs.setPreferCoordGen(true);
+		
 		// Setup preference change listeners for our own preferences
 		getPreferenceStore()
 				.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -193,6 +197,7 @@ public class RDKitTypesPluginActivator extends AbstractUIPlugin {
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_FILE:
 							case RDKitDepicterPreferencePage.PREF_KEY_CONFIG_JSON:
 							case RDKitDepicterPreferencePage.PREF_KEY_NORMALIZE_DEPICTIONS:
+							case RDKitDepicterPreferencePage.PREF_KEY_USE_COORDGEN:
 								RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 								break;
 							case RDKitTypesPreferencePage.PREF_KEY_STRICT_PARSING_AUTO_CONVERSION:

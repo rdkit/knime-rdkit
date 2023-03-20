@@ -222,8 +222,20 @@ implements SvgProvider {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
 			
-			// Normalize scale
-			if (bNormalize && omol.getNumConformers() > 0) {
+			boolean bComputeCoordinates = (omol.getNumConformers() == 0);
+			
+			// If we draw molecules that do not have conformers yet, 
+			// we need to compute one here, either with CoordGen or native RDKit,
+			// otherwise RDKit will do this for us, but always using the default
+			// CoordGen setting (not in sync with preferences)
+			if (bComputeCoordinates) {
+	            compute2DCoords(omol, bUseCoordGen);		            
+			}
+			
+			// Normalize scale (only necessary, if we did not generate fresh coordinates
+			// with CoordGen, because in that case we normalized already in our compute2DCoords 
+			// wrapper method)
+			if (bNormalize && !(bComputeCoordinates && bUseCoordGen)) {
 				omol.normalizeDepiction(-1, 0);
 			}
 			
@@ -316,7 +328,7 @@ implements SvgProvider {
 					else {
 						// Skip kekulization
 						RDKFuncs.prepareMolForDrawing(mol, false);
-					}			
+					}
 	
 					// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS), 
 					// we will compute them either with CoordGen or native RDKit
@@ -324,8 +336,10 @@ implements SvgProvider {
 			            compute2DCoords(mol, bUseCoordGen);		            
 					}
 					
-					// Normalize scale
-					if ((bComputeCoordinates || bNormalize) && omol.getNumConformers() > 0) {
+					// Normalize scale (only necessary, if we did not generate fresh coordinates
+					// with CoordGen, because in that case we normalized already in our compute2DCoords 
+					// wrapper method)
+					if (bNormalize && mol.getNumConformers() > 0 && !(bComputeCoordinates && bUseCoordGen)) {
 						mol.normalizeDepiction(-1, 0);
 					}
 
@@ -577,6 +591,10 @@ implements SvgProvider {
                     0 /* int sampleSeed */,
                     false /* boolean permuteDeg4Nodes */,
                     !bUseCoordGen /* boolean forceRDKit */);
+			
+			if (bUseCoordGen && mol.getNumConformers() > 0) {
+				mol.normalizeDepiction(-1, 0);
+			}
 		}
 		
 		return iRet;

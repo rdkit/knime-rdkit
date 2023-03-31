@@ -275,7 +275,9 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
       m_smartsPattern = markForCleanup(generatedSmartsPattern(m_modelDimension.getValue(),
             m_modelSmartsTemplate.getStringValue()));
       if (m_smartsPattern != null) {
-    	  RDKitMolValueRenderer.compute2DCoords(m_smartsPattern, RDKitDepicterPreferencePage.isUsingCoordGen());
+    	  RDKitMolValueRenderer.compute2DCoords(m_smartsPattern,
+		  	RDKitDepicterPreferencePage.isUsingCoordGen(),
+			RDKitDepicterPreferencePage.isNormalizeDepictions());
       }
 	}
 
@@ -320,10 +322,14 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 					// Calculate 2D Coordinates
 					if (m_modelDimension.getValue() == CoordinateDimension.Coord_2D) {
 						if (m_smartsPattern != null) {
-							RDKitMolValueRenderer.compute2DCoords(mol, m_smartsPattern, RDKitDepicterPreferencePage.isUsingCoordGen());
+							RDKitMolValueRenderer.compute2DCoords(mol, m_smartsPattern,
+								RDKitDepicterPreferencePage.isUsingCoordGen(),
+								RDKitDepicterPreferencePage.isNormalizeDepictions());
 						}
 						else {
-							RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+							RDKitMolValueRenderer.compute2DCoords(mol,
+								RDKitDepicterPreferencePage.isUsingCoordGen(),
+								RDKitDepicterPreferencePage.isNormalizeDepictions());
 						}
 					}
 

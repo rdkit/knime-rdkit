@@ -276,7 +276,9 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
 					if (mol.getNumConformers() == 0) {
-						RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+						RDKitMolValueRenderer.compute2DCoords(mol,
+							RDKitDepicterPreferencePage.isUsingCoordGen(),
+							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					}
 
 					String xmlSvg = null;

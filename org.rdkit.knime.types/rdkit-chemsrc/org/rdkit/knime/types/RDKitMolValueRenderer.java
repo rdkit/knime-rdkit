@@ -324,15 +324,12 @@ implements SvgProvider {
 					}
 
 					// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS),
-					// we will compute them either with CoordGen or native RDKit
+					// we will compute them either with CoordGen or native RDKit.
+					// Instead, if the molecule already have coordinates, we only need to normalize
+					// the scale to RDKit standards if normalization is requested in preferences
 					if (bComputeCoordinates) {
 			            compute2DCoords(mol, bUseCoordGen, bNormalize);
-					}
-					
-					// Normalize scale (only necessary, if we did not generate fresh coordinates
-					// with CoordGen, because in that case we normalized already in our compute2DCoords 
-					// wrapper method)
-					if (bNormalize && mol.getNumConformers() > 0 && !(bComputeCoordinates && bUseCoordGen)) {
+					} else if (bNormalize && mol.getNumConformers() > 0) {
 						mol.normalizeDepiction(-1, 0);
 					}
 

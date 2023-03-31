@@ -618,7 +618,9 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 						if (m_modelGenerateCoordinates.getBooleanValue()) {
 							if (m_modelForceGenerateCoordinates.getBooleanValue() || molFinal.getNumConformers() == 0) {
-								RDKitMolValueRenderer.compute2DCoords(molFinal, RDKitDepicterPreferencePage.isUsingCoordGen());
+								RDKitMolValueRenderer.compute2DCoords(molFinal,
+									RDKitDepicterPreferencePage.isUsingCoordGen(),
+									RDKitDepicterPreferencePage.isNormalizeDepictions());
 							}
 						}
 

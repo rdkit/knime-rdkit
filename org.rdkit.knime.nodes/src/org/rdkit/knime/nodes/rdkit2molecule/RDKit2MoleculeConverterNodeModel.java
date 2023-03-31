@@ -128,7 +128,9 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 			public DataCell convertRdkitMolecule(final ROMol mol) {
 				// Calculate 2D Coordinates, if necessary
 				if (mol.getNumConformers() == 0) {
-					RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+					RDKitMolValueRenderer.compute2DCoords(mol,
+						RDKitDepicterPreferencePage.isUsingCoordGen(),
+						RDKitDepicterPreferencePage.isNormalizeDepictions());
 				}
 
 				// Fix SDF value

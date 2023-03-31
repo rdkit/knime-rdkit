@@ -177,7 +177,9 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 		try {
 			// Convert to SDF
 			if (mol.getNumConformers() == 0) {
-				RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+				RDKitMolValueRenderer.compute2DCoords(mol,
+					RDKitDepicterPreferencePage.isUsingCoordGen(),
+					RDKitDepicterPreferencePage.isNormalizeDepictions());
 			}
 
 			value = RDKFuncs.MolToMolBlock(mol);

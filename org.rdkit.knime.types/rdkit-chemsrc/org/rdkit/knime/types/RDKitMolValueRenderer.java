@@ -137,7 +137,7 @@ implements SvgProvider {
 
 	/** The font used for drawing Smiles in error conditions, if available. */
 	private static final Font SMILES_FONT = new Font("Helvetica", Font.PLAIN, 12);
-	
+
 	//
 	// Members
 	//
@@ -156,7 +156,7 @@ implements SvgProvider {
 
 	/** The molecule to be rendered next. */
 	private transient ROMol m_molecule;
-	
+
 	/** A special lock used for the interface. */
 	private ReentrantLock m_reentrantLock = new ReentrantLock();
 
@@ -170,7 +170,7 @@ implements SvgProvider {
 		m_strSmiles = null;
 		m_strError = null;
 		m_bIsMissingCell = (value instanceof DataCell && ((DataCell)value).isMissing());
-		
+
 		if (m_molecule != null) {
 			m_molecule.delete();
 		}
@@ -180,17 +180,17 @@ implements SvgProvider {
 		boolean trySanitizing = true;
 		boolean bNormalize = RDKitDepicterPreferencePage.isNormalizeDepictions();
 		boolean bUseCoordGen = RDKitDepicterPreferencePage.isUsingCoordGen();
-		
+
 		try {
 			// We have an old plain RDKit Mol Value
 			if (value instanceof RDKitMolValue) {
 				molCell = (RDKitMolValue)value;
 			}
-	
+
 			// We have a wrapped RDKit Mol Value (or an error)
 			else if (value instanceof AdapterValue) {
 				final AdapterValue adapter = (AdapterValue)value;
-	
+
 				try {
 					if (adapter.getAdapterError(RDKitMolValue.class) != null) {
 						m_bIsMissingCell = true;
@@ -211,37 +211,30 @@ implements SvgProvider {
 					m_strError = ((MissingCell)value).getError();
 				}
 			}
-		} 
+		}
 		catch (final Exception ex) {
 			// If conversion fails we set a null value, which will show up as error messgae
 			omol = null;
 			// Logging something here may swamp the log files - not desired.
 		}
-		
+
 		if (molCell != null) {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
-			
+
 			boolean bComputeCoordinates = (omol.getNumConformers() == 0);
-			
-			// If we draw molecules that do not have conformers yet, 
+
+			// If we draw molecules that do not have conformers yet,
 			// we need to compute one here, either with CoordGen or native RDKit,
 			// otherwise RDKit will do this for us, but always using the default
 			// CoordGen setting (not in sync with preferences)
 			if (bComputeCoordinates) {
-	            compute2DCoords(omol, bUseCoordGen);		            
+	            compute2DCoords(omol, bUseCoordGen, bNormalize);
 			}
-			
-			// Normalize scale (only necessary, if we did not generate fresh coordinates
-			// with CoordGen, because in that case we normalized already in our compute2DCoords 
-			// wrapper method)
-			if (bNormalize && !(bComputeCoordinates && bUseCoordGen)) {
-				omol.normalizeDepiction(-1, 0);
-			}
-			
+
 			// Store the prepared molecule for drawing next
 			m_molecule = omol;
-		} 
+		}
 		else {
 			boolean bComputeCoordinates = false;
 
@@ -255,13 +248,13 @@ implements SvgProvider {
 				}
 				else if (value instanceof SdfValue) {
 		            String val = ((SdfValue) value).getSdfValue();
-		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */, 
+		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
 		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
 		            bComputeCoordinates = false; // We accept, if there is no conformer
 				}
 				else if (value instanceof MolValue) {
 		            String val = ((MolValue) value).getMolValue();
-		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */, 
+		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
 		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
 		            bComputeCoordinates = false; // We accept, if there is no conformer
 				}
@@ -271,7 +264,7 @@ implements SvgProvider {
 		            bComputeCoordinates = true;
 		            trySanitizing = false;
 				}
-				
+
 				if (tmol != null) {
 					// save a copy in case something goes badly wrong in the sanitization
 					omol = new ROMol(tmol);
@@ -280,9 +273,9 @@ implements SvgProvider {
 							RDKFuncs.sanitizeMol(tmol);
 							omol.delete();
 							omol = tmol;
-						} 
+						}
 						catch (final Exception ex) {
-							trySanitizing = false;					
+							trySanitizing = false;
 							tmol.delete();
 							tmol = null;
 						}
@@ -299,7 +292,7 @@ implements SvgProvider {
 						}
 					}
 				}
-			} 
+			}
 			catch (final Exception ex) {
 				if (omol != null) {
 					omol.delete();
@@ -311,35 +304,32 @@ implements SvgProvider {
 				final Thread t = Thread.currentThread();
 				final ClassLoader contextClassLoader = t.getContextClassLoader();
 				t.setContextClassLoader(getClass().getClassLoader());
-	
+
 				try {
 					RWMol mol = new RWMol(omol);
 					if (trySanitizing) {
 						try {
 							RDKFuncs.prepareMolForDrawing(mol);
-						} 
+						}
 						catch(final MolSanitizeException ex) {
 							mol.delete();
 							mol = new RWMol(omol);
 							// Skip kekulization. If this still fails we throw up our hands
 							RDKFuncs.prepareMolForDrawing(mol, false);
 						}
-					} 
+					}
 					else {
 						// Skip kekulization
 						RDKFuncs.prepareMolForDrawing(mol, false);
 					}
-	
-					// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS), 
-					// we will compute them either with CoordGen or native RDKit
+
+					// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS),
+					// we will compute them either with CoordGen or native RDKit.
+					// Instead, if the molecule already have coordinates, we only need to normalize
+					// the scale to RDKit standards if normalization is requested in preferences
 					if (bComputeCoordinates) {
-			            compute2DCoords(mol, bUseCoordGen);		            
-					}
-					
-					// Normalize scale (only necessary, if we did not generate fresh coordinates
-					// with CoordGen, because in that case we normalized already in our compute2DCoords 
-					// wrapper method)
-					if (bNormalize && mol.getNumConformers() > 0 && !(bComputeCoordinates && bUseCoordGen)) {
+			            compute2DCoords(mol, bUseCoordGen, bNormalize);
+					} else if (bNormalize && mol.getNumConformers() > 0) {
 						mol.normalizeDepiction(-1, 0);
 					}
 
@@ -384,7 +374,7 @@ implements SvgProvider {
 		super.paintComponent(g);
 
 		m_svgDocument = getSvg();
-		
+
 		// Set default color
 		g.setColor(Color.black);
 
@@ -428,7 +418,7 @@ implements SvgProvider {
 			g.setColor(Color.black);
 		}
 	}
-	
+
 	@Override
 	public LockedSupplier<SVGDocument> getSvgSupplier() {
       return new LockedSupplier<SVGDocument>(getSvg(), m_reentrantLock);
@@ -442,32 +432,32 @@ implements SvgProvider {
 		if (m_molecule != null) {
 			try {
 				final MolDraw2DSVG molDrawing = new MolDraw2DSVG(-1, -1);
-				
+
 				// Apply config from preferences (since RDKit Types version 4.6.0), if available
 				String strJsonConfig = RDKitDepicterPreferencePage.getJsonConfig();
 				if (strJsonConfig != null) {
 					RDKFuncs.updateDrawerParamsFromJSON(molDrawing, strJsonConfig);
 				}
-				
+
 				MolDrawOptions opts = molDrawing.drawOptions();
-				
+
 				// We've already prepared the molecule appropriately, so don't try again
 				opts.setPrepareMolsBeforeDrawing(false);
-				
+
 				// Apply old config, if no JSON config is provided (before RDKit Types version 4.6.0)
 				if (strJsonConfig == null) {
 					opts.setAddStereoAnnotation(true);
 				}
-				
+
 				molDrawing.drawMolecule(m_molecule);
 				molDrawing.finishDrawing();
 
-				// Use flexicanvas 
+				// Use flexicanvas
 				String svg = molDrawing.getDrawingText();
 				svg = svg.replaceAll("(width|height)(=[\"'])(\\d+px)([\"'])", "$1$2100%$4");
 
 				molDrawing.delete();
-				
+
 				final String parserClass = XMLResourceDescriptor.getXMLParserClassName();
 				final SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parserClass);
 
@@ -493,7 +483,7 @@ implements SvgProvider {
 				}
 			}
 		}
-		
+
 		return m_svgDocument;
 	}
 
@@ -503,7 +493,7 @@ implements SvgProvider {
 
 	/**
 	 * Draws a multiline string to the specified graphics context at the position (x;y).
-	 * 
+	 *
 	 * @param g Graphics context. Can be null to do nothing.
 	 * @param str String to be drawn. Can be null to do nothing.
 	 * @param x X position.
@@ -523,67 +513,86 @@ implements SvgProvider {
 			}
 		}
 	}
-	
+
 	//
 	// Static Methods
 	//
-	
+
 	/**
 	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
 	 * and passes default parameters, except the last one: forceRDKit will be set
 	 * to true to overwrite the global setting of setPreferCoordGen, which is now
-	 * set in {@link RDKitTypesPluginActivator#start(org.osgi.framework.BundleContext)} 
+	 * set in {@link RDKitTypesPluginActivator#start(org.osgi.framework.BundleContext)}
 	 * always to true. For backward-compatibility purposes this method can be called
 	 * to have the same behavior like the ROMol.compute2DCoords(...) before the global
 	 * setting was changed.
-	 * 
+	 *
 	 * @param mol Molecule to re-compute coordinates for. Can be null to do nothing.
-	 * 
-	 * @return ID of the conformation added to the molecule containing the 2D coordinates. 
+	 *
+	 * @return ID of the conformation added to the molecule containing the 2D coordinates.
 	 *     -1, if it did not run properly, e.g. mol was null.
 	 */
 	public static int compute2DCoords(ROMol mol) {
-		return compute2DCoords(mol, (Int_Point2D_Map)null, false);
+		return compute2DCoords(mol, (Int_Point2D_Map)null, false, false);
 	}
-	
+
 	/**
 	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
 	 * and passes default parameters except for the last boolean parameter, which
 	 * controls, if the coordinate generation should happen with CoordGen or
 	 * native RDKit. For this last parameter we use the negated bUseCoordGen parameter
 	 * that is passed in.
-	 * 
+	 *
 	 * @param mol Molecule to re-compute coordinates for. Can be null to do nothing.
 	 * @param bUseCoordGen Set to true to set forceRDKit parameter to false. And vice versa.
-	 * 
-	 * @return ID of the conformation added to the molecule containing the 2D coordinates. 
+	 *
+	 * @return ID of the conformation added to the molecule containing the 2D coordinates.
 	 *     -1, if it did not run properly, e.g. mol was null.
 	 */
 	public static int compute2DCoords(ROMol mol, boolean bUseCoordGen) {
-		return compute2DCoords(mol, (Int_Point2D_Map)null, bUseCoordGen);
+		return compute2DCoords(mol, (Int_Point2D_Map)null, bUseCoordGen, false);
 	}
-	
+
 	/**
 	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
 	 * and passes default parameters except for the last boolean parameter, which
 	 * controls, if the coordinate generation should happen with CoordGen or
 	 * native RDKit. For this last parameter we use the negated bUseCoordGen parameter
 	 * that is passed in.
-	 * 
+	 *
+	 * @param mol Molecule to re-compute coordinates for. Can be null to do nothing.
+	 * @param bUseCoordGen Set to true to set forceRDKit parameter to false. And vice versa.
+	 * @param bNormalize Set to true to trigger a canonical reorientation.
+	 *
+	 * @return ID of the conformation added to the molecule containing the 2D coordinates.
+	 *     -1, if it did not run properly, e.g. mol was null.
+	 */
+	public static int compute2DCoords(ROMol mol, boolean bUseCoordGen, boolean bNormalize) {
+		return compute2DCoords(mol, (Int_Point2D_Map)null, bUseCoordGen, bNormalize);
+	}
+
+	/**
+	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
+	 * and passes default parameters except for the last boolean parameter, which
+	 * controls, if the coordinate generation should happen with CoordGen or
+	 * native RDKit. For this last parameter we use the negated bUseCoordGen parameter
+	 * that is passed in.
+	 *
 	 * @param mol Molecule to re-compute coordinates for. Can be null to do nothing.
 	 * @param mapTemplate Coordinates to be used to align the first molecule with. Can be null to not align.
 	 * @param bUseCoordGen Set to true to set forceRDKit parameter to false. And vice versa.
-	 * 
-	 * @return ID of the conformation added to the molecule containing the 2D coordinates. 
+	 * @param bNormalize Set to true to trigger a canonical reorientation.
+	 *
+	 * @return ID of the conformation added to the molecule containing the 2D coordinates.
 	 *     -1, if it did not run properly, e.g. mol was null.
 	 */
-	public static int compute2DCoords(ROMol mol, Int_Point2D_Map mapTemplate, boolean bUseCoordGen) {
+	public static int compute2DCoords(ROMol mol, Int_Point2D_Map mapTemplate, boolean bUseCoordGen, boolean bNormalize) {
 		int iRet = -1;
-		
+
 		if (mol != null) {
 			// The defaults are used from documentation found on March 09, 2023 under this link:
 			// https://github.com/rdkit/rdkit/blob/58b79c6f8e2581205007effcf53c6c3641393c07/Code/JavaWrappers/ROMol.i#L423
-			iRet = (int)mol.compute2DCoords(mapTemplate /* coordMap */, 
+			iRet = (int)mol.compute2DCoords(mapTemplate /* coordMap */,
 					false /* boolean canonOrient */,
                     true /* boolean clearConfs */,
                     0 /* long nFlipsPerSample */,
@@ -591,37 +600,42 @@ implements SvgProvider {
                     0 /* int sampleSeed */,
                     false /* boolean permuteDeg4Nodes */,
                     !bUseCoordGen /* boolean forceRDKit */);
-			
-			if (bUseCoordGen && mol.getNumConformers() > 0) {
-				mol.normalizeDepiction(-1, 0);
+
+			// When using CoordGen, we always rescale as the CoordGen scale is different
+			// from RDKit. We leave the scale to 1.0 when using RDKit as rescaling is not
+			// needed. Irrespective of the CoordGen preference, we canonicalize orientation
+			// orienting the main molecule axis along the X axis when bNormalize is true.
+			if (mol.getNumConformers() > 0) {
+				mol.normalizeDepiction(-1, bNormalize ? 1 : 0, bUseCoordGen ? -1.0 : 1.0);
 			}
 		}
-		
+
 		return iRet;
 	}
-	
+
 	/**
 	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
 	 * and passes default parameters except for the last boolean parameter, which
 	 * controls, if the coordinate generation should happen with CoordGen or
 	 * native RDKit. For this last parameter we use the negated bUseCoordGen parameter
 	 * that is passed in.
-	 * 
+	 *
 	 * @param mol Molecule to re-compute coordinates for. Can be null to do nothing.
 	 * @param template SMARTS template to align the first molecule with. Can be null to not align.
 	 * @param bUseCoordGen Set to true to set forceRDKit parameter to false. And vice versa.
-	 * 
-	 * @return ID of the conformation added to the molecule containing the 2D coordinates. 
+	 * @param bNormalize Set to true to trigger a canonical reorientation.
+	 *
+	 * @return ID of the conformation added to the molecule containing the 2D coordinates.
 	 *     -1, if it did not run properly, e.g. mol was null.
 	 */
-	public static int compute2DCoords(ROMol mol, ROMol template, boolean bUseCoordGen) {
+	public static int compute2DCoords(ROMol mol, ROMol template, boolean bUseCoordGen, boolean bNormalize) {
 		int iRet = -1;
-		
+
 		if (mol != null) {
 			Int_Point2D_Map mapTemplate = null;
 			Match_Vect matchVect = null;
 			Conformer conformer = null;
-			
+
 			try {
 				if (template != null && template.getNumConformers() > 0) {
 					matchVect = mol.getSubstructMatch(template);
@@ -635,10 +649,10 @@ implements SvgProvider {
 						}
 					}
 				}
-				
-				iRet = compute2DCoords(mol, mapTemplate, bUseCoordGen);
+
+				iRet = compute2DCoords(mol, mapTemplate, bUseCoordGen, bNormalize);
 			}
-			finally {				
+			finally {
 				if (conformer != null) {
 					conformer.delete();
 				}
@@ -652,7 +666,7 @@ implements SvgProvider {
 				}
 			}
 		}
-		
+
 		return iRet;
 	}
 }

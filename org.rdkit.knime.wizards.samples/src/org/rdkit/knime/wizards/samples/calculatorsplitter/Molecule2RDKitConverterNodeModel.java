@@ -76,6 +76,7 @@ import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValueRenderer;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
 import org.rdkit.knime.util.SettingsUtils;
@@ -379,7 +380,9 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 					if (m_modelGenerateCoordinates.getBooleanValue()) {
 						if (m_modelForceGenerateCoordinates.getBooleanValue() || mol.getNumConformers() == 0) {
-							RDKitMolValueRenderer.compute2DCoords(mol);
+							RDKitMolValueRenderer.compute2DCoords(mol,
+								RDKitDepicterPreferencePage.isUsingCoordGen(),
+								RDKitDepicterPreferencePage.isNormalizeDepictions());
 						}
 					}
 

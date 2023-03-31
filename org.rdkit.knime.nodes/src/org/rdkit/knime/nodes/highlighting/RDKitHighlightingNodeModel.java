@@ -313,7 +313,9 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					// created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
 					if (mol.getNumConformers() == 0) {
-						RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+						RDKitMolValueRenderer.compute2DCoords(mol,
+							RDKitDepicterPreferencePage.isUsingCoordGen(),
+							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					}
 
 					boolean bAppliedHighlighting = false;

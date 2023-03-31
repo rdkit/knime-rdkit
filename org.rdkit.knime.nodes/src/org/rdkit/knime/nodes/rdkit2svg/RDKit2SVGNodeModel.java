@@ -326,7 +326,9 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
 					if (mol.getNumConformers() == 0) {
-						RDKitMolValueRenderer.compute2DCoords(mol, RDKitDepicterPreferencePage.isUsingCoordGen());
+						RDKitMolValueRenderer.compute2DCoords(mol,
+							RDKitDepicterPreferencePage.isUsingCoordGen(),
+							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					}
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);

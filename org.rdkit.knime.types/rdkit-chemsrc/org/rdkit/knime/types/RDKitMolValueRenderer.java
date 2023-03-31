@@ -328,6 +328,13 @@ implements SvgProvider {
 					if (bComputeCoordinates) {
 			            compute2DCoords(mol, bUseCoordGen, bNormalize);
 					}
+					
+					// Normalize scale (only necessary, if we did not generate fresh coordinates
+					// with CoordGen, because in that case we normalized already in our compute2DCoords 
+					// wrapper method)
+					if (bNormalize && mol.getNumConformers() > 0 && !(bComputeCoordinates && bUseCoordGen)) {
+						mol.normalizeDepiction(-1, 0);
+					}
 
 					// Store the prepared molecule for drawing next
 					m_molecule = mol;

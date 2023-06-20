@@ -142,7 +142,7 @@ pipeline {
         stage('Compile and Build') {
         	steps {
 	            // Compiles the plugin and builds an update site from it
-		        configFileProvider([configFile(fileId: 'artifactory-maven-settings', variable: 'MAVEN_SETTINGS')]) {
+		        configFileProvider([configFile(fileId: 'artifactory-maven', variable: 'MAVEN_SETTINGS')]) {
 					sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/${JAVA_VERSION} && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
 		        }
 		    }    

@@ -607,6 +607,13 @@ implements SvgProvider {
 			// orienting the main molecule axis along the X axis when bNormalize is true.
 			if (mol.getNumConformers() > 0) {
 				mol.normalizeDepiction(-1, bNormalize ? 1 : 0, bUseCoordGen ? -1.0 : 1.0);
+				if (bNormalize) {
+					// canonicalization may flip the molecule around the Z axis,
+					// so we recompute bond wedging to make sure the stereochemistry
+					// is depicted correctly (KNIME-1692)
+					mol.ClearSingleBondDirFlags();
+					mol.WedgeMolBonds(mol.getConformer());
+				}
 			}
 		}
 

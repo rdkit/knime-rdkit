@@ -47,4 +47,13 @@
 	   <packageUrl regex="true">^pkg:maven/org\.codehaus\.woodstox/stax2\-api@.*$</packageUrl>
 	   <cve>CVE-2022-40152</cve>
 	</suppress>
+	
+	<suppress>
+	   <notes><![CDATA[
+	   		   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-SNAPSHOT-2023-06-27-jar-with-dependencies.jar (shaded: com.sun.xml.bind.jaxb:isorelax:20090621)
+			   There is currently no fix provided by OPSIN, which has net.java.dev as a dependency that brings in isorelax in its only version. There is no newer version available.
+	   ]]></notes>
+	   <packageUrl regex="true">^pkg:maven/com\.sun\.xml\.bind\.jaxb/isorelax@.*$</packageUrl>
+	   <cve>CVE-2023-34411</cve>
+	</suppress>	
 </suppressions>

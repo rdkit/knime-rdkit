@@ -409,40 +409,42 @@ public class FunctionalGroupFilterNodeDialog extends DefaultNodeSettingsPane {
 	 * @param bEnabled Set to true to show an error, false otherwise.
 	 */
 	protected void setFileError(final boolean bEnabled) {
-		final Border border = m_compInputFile.getBorder();
-
-		if (bEnabled) {
-			boolean bErrorBorderFound = false;
-
-			// Check, if our error border is already set
-			if (border == m_borderInputFileError) {
-				bErrorBorderFound = true;
-			}
-			else if (border instanceof CompoundBorder &&
-					((CompoundBorder)border).getOutsideBorder() ==
-					m_borderInputFileError) {
-				bErrorBorderFound = true;
-			}
-
-			if (!bErrorBorderFound) {
-				if (border == null) {
-					m_compInputFile.setBorder(m_borderInputFileError);
+		if (m_compInputFile != null) {
+			final Border border = m_compInputFile.getBorder();
+	
+			if (bEnabled) {
+				boolean bErrorBorderFound = false;
+	
+				// Check, if our error border is already set
+				if (border == m_borderInputFileError) {
+					bErrorBorderFound = true;
 				}
-				else {
-					m_compInputFile.setBorder(BorderFactory.createCompoundBorder(
-							m_borderInputFileError, border));
+				else if (border instanceof CompoundBorder &&
+						((CompoundBorder)border).getOutsideBorder() ==
+						m_borderInputFileError) {
+					bErrorBorderFound = true;
+				}
+	
+				if (!bErrorBorderFound) {
+					if (border == null) {
+						m_compInputFile.setBorder(m_borderInputFileError);
+					}
+					else {
+						m_compInputFile.setBorder(BorderFactory.createCompoundBorder(
+								m_borderInputFileError, border));
+					}
 				}
 			}
-		}
-		else { // Disable error
-			// Check, if our error border is still set
-			if (border == m_borderInputFileError) {
-				m_compInputFile.setBorder(null);
-			}
-			else if (border instanceof CompoundBorder &&
-					((CompoundBorder)border).getOutsideBorder() ==
-					m_borderInputFileError) {
-				m_compInputFile.setBorder(((CompoundBorder)border).getInsideBorder());
+			else { // Disable error
+				// Check, if our error border is still set
+				if (border == m_borderInputFileError) {
+					m_compInputFile.setBorder(null);
+				}
+				else if (border instanceof CompoundBorder &&
+						((CompoundBorder)border).getOutsideBorder() ==
+						m_borderInputFileError) {
+					m_compInputFile.setBorder(((CompoundBorder)border).getInsideBorder());
+				}
 			}
 		}
 	}

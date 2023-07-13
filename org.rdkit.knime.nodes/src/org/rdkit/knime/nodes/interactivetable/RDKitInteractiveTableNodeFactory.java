@@ -95,6 +95,8 @@ public class RDKitInteractiveTableNodeFactory extends NodeFactory<RDKitInteracti
 
 		return retView;
 	}
+	
+	
 
 	/**
 	 * This node does not have any views.

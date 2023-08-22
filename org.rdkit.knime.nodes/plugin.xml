@@ -27,9 +27,11 @@
 
       <node category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory"/>
       <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.rdkfingerprint.RDKitCountBasedFingerprintNodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderV2NodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.fingerprintreader.RDKitFingerprintReaderV2NodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterV2NodeFactory"/>
+      <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.fingerprintwriter.RDKitFingerprintWriterV2NodeFactory" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.diversitypicker.RDKitDiversityPickerNodeFactory"/>
       <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintReaderNodeFactory"/>
       <node deprecated="true" category-path="/community/rdkit/fingerprints" factory-class="org.rdkit.knime.nodes.fingerprintreadwrite.FingerprintWriterNodeFactory"/>
 

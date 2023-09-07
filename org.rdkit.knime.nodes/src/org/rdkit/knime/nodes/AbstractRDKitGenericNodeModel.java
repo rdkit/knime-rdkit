@@ -141,7 +141,7 @@ import org.rdkit.knime.util.WarningConsolidator;
  *
  * @author Manuel Schwarze
  */
-public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitObjectCleaner {
+public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements RDKitObjectCleaner {
 
 	//
 	// Constants
@@ -152,7 +152,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
-			.getLogger(AbstractRDKitNodeModel.class);
+			.getLogger(AbstractRDKitGenericNodeModel.class);
 
 	/** Column name for internal spec table column with information about conserved internal tables. */
 	private static final String PORT_TYPE_COLUMN_NAME = "PortType";
@@ -249,7 +249,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param nrInDataPorts Number of input ports. Must be 0 .. n.
 	 * @param nrOutDataPorts Number of output ports. Must be 0 .. m.
 	 */
-	protected AbstractRDKitNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
+	protected AbstractRDKitGenericNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
 		super(nrInDataPorts, nrOutDataPorts);
 		initializeContentTableModels(nrInDataPorts, nrOutDataPorts);
 	}
@@ -260,8 +260,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param inPortTypes Input port definitions. Must not be null.
 	 * @param outPortTypes  Output port definitions. Must not be null.
 	 */
-	protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
-                                      final PortType[] outPortTypes) {
+	protected AbstractRDKitGenericNodeModel(final PortType[] inPortTypes,
+											final PortType[] outPortTypes) {
 		super(inPortTypes, outPortTypes);
       initializeContentTableModels(inPortTypes.length, outPortTypes.length);
 	}
@@ -273,7 +273,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *                           Mustn't be Null.
 	 * @throws IllegalArgumentException if provided {@code nodeCreationConfig} is malformed.
 	 */
-	protected AbstractRDKitNodeModel(NodeCreationConfiguration nodeCreationConfig) {
+	protected AbstractRDKitGenericNodeModel(NodeCreationConfiguration nodeCreationConfig) {
 		this(
 				nodeCreationConfig.getPortConfig()
 						.map(PortsConfiguration::getInputPorts)
@@ -294,9 +294,9 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
     * @param arrOutputPortRoles Roles for output ports or null to use default. 
     *    The number must match the specified number of output data ports.
     */
-   protected AbstractRDKitNodeModel(final int nrInDataPorts,
-                                     final int nrOutDataPorts, final InputPortRole[] arrInputPortRoles,
-                                     final OutputPortRole[] arrOutputPortRoles) {
+   protected AbstractRDKitGenericNodeModel(final int nrInDataPorts,
+										   final int nrOutDataPorts, final InputPortRole[] arrInputPortRoles,
+										   final OutputPortRole[] arrOutputPortRoles) {
       this(nrInDataPorts, nrOutDataPorts);
       
       setPortRoles(arrInputPortRoles, arrOutputPortRoles);
@@ -312,9 +312,9 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
     * @param arrOutputPortRoles Roles for output ports. The number must match the specified
     *    number of output data ports.
     */
-   protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
-                                     final PortType[] outPortTypes, final InputPortRole[] arrInputPortRoles,
-                                     final OutputPortRole[] arrOutputPortRoles) {
+   protected AbstractRDKitGenericNodeModel(final PortType[] inPortTypes,
+										   final PortType[] outPortTypes, final InputPortRole[] arrInputPortRoles,
+										   final OutputPortRole[] arrOutputPortRoles) {
       this(inPortTypes, outPortTypes);
       
       setPortRoles(arrInputPortRoles, arrOutputPortRoles);
@@ -646,7 +646,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
    
    /**
     * This implementation returns RDKit node specific roles for input ports, if set for the node in the constructor
-    * or by calling {@link AbstractRDKitNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
+    * or by calling {@link AbstractRDKitGenericNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
     * Otherwise it returns the default from KNIME.
     * {@inheritDoc}
     */
@@ -657,7 +657,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
    
    /**
     * This implementation returns RDKit node specific roles for output ports, if set for the node in the constructor
-    * or by calling {@link AbstractRDKitNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
+    * or by calling {@link AbstractRDKitGenericNodeModel#setPortRoles(InputPortRole[], OutputPortRole[])}.
     * Otherwise it returns the default from KNIME.
     * {@inheritDoc}
     */
@@ -1622,7 +1622,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 				// Every 20 iterations report progress and check for cancel
 				if (lRowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, strProgressMessage);
+					AbstractRDKitGenericNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, strProgressMessage);
 				}
 
 				lRowIndex++;
@@ -1706,7 +1706,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 			// Every 20 iterations report progress and check for cancel
 			if (lRowIndex % 20 == 0) {
-				AbstractRDKitNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, " - Splitting");
+				AbstractRDKitGenericNodeModel.reportProgress(exec, lRowIndex, lRowCount, row, " - Splitting");
 			}
 
 			lRowIndex++;
@@ -2574,13 +2574,13 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					strMessage += " - Assigning missing cells.";
 					m_warningConsolidator.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
 							strMessage);
-					AbstractRDKitNodeModel.LOGGER.warn(strMessage, e);
+					AbstractRDKitGenericNodeModel.LOGGER.warn(strMessage, e);
 					arrCells = AbstractRDKitCellFactory.createEmptyCells(1);
 				}
 				// Or fail
 				else {
 					strMessage += " - Giving up.";
-					AbstractRDKitNodeModel.LOGGER.error(strMessage, e);
+					AbstractRDKitGenericNodeModel.LOGGER.error(strMessage, e);
 					throw new RuntimeException(strMessage, e);
 				}
 			}
@@ -2589,7 +2589,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			// Update the progress only every 20 rows
 			if (rowIndex % 20 == 0) {
 				try {
-					AbstractRDKitNodeModel.reportProgress(m_exec, (int)rowIndex,
+					AbstractRDKitGenericNodeModel.reportProgress(m_exec, (int)rowIndex,
 							m_lTotalRowCount, row,
 							new StringBuilder(" [").append(getActiveCount()).append(" active, ")
 							.append(getFinishedTaskCount()).append(" pending]").toString());

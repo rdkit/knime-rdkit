@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
+ * Copyright (C) 2012-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -46,6 +46,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
+
 package org.rdkit.knime.nodes;
 
 import java.io.ByteArrayInputStream;
@@ -59,6 +60,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -96,7 +98,11 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.streamable.InputPortRole;
@@ -255,12 +261,30 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @param outPortTypes  Output port definitions. Must not be null.
 	 */
 	protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
-			final PortType[] outPortTypes) {
+                                      final PortType[] outPortTypes) {
 		super(inPortTypes, outPortTypes);
       initializeContentTableModels(inPortTypes.length, outPortTypes.length);
 	}
 
-   /**
+	/**
+	 * Constructs new node model with configuration specified.
+	 *
+	 * @param nodeCreationConfig Node Creation Configuration instance.
+	 *                           Mustn't be Null.
+	 * @throws IllegalArgumentException if provided {@code nodeCreationConfig} is malformed.
+	 */
+	protected AbstractRDKitNodeModel(NodeCreationConfiguration nodeCreationConfig) {
+		this(
+				nodeCreationConfig.getPortConfig()
+						.map(PortsConfiguration::getInputPorts)
+						.orElseThrow(() -> new IllegalArgumentException("No input port types defined.")),
+				nodeCreationConfig.getPortConfig()
+						.map(PortsConfiguration::getOutputPorts)
+						.orElseThrow(() -> new IllegalArgumentException("No output port types defined."))
+		);
+	}
+
+	/**
     * Creates a new node model with the specified number of input and output ports.
     * 
     * @param nrInDataPorts Number of input ports. Must be 0 .. n.
@@ -271,8 +295,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
     *    The number must match the specified number of output data ports.
     */
    protected AbstractRDKitNodeModel(final int nrInDataPorts,
-         final int nrOutDataPorts, final InputPortRole[] arrInputPortRoles,
-         final OutputPortRole[] arrOutputPortRoles) {
+                                     final int nrOutDataPorts, final InputPortRole[] arrInputPortRoles,
+                                     final OutputPortRole[] arrOutputPortRoles) {
       this(nrInDataPorts, nrOutDataPorts);
       
       setPortRoles(arrInputPortRoles, arrOutputPortRoles);
@@ -289,8 +313,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
     *    number of output data ports.
     */
    protected AbstractRDKitNodeModel(final PortType[] inPortTypes,
-         final PortType[] outPortTypes, final InputPortRole[] arrInputPortRoles,
-         final OutputPortRole[] arrOutputPortRoles) {
+                                     final PortType[] outPortTypes, final InputPortRole[] arrInputPortRoles,
+                                     final OutputPortRole[] arrOutputPortRoles) {
       this(inPortTypes, outPortTypes);
       
       setPortRoles(arrInputPortRoles, arrOutputPortRoles);
@@ -823,7 +847,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
 			throws InvalidSettingsException {
 		// Reset warning and error tracker
 		getWarningConsolidator().clear();
@@ -831,14 +855,14 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		// Check whether native RDKit library has been loaded successfully
 		RDKitTypesPluginActivator.checkErrorState();
 
-		return new DataTableSpec[getNrOutPorts()];
+		return new PortObjectSpec[getNrOutPorts()];
 	}
 
 	/**
 	 * In this implementation this method acts as director of calling
-	 * {@link #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)},
-	 * {@link #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)} and
-	 * {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}.
+	 * {@link #preProcessing(PortObject[], InputDataInfo[][], ExecutionContext)},
+	 * {@link #processing(PortObject[], InputDataInfo[][], ExecutionContext)} and
+	 * {@link #postProcessing(PortObject[], InputDataInfo[][], PortObject[], ExecutionContext)}.
 	 * Derived classes need to implement at least the processing() method. It also
 	 * takes responsible of directing the warning generation as well as the clean up of
 	 * RDKit based resources. Do not override this method. Rather override one listed
@@ -849,31 +873,32 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * @see #createInputDataInfos(int, DataTableSpec)
 	 * @see #getPreProcessingPercentage()
 	 * @see #getPostProcessingPercentage()
-	 * @see #preProcessing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
-	 * @see #processing(BufferedDataTable[], InputDataInfo[][], ExecutionContext)
-	 * @see #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)
-	 * @see #createWarningContextOccurrencesMap(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[])
+	 * @see #preProcessing(PortObject[], InputDataInfo[][], ExecutionContext)
+	 * @see #processing(PortObject[], InputDataInfo[][], ExecutionContext)
+	 * @see #postProcessing(PortObject[], InputDataInfo[][], PortObject[], ExecutionContext)
+	 * @see #createWarningContextOccurrencesMap(PortObject[], InputDataInfo[][], PortObject[])
 	 */
 	@Override
-	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-			final ExecutionContext exec) throws Exception {
+	protected PortObject[] execute(final PortObject[] inObjects,
+								   final ExecutionContext exec) throws Exception {
 	   // Check table size limitations
-	   if (inData != null) {
+	   if (inObjects != null) {
    	   for (int i = 0; i < m_arrInputTableIndexesWithSizeLimit.length; i++) {
-   	      if (m_arrInputTableIndexesWithSizeLimit[i] < inData.length) {
-   	         if (inData[m_arrInputTableIndexesWithSizeLimit[i]] != null && 
-   	               inData[m_arrInputTableIndexesWithSizeLimit[i]].size() > Integer.MAX_VALUE) {
+   	      if (m_arrInputTableIndexesWithSizeLimit[i] < inObjects.length) {
+   	         if (inObjects[m_arrInputTableIndexesWithSizeLimit[i]] != null &&
+   	               inObjects[m_arrInputTableIndexesWithSizeLimit[i]] instanceof BufferedDataTable dataTable &&
+   	               dataTable.size() > Integer.MAX_VALUE) {
    	            throw new UnsupportedOperationException(
-   	                "This RDKit Node does not support more than " + Integer.MAX_VALUE + " rows for the " 
+   	                "This RDKit Node does not support more than " + Integer.MAX_VALUE + " rows for the "
    	                   + (m_arrInputTableIndexesWithSizeLimit[i] + 1) + ". input table.");
    	         }
    	      }
-   	   }   
+   	   }
 	   }
 	   
 		m_lExecutionStartTs = System.currentTimeMillis();
-		BufferedDataTable[] arrConvertedTables = null;
-		BufferedDataTable[] arrResultTables = null;
+		PortObject[] arrConvertedObjects = null;
+		PortObject[] arrResultObjects = null;
 		m_excEncountered = null;
 
 		try {
@@ -890,24 +915,24 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 				final double dPercCore = correctPercentage(1.0d - dPercConv - dPercPre - dPercPost);
 
 				// Get settings and input information, e.g. index information
-				InputDataInfo[][] arrInputDataInfo = createInputDataInfos(getInputTableSpecs(inData));
+				InputDataInfo[][] arrInputDataInfo = createInputDataInfos(getInputTableSpecs(objectsToTables(inObjects)));
 
 				// Conversion of input data to adapter cells if required and recreate input data info afterwards
-				arrConvertedTables = convertInputTables(inData, arrInputDataInfo, exec.createSubExecutionContext(dPercConv));
-				arrInputDataInfo = createInputDataInfos(getInputTableSpecs(arrConvertedTables));
+				arrConvertedObjects = convertInputTables(inObjects, arrInputDataInfo, exec.createSubExecutionContext(dPercConv));
+				arrInputDataInfo = createInputDataInfos(getInputTableSpecs(objectsToTables(arrConvertedObjects)));
 
 				// Pre-processing
-				preProcessing(arrConvertedTables, arrInputDataInfo, exec.createSubExecutionContext(dPercPre));
+				preProcessing(arrConvertedObjects, arrInputDataInfo, exec.createSubExecutionContext(dPercPre));
 
 				// Core-processing
-				arrResultTables = processing(arrConvertedTables, arrInputDataInfo, exec.createSubExecutionContext(dPercCore));
+				arrResultObjects = processing(arrConvertedObjects, arrInputDataInfo, exec.createSubExecutionContext(dPercCore));
 
 				// Post-processing
-				arrResultTables = postProcessing(arrConvertedTables, arrInputDataInfo, arrResultTables,
+				arrResultObjects = postProcessing(arrConvertedObjects, arrInputDataInfo, arrResultObjects,
 						exec.createSubExecutionContext(dPercPost));
 
 				// Show a warning, if errors were encountered
-				generateWarnings(createWarningContextOccurrencesMap(arrConvertedTables, arrInputDataInfo, arrResultTables));
+				generateWarnings(createWarningContextOccurrencesMap(arrConvertedObjects, arrInputDataInfo, arrResultObjects));
 			}
 			catch (final Throwable exc) {
 				m_excEncountered = exc;
@@ -920,10 +945,10 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 		// Prepares conservation of certain tables
 		// if the derived node implements the TableViewSupport interface.
 		if (this instanceof TableViewSupport) {
-			conserveTables(exec, inData, arrResultTables);
+			conserveTables(exec, objectsToTables(inObjects), objectsToTables(arrResultObjects));
 		}
 
-		return arrResultTables;
+		return arrResultObjects;
 	}
 
 	/**
@@ -981,12 +1006,12 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	}
 
 	/**
-	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, before
+	 * This method gets called from the method {@link #execute(PortObject[], ExecutionContext)}, before
 	 * the pre-processing starts. It converts adaptable column types into appropriate Adapter Cells and delivers
 	 * tables that should be used for further processing as if they were the original input tables. The only
 	 * changes are column types.
 	 *
-	 * @param inData The input tables of the node. Can be null.
+	 * @param inData The input port objects of the node. Can be null.
 	 * @param arrInputDataInfo Information about all columns of the input tables.
 	 * @param exec The execution context, which was derived as sub-execution context based on 5%. Track the progress from 0..1.
 	 *
@@ -997,12 +1022,12 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @throws Exception Thrown, if conversion fails.
 	 */
-	protected BufferedDataTable[] convertInputTables(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+	protected PortObject[] convertInputTables(final PortObject[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
-		BufferedDataTable[] arrConvertedTables = null;
+		PortObject[] arrConvertedTables = null;
 
 		if (inData != null) {
-			arrConvertedTables = new BufferedDataTable[inData.length];
+			arrConvertedTables = new PortObject[inData.length];
 
 			// Setup conversions
 			final Map<Integer, ColumnRearranger> mapColumnRearrangers = new HashMap<Integer, ColumnRearranger>();
@@ -1011,7 +1036,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 
 				// Conversion makes only sense, if we have an input table and input columns defined
 				if (inData[iTableIndex] != null && arrInputDataInfo != null && arrInputDataInfo.length > 0 &&
-						arrInputDataInfo[iTableIndex] != null && arrInputDataInfo[iTableIndex].length > 0) {
+						arrInputDataInfo[iTableIndex] != null && arrInputDataInfo[iTableIndex].length > 0 &&
+						inData[iTableIndex] instanceof BufferedDataTable) {
 
 					// Check, if an input column is compatible with an acceptable class that needs conversion
 					final List<InputDataInfo> listConversionColumns = new ArrayList<InputDataInfo>(5);
@@ -1025,7 +1051,7 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 					// Setup a column rearranger and run it for the input table, but only if changes are necessary
 					if (!listConversionColumns.isEmpty()) {
 						final int[] arrColumnIndex = new int[listConversionColumns.size()];
-						final DataTableSpec tableSpec = inData[iTableIndex].getDataTableSpec();
+						final DataTableSpec tableSpec = ((BufferedDataTable) inData[iTableIndex]).getDataTableSpec();
 						final ColumnRearranger rearranger = new ColumnRearranger(tableSpec);
 						int iCount = 0;
 						for (final InputDataInfo inputDataInfo : listConversionColumns) {
@@ -1077,16 +1103,16 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			for (int iTableIndex = 0; iTableIndex < inData.length; iTableIndex++) {
 				exec.setMessage("Converting input tables for processing (" + iCount + " of " + iCountTablesToBeConverted + ") ...");
 				final ColumnRearranger rearranger = mapColumnRearrangers.get(iTableIndex);
-				if (rearranger != null) {
+				if (rearranger != null && inData[iTableIndex] instanceof BufferedDataTable) {
 					iCount++;
-					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(inData[iTableIndex],
+					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(((BufferedDataTable) inData[iTableIndex]),
 							rearranger, exec.createSubProgress(1.0d / iCountTablesToBeConverted / 2.0d));
 
 					// Part 2 of workaround from above: We need to remove the last column again
-					final DataTableSpec tableSpec = arrConvertedTables[iTableIndex].getDataTableSpec();
+					final DataTableSpec tableSpec = ((BufferedDataTable) arrConvertedTables[iTableIndex]).getDataTableSpec();
 					final ColumnRearranger rearrangerWorkaround = new ColumnRearranger(tableSpec);
 					rearrangerWorkaround.remove(tableSpec.getNumColumns() - 1);
-					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(arrConvertedTables[iTableIndex],
+					arrConvertedTables[iTableIndex] = exec.createColumnRearrangeTable(((BufferedDataTable) arrConvertedTables[iTableIndex]),
 							rearrangerWorkaround, exec.createSubProgress(1.0d / iCountTablesToBeConverted / 2.0d));
 				}
 			}
@@ -1140,17 +1166,17 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * the row-by-row processing starts. All necessary pre-calculations can be done here. Results of the method
 	 * should be made available through member variables, which get picked up by the other methods like
 	 * process(InputDataInfo[], DataRow) in the factory or
-	 * {@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}
+	 * {@link #postProcessing(PortObject[], InputDataInfo[][], PortObject[], ExecutionContext)}
 	 * in the model.
 	 *
-	 * @param inData The input tables of the node.
+	 * @param inObjects The input port objects of the node.
 	 * @param arrInputDataInfo Information about all columns of the input tables.
 	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
 	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
 	 *
 	 * @throws Exception Thrown, if pre-processing fails.
 	 */
-	protected void preProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
+	protected void preProcessing(final PortObject[] inObjects, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
 		// Does not do anything be default
 		exec.setProgress(1.0d);
@@ -1163,39 +1189,39 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * cleanup RDKit objects at the end. Hence, it should not be overridden. Instead a developer would
 	 * override this method.
 	 *
-	 * @param inData The input tables of the node.
+	 * @param inObjects The input port objects of the node.
 	 * @param arrInputDataInfo Information about all columns of the input tables.
 	 * @param exec The execution context, which was derived as sub-execution context. Track the progress from 0..1.
 	 *
 	 * @return The result tables to be passed to the method
-	 * 		{@link #postProcessing(BufferedDataTable[], InputDataInfo[][], BufferedDataTable[], ExecutionContext)}.
+	 * 		{@link #postProcessing(PortObject[], InputDataInfo[][], PortObject[], ExecutionContext)}.
 	 * 		If this method is not overridden these are the same tables that will be returned by the method
-	 * 		{@link #execute(BufferedDataTable[], ExecutionContext)} as the final result tables.
+	 * 		{@link #execute(PortObject[], ExecutionContext)} as the final result tables.
 	 *
 	 * @throws Exception Thrown, if post-processing fails.
 	 */
-	protected abstract BufferedDataTable[] processing(final BufferedDataTable[] inData, InputDataInfo[][] arrInputDataInfo,
+	protected abstract PortObject[] processing(final PortObject[] inObjects, InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception;
 
 	/**
-	 * This method gets called from the method {@link #execute(BufferedDataTable[], ExecutionContext)}, after
+	 * This method gets called from the method {@link #execute(PortObject[], ExecutionContext)}, after
 	 * the row-by-row processing has ended a new result table set has been created.
 	 * All necessary post-calculations can be done here, e.g. creating a completely new table by filtering
 	 * the intermediate table. The returned table array will be returned also from the execute method.
 	 *
-	 * @param inData The input tables of the node.
+	 * @param inObjects The input port objects of the node.
 	 * @param arrInputDataInfo Information about all columns of the input tables.
 	 * @param processingResult Tables of the core processing.
 	 * @param exec The execution context, which was derived as sub-execution context based on the percentage
 	 * 		setting of #getPreProcessingPercentage(). Track the progress from 0..1.
 	 *
-	 * @return The final result tables to be returned by {@link #execute(BufferedDataTable[], ExecutionContext)}.
+	 * @return The final result tables to be returned by {@link #execute(PortObject[], ExecutionContext)}.
 	 * 		By default it just returns the tables passed in as processingResult tables.
 	 *
 	 * @throws Exception Thrown, if post-processing fails.
 	 */
-	protected BufferedDataTable[] postProcessing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
-			final BufferedDataTable[] processingResult, final ExecutionContext exec) throws Exception {
+	protected PortObject[] postProcessing(final PortObject[] inObjects, final InputDataInfo[][] arrInputDataInfo,
+			final PortObject[] processingResult, final ExecutionContext exec) throws Exception {
 		// Does not do anything be default
 		exec.setProgress(1.0d);
 		return processingResult;
@@ -1312,13 +1338,13 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * in the warning consolidator. Such a context could for instance be the "row context", if
 	 * the warning consolidator was configured with it and consolidates warnings that happen based
 	 * on certain malformed data in input rows. In this case we would list the row number of the
-	 * input table (inData[0]) for this row context. The passed in parameters are for convenience
+	 * input table (inObjects[0]) for this row context. The passed in parameters are for convenience
 	 * only, as most of the time the numbers depend on them to some degree.
 	 * The default implementation delivers a map, which contains only one context - the ROW_CONTEXT of
 	 * the consolidator - and as total number of occurrences the number of input rows in table 0.
 	 * Override this method for differing behavior.
 	 *
-	 * @param inData All input tables of the node with their data.
+	 * @param inObjects All input tables of the node with their data.
 	 * @param arrInputDataInfo Information about all columns in the input tables.
 	 * @param resultData All result tables of the node that will be returned by the execute() method.
 	 *
@@ -1326,11 +1352,19 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 *
 	 * @see #getWarningConsolidator()
 	 */
-	protected Map<String, Long> createWarningContextOccurrencesMap(final BufferedDataTable[] inData,
-			final InputDataInfo[][] arrInputDataInfo, final BufferedDataTable[] resultData) {
+	protected Map<String, Long> createWarningContextOccurrencesMap(final PortObject[] inObjects,
+			final InputDataInfo[][] arrInputDataInfo, final PortObject[] resultData) {
 
 		final Map<String, Long> mapContextOccurrences = new HashMap<String, Long>();
-		mapContextOccurrences.put(WarningConsolidator.ROW_CONTEXT.getId(), inData[0].size());
+		mapContextOccurrences.put(
+				WarningConsolidator.ROW_CONTEXT.getId(),
+				Arrays.stream(inObjects)
+						.map(portObject -> portObject instanceof BufferedDataTable dataTable ? dataTable : null)
+						.filter(Objects::nonNull)
+						.findFirst()
+						.map(BufferedDataTable::size)
+						.orElse(0L)
+		);
 
 		return mapContextOccurrences;
 	}
@@ -1860,8 +1894,8 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 	 * This implementation contains only the row context. Override this method to
 	 * use a consolidator that supports more contexts, e.g. for tables, batches, etc.
 	 *
-	 * @return Warning consolidator used in {@link #configure(DataTableSpec[])} and
-	 * 		{@link #execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}.
+	 * @return Warning consolidator used in {@link #configure(PortObjectSpec[])} and
+	 * 		{@link #execute(PortObject[], ExecutionContext)}.
 	 * 		Must not be null.
 	 */
 	protected WarningConsolidator createWarningConsolidator() {
@@ -2770,5 +2804,108 @@ public abstract class AbstractRDKitNodeModel extends NodeModel implements RDKitO
 			}
 		}
 	}
+
+	/**
+	 * Returns an array containing input ports indexes for the ports group specified.
+	 *
+	 * @param nodeCreationConfig {@link NodeCreationConfiguration} instance.
+	 *                           Mustn't be Null.
+	 * @param strPortGroupId     Ports group ID.
+	 *                           Mustn't be Null.
+	 * @return Array containing input ports indexes. Never Null.
+	 * @throws IllegalStateException if {@code nodeCreationConfig} or {@code strPortGroupId} parameter is Null.
+	 */
+	public static int[] getInputTablePortIndexes(NodeCreationConfiguration nodeCreationConfig, String strPortGroupId) {
+		if (nodeCreationConfig == null) {
+			throw new IllegalStateException("Node Creation Configuration parameter must not be Null.");
+		}
+		if (strPortGroupId == null) {
+			throw new IllegalStateException("Input Ports Group ID parameter must not be Null.");
+		}
+
+		return nodeCreationConfig.getPortConfig()
+				.map(PortsConfiguration::getInputPortLocation)
+				.map(mapLocations -> mapLocations.get(strPortGroupId))
+				.orElseThrow(() -> new IllegalStateException("Input ports group '" + strPortGroupId + "' is not defined."));
+	}
+
+	/**
+	 * Returns an array containing output ports indexes for the ports group specified.
+	 *
+	 * @param nodeCreationConfig {@link NodeCreationConfiguration} instance.
+	 *                           Mustn't be Null.
+	 * @param strPortGroupId     Ports group ID.
+	 *                           Mustn't be Null.
+	 * @return Array containing output ports indexes. Never Null.
+	 * @throws IllegalStateException if {@code nodeCreationConfig} or {@code strPortGroupId} parameter is Null.
+	 */
+	public static int[] getOutputTablePortIndexes(NodeCreationConfiguration nodeCreationConfig, String strPortGroupId) {
+		if (nodeCreationConfig == null) {
+			throw new IllegalStateException("Node Creation Configuration parameter must not be Null.");
+		}
+		if (strPortGroupId == null) {
+			throw new IllegalStateException("Output Ports Group ID parameter must not be Null.");
+		}
+
+		return nodeCreationConfig.getPortConfig()
+				.map(PortsConfiguration::getOutputPortLocation)
+				.map(mapLocations -> mapLocations.get(strPortGroupId))
+				.orElseThrow(() -> new IllegalStateException("Output ports group '" + strPortGroupId + "' is not defined."));
+	}
+
+	/**
+	 * Converts {@link PortObjectSpec} array to {@link DataTableSpec} array.
+	 *
+	 * @param inObjectSpecs Source {@link PortObjectSpec} array.
+	 *                      Can be Null.
+	 * @return {@link DataTableSpec} array. Can be Null.
+	 */
+	protected static DataTableSpec[] objectSpecsToTableSpecs(PortObjectSpec[] inObjectSpecs) {
+		return inObjectSpecs == null ? null :
+				Arrays.stream(inObjectSpecs)
+						.map(portObjectSpec -> portObjectSpec instanceof DataTableSpec dataTableSpec ? dataTableSpec : null)
+						.toArray(DataTableSpec[]::new);
+	}
+
+	/**
+	 * Converts {@link DataTableSpec} array to {@link PortObjectSpec} array.
+	 *
+	 * @param inTableSpecs Source {@link DataTableSpec} array.
+	 *                     Can be Null.
+	 * @return {@link PortObjectSpec} array. Can be Null.
+	 */
+	protected static PortObjectSpec[] tableSpecsToObjectSpecs(DataTableSpec[] inTableSpecs) {
+		return inTableSpecs == null ? null :
+				Arrays.stream(inTableSpecs)
+						.toArray(PortObjectSpec[]::new);
+	}
+
+	/**
+	 * Converts {@link PortObject} array to {@link BufferedDataTable} array.
+	 *
+	 * @param inObjects Source {@link PortObject} array.
+	 *                  Can be Null.
+	 * @return {@link BufferedDataTable} array. Can be Null.
+	 */
+	protected static BufferedDataTable[] objectsToTables(PortObject[] inObjects) {
+		return inObjects == null ? null :
+				Arrays.stream(inObjects)
+						.map(portObject -> portObject instanceof BufferedDataTable dataTable ? dataTable : null)
+						.toArray(BufferedDataTable[]::new);
+	}
+
+	/**
+	 * Converts {@link BufferedDataTable} array to {@link PortObject} array.
+	 *
+	 * @param inTables Source {@link BufferedDataTable} array.
+	 *                 Can be Null.
+	 * @return {@link PortObject} array. Can be Null.
+	 */
+	protected static PortObject[] tablesToObjects(BufferedDataTable[] inTables) {
+		return inTables == null ? null :
+				Arrays.stream(inTables)
+						.toArray(PortObject[]::new);
+	}
+
 }
 

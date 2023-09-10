@@ -411,7 +411,6 @@ public class FunctionalGroupFilterNodeDialog extends DefaultNodeSettingsPane {
 	 */
 	protected void setFileError(final boolean bEnabled) {
 		if (m_compInputFile == null) {
-			// happens only during test workflow execution with "Test dialogs" option set
 			return;
 		}
 

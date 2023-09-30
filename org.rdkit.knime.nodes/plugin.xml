@@ -40,8 +40,9 @@
 	  <node category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory"/>
       <node after="org.rdkit.knime.nodes.mcs.RDKitMCSNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory"/>
 	  <node after="org.rdkit.knime.nodes.substructfilter.RDKitSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory"/>
-      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/> 
-      <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/> 
+      <node after="org.rdkit.knime.nodes.moleculesubstructfilter.RDKitMoleculeSubstructFilterNodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterV2NodeFactory"/> 
+      <node deprecated="true" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterNodeFactory"/>
+      <node after="org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupFilterV2NodeFactory" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.substructurecounter.SubstructureCounterNodeFactory"/>
 	  <node deprecated="true" category-path="/community/rdkit/searching" factory-class="org.rdkit.knime.nodes.multiplesubstrucfilter.RDKitDictSubstructFilterNodeFactory"/>
 
       <node category-path="/community/rdkit/reactions" factory-class="org.rdkit.knime.nodes.onecomponentreaction2.RDKitOneComponentReactionNodeFactory"/>

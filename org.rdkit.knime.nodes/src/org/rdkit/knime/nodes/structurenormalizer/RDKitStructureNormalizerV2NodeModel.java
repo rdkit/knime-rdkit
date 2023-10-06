@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C)2013
+ * Copyright (C)2013-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -49,11 +49,13 @@
 package org.rdkit.knime.nodes.structurenormalizer;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,10 +82,18 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.SettingsModelReaderFileChooser;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.writer.FileOverwritePolicy;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.writer.SettingsModelWriterFileChooser;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.writer.WritePathAccessor;
+import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.nodes.AbstractRDKitNodeModel;
+import org.rdkit.knime.nodes.functionalgroupfilter.FunctionalGroupDefinitions;
+import org.rdkit.knime.util.FileSystemsUtils;
 import org.rdkit.knime.util.FileUtils;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumerationArray;
@@ -95,29 +105,37 @@ import org.rdkit.knime.util.StringUtils;
  * providing calculations based on the open source RDKit library.
  * 
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
-public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
+public class RDKitStructureNormalizerV2NodeModel extends AbstractRDKitNodeModel {
 
 	//
 	// Enumeration
 	//
 
 	/** Defines input types for the structure checker. */
-	public enum Input { SDF, SMILES };
+	public enum Input {
+		/**
+		 * Input type SDF.
+		 */
+		SDF,
 
-	//
+		/**
+		 * Input type SMILES.
+		 */
+		SMILES
+	}
+
+    //
 	// Constants
 	//
 
 	/** The logger instance. */
 	protected static final NodeLogger LOGGER = NodeLogger
-			.getLogger(RDKitStructureNormalizerNodeModel.class);
+			.getLogger(RDKitStructureNormalizerV2NodeModel.class);
 
 	/** Input data info index for Mol value. */
 	protected static final int INPUT_COLUMN_MOL = 0;
-
-	/** Pseudo file name to show when default configuration shall be used for Structure Normalizer. */
-	protected static final String DEFAULT_CONFIGURATION_ID = "Default Configuration";
 
 	/** The default switches to be used for StruCheck. */
 	protected static final StruCheckSwitch[] DEFAULT_SWITCHES = new StruCheckSwitch[] {
@@ -174,57 +192,59 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	// Members
 	//
 
+	/** The input table port index */
+	private final int m_iInputTablePortIdx;
+
+	/** The passed molecules output table port index */
+	private final int m_iPassedMoleculesPortIdx;
+
+	/** The failed molecules output table port index */
+	private final int m_iFailedMoleculesPortIdx;
+
 	/** Settings model for the column name of the input column. */
 	private final SettingsModelString m_modelInputColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createInputColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createInputColumnNameModel());
 
 	/** Settings model for the column name of the corrected structure column. */
 	private final SettingsModelString m_modelCorrectedStructureColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createPassedCorrectedStructureColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createPassedCorrectedStructureColumnNameModel());
 
 	/** Settings model for the column name of the passed flags column. */
 	private final SettingsModelString m_modelPassedFlagsColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createPassedFlagsColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createPassedFlagsColumnNameModel());
 
 	/** Settings model for the column name of the passed warning messages column. */
 	private final SettingsModelString m_modelPassedWarningMessagesColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createPassedWarningMessagesColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createPassedWarningMessagesColumnNameModel());
 
 	/** Settings model for the column name of the failed flags column. */
 	private final SettingsModelString m_modelFailedFlagsColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createFailedFlagsColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createFailedFlagsColumnNameModel());
 
 	/** Settings model for the column name of the passed warning messages column. */
 	private final SettingsModelString m_modelFailedErrorMessagesColumnName =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createFailedErrorMessagesColumnNameModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createFailedErrorMessagesColumnNameModel());
 
 	/** Settings model for optional switches. */
 	private final SettingsModelEnumerationArray<StruCheckSwitch> m_modelSwitchOptions =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createSwitchOptionsModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createSwitchOptionsModel());
 
 	/** Settings model for optional advanced switches. */
 	private final SettingsModelString m_modelAdvancedOptions =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createAdvancedOptionsModel(), true); // Was added later
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createAdvancedOptionsModel(), true); // Was added later
 
 	/** Settings model for the transformation configuration of the structure checker. */
-	private final SettingsModelString m_modelTransformationConfigurationFile =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createTransformationConfigurationFileModel());
+	private final SettingsModelReaderFileChooser m_modelTransformationConfigurationPath;
 
 	/** Settings model for the augmented atoms configuration of the structure checker. */
-	private final SettingsModelString m_modelAugmentedAtomsConfigurationFile =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createAugmentedAtomsConfigurationFileModel());
+	private final SettingsModelReaderFileChooser m_modelAugmentedAtomsConfigurationPath;
 
-	/** Settings model for the log file name. */
-	private final SettingsModelString m_modelLogFile =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createLogFileModel());
-
-	/** Settings model for the option to overwrite an existing log file. */
-	private final SettingsModelBoolean m_modelOverwriteOption =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createOverwriteOptionModel());
+	/** Settings model for the log file path. */
+	private final SettingsModelWriterFileChooser m_modelLogPath;
 
 	/** Settings model to define additional codes that shall be treated as failures instead of warnings. */
 	private final SettingsModelEnumerationArray<StruCheckCode> m_modelAdditionalFailureCodesConfiguration =
-			registerSettings(RDKitStructureNormalizerNodeDialog.createAdditionalFailureCodesConfigurationModel());
+			registerSettings(RDKitStructureNormalizerV2NodeDialog.createAdditionalFailureCodesConfigurationModel());
 
 	// Intermediate results
 
@@ -236,10 +256,27 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	//
 
 	/**
-	 * Create new node model with one data in- and one out-port.
+	 * Constructs new {@code RDKitStructureNormalizerV2NodeModel} instance with configuration specified.
+	 *
+	 * @param nodeCreationConfig Node Creation Configuration instance.
+	 *                           Mustn't be null.
 	 */
-	RDKitStructureNormalizerNodeModel() {
-		super(1, 2);
+	RDKitStructureNormalizerV2NodeModel(NodeCreationConfiguration nodeCreationConfig) {
+		super(nodeCreationConfig);
+
+		m_iInputTablePortIdx = getInputTablePortIndexes(nodeCreationConfig,
+				RDKitStructureNormalizerV2NodeFactory.INPUT_PORT_GRP_ID_INPUT_TABLE)[0];
+		m_iPassedMoleculesPortIdx = getOutputTablePortIndexes(nodeCreationConfig,
+				RDKitStructureNormalizerV2NodeFactory.OUTPUT_PORT_GRP_ID_PASSED_MOLECULES)[0];
+		m_iFailedMoleculesPortIdx = getOutputTablePortIndexes(nodeCreationConfig,
+				RDKitStructureNormalizerV2NodeFactory.OUTPUT_PORT_GRP_ID_FAILED_MOLECULES)[0];
+
+		m_modelTransformationConfigurationPath = registerSettings(RDKitStructureNormalizerV2NodeDialog
+				.createTransformationConfigurationPathModel(nodeCreationConfig));
+		m_modelAugmentedAtomsConfigurationPath = registerSettings(RDKitStructureNormalizerV2NodeDialog
+				.createAugmentedAtomsConfigurationPathModel(nodeCreationConfig));
+		m_modelLogPath = registerSettings(RDKitStructureNormalizerV2NodeDialog
+				.createLogPathModel(nodeCreationConfig));
 	}
 
 	//
@@ -247,8 +284,47 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	//
 
 	/**
-	 * {@inheritDoc}
+	 * KNIME File Handling API messages handler.
+	 *
+	 * @param statusMessage A message received from KNIME File Handling API.
+	 *                      Can be null.
 	 */
+	protected void onStatusMessage(StatusMessage statusMessage) {
+		if (statusMessage != null && statusMessage.getMessage() != null) {
+			switch (statusMessage.getType()) {
+				case ERROR -> getWarningConsolidator().saveWarning(statusMessage.getMessage());
+				case WARNING -> LOGGER.warn(statusMessage.getMessage());
+				case INFO -> LOGGER.info(statusMessage.getMessage());
+			}
+		}
+	}
+
+	@Override
+	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException
+	{
+		try {
+			m_modelTransformationConfigurationPath.configureInModel(inSpecs, this::onStatusMessage);
+		}
+		catch (InvalidSettingsException e) {
+			// ignoring it here
+		}
+		try {
+			m_modelAugmentedAtomsConfigurationPath.configureInModel(inSpecs, this::onStatusMessage);
+		}
+		catch (InvalidSettingsException e) {
+			// ignoring it here
+		}
+		try {
+			m_modelLogPath.configureInModel(inSpecs, this::onStatusMessage);
+		}
+		catch (InvalidSettingsException e) {
+			// ignoring it here
+		}
+
+		return super.configure(inSpecs);
+	}
+
 	@Override
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
@@ -256,112 +332,106 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 		super.configure(inSpecs);
 
 		// Auto guess the input column if not set - fails if no compatible column found
-		final List<Class<? extends DataValue>> listTypes = new ArrayList<Class<? extends DataValue>>();
+		final DataTableSpec specInputTable = inSpecs[m_iInputTablePortIdx];
+		final List<Class<? extends DataValue>> listTypes = new ArrayList<>();
 		listTypes.add(SdfValue.class);
 		listTypes.add(SmilesValue.class);
-		SettingsUtils.autoGuessColumn(inSpecs[0], m_modelInputColumnName, listTypes, 0,
+		SettingsUtils.autoGuessColumn(specInputTable, m_modelInputColumnName, listTypes, 0,
 				"Auto guessing: Using column %COLUMN_NAME%.",
 				"No RDKit Mol, SMILES or SDF compatible column in input table.", getWarningConsolidator());
 
 		// Determines, if the input column exists - fails if it does not
-		SettingsUtils.checkColumnExistence(inSpecs[0], m_modelInputColumnName, listTypes,
+		SettingsUtils.checkColumnExistence(specInputTable, m_modelInputColumnName, listTypes,
 				"Input column has not been specified yet.",
 				"Input column %COLUMN_NAME% does not exist. Has the input table changed?");
 
 		// Auto guess the new column names for table 1 and make them unique
 		final String strInputColumnName = m_modelInputColumnName.getStringValue();
-		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+		SettingsUtils.autoGuessColumnName(specInputTable, null, null,
 				m_modelCorrectedStructureColumnName, strInputColumnName + " - " + DEFAULT_POSTFIX_PASSED_CORRECTED);
-		SettingsUtils.autoGuessColumnName(inSpecs[0],
+		SettingsUtils.autoGuessColumnName(specInputTable,
 				new String[] { m_modelCorrectedStructureColumnName.getStringValue() }, null,
 				m_modelPassedFlagsColumnName, strInputColumnName + " - " + DEFAULT_POSTFIX_PASSED_FLAGS);
-		SettingsUtils.autoGuessColumnName(inSpecs[0],
+		SettingsUtils.autoGuessColumnName(specInputTable,
 				new String[] { m_modelCorrectedStructureColumnName.getStringValue(),
 				m_modelPassedFlagsColumnName.getStringValue() }, null,
 				m_modelPassedWarningMessagesColumnName, strInputColumnName + " - " + DEFAULT_POSTFIX_PASSED_WARNINGS);
 
 		// Auto guess the new column names for table 2 and make them unique
-		SettingsUtils.autoGuessColumnName(inSpecs[0], null, null,
+		SettingsUtils.autoGuessColumnName(specInputTable, null, null,
 				m_modelFailedFlagsColumnName, strInputColumnName + " - " + DEFAULT_POSTFIX_FAILED_FLAGS);
-		SettingsUtils.autoGuessColumnName(inSpecs[0],
+		SettingsUtils.autoGuessColumnName(specInputTable,
 				new String[] { m_modelFailedFlagsColumnName.getStringValue() }, null,
 				m_modelFailedErrorMessagesColumnName, strInputColumnName + " - " + DEFAULT_POSTFIX_FAILED_ERRORS);
 
-		// Determine, if the new column names have been set and if they are really unique in table 1
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+		// Determine, if the new column names have been set and if they are unique in table 1
+		SettingsUtils.checkColumnNameUniqueness(specInputTable, null, null,
 				m_modelCorrectedStructureColumnName,
 				"Corrected structure output column name (table 1) has not been specified yet.",
 				"The name %COLUMN_NAME% of the new corrected structure column (table 1) exists already in the input.");
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0],
+		SettingsUtils.checkColumnNameUniqueness(specInputTable,
 				new String[] { m_modelCorrectedStructureColumnName.getStringValue() }, null,
 				m_modelPassedFlagsColumnName,
 				"Flags column name (table 1) has not been specified yet.",
 				"The name %COLUMN_NAME% of the new flags column (table 1) exists already in the input.");
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0],
+		SettingsUtils.checkColumnNameUniqueness(specInputTable,
 				new String[] { m_modelCorrectedStructureColumnName.getStringValue(),
 				m_modelPassedFlagsColumnName.getStringValue()}, null,
 				m_modelPassedWarningMessagesColumnName,
 				"Warnings column name (table 1) has not been specified yet.",
 				"The name %COLUMN_NAME% of the new warnings column (table 1) exists already in the input.");
 
-		// Determine, if the new column names have been set and if they are really unique in table 2
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0], null, null,
+		// Determine, if the new column names have been set and if they are unique in table 2
+		SettingsUtils.checkColumnNameUniqueness(specInputTable, null, null,
 				m_modelFailedFlagsColumnName,
 				"Flags column name (table 2) has not been specified yet.",
 				"The name %COLUMN_NAME% of the new flags column (table 2) exists already in the input.");
-		SettingsUtils.checkColumnNameUniqueness(inSpecs[0],
+		SettingsUtils.checkColumnNameUniqueness(specInputTable,
 				new String[] { m_modelFailedFlagsColumnName.getStringValue() }, null,
 				m_modelFailedErrorMessagesColumnName,
 				"Errors column name (table 2) has not been specified yet.",
 				"The name %COLUMN_NAME% of the new errors column (table 2) exists already in the input.");
 
 		// Check if the transformation configuration files can be read
-		if (m_modelTransformationConfigurationFile.getStringValue() == null || m_modelTransformationConfigurationFile.getStringValue().isEmpty()) {
-			m_modelTransformationConfigurationFile.setStringValue(DEFAULT_CONFIGURATION_ID);
-		}
-		final String strTrnFile = m_modelTransformationConfigurationFile.getStringValue();
-		final String strTransformationConfiguration = getConfiguration(strTrnFile, DEFAULT_TRANSFORMATION_CONFIGURATION_FILE);
+		final String strTransformationConfiguration = getConfiguration(m_modelTransformationConfigurationPath, DEFAULT_TRANSFORMATION_CONFIGURATION_FILE);
 		if (StringUtils.isEmptyAfterTrimming(strTransformationConfiguration)) {
 			throw new InvalidSettingsException("Transformation configuration defined in " +
-					strTrnFile + " is empty.");
+					m_modelTransformationConfigurationPath.getPath() + " is empty.");
 		}
 
 		// Check if the augmented atoms configuration files can be read
-		if (m_modelAugmentedAtomsConfigurationFile.getStringValue() == null || m_modelAugmentedAtomsConfigurationFile.getStringValue().isEmpty()) {
-			m_modelAugmentedAtomsConfigurationFile.setStringValue(DEFAULT_CONFIGURATION_ID);
-		}
-		final String strChkFile = m_modelAugmentedAtomsConfigurationFile.getStringValue();
-		final String strAugmentedAtomsConfiguration = getConfiguration(strChkFile, DEFAULT_AUGMENTED_ATOMS_CONFIGURATION_FILE);
+		final String strAugmentedAtomsConfiguration = getConfiguration(m_modelAugmentedAtomsConfigurationPath, DEFAULT_AUGMENTED_ATOMS_CONFIGURATION_FILE);
 		if (StringUtils.isEmptyAfterTrimming(strAugmentedAtomsConfiguration)) {
 			throw new InvalidSettingsException("Augmented atoms configuration defined in " +
-					strChkFile + " is empty.");
+					m_modelAugmentedAtomsConfigurationPath.getPath() + " is empty.");
 		}
 
 		// Perform checks on the specified log output file
-		final String strLogFile = m_modelLogFile.getStringValue();
-		if (!StringUtils.isEmptyAfterTrimming(strLogFile)) {
-			final File fileLog = FileUtils.convertToFile(strLogFile, false, true);
-			if (fileLog.exists()) {
-				if (m_modelOverwriteOption.getBooleanValue()) {
-					getWarningConsolidator().saveWarning("The specified log file exists and will be overwritten.");
+		try (final WritePathAccessor pathAccessor = m_modelLogPath.createWritePathAccessor()) {
+			final Path path = pathAccessor.getOutputPath(this::onStatusMessage);
+			if (path != null && !path.toString().isBlank()) {
+				if (Files.exists(path)) {
+					if (!FileOverwritePolicy.OVERWRITE.equals(m_modelLogPath.getFileOverwritePolicy())) {
+						throw new InvalidSettingsException("The specified log file exists already. " +
+								"You may remove the file or switch on the Overwrite option to grant execution.");
+					}
 				}
 				else {
-					throw new InvalidSettingsException("The specified log file exists already. " +
-							"You may remove the file or switch on the Overwrite option to grant execution.");
+					final Path pathParent = path.getParent();
+					if (pathParent != null && !Files.exists(pathParent)) {
+						if (!m_modelLogPath.isCreateMissingFolders()) {
+							throw new InvalidSettingsException("Directory of specified log file does not exist.");
+						}
+
+						getWarningConsolidator().saveWarning(
+								"Directory of specified log file does not exist " +
+										"and will be created.");
+					}
 				}
 			}
-			else {
-				final File dirLog = fileLog.getParentFile();
-				if (dirLog == null) {
-					throw new InvalidSettingsException("Cannot determine parent " +
-							"directory of the output file.");
-				}
-				else if (!dirLog.exists()) {
-					getWarningConsolidator().saveWarning(
-							"Directory of specified output file does not exist " +
-							"and will be created.");
-				}
-			}
+		}
+		catch (IOException e) {
+			getWarningConsolidator().saveWarning("Failed to access log file: " + e.getMessage());
 		}
 
 		// Consolidate all warnings and make them available to the user
@@ -383,7 +453,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 		InputDataInfo[] arrDataInfo = null;
 
 		// Specify input of table 1
-		if (inPort == 0) {
+		if (inPort == m_iInputTablePortIdx) {
 			arrDataInfo = new InputDataInfo[1]; // We have only one input column
 			arrDataInfo[INPUT_COLUMN_MOL] = new InputDataInfo(inSpec, m_modelInputColumnName,
 					InputDataInfo.EmptyCellPolicy.DeliverEmptyRow, null,
@@ -405,43 +475,39 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
 	 * 		given DataTableSpec elements.
 	 * 
-	 * @see #createOutputFactories(int)
+	 * @see #createOutputFactory(InputDataInfo[])
 	 */
 	@Override
 	protected DataTableSpec getOutputTableSpec(final int outPort,
 			final DataTableSpec[] inSpecs) throws InvalidSettingsException {
 		DataTableSpec spec = null;
 
-		switch (outPort) {
-		case 0:
-		case 1:
+        if (outPort == m_iPassedMoleculesPortIdx || outPort == m_iFailedMoleculesPortIdx) {
 			// Check existence and proper column type
-			final InputDataInfo[] arrInputDataInfos = createInputDataInfos(0, inSpecs[0]);
-			arrInputDataInfos[0].getColumnIndex();
+            createInputDataInfos(m_iInputTablePortIdx, inSpecs[m_iInputTablePortIdx]);
 
-			// Copy all specs from input table
-			final ArrayList<DataColumnSpec> newColSpecs = new ArrayList<DataColumnSpec>();
-			for (final DataColumnSpec inCol : inSpecs[0]) {
-				newColSpecs.add(inCol);
-			}
+            // Copy all specs from input table
+            final ArrayList<DataColumnSpec> newColSpecs = new ArrayList<>();
+            for (final DataColumnSpec inCol : inSpecs[m_iInputTablePortIdx]) {
+                newColSpecs.add(inCol);
+            }
 
-			// Append result column(s)
-			if (outPort == 0) {
-				newColSpecs.add(new DataColumnSpecCreator(m_modelCorrectedStructureColumnName.getStringValue(), SdfAdapterCell.RAW_TYPE).createSpec());
-				newColSpecs.add(new DataColumnSpecCreator(m_modelPassedFlagsColumnName.getStringValue(), IntCell.TYPE).createSpec());
-				newColSpecs.add(new DataColumnSpecCreator(m_modelPassedWarningMessagesColumnName.getStringValue(),
-						ListCell.getCollectionType(StringCell.TYPE)).createSpec());
-			}
+            // Append result column(s)
+            if (outPort == m_iPassedMoleculesPortIdx) {
+                newColSpecs.add(new DataColumnSpecCreator(m_modelCorrectedStructureColumnName.getStringValue(), SdfAdapterCell.RAW_TYPE).createSpec());
+                newColSpecs.add(new DataColumnSpecCreator(m_modelPassedFlagsColumnName.getStringValue(), IntCell.TYPE).createSpec());
+                newColSpecs.add(new DataColumnSpecCreator(m_modelPassedWarningMessagesColumnName.getStringValue(),
+                        ListCell.getCollectionType(StringCell.TYPE)).createSpec());
+            }
 			else { // Port 1
-				newColSpecs.add(new DataColumnSpecCreator(m_modelFailedFlagsColumnName.getStringValue(), IntCell.TYPE).createSpec());
-				newColSpecs.add(new DataColumnSpecCreator(m_modelFailedErrorMessagesColumnName.getStringValue(),
-						ListCell.getCollectionType(StringCell.TYPE)).createSpec());
-			}
+                newColSpecs.add(new DataColumnSpecCreator(m_modelFailedFlagsColumnName.getStringValue(), IntCell.TYPE).createSpec());
+                newColSpecs.add(new DataColumnSpecCreator(m_modelFailedErrorMessagesColumnName.getStringValue(),
+                        ListCell.getCollectionType(StringCell.TYPE)).createSpec());
+            }
 
-			spec = new DataTableSpec(
-					newColSpecs.toArray(new DataColumnSpec[newColSpecs.size()]));
-			break;
-		}
+            spec = new DataTableSpec(
+                    newColSpecs.toArray(new DataColumnSpec[0]));
+        }
 
 		return spec;
 	}
@@ -477,39 +543,34 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 				AbstractRDKitCellFactory.RowFailurePolicy.DeliverEmptyValues,
 				getWarningConsolidator(), arrInputDataInfos, arrOutputSpec) {
 
-			@Override
 			/**
 			 * This method implements the calculation logic to generate the new cells based on
 			 * the input made available in the first (and second) parameter.
 			 * {@inheritDoc}
 			 */
+			@Override
 			public DataCell[] process(final InputDataInfo[] arrInputDataInfo, final DataRow row, final long lUniqueWaveId) throws Exception {
-				String strMol = null;
+				String strMol;
 				String strData = null;
 
-				switch (m_inputType) {
-				case SDF:
-					strMol = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
+                switch (m_inputType) {
+                    case SDF -> {
+                        strMol = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
 
-					// Standardize line endings
-					strMol = strMol.replace("\r\n", "\n");
+                        // Standardize line endings
+                        strMol = strMol.replace("\r\n", "\n");
 
-					// Cut off properties and $$$$ and append later again to corrected structure
-					final String strEndTag = "M  END\n";
-					final int iIndexEnd = strMol.indexOf(strEndTag);
-
-					if (iIndexEnd >= 0) {
-						strData = strMol.substring(iIndexEnd + strEndTag.length());
-						strMol = strMol.substring(0, iIndexEnd + strEndTag.length());
-					}
-
-					break;
-				case SMILES:
-					strMol = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
-					break;
-				default:
-					throw new Exception("Invalid input type.");
-				}
+                        // Cut off properties and $$$$ and append later again to corrected structure
+                        final String strEndTag = "M  END\n";
+                        final int iIndexEnd = strMol.indexOf(strEndTag);
+                        if (iIndexEnd >= 0) {
+                            strData = strMol.substring(iIndexEnd + strEndTag.length());
+                            strMol = strMol.substring(0, iIndexEnd + strEndTag.length());
+                        }
+                    }
+                    case SMILES -> strMol = arrInputDataInfo[INPUT_COLUMN_MOL].getSmiles(row);
+                    default -> throw new Exception("Invalid input type.");
+                }
 
 				final StringInt_Pair results = markForCleanup(
 						RDKFuncs.checkMolString(strMol, m_inputType == Input.SMILES), lUniqueWaveId);
@@ -529,7 +590,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 				DataCell cellErrorMessages = missingCell;
 				if (arrErrorCodes.length > 0) {
-					final List<DataCell> cells = new ArrayList<DataCell>(arrErrorCodes.length);
+					final List<DataCell> cells = new ArrayList<>(arrErrorCodes.length);
 					for (final StruCheckCode code : arrErrorCodes) {
 						cells.add(new StringCell(code.getMessage()));
 					}
@@ -538,7 +599,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 				DataCell cellWarningMessages = missingCell;
 				if (arrWarningCodes.length > 0) {
-					final List<DataCell> cells = new ArrayList<DataCell>(5);
+					final List<DataCell> cells = new ArrayList<>(5);
 					for (final StruCheckCode code : arrWarningCodes) {
 						cells.add(new StringCell(code.getMessage()));
 					}
@@ -555,19 +616,16 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 		return factory;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected BufferedDataTable[] processing(final BufferedDataTable[] inData, final InputDataInfo[][] arrInputDataInfo,
 			final ExecutionContext exec) throws Exception {
 		final DataTableSpec[] arrOutSpecs = getOutputTableSpecs(inData);
 
 		// Contains the rows with the result column
-		final BufferedDataContainer port0 = exec.createDataContainer(arrOutSpecs[0]);
+		final BufferedDataContainer port0 = exec.createDataContainer(arrOutSpecs[m_iPassedMoleculesPortIdx]);
 
 		// Contains the input rows if result computation fails
-		final BufferedDataContainer port1 = exec.createDataContainer(arrOutSpecs[1]);
+		final BufferedDataContainer port1 = exec.createDataContainer(arrOutSpecs[m_iFailedMoleculesPortIdx]);
 
 		synchronized (STRUCTURE_CHECKER_LOCK) {
 
@@ -578,45 +636,46 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 			initialize();
 
 			// Check input type
-			m_inputType = determineStructureCheckerInputType(arrInputDataInfo[0][INPUT_COLUMN_MOL].getDataType());
+			m_inputType = determineStructureCheckerInputType(arrInputDataInfo[m_iInputTablePortIdx][INPUT_COLUMN_MOL].getDataType());
 
 			// Get settings and define data specific behavior
-			final long lTotalRowCount = inData[0].size();
+			final long lTotalRowCount = inData[m_iInputTablePortIdx].size();
 
 			// Setup main factory
-			final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[0]);
+			final AbstractRDKitCellFactory factory = createOutputFactory(arrInputDataInfo[m_iInputTablePortIdx]);
 
 			// Iterate through all input rows, calculate results and split the output
-			long rowIndex = 0;
-			for (final CloseableRowIterator i = inData[0].iterator(); i.hasNext(); rowIndex++) {
-				final DataRow row = i.next();
-				final DataCell[] arrResults = factory.getCells(row);
+			try (final CloseableRowIterator i = inData[m_iInputTablePortIdx].iterator()) {
+				for (long rowIndex = 0; i.hasNext(); rowIndex++) {
+					final DataRow row = i.next();
+					final DataCell[] arrResults = factory.getCells(row);
 
-				// Check what goes into the second table (empty cells, failures and warnings treated like failures)
-				if (arrResults[1] == null || arrResults[1].isMissing() ||
-						(((IntCell)arrResults[1]).getIntValue() & iErrorCodeMask) != 0) {
-					port1.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
-							new DataCell[] {
-							arrResults[COL_ID_FLAGS],
-							arrResults[COL_ID_ERRORS]
-					}, -1));
-				}
-				else {
-					port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
-							new DataCell[] {
-							arrResults[COL_ID_CORRECTED_STRUCTURE],
-							arrResults[COL_ID_FLAGS],
-							arrResults[COL_ID_WARNINGS]
-					}, -1));
-				}
+					// Check what goes into the second table (empty cells, failures and warnings treated like failures)
+					if (arrResults[1] == null || arrResults[1].isMissing() ||
+							(((IntCell) arrResults[1]).getIntValue() & iErrorCodeMask) != 0) {
+						port1.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+								new DataCell[]{
+										arrResults[COL_ID_FLAGS],
+										arrResults[COL_ID_ERRORS]
+								}, -1));
+					}
+					else {
+						port0.addRowToTable(AbstractRDKitCellFactory.mergeDataCells(row,
+								new DataCell[]{
+										arrResults[COL_ID_CORRECTED_STRUCTURE],
+										arrResults[COL_ID_FLAGS],
+										arrResults[COL_ID_WARNINGS]
+								}, -1));
+					}
 
-				// Every 20 iterations check cancellation status and report progress
-				if (rowIndex % 20 == 0) {
-					AbstractRDKitNodeModel.reportProgress(exec, rowIndex, lTotalRowCount, row);
+					// Every 20 iterations check cancellation status and report progress
+					if (rowIndex % 20 == 0) {
+						AbstractRDKitNodeModel.reportProgress(exec, rowIndex, lTotalRowCount, row);
+					}
 				}
-			};
+			}
 
-			exec.checkCanceled();
+            exec.checkCanceled();
 			exec.setProgress(1.0, "Finished Processing");
 
 			port0.close();
@@ -627,12 +686,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	}
 
 	/**
-	 * Initializes the structure checker. Configuration depends on the global flag
-	 * {@link #GLOBAL_CONFIGURATION_MODE}. If true, it will use the default
-	 * configuration for Transformation and Augmented Atoms Configuration files
-	 * as well as StruChk switches. Also, it would initialize only if it was not
-	 * done before. If false, it will use always the node settings and would
-	 * initialize any time this method gets called.
+	 * Initializes the structure checker.
 	 * 
 	 * @throws Exception Thrown, if initializing failed.
 	 */
@@ -643,10 +697,10 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 			// Create temporary transformation configuration file
 			final String strTransformationConfigurationOriginal =
-					(isDefaultConfigurationFile(m_modelTransformationConfigurationFile.getStringValue()) ?
+					(isDefaultConfigurationFile(m_modelTransformationConfigurationPath.getPath()) ?
 							DEFAULT_TRANSFORMATION_CONFIGURATION_FILE :
-								m_modelTransformationConfigurationFile.getStringValue());
-			String strTransformationConfiguration = getConfiguration(m_modelTransformationConfigurationFile.getStringValue(),
+								m_modelTransformationConfigurationPath.getPath());
+			String strTransformationConfiguration = getConfiguration(m_modelTransformationConfigurationPath,
 					DEFAULT_TRANSFORMATION_CONFIGURATION_FILE);
 			strTransformationConfiguration = strTransformationConfiguration.replace("\r\n", "\n");
 			final File fileTempTransformationConfigFile = File.createTempFile("checkfgs", ".trn");
@@ -666,10 +720,10 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 			// Create temporary augmented atoms configuration file
 			final String strAugmentedAtomsConfigurationOriginal =
-					(isDefaultConfigurationFile(m_modelAugmentedAtomsConfigurationFile.getStringValue()) ?
+					(isDefaultConfigurationFile(m_modelAugmentedAtomsConfigurationPath.getPath()) ?
 							DEFAULT_AUGMENTED_ATOMS_CONFIGURATION_FILE :
-								m_modelAugmentedAtomsConfigurationFile.getStringValue());
-			String strAugmentedAtomsConfiguration = getConfiguration(m_modelAugmentedAtomsConfigurationFile.getStringValue(),
+								m_modelAugmentedAtomsConfigurationPath.getPath());
+			String strAugmentedAtomsConfiguration = getConfiguration(m_modelAugmentedAtomsConfigurationPath,
 					DEFAULT_AUGMENTED_ATOMS_CONFIGURATION_FILE);
 			strAugmentedAtomsConfiguration = strAugmentedAtomsConfiguration.replace("\r\n", "\n");
 			final File fileTempAugmentedAtomsConfigFile = File.createTempFile("checkfgs", ".chk");
@@ -687,52 +741,83 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 				FileUtils.close(outAtoms);
 			}
 
-			// Create log file
-			final String strLogFile = m_modelLogFile.getStringValue();
-			File fileLog;
-			if (!StringUtils.isEmptyAfterTrimming(strLogFile)) {
-				fileLog = FileUtils.convertToFile(strLogFile, false, true);
-			}
-			else {
-				fileLog = File.createTempFile("StructureNormalizer", ".log");
-				fileLog.delete(); // Delete it again, it will be recreated by StruChk
-			}
+			try (final WritePathAccessor pathAccessor = m_modelLogPath.createWritePathAccessor()) {
+				// Create log file
+				Path pathLogFile = pathAccessor.getOutputPath(this::onStatusMessage);
 
-			// Create missing directories
-			final File dirLog = fileLog.getParentFile();
-			FileUtils.prepareDirectory(dirLog); // Throws an exception, if not successful
+				// Create missing directories
+				if (pathLogFile != null && !pathLogFile.toString().isBlank()) {
+					if (Files.exists(pathLogFile)) {
+						if (FileOverwritePolicy.FAIL.equals(m_modelLogPath.getFileOverwritePolicy())) {
+							throw new InvalidSettingsException("The specified log file exists already. " +
+									"You may remove the file or switch on the Overwrite option to grant execution.");
+						}
+					}
+					else {
+						final Path pathLogFileParent = pathLogFile.getParent();
+						if (pathLogFileParent != null && !Files.exists(pathLogFileParent)) {
+							if (!m_modelLogPath.isCreateMissingFolders()) {
+								throw new InvalidSettingsException("The specified log file directory does not exist. " +
+										"You may create the directory or switch on the Overwrite option to grant execution.");
+							}
 
-			// Initialize the structure checker
-			String strAdvancedOptions = m_modelAdvancedOptions.getStringValue();
-			if (strAdvancedOptions != null) {
-				strAdvancedOptions = strAdvancedOptions.trim();
-				if (!strAdvancedOptions.isEmpty()) {
-					strAdvancedOptions += "\n";
+							// Create missing directories
+							Files.createDirectories(pathLogFileParent);
+						}
+					}
 				}
-			}
-			else {
-				strAdvancedOptions = "";
-			}
 
-			String strOptions = "StruCheck\n" + // Add this dummy argument to work around an issue
-					// in RDKit/StruCheck that throws the first parameter away
-					StruCheckSwitch.generateSwitches(m_modelSwitchOptions.getValues()) +
-					strAdvancedOptions +
-					"-or\n" +
-					"-ta \"{0}\"\n" +
-					"-ca \"{1}\"\n" +
-					"-l \"{2}\"";
-			strOptions = strOptions.replace("{0}", fileTempTransformationConfigFile.getAbsolutePath());
-			strOptions = strOptions.replace("{1}", fileTempAugmentedAtomsConfigFile.getAbsolutePath());
-			strOptions = strOptions.replace("{2}", fileLog.getAbsolutePath());
-			LOGGER.info("Initializing StruChk of RDKit with the following options:\n" + strOptions);
-			LOGGER.info(fileTempTransformationConfigFile.getName() + " copied from " + strTransformationConfigurationOriginal);
-			LOGGER.info(fileTempAugmentedAtomsConfigFile.getName() + " copied from " + strAugmentedAtomsConfigurationOriginal);
+				final Path pathLogTmpFile = Files.createTempFile("checkfgs", ".log");
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    try {
+                        Files.delete(pathLogTmpFile);
+                    }
+					catch (IOException e) {
+                        // Ignoring it
+                    }
+                }));
+				Files.delete(pathLogTmpFile); // Deleting it, it will be recreated by StruChk
 
-			final int iError = RDKFuncs.initCheckMol(strOptions);
-			if (iError != 0) {
-				throw new Exception("Configuring the Structure Normalizer failed with error code #" + iError +
-						" - Please check your configuration files and settings.");
+				// Initialize the structure checker
+				String strAdvancedOptions = m_modelAdvancedOptions.getStringValue();
+				if (strAdvancedOptions != null) {
+					strAdvancedOptions = strAdvancedOptions.trim();
+					if (!strAdvancedOptions.isEmpty()) {
+						strAdvancedOptions += "\n";
+					}
+				}
+				else {
+					strAdvancedOptions = "";
+				}
+
+				String strOptions = "StruCheck\n" + // Add this dummy argument to work around an issue
+						// in RDKit/StruCheck that throws the first parameter away
+						StruCheckSwitch.generateSwitches(m_modelSwitchOptions.getValues()) +
+						strAdvancedOptions +
+						"-or\n" +
+						"-ta \"{0}\"\n" +
+						"-ca \"{1}\"\n" +
+						"-l \"{2}\"";
+				strOptions = strOptions.replace("{0}", fileTempTransformationConfigFile.getAbsolutePath());
+				strOptions = strOptions.replace("{1}", fileTempAugmentedAtomsConfigFile.getAbsolutePath());
+				strOptions = strOptions.replace("{2}", pathLogTmpFile.toAbsolutePath().toString());
+				LOGGER.info("Initializing StruChk of RDKit with the following options:\n" + strOptions);
+				LOGGER.info(fileTempTransformationConfigFile.getName() + " copied from " + strTransformationConfigurationOriginal);
+				LOGGER.info(fileTempAugmentedAtomsConfigFile.getName() + " copied from " + strAugmentedAtomsConfigurationOriginal);
+
+				try {
+					final int iError = RDKFuncs.initCheckMol(strOptions);
+
+					if (iError != 0) {
+						throw new Exception("Configuring the Structure Normalizer failed with error code #" + iError +
+								" - Please check your configuration files and settings.");
+					}
+				}
+				finally {
+					if (pathLogFile != null && !pathLogFile.toString().isBlank() && Files.exists(pathLogTmpFile)) {
+						Files.copy(pathLogTmpFile, pathLogFile, StandardCopyOption.REPLACE_EXISTING);
+					}
+				}
 			}
 		}
 	}
@@ -776,70 +861,63 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 
 	/**
 	 * Reads a configuration file either from the specified file, or - if it is null or
-	 * equal to the {@link #DEFAULT_CONFIGURATION_ID} - it reads it from the defined
-	 * default resource.
-	 * 
-	 * @param strFileName The file name of a file to be read or {@link #DEFAULT_CONFIGURATION_ID}
-	 * 		to use the default resource.
+	 * empty - it reads it from the defined default resource.
+	 *
+	 * @param modelFilePath      {@code SettingsModelReaderFileChooser} instance specifying the file to be read
+	 *                           or empty to use the default resource.
+	 *                           Can be null.
 	 * @param strDefaultResource The path the default resource (in JAR file).
-	 * 
 	 * @return Configuration string (content of the file).
-	 * 
 	 * @throws InvalidSettingsException Thrown, if configuration could not be read.
 	 */
-	public static String getConfiguration(final String strFileName, final String strDefaultResource) throws InvalidSettingsException {
-		String strConfiguration = null;
+	public static String getConfiguration(final SettingsModelReaderFileChooser modelFilePath, final String strDefaultResource) throws InvalidSettingsException {
+		final String strConfiguration;
 		String strErrorMsgStart = null;
 
-		InputStream in = null;
-
-		// Check for default and use it
-		if (isDefaultConfigurationFile(strFileName)) {
-			strErrorMsgStart = "The default configuration file resource '" +
-					strDefaultResource + "' ";
-			in = RDKitStructureNormalizerNodeModel.class.getClassLoader().
-					getResourceAsStream(strDefaultResource);
-			if (in == null) {
-				throw new InvalidSettingsException(strErrorMsgStart + "could not be found.");
-			}
-		}
-
-		// Load custom file and use it
-		else {
-			final File file = FileUtils.convertToFile(strFileName, true, false);
-			strErrorMsgStart = "The custom configuration file '" +
-					file.getAbsolutePath() + "' ";
-			try {
-				in = new FileInputStream(file);
-			}
-			catch (final FileNotFoundException exc) {
-				throw new InvalidSettingsException(strErrorMsgStart + "could not be found.", exc);
-			}
-		}
-
-		// Load the file
 		try {
-			strConfiguration = FileUtils.getContentFromResource(in); // Closes the input stream
+			// Check for default and use it
+			if (modelFilePath == null || isDefaultConfigurationFile(modelFilePath.getPath())) {
+				strErrorMsgStart = "The default configuration file resource '" +
+						strDefaultResource + "' ";
+				try (final InputStream inputStream = FunctionalGroupDefinitions.class.getClassLoader().getResourceAsStream(strDefaultResource)) {
+					strErrorMsgStart = "The default configuration file resource '" +
+							strDefaultResource + "' ";
+
+					strConfiguration = FileUtils.getContentFromResource(inputStream);
+				}
+			}
+
+			// Load custom file and use it
+			else {
+				strErrorMsgStart = "The custom configuration file '" +
+						modelFilePath.getPath() + "' ";
+
+				strConfiguration = FileSystemsUtils.readFile(modelFilePath, FileUtils::getContentFromResource, LOGGER);
+			}
+		}
+		catch (final FileNotFoundException exc) {
+			throw new InvalidSettingsException(strErrorMsgStart
+					+ "could not be found.", exc);
 		}
 		catch (final IOException exc) {
-			throw new InvalidSettingsException(
-					strErrorMsgStart + "could not be read successfully: " + exc.getMessage(), exc);
+			throw new InvalidSettingsException(strErrorMsgStart
+					+ "could not be read successfully: " + exc.getMessage(), exc);
 		}
 
 		return strConfiguration;
 	}
 
 	/**
-	 * Determines, if the the specified file name (of a StruChecker configuration
+	 * Determines, if the specified file name (of a StruChecker configuration
 	 * file) defines a default configuration file or not. It returns true, if
-	 * the file name is either null or is equal to {@link #DEFAULT_CONFIGURATION_ID}.
+	 * the file name is either null or empty.
 	 *
-	 * @param strInputFile Either a path name to the input file or the value {@link #DEFAULT_CONFIGURATION_ID}.
+	 * @param strInputFile Either a path name to the input file or empty.
 	 *
-	 * @return True, if the passed in value is null or the {@link #DEFAULT_CONFIGURATION_ID}. False otherwise.
+	 * @return True, if the passed in value is null or the empty. False otherwise.
 	 */
 	public static boolean isDefaultConfigurationFile(final String strInputFile) {
-		return (strInputFile == null || DEFAULT_CONFIGURATION_ID.equals(strInputFile));
+		return (strInputFile == null || strInputFile.isBlank());
 	}
 
 	/**
@@ -849,7 +927,7 @@ public class RDKitStructureNormalizerNodeModel extends AbstractRDKitNodeModel {
 	 * 
 	 * @return Input type for the checker to be used. Null, if null was passed in.
 	 */
-	public Input determineStructureCheckerInputType(final DataType type) throws InvalidSettingsException {
+	public Input determineStructureCheckerInputType(final DataType type) {
 		Input ret = null;
 
 		if (type != null) {

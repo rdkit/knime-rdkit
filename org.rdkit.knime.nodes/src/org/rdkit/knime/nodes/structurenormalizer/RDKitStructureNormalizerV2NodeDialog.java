@@ -48,6 +48,7 @@
  */
 package org.rdkit.knime.nodes.structurenormalizer;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -227,7 +228,14 @@ public class RDKitStructureNormalizerV2NodeDialog extends DefaultNodeSettingsPan
             m_strLastInputColumnName = strNewInputColumnName;
         });
 
-		getTab("Options").setPreferredSize(new Dimension(600, 310));
+		final JPanel panelOptions = (JPanel) getTab("Options");
+		panelOptions.setBorder(
+				BorderFactory.createCompoundBorder(
+						BorderFactory.createEmptyBorder(15, 15, 15, 15),
+						panelOptions.getBorder()
+				)
+		);
+		panelOptions.setPreferredSize(new Dimension(880, 450));
 
 		createNewTab("Handling Failures");
 		createNewTab("Advanced");
@@ -434,23 +442,24 @@ public class RDKitStructureNormalizerV2NodeDialog extends DefaultNodeSettingsPan
 
 		// "Handling Failures" TAB
 		final JPanel panelFailures = (JPanel)getTab("Handling Failures");
-		panelFailures.setLayout(new GridBagLayout());
+		panelFailures.setLayout(new BorderLayout());
 		panelFailures.removeAll();
+		panelFailures.setBorder(
+				BorderFactory.createCompoundBorder(
+						BorderFactory.createEmptyBorder(15, 15, 15, 15),
+						panelFailures.getBorder()
+				)
+		);
 
 		final JPanel panelSubSpecialFailures = new JPanel(new GridBagLayout());
-		panelSubSpecialFailures.setPreferredSize(new Dimension(400, 200));
-
+		panelSubSpecialFailures.setPreferredSize(new Dimension(400, 250));
 		panelSubSpecialFailures.setBorder(BorderFactory.createTitledBorder("Special Failures (Optional)"));
 		LayoutUtils.constrain(panelSubSpecialFailures, compFailureCodes.getComponentPanel(),
 				0, 0, 1, LayoutUtils.REMAINDER,
 				LayoutUtils.BOTH, LayoutUtils.CENTER, 1.0d, 1.0d,
 				0, 10, 0, 7);
 
-		iRow = 0;
-		LayoutUtils.constrain(panelFailures, panelSubSpecialFailures,
-				0, iRow++, LayoutUtils.REMAINDER, LayoutUtils.REMAINDER,
-				LayoutUtils.BOTH, LayoutUtils.CENTER, 1.0d, 1.0d,
-				7, 7, 7, 7);
+		panelFailures.add(panelSubSpecialFailures, BorderLayout.NORTH);
 
 		LayoutUtils.correctKnimeDialogBorders(getPanel());
 	}

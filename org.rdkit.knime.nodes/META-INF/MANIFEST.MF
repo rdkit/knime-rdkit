@@ -3,14 +3,14 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.nodes
-Bundle-Version: 4.7.1.qualifier
+Bundle-Version: 4.9.0.qualifier
 Bundle-Vendor: NIBR
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
  org.knime.base;bundle-version="[4.7.0,6.0.0)",
  org.knime.chem.types;bundle-version="[4.7.0,6.0.0)",
  org.knime.workbench.repository;bundle-version="[4.7.0,6.0.0)",
- org.rdkit.knime.types;bundle-version="[4.7.1,5.0.0)",
+ org.rdkit.knime.types;bundle-version="[4.9.0,5.0.0)",
  org.knime.ext.svg;bundle-version="[4.7.0,6.0.0)"
 Export-Package: org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.addconformers,

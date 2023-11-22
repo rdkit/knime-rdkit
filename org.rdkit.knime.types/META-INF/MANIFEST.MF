@@ -22,7 +22,7 @@ Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: rdkit-chem.jar,
  lib/org.RDKit.jar,
  lib/org.RDKitDoc.jar
-Bundle-Version: 4.8.0.qualifier
+Bundle-Version: 4.8.1.qualifier
 Bundle-Name: RDKit Chemistry Type Definitions
 Bundle-Activator: org.rdkit.knime.RDKitTypesPluginActivator
 Bundle-ManifestVersion: 2

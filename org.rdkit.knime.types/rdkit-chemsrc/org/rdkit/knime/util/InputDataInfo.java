@@ -1341,12 +1341,15 @@ public class InputDataInfo {
 	 */
 	public Int_Vect getRDKitIntegerVector(final DataRow row) throws EmptyCellException {
 		Int_Vect vectInt = null;
+		
+		// We get a list that does not contain null values
 		final List<Integer> listIntegers = getIntegerList(row);
 
 		if (listIntegers != null) {
-			vectInt = new Int_Vect();
-			for (final Integer i : listIntegers) {
-				vectInt.add(i);
+			int iLen = listIntegers.size();
+			vectInt = new Int_Vect(iLen);
+			for (int i = 0; i < iLen; i++) {
+				vectInt.set(i, listIntegers.get(i));
 			}
 		}
 
@@ -1373,18 +1376,21 @@ public class InputDataInfo {
 	 */
 	public UInt_Vect getRDKitUIntegerVector(final DataRow row) throws EmptyCellException {
 		UInt_Vect vectInt = null;
+
+		// We get a list that does not contain null values
 		final List<Integer> listIntegers = getIntegerList(row);
 
 		if (listIntegers != null) {
-			vectInt = new UInt_Vect(listIntegers.size());
-			for (final Integer i : listIntegers) {
-				vectInt.add(i);
+			int iLen = listIntegers.size();
+			vectInt = new UInt_Vect(iLen);
+			for (int i = 0; i < iLen; i++) {
+				vectInt.set(i, (long)listIntegers.get(i));
 			}
 		}
 
 		return vectInt;
 	}
-
+	
 	//
 	// Protected Methods
 	//

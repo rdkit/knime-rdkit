@@ -327,7 +327,7 @@ public abstract class AbstractRDKitFingerprintNodeModel extends AbstractRDKitCal
 								if (!arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].isMissing(row)) {
 									final int iAtomIndex = arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getInt(row);
 									atomList = markForCleanup(new UInt_Vect(1), lUniqueWaveId);
-									atomList.add(iAtomIndex);
+									atomList.set(0, iAtomIndex);
 								}
 							}
 

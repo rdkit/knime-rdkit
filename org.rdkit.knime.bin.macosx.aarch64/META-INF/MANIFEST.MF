@@ -6,4 +6,4 @@ Bundle-Version: 4.8.1.qualifier
 Fragment-Host: org.rdkit.knime.types;bundle-version="4.8.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Eclipse-PlatformFilter: (&(osgi.os=macosx)(osgi.arch=aarch64))
-Bundle-Vendor: NIBR
+Bundle-Vendor: Novartis

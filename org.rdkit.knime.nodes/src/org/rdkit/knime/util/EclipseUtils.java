@@ -106,7 +106,7 @@ public class EclipseUtils {
 	 * @param strResourcePath
 	 *            Resource path (absolute or relative to the specified root
 	 *            object). Must not be <code>null</code>. An absolute example:
-	 *            "/com/novartis/nibr/knime/images/loading.gif".
+	 *            "/org/rdkit/knime/nodes/highlighting/delete.png".
 	 * @return
 	 */
 	public static ImageData loadImageData(final Class<?> rootClass,

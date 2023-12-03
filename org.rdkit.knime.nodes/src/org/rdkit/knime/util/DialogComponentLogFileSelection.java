@@ -4,7 +4,7 @@
  * are protected by copyright law. All rights reserved.
  *
  * Copyright (C)2023
- * Novartis Institutes for BioMedical Research
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify

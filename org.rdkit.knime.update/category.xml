@@ -14,7 +14,7 @@
    </feature>
    <category-def name="RDKit" label="RDKit KNIME Community Contributions">
       <description>
-         RDKit KNIME extensions contributed by NIBR to the KNIME community.
+         RDKit KNIME extensions contributed by Novartis to the KNIME community.
       </description>
    </category-def>
 </site>

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2010-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -49,16 +49,20 @@
 package org.rdkit.knime.nodes.twocomponentreaction2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.RDKit.ChemicalReaction;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -71,6 +75,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -92,6 +97,7 @@ import org.rdkit.knime.util.WarningConsolidator;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNodeModel<RDKitTwoComponentReactionNodeDialog> {
 
@@ -133,6 +139,14 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	private final SettingsModelString m_modelReactant2ColumnName =
 			registerSettings(RDKitTwoComponentReactionNodeDialog.createReactant2ColumnNameModel(), "reactant2_column", "secondColumn");
 	// Accept also deprecated keys
+
+	/** Settings model for the additional columns filter from port 0. */
+	private final SettingsModelColumnFilter2 m_modelReactant1ColumnsFilter =
+			registerSettings(RDKitTwoComponentReactionNodeDialog.createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled, 0), true);
+
+	/** Settings model for the additional columns filter from port 1. */
+	private final SettingsModelColumnFilter2 m_modelReactant2ColumnsFilter =
+			registerSettings(RDKitTwoComponentReactionNodeDialog.createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled, 1), true);
 
 	/** Settings model for the option of performing matrix reaction calculations. */
 	private final SettingsModelBoolean m_modelDoMatrixExpansion =
@@ -261,8 +275,6 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 	 * 
 	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
 	 * 		given DataTableSpec elements.
-	 * 
-	 * @see #createOutputFactories(int)
 	 */
 	@Override
 	protected DataTableSpec getOutputTableSpec(final int outPort,
@@ -280,6 +292,45 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 2 sequence index", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 2", RDKitAdapterCell.RAW_TYPE).createSpec());
+
+			// Additional columns
+			if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+				final Stream<DataColumnSpec> streamAdditionalColumnSpecs;
+				if (inSpecs[0] == inSpecs[1]) {
+					// we have the same table on both input ports, so processing it only once to avoid additional columns duplication
+					streamAdditionalColumnSpecs = Stream
+							.concat(
+									Arrays.stream(m_modelReactant1ColumnsFilter.applyTo(inSpecs[0]).getIncludes()),
+									Arrays.stream(m_modelReactant2ColumnsFilter.applyTo(inSpecs[0]).getIncludes())
+							)
+							.distinct()
+							.filter(strColumnName -> !strColumnName.equals(m_modelReactant1ColumnName.getStringValue())
+									&& !strColumnName.equals(m_modelReactant2ColumnName.getStringValue()))
+							.map(inSpecs[0]::getColumnSpec);
+				}
+				else {
+					streamAdditionalColumnSpecs = Stream.concat(
+							Arrays.stream(m_modelReactant1ColumnsFilter.applyTo(inSpecs[0]).getIncludes())
+									.filter(strColumnName -> !strColumnName.equals(m_modelReactant1ColumnName.getStringValue()))
+									.map(inSpecs[0]::getColumnSpec),
+							Arrays.stream(m_modelReactant2ColumnsFilter.applyTo(inSpecs[1]).getIncludes())
+									.filter(strColumnName1 -> !strColumnName1.equals(m_modelReactant2ColumnName.getStringValue()))
+									.map(inSpecs[1]::getColumnSpec));
+				}
+
+				final List<String> listAllColumnNames = listSpecs.stream()
+						.map(DataColumnSpec::getName)
+						.collect(Collectors.toCollection(ArrayList::new));
+				streamAdditionalColumnSpecs
+						.forEach(columnSpec -> {
+							final String strUniqueColumnName = SettingsUtils.makeColumnNameUnique(columnSpec.getName(), null, listAllColumnNames);
+							final DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(columnSpec);
+							columnSpecCreator.setName(strUniqueColumnName);
+							columnSpecCreator.setDomain(null);
+							listSpecs.add(columnSpecCreator.createSpec());
+							listAllColumnNames.add(strUniqueColumnName);
+						});
+			}
 
 			spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
 			break;
@@ -353,6 +404,46 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					new MultiThreadWorker<DataRow, List<DataRow>>(iQueueSize, iMaxParallelWorkers) {
 
 				/**
+				 * Array of input reactant table #1 column indexes to be included to output table.
+				 */
+				private final List<Integer> listReactant1AdditionalColumnIndexes;
+
+				/**
+				 * Array of input reactant table #2 column indexes to be included to output table.
+				 */
+				private final List<Integer> listReactant2AdditionalColumnIndexes;
+
+				{
+                    if (!m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+                        listReactant1AdditionalColumnIndexes = null;
+                        listReactant2AdditionalColumnIndexes = null;
+                    }
+					else if (inData[0].getDataTableSpec() == inData[1].getDataTableSpec()) {
+						// we have the same table on both input ports, so processing it only once to avoid additional columns duplication
+						final DataTableSpec inSpec = inData[0].getDataTableSpec();
+						listReactant1AdditionalColumnIndexes = Stream
+								.concat(
+										Arrays.stream(m_modelReactant1ColumnsFilter.applyTo(inSpec).getIncludes()),
+										Arrays.stream(m_modelReactant2ColumnsFilter.applyTo(inSpec).getIncludes())
+								)
+								.distinct()
+								.filter(strColumnName -> !strColumnName.equals(m_modelReactant1ColumnName.getStringValue())
+										&& !strColumnName.equals(m_modelReactant2ColumnName.getStringValue()))
+								.map(inSpec::findColumnIndex)
+								.toList();
+						listReactant2AdditionalColumnIndexes = Collections.emptyList();
+					}
+					else {
+						listReactant1AdditionalColumnIndexes = createAdditionalColumnIndexList(
+								m_modelReactant1ColumnsFilter, inData[0].getDataTableSpec(),
+								m_modelReactant1ColumnName);
+						listReactant2AdditionalColumnIndexes = createAdditionalColumnIndexList(
+								m_modelReactant2ColumnsFilter, inData[1].getDataTableSpec(),
+								m_modelReactant2ColumnName);
+                    }
+                }
+
+				/**
 				 * Computes the two component reactions.
 				 * 
 				 * @param row Input row with reactant 1.
@@ -392,7 +483,20 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 													break;
 												}
 											}
-											listNewRows = processWithSecondReactant(mol1, rowAccess.next(),
+
+											// Additional data cells
+											final List<DataCell> listAdditionalCells1;
+                                            if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+												listAdditionalCells1 = new ArrayList<>();
+												for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
+													listAdditionalCells1.add(row.getCell(iReactant1AdditionalColumnIndex));
+												}
+											}
+                                            else {
+												listAdditionalCells1 = null;
+											}
+
+											listNewRows = processWithSecondReactant(mol1, listAdditionalCells1, rowAccess.next(),
 													listNewRows, subUniqueWaveId, (int)index, index2);
 										}
 										else {
@@ -416,7 +520,19 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 											final DataRow row2 = rowAccess.get((int)index);
 
 											if (row2 != null) {
-												listNewRows = processWithSecondReactant(mol1, row2,
+												// Additional data cells
+												final List<DataCell> listAdditionalCells1;
+                                                if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+													listAdditionalCells1 = new ArrayList<>();
+													for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
+														listAdditionalCells1.add(row.getCell(iReactant1AdditionalColumnIndex));
+													}
+												}
+                                                else {
+													listAdditionalCells1 = null;
+												}
+
+												listNewRows = processWithSecondReactant(mol1, listAdditionalCells1, row2,
 														null, uniqueWaveId, (int)index, (int)index);
 											}
 											else {
@@ -446,6 +562,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * Prepares the processing with two reactants and calls processReactionResults-
 				 * 
 				 * @param mol1 Molecule of reactant 1. Must not be null.
+				 * @param listAdditionalCells Additional data cells to be added to result data rows. Can be null.
 				 * @param row2 Data row with reactant 2. Must not be null.
 				 * @param listToAddTo A list to add new results to. Can be null.
 				 * @param wave Unique wave id for RDKit object cleanup.
@@ -457,7 +574,7 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * 		be thrown because the EmptyCellPolicy is set to TreatAsNull
 				 * 		for retrieval of reactant 2 data.
 				 */
-				private List<DataRow> processWithSecondReactant(final ROMol mol1, final DataRow row2,
+				private List<DataRow> processWithSecondReactant(final ROMol mol1, final List<DataCell> listAdditionalCells, final DataRow row2,
 						final List<DataRow> listToAddTo, final long wave, final int... indicesReactants)
 								throws EmptyCellException {
 					List<DataRow> listNewRows = listToAddTo;
@@ -473,8 +590,20 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 						rs.set(0, mol1);
 						rs.set(1, mol2);
 
+						// Additional data cells
+						final List<DataCell> listAdditionalCells2;
+                        if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+                            listAdditionalCells2 = new ArrayList<>(listAdditionalCells);
+							for (int iReactant2AdditionalColumnIndex : listReactant2AdditionalColumnIndexes) {
+								listAdditionalCells2.add(row2.getCell(iReactant2AdditionalColumnIndex));
+							}
+						}
+                        else {
+							listAdditionalCells2 = null;
+						}
+
 						// Process reaction and create rows
-						listNewRows = processReactionResults(chemicalReaction.get(), rs, listToAddTo,
+						listNewRows = processReactionResults(chemicalReaction.get(), rs, listAdditionalCells2, listToAddTo,
 								wave, indicesReactants);
 
 					}

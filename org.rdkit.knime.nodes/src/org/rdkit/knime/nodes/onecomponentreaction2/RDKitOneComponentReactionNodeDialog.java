@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2010-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -48,10 +48,18 @@
  */
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
+
+import javax.swing.*;
 
 /**
  * <code>NodeDialog</code> for the "RDKitOneComponentReaction" Node.
@@ -62,8 +70,18 @@ import org.rdkit.knime.util.DialogComponentColumnNameSelection;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public class RDKitOneComponentReactionNodeDialog extends AbstractRDKitReactionNodeDialog {
+
+	//
+	// Members
+	//
+
+	/**
+	 * The settings model to be used for the additional reactant columns filter.
+	 */
+	private SettingsModelColumnFilter2 m_modelAdditionalColumnsFilter;
 
 	//
 	// Constructor
@@ -100,6 +118,31 @@ public class RDKitOneComponentReactionNodeDialog extends AbstractRDKitReactionNo
 		// Nothing to add here
 	}
 
+	@Override
+	protected String getDialogComponentAdditionalColumnsEnableLabel() {
+		return "Include additional columns from reactant input table into product output table";
+	}
+
+	@Override
+	protected JPanel addDialogComponentsForAdditionalColumnsSelection() {
+		super.createNewGroup("Additional columns from Reactant table");
+
+		m_modelAdditionalColumnsFilter = createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled);
+		super.addDialogComponent(new DialogComponentColumnFilter2(
+				m_modelAdditionalColumnsFilter,
+				0));
+
+		return null;
+	}
+
+	@Override
+	public void loadAdditionalSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs) throws NotConfigurableException {
+		super.loadAdditionalSettingsFrom(settings, specs);
+
+		// have to do it exactly here, after columns filter model loaded in order to prevent NPE deep inside its implementation code
+		m_modelAdditionalColumnsFilter.setEnabled(m_modelAdditionalColumnsEnabled.getBooleanValue());
+	}
+
 	//
 	// Static Methods
 	//
@@ -112,4 +155,22 @@ public class RDKitOneComponentReactionNodeDialog extends AbstractRDKitReactionNo
 	static final SettingsModelString createReactantColumnNameModel() {
 		return new SettingsModelString("input_column", null);
 	}
+
+	/**
+	 * Creates the settings model to be used for the additional data columns filtering.
+	 *
+	 * @param modelAdditionalColumnsEnabled Settings model for the additional columns selection enablement flag.
+	 *                                      Can be null.
+	 * @return Settings mode for additional data columns filter.
+	 */
+	static SettingsModelColumnFilter2 createAdditionalColumnsFilterModel(SettingsModelBoolean modelAdditionalColumnsEnabled) {
+		final SettingsModelColumnFilter2 modelResult = new SettingsModelColumnFilter2("additionalColumnsFilter");
+
+		if (modelAdditionalColumnsEnabled != null) {
+			modelAdditionalColumnsEnabled.addChangeListener(e -> modelResult.setEnabled(modelAdditionalColumnsEnabled.getBooleanValue()));
+		}
+
+		return modelResult;
+	}
+
 }

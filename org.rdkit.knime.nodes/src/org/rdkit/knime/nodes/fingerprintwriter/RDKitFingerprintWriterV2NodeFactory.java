@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
+ * Copyright (C) 2012-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -46,22 +46,69 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.rdkit.knime.nodes.functionalgroupfilter;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.rdkit.knime.nodes.fingerprintwriter;
+
+import org.knime.core.node.*;
+import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.filehandling.core.port.FileSystemPortObject;
+
+import java.util.Optional;
 
 /**
- * <code>NodeFactory</code> for the RDKit based "RDKitFunctionalGroupFilter" Node.
+ * {@code NodeFactory} for the RDKit based "RDKitFingerprintWriter" Node.
  * 
- * @author Dillip K Mohanty
+ *
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
-public class FunctionalGroupFilterNodeFactory extends NodeFactory<FunctionalGroupFilterNodeModel> {
+public class RDKitFingerprintWriterV2NodeFactory extends ConfigurableNodeFactory<RDKitFingerprintWriterV2NodeModel> {
+
+	//
+	// Constants
+	//
 
 	/**
-	 * Creates a model for the RDKitFunctionalGroupFilter functionality
+	 * The file system ports group id.
+	 */
+	protected static final String INPUT_PORT_GRP_ID_FS_CONNECTION = "File System Connection";
+
+	/**
+	 * The input table ports group id.
+	 */
+	protected static final String INPUT_PORT_GRP_ID_FINGERPRINTS = "Input fingerprints";
+
+	//
+	// Public methods
+	//
+
+	/**
+	 * This node does not have any views.
+	 *
+	 * @return Always null.
+	 */
+	@Override
+	public NodeView<RDKitFingerprintWriterV2NodeModel> createNodeView(
+			final int viewIndex,
+			final RDKitFingerprintWriterV2NodeModel nodeModel) {
+		return null;
+	}
+
+	//
+	// Protected methods
+	//
+
+	@Override
+	protected Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
+		PortsConfigurationBuilder result = new PortsConfigurationBuilder();
+		result.addOptionalInputPortGroup(INPUT_PORT_GRP_ID_FS_CONNECTION, FileSystemPortObject.TYPE);
+		result.addFixedInputPortGroup(INPUT_PORT_GRP_ID_FINGERPRINTS, BufferedDataTable.TYPE);
+
+		return Optional.of(result);
+	}
+
+	/**
+	 * Creates a model for the RDKitFingerprintWriter functionality
 	 * of the RDKit library. The model is derived from the
 	 * abstract class AbstractRDKitNodeModel, which provides
 	 * common base functionality for RDKit nodes.
@@ -70,20 +117,8 @@ public class FunctionalGroupFilterNodeFactory extends NodeFactory<FunctionalGrou
 	 * @see org.rdkit.knime.nodes.AbstractRDKitNodeModel
 	 */
 	@Override
-	public FunctionalGroupFilterNodeModel createNodeModel() {
-		return new FunctionalGroupFilterNodeModel();
-	}
-
-	/**
-	 * This node does not have any views.
-	 * 
-	 * @return Always null.
-	 */
-	@Override
-	public NodeView<FunctionalGroupFilterNodeModel> createNodeView(
-			final int viewIndex,
-			final FunctionalGroupFilterNodeModel nodeModel) {
-		return null;
+	protected RDKitFingerprintWriterV2NodeModel createNodeModel(NodeCreationConfiguration creationConfig) {
+		return new RDKitFingerprintWriterV2NodeModel(creationConfig);
 	}
 
 	/**
@@ -92,7 +127,7 @@ public class FunctionalGroupFilterNodeFactory extends NodeFactory<FunctionalGrou
 	 * @return Always 0.
 	 */
 	@Override
-	public int getNrNodeViews() {
+	protected int getNrNodeViews() {
 		return 0;
 	}
 
@@ -102,16 +137,14 @@ public class FunctionalGroupFilterNodeFactory extends NodeFactory<FunctionalGrou
 	 * @return Always true.
 	 */
 	@Override
-	public boolean hasDialog() {
+	protected boolean hasDialog() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-	public NodeDialogPane createNodeDialogPane() {
-		return new FunctionalGroupFilterNodeDialog();
+	protected NodeDialogPane createNodeDialogPane(NodeCreationConfiguration creationConfig) {
+		return new RDKitFingerprintWriterV2NodeDialog(creationConfig);
 	}
+
 }
 

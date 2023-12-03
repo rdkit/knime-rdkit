@@ -44,6 +44,17 @@
                 yielding the combinatorial expansion of the reactants. If not checked, reactants 1 and 2 will be combined
                 sequentially, with the shorter list determining the number of output rows.</option>
         </tab>
+        <tab name="Advanced">
+            <option name="Include additional columns from reactant input tables into product output table">
+                Enable this option in order to select additional data columns from reactant input tables to be included into the result table.
+            </option>
+            <option name="Additional columns from Reactant #1 table">
+                Selection of additional data columns from reactant #1 input table.
+            </option>
+            <option name="Additional columns from Reactant #2 table">
+                Selection of additional data columns from reactant #2 input table.
+            </option>
+        </tab>
     </fullDescription>
     <ports>
         <inPort index="0" name="Reactant 1">Data with RDKit Mol column</inPort>

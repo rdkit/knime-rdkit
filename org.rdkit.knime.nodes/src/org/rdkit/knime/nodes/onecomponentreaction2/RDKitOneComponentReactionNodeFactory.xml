@@ -40,6 +40,14 @@
                 Only the first of multiple encountered products will show up in the result table.
             </option>
         </tab>
+        <tab name="Advanced">
+            <option name="Include additional columns from reactant input table into product output table">
+                Enable this option in order to select additional data columns from reactant input table to be included into the result table.
+            </option>
+            <option name="Additional columns from Reactant table">
+                Selection of additional data columns from reactant input table.
+            </option>
+        </tab>
     </fullDescription>
 
     <ports>

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
+ * Copyright (C) 2010-2023
  * Novartis Institutes for BioMedical Research
  *
  *
@@ -49,13 +49,17 @@
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.RDKit.ChemicalReaction;
 import org.RDKit.ROMol;
 import org.RDKit.ROMol_Vect;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -67,6 +71,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -85,6 +90,7 @@ import org.rdkit.knime.util.WarningConsolidator;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNodeModel<RDKitOneComponentReactionNodeDialog> {
 
@@ -116,6 +122,10 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	private final SettingsModelString m_modelInputColumnName =
 			registerSettings(RDKitOneComponentReactionNodeDialog.createReactantColumnNameModel(), "input_column", "firstColumn");
 	// Accept also deprecated keys
+
+	/** Settings model for the additional columns filter. */
+	private final SettingsModelColumnFilter2 m_modelReactantColumnsFilter =
+			registerSettings(RDKitOneComponentReactionNodeDialog.createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled), true);
 
 	//
 	// Constructor
@@ -222,8 +232,6 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 	 * 
 	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
 	 * 		given DataTableSpec elements.
-	 * 
-	 * @see #createOutputFactories(int)
 	 */
 	@Override
 	protected DataTableSpec getOutputTableSpec(final int outPort,
@@ -235,10 +243,32 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 		case 0:
 			// Define output table
 			listSpecs = new ArrayList<DataColumnSpec>();
+
+			// Result columns
 			listSpecs.add(new DataColumnSpecCreator("Product", RDKitAdapterCell.RAW_TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Product Index", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 1 sequence index", IntCell.TYPE).createSpec());
 			listSpecs.add(new DataColumnSpecCreator("Reactant 1", RDKitAdapterCell.RAW_TYPE).createSpec());
+
+			// Additional columns
+			if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+				final Stream<DataColumnSpec> streamAdditionalColumnSpecs = Arrays.stream(m_modelReactantColumnsFilter.applyTo(inSpecs[0]).getIncludes())
+						.filter(strColumnName -> !strColumnName.equals(m_modelInputColumnName.getStringValue()))
+						.map(inSpecs[0]::getColumnSpec);
+
+				final List<String> listAllColumnNames = listSpecs.stream()
+						.map(DataColumnSpec::getName)
+						.collect(Collectors.toCollection(ArrayList::new));
+				streamAdditionalColumnSpecs
+						.forEach(columnSpec -> {
+							final String strUniqueColumnName = SettingsUtils.makeColumnNameUnique(columnSpec.getName(), null, listAllColumnNames);
+							final DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(columnSpec);
+							columnSpecCreator.setName(strUniqueColumnName);
+							columnSpecCreator.setDomain(null);
+							listSpecs.add(columnSpecCreator.createSpec());
+							listAllColumnNames.add(strUniqueColumnName);
+						});
+			}
 
 			spec = new DataTableSpec("Output", listSpecs.toArray(new DataColumnSpec[listSpecs.size()]));
 			break;
@@ -277,6 +307,13 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 			new MultiThreadWorker<DataRow, DataRow[]>(iQueueSize, iMaxParallelWorkers) {
 
 				/**
+				 * Array of input table column indexes to be included to output table.
+				 */
+				private final List<Integer> listReactantAdditionalColumnIndexes = m_modelAdditionalColumnsEnabled.getBooleanValue()
+						? createAdditionalColumnIndexList(m_modelReactantColumnsFilter, inData[0].getDataTableSpec(), m_modelInputColumnName)
+						: null;
+
+				/**
 				 * Computes the one component reactions.
 				 * 
 				 * @param row Input row.
@@ -304,8 +341,20 @@ public class RDKitOneComponentReactionNodeModel extends AbstractRDKitReactionNod
 								final ROMol_Vect rs = new ROMol_Vect(1);
 								rs.set(0, mol);
 
+								// Additional data cells
+								final List<DataCell> listAdditionalCells;
+								if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+									listAdditionalCells = new ArrayList<>();
+									for (int iReactantAdditionalColumnIndex : listReactantAdditionalColumnIndexes) {
+										listAdditionalCells.add(row.getCell(iReactantAdditionalColumnIndex));
+									}
+								}
+								else {
+									listAdditionalCells = null;
+								}
+
 								// Process reaction and create rows
-								listNewRows = processReactionResults(chemicalReaction.get(), rs, null,
+								listNewRows = processReactionResults(chemicalReaction.get(), rs, listAdditionalCells, null,
 										uniqueWaveId, (int)index);
 							}
 						}

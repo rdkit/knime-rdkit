@@ -60,7 +60,7 @@ import org.knime.core.data.convert.DataCellFactoryMethod;
  * different implementations (e.g. blobs).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @author Manuel Schwarze, NIBR
+ * @author Manuel Schwarze, Novartis
  */
 public final class RDKitMolCellFactory implements DataCellFactory {
 

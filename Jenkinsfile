@@ -22,7 +22,7 @@ pipeline {
     	// The Java version to be used to compile and build - possible values are java8, java11 and java17
     	JAVA_VERSION = "java17"
 
-    	// Two pre-requisites that need to be installed by the NIBR Jenkins job knime4.x-all-setup-build-environment
+    	// Two pre-requisites that need to be installed by the Novartis Jenkins job knime4.x-all-setup-build-environment
     	DIRECTOR_HOME = "/apps/knime/buildtools/director"
     	M2_HOME = "/apps/knime/buildtools/apache-maven"
 		PATH = "${M2_HOME}/bin:${PATH}"
@@ -174,7 +174,7 @@ pipeline {
 				// Installs with the Director tool a new minimal KNIME instance with the build artifacts (needs to run as bash script!)
 				// The logic comes from the KNIME Community implementation (community.inc), which was slightly adapted to disable
 				// accessing the KNIME Community server for test workflows, because we provide those as part of the RDKit testing feature
-				// and cannot access the server from NIBR (proxy settings and credentials would be required for authentication)
+				// and cannot access the server from Novartis (proxy settings and credentials would be required for authentication)
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}"
 					
@@ -231,7 +231,7 @@ pipeline {
             }        
 			steps {
 		        script {
-					// Add successfully tested NIBR artifacts to existing NIBR update site
+					// Add successfully tested Novartis artifacts to existing Novartis update site
 					sh '''#!/bin/bash
 						/bin/bash "${WORKSPACE}/scripts/mirrorSingleUpdateSite.sh" "${WORKSPACE}/tmp/knime test/knime" "${DEPLOY_MASTER_UPDATE_SITE}" true true "${WORKSPACE}/scripts/mirror.xml" "${WORKSPACE}/org.rdkit.knime.update/target/repository/" true
 					'''
@@ -263,7 +263,7 @@ pipeline {
 				expression {
 					// Never run deployments on PROD, only on DEV or TEST
 					((env.ENVIRONMENT == 'dev' || env.ENVIRONMENT == 'test') &&
-					// Never trigger packaging for master (which is the community master) when building in NIBR environment
+					// Never trigger packaging for master (which is the community master) when building in Novartis environment
 					 ((env.DEPLOY_BRANCH_BUILDS_TO_MASTER == 'true' && !(env.git_branch_lowercase == 'master' || env.GIT_BRANCH == 'master')) || 
 					  env.git_branch_lowercase == 'master_nibr' || env.GIT_BRANCH == 'master_nibr') &&
 					// Never trigger packaging for any UNSTABLE tests

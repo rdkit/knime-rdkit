@@ -1,8 +1,8 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2010-2022
- *  Novartis Institutes for BioMedical Research
+ *  Copyright (C)2010-2023
+ *  Novartis Pharma AG, Switzerland
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as

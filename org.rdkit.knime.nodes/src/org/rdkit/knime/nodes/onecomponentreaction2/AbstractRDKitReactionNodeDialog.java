@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,7 @@
  */
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -66,6 +67,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
 import org.rdkit.knime.util.LayoutUtils;
 
+import java.awt.*;
+
 /**
  * <code>NodeDialog</code> for the "RDKitOneComponentReaction" Node.
  * 
@@ -75,6 +78,7 @@ import org.rdkit.knime.util.LayoutUtils;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSettingsPane {
 
@@ -87,6 +91,9 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 
 	/** Setting model component for the SMARTS reaction field. */
 	private final DialogComponent m_compSmartsReactionField;
+
+	/** Settings model for additional columns enablement flag. */
+	protected final SettingsModelBoolean m_modelAdditionalColumnsEnabled;
 
 	/** The input port index of the reaction table. */
 	private final int m_iReactionTableIndex;
@@ -149,6 +156,23 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 
 		addDialogComponentsAfterReactionSettings();
 
+		super.createNewTab("Advanced");
+
+		m_modelAdditionalColumnsEnabled = createAdditionalColumnsEnabledModel();
+		final DialogComponentBoolean compAdditionalColumnsEnabled = new DialogComponentBoolean(m_modelAdditionalColumnsEnabled,
+				getDialogComponentAdditionalColumnsEnableLabel());
+
+		super.addDialogComponent(compAdditionalColumnsEnabled);
+
+		final JPanel panelAdditionalColumnsSelection =
+				addDialogComponentsForAdditionalColumnsSelection();
+		if (panelAdditionalColumnsSelection != null) {
+			final JPanel panelAdvanced = (JPanel) super.getTab("Advanced");
+			panelAdvanced.setLayout(new BorderLayout());
+			panelAdvanced.add(compAdditionalColumnsEnabled.getComponentPanel(), BorderLayout.NORTH);
+			panelAdvanced.add(panelAdditionalColumnsSelection, BorderLayout.CENTER);
+		}
+
 		LayoutUtils.correctKnimeDialogBorders(getPanel());
 	}
 
@@ -167,6 +191,21 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 	 * reaction based settings.
 	 */
 	protected abstract void addDialogComponentsAfterReactionSettings();
+
+	/**
+	 * Returns the label text for additional columns enabled flag dialog component.
+	 *
+	 * @return The label text for additional columns enabled flag dialog component.
+	 */
+	protected abstract String getDialogComponentAdditionalColumnsEnableLabel();
+
+	/**
+	 * This method adds all dialog components for additional columns selection.
+	 *
+	 * @return {@code JPanel} instance containing additional columns selection widgets with custom layout.
+	 * Can be null if default widgets layout is to be applied.
+	 */
+	protected abstract JPanel addDialogComponentsForAdditionalColumnsSelection();
 
 	/**
 	 * Show or hides reaction based settings based on the input method for
@@ -259,6 +298,15 @@ public abstract class AbstractRDKitReactionNodeDialog extends DefaultNodeSetting
 		result.setEnabled(modelRandomizeReactantsOption.getBooleanValue());
 
 		return result;
+	}
+
+	/**
+	 * Creates the settings model to be used for the additional data columns enabled flag.
+	 *
+	 * @return Settings mode for additional data columns filter enabled flag.
+	 */
+	public static SettingsModelBoolean createAdditionalColumnsEnabledModel() {
+		return new SettingsModelBoolean("additionalColumnsEnabled", false);
 	}
 
 }

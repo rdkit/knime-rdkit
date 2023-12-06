@@ -13,6 +13,7 @@ bin
 /.metadata/
 .polyglot.feature.xml.takari_issue_192
 .polyglot..META-INF_MANIFEST.MF
+.polyglot.META-INF
 .META-INF_MANIFEST.MF
 target/
 org.rdkit.knime.binaries.feature/feature.xml.takari_issue_192

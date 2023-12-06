@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode>
+<knimeNode icon="default.png" type="Manipulator" xmlns="http://knime.org/node/v4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
+    <name>RDKit Functional Group Filter</name>
+
+    <shortDescription>
+        Node for filtering set of molecules containing functional groups specified by the user.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            This node can be used for filtering sets of molecules based on named substructures (functional groups based on SMARTS).
+            Note that the default definitions are constructed to try and define functional groups relevant for reactivity; consequently
+            groups like -CF3 do not match the halogen pattern.
+        </intro>
+
+        <tab name="Options">
+            <option name="RDKit Mol column">It specifies which column contains the set of RDKit molecules.</option>
+            <option name="Functional group definition file">
+                File containing functional group definitions. This input is optional. Alternatively you may
+                press "Load Defaults" to use default functional group definitions. Pressing the info button
+                on the very right shows the content of the currently selected definitions incl. all SMARTS
+                that describe the functional groups.
+                <br/><br/>
+                The "Load Custom..." button lets you define your own configuration in a dialog with the following options:
+                <br/><br/>
+                <b>Read from:</b><br/>
+                Select a file system which stores the model you want to read. There
+                are four default file system options to choose from:
+                <br />
+                <ul>
+                    <li><i>Local File System:</i> Allows you to select a file from your
+                        local system.
+                    </li>
+                    <li><i>Mountpoint:</i> Allows you to read from a mountpoint.
+                        When selected, a new drop-down menu appears to choose the mountpoint.
+                        Unconnected mountpoints are greyed out but can still be selected (note that browsing is disabled in this case).
+                        Go to the KNIME Explorer and connect to the mountpoint to enable browsing.
+                        A mountpoint is displayed in red if it was previously selected but is no longer available.
+                        You won't be able to save the dialog as long as you don't select a valid i.e. known mountpoint.
+                    </li>
+                    <li><i>Relative to:</i> Allows you to choose whether to resolve the path
+                        relative to the current mountpoint, current workflow or the current workflow's data area.
+                        When selected, a new drop-down menu appears to choose which of the two options to use.
+                    </li>
+                    <li><i>Custom/KNIME URL:</i> Allows to specify a URL (e.g. file://, http:// or knime:// protocol).
+                        When selected, a spinner appears that allows you to specify the desired connection and read timeout in milliseconds.
+                        In case it takes longer to connect to the host / read the file, the node fails to execute.
+                        Browsing is disabled for this option.
+                    </li>
+                </ul>
+                It is possible to use other file systems with this node. Therefore,
+                you have to enable the file system connection input port of this node
+                by clicking the
+                <b>...</b>
+                in the bottom left corner of the node's icon and choose
+                <i>Add File System Connection port</i>
+                .
+                <br />
+                Afterwards, you can simply connect the desired connector node to this node.
+                The file system connection will then be shown in the drop-down menu.
+                It is greyed out if the file system is not connected in which case you have to (re)execute the connector node first.
+                Note: The default file systems listed above can't be selected if a file system is provided via the input port.
+                <br/><br/>
+                <b>File/URL:</b><br/>
+                Enter a URL when reading from <i>Custom/KNIME URL</i>, otherwise enter a path to a file. The
+                required syntax of a path depends on the chosen file system, such as &quot;C:\path\to\file&quot; (Local
+                File System on Windows) or  &quot;/path/to/file&quot; (Local
+                File System on Linux/MacOS and Mountpoint). For file systems connected via input port, the node
+                description of the respective connector node describes the required path format.
+                You can also choose a previously selected file from the drop-down list, or select a location
+                from the &quot;Browse...&quot; dialog.
+                Note that browsing is disabled in some cases:
+                <ul>
+                    <li><i>Custom/KNIME URL:</i> Browsing is always disabled.</li>
+                    <li><i>Mountpoint:</i> Browsing is disabled if the selected mountpoint isn't connected.
+                        Go to the KNIME Explorer and connect to the mountpoint to enable browsing.</li>
+                    <li><i>File systems provided via input port:</i>
+                        Browsing is disabled if the connector node hasn't been executed since the workflow has been opened.
+                        (Re)execute the connector node to enable browsing.</li>
+                </ul>
+                <b>Warning: </b>Although technically the location can be set via a
+                <a href="https://docs.knime.com/latest/analytics_platform_file_handling_guide/index.html#path">
+                <i>path flow variable</i></a>, the filter will always deliver empty results, because
+                the configuration file must be present at configuration time to select for it all active entries for the filter.
+                This step would be missing when using a flow variable, which gets only processed at execution time of the node.
+            </option>
+            <option name="List of functional group filters">Defines the conditions for filtering molecules.
+                Select the ones that needs to be applied on the molecules.
+                If no filter pattern is selected, molecules are sent to the matching output table.
+            </option>
+            <option name="Recording of first non-matching pattern in new column">
+                If checked, an additional column (the name can be specified) containing the first
+                non-matching pattern is added to the table of failing molecules.
+            </option>
+        </tab>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="RDKit Molecules">Table containing a set of RDKit molecules.</inPort>
+        <dynInPort insert-before="0"
+                   name="File system connection"
+                   group-identifier="File System Connection">
+            The file system connection.
+        </dynInPort>
+        <outPort index="0" name="Molecules passing the filter">Table containing molecules that pass the filter.</outPort>
+        <outPort index="1" name="Molecules failing the filter">Table containing molecules that do not pass the filter.</outPort>
+    </ports>
+
+</knimeNode>

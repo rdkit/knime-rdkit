@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,6 +66,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.AbstractRDKitCalculatorNodeModel;
 import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.types.RDKitMolValueRenderer;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsUtils;
 import org.rdkit.knime.util.WarningConsolidator;
@@ -274,7 +276,9 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
 					if (mol.getNumConformers() == 0) {
-						mol.compute2DCoords();
+						RDKitMolValueRenderer.compute2DCoords(mol,
+							RDKitDepicterPreferencePage.isUsingCoordGen(),
+							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					}
 
 					String xmlSvg = null;

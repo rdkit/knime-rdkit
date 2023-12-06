@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -72,6 +72,8 @@ import org.rdkit.knime.nodes.AbstractRDKitCellFactory;
 import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolCellFactory;
 import org.rdkit.knime.types.RDKitMolValue;
+import org.rdkit.knime.types.RDKitMolValueRenderer;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.SettingsModelEnumeration;
 import org.rdkit.knime.util.SettingsUtils;
@@ -273,7 +275,9 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
       m_smartsPattern = markForCleanup(generatedSmartsPattern(m_modelDimension.getValue(),
             m_modelSmartsTemplate.getStringValue()));
       if (m_smartsPattern != null) {
-         m_smartsPattern.compute2DCoords();
+    	  RDKitMolValueRenderer.compute2DCoords(m_smartsPattern,
+		  	RDKitDepicterPreferencePage.isUsingCoordGen(),
+			RDKitDepicterPreferencePage.isNormalizeDepictions());
       }
 	}
 
@@ -318,10 +322,14 @@ public class RDKitAddCoordinatesNodeModel extends AbstractRDKitCalculatorNodeMod
 					// Calculate 2D Coordinates
 					if (m_modelDimension.getValue() == CoordinateDimension.Coord_2D) {
 						if (m_smartsPattern != null) {
-							mol.compute2DCoords(m_smartsPattern);
+							RDKitMolValueRenderer.compute2DCoords(mol, m_smartsPattern,
+								RDKitDepicterPreferencePage.isUsingCoordGen(),
+								RDKitDepicterPreferencePage.isNormalizeDepictions());
 						}
 						else {
-							mol.compute2DCoords();
+							RDKitMolValueRenderer.compute2DCoords(mol,
+								RDKitDepicterPreferencePage.isUsingCoordGen(),
+								RDKitDepicterPreferencePage.isNormalizeDepictions());
 						}
 					}
 

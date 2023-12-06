@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C)2003-2011
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,6 +57,9 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -85,6 +88,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitorView;
 import org.knime.core.node.NodeSettingsRO;
@@ -114,6 +118,14 @@ import org.rdkit.knime.headers.HeaderPropertyHandlerRegistry;
  * @author Manuel Schwarze, Novartis
  */
 public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
+
+	//
+	// Constants
+	//
+
+	/** The logger instance. */
+	private static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RDKitInteractiveView.class);
 
 	/** The Component displaying the table. */
 	private final TableView m_tableView;
@@ -265,14 +277,28 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 
 			// TODO: Add to method getPopupMenu()
 		};
-
 	}
-
-	/** {@inheritDoc} Removes all new lines and replaces them by a comma. */
-	@Override
+	
+	/** Removes all new lines and replaces them by a comma. Only used until KNIME 4.x. */
 	public void warningChanged(final String warning) {
 		final String warningWithoutNewLines = (warning == null ? null : warning.replace("\n", ", "));
-		super.warningChanged(warningWithoutNewLines);
+		
+		// Since KNIME 5.x the message warningChanged(String) was replaced with warningChanged(Message).
+		// This means that the String method will not be called anymore and the modifications we had are obsolete in KNIME 5.x.
+		// However, in KNIME 4.x the method is still there, and to avoid signature changes for this only incompatibility
+		// we are using reflection here to still call the proper super method, but ignore errors.
+		try {
+			MethodHandle superMethod = MethodHandles.lookup().findSpecial(NodeView.class, "warningChanged",
+			        MethodType.methodType(Void.class, String.class), RDKitInteractiveView.class);
+			superMethod.invoke(warningWithoutNewLines);
+		}
+		catch (Throwable exc) {
+			if (exc instanceof ThreadDeath) {
+				throw (ThreadDeath)exc;
+			}
+			
+			LOGGER.warn("Warning changed: " + warningWithoutNewLines);
+		}
 	}
 
 	/**

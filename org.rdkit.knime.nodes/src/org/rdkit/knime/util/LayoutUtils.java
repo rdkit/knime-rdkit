@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1212,13 +1212,13 @@ public final class LayoutUtils {
 	 *            Component to be added and layed out.
 	 * @param iGridX
 	 *            Specifies the cell at the left of the component's display
-	 *            area, where the leftmost cell has gridx = 0. The value
+	 *            area, where the leftmost cell has gridxï¿½=ï¿½0. The value
 	 *            RELATIVE specifies that the component be placed just to the
 	 *            right of the component that was added to the container just
 	 *            before this component was added.
 	 * @param iGridY
 	 *            Specifies the cell at the top of the component's display area,
-	 *            where the topmost cell has gridy = 0. The value RELATIVE
+	 *            where the topmost cell has gridyï¿½=ï¿½0. The value RELATIVE
 	 *            specifies that the component be placed just below the
 	 *            component that was added to the container just before this
 	 *            component was added.
@@ -1255,13 +1255,13 @@ public final class LayoutUtils {
 	 *            Component to be added and layed out.
 	 * @param iGridX
 	 *            Specifies the cell at the left of the component's display
-	 *            area, where the leftmost cell has gridx = 0. The value
+	 *            area, where the leftmost cell has gridxï¿½=ï¿½0. The value
 	 *            RELATIVE specifies that the component be placed just to the
 	 *            right of the component that was added to the container just
 	 *            before this component was added.
 	 * @param iGridY
 	 *            Specifies the cell at the top of the component's display area,
-	 *            where the topmost cell has gridy = 0. The value RELATIVE
+	 *            where the topmost cell has gridyï¿½=ï¿½0. The value RELATIVE
 	 *            specifies that the component be placed just below the
 	 *            component that was added to the container just before this
 	 *            component was added.
@@ -1311,13 +1311,13 @@ public final class LayoutUtils {
 	 *            Component to be added and layed out.
 	 * @param iGridX
 	 *            Specifies the cell at the left of the component's display
-	 *            area, where the leftmost cell has gridx = 0. The value
+	 *            area, where the leftmost cell has gridxï¿½=ï¿½0. The value
 	 *            RELATIVE specifies that the component be placed just to the
 	 *            right of the component that was added to the container just
 	 *            before this component was added.
 	 * @param iGridY
 	 *            Specifies the cell at the top of the component's display area,
-	 *            where the topmost cell has gridy = 0. The value RELATIVE
+	 *            where the topmost cell has gridyï¿½=ï¿½0. The value RELATIVE
 	 *            specifies that the component be placed just below the
 	 *            component that was added to the container just before this
 	 *            component was added.
@@ -1336,12 +1336,12 @@ public final class LayoutUtils {
 	 *            than the component's requested size. It determines whether to
 	 *            resize the component, and if so, how. The following values are
 	 *            valid for fill:<BR>
-	 *            · NONE: Do not resize the component.<BR>
-	 *            · HORIZONTAL: Make the component wide enough to fill its
+	 *            ï¿½ NONE: Do not resize the component.<BR>
+	 *            ï¿½ HORIZONTAL: Make the component wide enough to fill its
 	 *            display area horizontally, but do not change its height.<BR>
-	 *            · VERTICAL: Make the component tall enough to fill its display
+	 *            ï¿½ VERTICAL: Make the component tall enough to fill its display
 	 *            area vertically, but do not change its width.<BR>
-	 *            · BOTH: Make the component fill its display area entirely.<BR>
+	 *            ï¿½ BOTH: Make the component fill its display area entirely.<BR>
 	 * @param iAnchor
 	 *            This field is used when the component is smaller than its
 	 *            display area. It determines where, within the display area, to
@@ -1472,7 +1472,7 @@ public final class LayoutUtils {
 	 * @param strPath
 	 *            Resource path (absolute or relative to the specified root
 	 *            object). Must not be <code>null</code>. An absolute example:
-	 *            "/com/novartis/nibr/knime/images/loading.gif".
+	 *            "/org/rdkit/knime/nodes/highlighting/delete.png".
 	 * @param strDescription
 	 *            A description of the image to be loaded. Can be
 	 *            <code>null</code>.
@@ -1495,7 +1495,7 @@ public final class LayoutUtils {
 	 * @param strPath
 	 *            Resource path (absolute or relative to the specified root
 	 *            object). Must not be <code>null</code>. An absolute example:
-	 *            "/com/novartis/nibr/knime/images/loading.gif".
+	 *            "/org/rdkit/knime/nodes/highlighting/delete.png".
 	 * @param strDescription
 	 *            A description of the image to be loaded. Can be
 	 *            <code>null</code>.
@@ -1539,7 +1539,7 @@ public final class LayoutUtils {
 	 * @param strResourcePath
 	 *            Resource path starting from the root package of the Java
 	 *            application. Must not be <code>null</code>. An example:
-	 *            "/com/novartis/nibr/knime/images/loading.gif".
+	 *            "/org/rdkit/knime/nodes/highlighting/delete.png".
 	 * 
 	 * @return Image object containing the loaded image, or null, if image could
 	 *         not be loaded.

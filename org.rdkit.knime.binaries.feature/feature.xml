@@ -3,14 +3,14 @@
       id="org.rdkit.knime.binaries.feature"
       label="RDKit Binaries and Chemistry Type Definitions Feature"
       version="4.9.1.qualifier"
-      provider-name="NIBR">
+      provider-name="Novartis">
 
    <description>
       This feature contains RDKit binaries for use as dependencies for other packages as well as chemistry type definitions for KNIME.
    </description>
 
    <copyright>
-      Copyright (C) 2010-2023 Novartis Institutes for BioMedical Research
+      Copyright (C)2010-2023 Novartis Pharma AG, Switzerland
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

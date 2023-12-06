@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C)2015-2017
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2015-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify

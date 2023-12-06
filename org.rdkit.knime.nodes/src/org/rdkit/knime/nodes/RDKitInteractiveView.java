@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C)2003-2011
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -94,7 +94,6 @@ import org.knime.core.node.NodeProgressMonitorView;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.message.Message;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.ColumnHeaderRenderer;
 import org.knime.core.node.tableview.TableContentModel;
@@ -278,11 +277,6 @@ public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 
 			// TODO: Add to method getPopupMenu()
 		};
-	}
-	
-	@Override
-	public void warningChanged(Message message) {
-		super.warningChanged(message);
 	}
 	
 	/** Removes all new lines and replaces them by a comma. Only used until KNIME 4.x. */

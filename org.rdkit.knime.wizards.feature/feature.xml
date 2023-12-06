@@ -3,7 +3,7 @@
       id="org.rdkit.knime.wizards.feature"
       label="RDKit Nodes Creation Wizards Feature"
       version="4.9.1.qualifier"
-      provider-name="NIBR"
+      provider-name="Novartis"
       plugin="org.rdkit.knime.wizards">
 
    <description>
@@ -11,7 +11,7 @@ For KNIME Developers only: When installing this feature into the Eclipse SDK you
    </description>
 
    <copyright>
-      Copyright (C) 2012-2023 Novartis Institutes for BioMedical Research
+      Copyright (C)2012-2023 Novartis Pharma AG, Switzerland
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

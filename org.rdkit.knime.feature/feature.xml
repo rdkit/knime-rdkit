@@ -3,7 +3,7 @@
       id="org.rdkit.knime.feature"
       label="RDKit Nodes Feature"
       version="4.9.1.qualifier"
-      provider-name="NIBR"
+      provider-name="Novartis"
       plugin="org.rdkit.knime.nodes">
 
    <description>
@@ -11,7 +11,7 @@
    </description>
 
    <copyright>
-      Copyright (C) 2010-2023 Novartis Institutes for BioMedical Research
+      Copyright (C)2010-2023 Novartis Pharma AG, Switzerland
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

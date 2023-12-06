@@ -34,13 +34,9 @@
 =======
     <setAttribute key="selected_features">
         <setEntry value="com.collabnet.subversion.merge.feature:default"/>
-        <setEntry value="com.ggasoftware.indigo.knime.feature:default"/>
-        <setEntry value="com.ggasoftware.indigo.knime.source.feature:default"/>
         <setEntry value="com.knime.features.enterprise.client.exampleserver:default"/>
         <setEntry value="com.knime.features.reporting.designer:default"/>
         <setEntry value="com.knime.features.reporting.runtime:default"/>
-        <setEntry value="com.novartis.nibr.knime.feature:default"/>
-        <setEntry value="com.novartis.nibr.knime.update:default"/>
         <setEntry value="com.sun.jna:default"/>
         <setEntry value="de.mpicbg.tds.knime.hcstools.feature:default"/>
         <setEntry value="de.mpicbg.tds.knime.scripting.groovy.feature:default"/>

@@ -4,7 +4,7 @@ Bundle-Name: RDKit Nodes
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.nodes
 Bundle-Version: 4.9.1.qualifier
-Bundle-Vendor: NIBR
+Bundle-Vendor: Novartis
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
  org.knime.base;bundle-version="[4.7.0,6.0.0)",

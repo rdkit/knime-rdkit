@@ -3,14 +3,14 @@
       id="org.rdkit.knime.testing.feature"
       label="RDKit Nodes Tests Feature"
       version="4.9.1.qualifier"
-      provider-name="NIBR">
+      provider-name="Novartis">
 
    <description>
       Regression and unit tests used when automatically building the RDKit KNIME extensions to ensure high quality.
    </description>
 
    <copyright>
-      Copyright (C) 2012-2023 Novartis Institutes for BioMedical Research
+      Copyright (C)2012-2023 Novartis Pharma AG, Switzerland
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

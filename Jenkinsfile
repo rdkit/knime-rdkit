@@ -17,7 +17,7 @@ pipeline {
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
 		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "5.1"
+    	KNIME_VERSION = "5.2"
     	
     	// The Java version to be used to compile and build - possible values are java8, java11 and java17
     	JAVA_VERSION = "java17"

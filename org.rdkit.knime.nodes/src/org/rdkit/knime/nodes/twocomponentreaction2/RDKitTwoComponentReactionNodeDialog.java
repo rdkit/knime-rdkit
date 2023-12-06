@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2010
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2010-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -48,13 +48,21 @@
  */
 package org.rdkit.knime.nodes.twocomponentreaction2;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.rdkit.knime.nodes.onecomponentreaction2.AbstractRDKitReactionNodeDialog;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.DialogComponentColumnNameSelection;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * <code>NodeDialog</code> for the "RDKitTwoComponentReaction" Node.
@@ -65,8 +73,23 @@ import org.rdkit.knime.util.DialogComponentColumnNameSelection;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public class RDKitTwoComponentReactionNodeDialog extends AbstractRDKitReactionNodeDialog {
+
+	//
+	// Members
+	//
+
+	/**
+	 * The settings model to be used for the additional reactant #1 columns filter.
+	 */
+	private SettingsModelColumnFilter2 m_modelReactant1AdditionalColumnsFilter;
+
+	/**
+	 * The settings model to be used for the additional reactant #2 columns filter.
+	 */
+	private SettingsModelColumnFilter2 m_modelReactant2AdditionalColumnsFilter;
 
 	//
 	// Constructor
@@ -107,6 +130,42 @@ public class RDKitTwoComponentReactionNodeDialog extends AbstractRDKitReactionNo
 				createDoMatrixExpansionModel(), "Do matrix expansion"));
 	}
 
+	@Override
+	protected String getDialogComponentAdditionalColumnsEnableLabel() {
+		return "Include additional columns from reactant input tables into product output table";
+	}
+
+	@Override
+	protected JPanel addDialogComponentsForAdditionalColumnsSelection() {
+		m_modelReactant1AdditionalColumnsFilter = createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled, 0);
+		final DialogComponentColumnFilter2 compColumnsFilter1 = new DialogComponentColumnFilter2(
+				m_modelReactant1AdditionalColumnsFilter,
+				0);
+		super.addDialogComponent(compColumnsFilter1);
+
+		m_modelReactant2AdditionalColumnsFilter = createAdditionalColumnsFilterModel(m_modelAdditionalColumnsEnabled, 1);
+		final DialogComponentColumnFilter2 compColumnsFilter2 = new DialogComponentColumnFilter2(
+				m_modelReactant2AdditionalColumnsFilter,
+				1);
+		super.addDialogComponent(compColumnsFilter2);
+
+		JPanel panelResult = new JPanel(new BorderLayout());
+		final JTabbedPane tabs = new JTabbedPane();
+		tabs.addTab("Additional columns from Reactant table #1", compColumnsFilter1.getComponentPanel());
+		tabs.addTab("Additional columns from Reactant table #2", compColumnsFilter2.getComponentPanel());
+		panelResult.add(tabs);
+		return panelResult;
+	}
+
+	@Override
+	public void loadAdditionalSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs) throws NotConfigurableException {
+		super.loadAdditionalSettingsFrom(settings, specs);
+
+		// have to do it exactly here, after columns filter model loaded in order to prevent NPE deep inside its implementation code
+		m_modelReactant1AdditionalColumnsFilter.setEnabled(m_modelAdditionalColumnsEnabled.getBooleanValue());
+		m_modelReactant2AdditionalColumnsFilter.setEnabled(m_modelAdditionalColumnsEnabled.getBooleanValue());
+	}
+
 	//
 	// Static Methods
 	//
@@ -137,4 +196,23 @@ public class RDKitTwoComponentReactionNodeDialog extends AbstractRDKitReactionNo
 	static final SettingsModelBoolean createDoMatrixExpansionModel() {
 		return new SettingsModelBoolean("matrixExpansion", false);
 	}
+
+	/**
+	 * Creates the settings model to be used for the additional data columns filtering.
+	 *
+	 * @param modelAdditionalColumnsEnabled Settings model for the additional columns selection enablement flag.
+	 *                                      Can be null.
+	 * @param iInputTableIndex              Index of the input table to apply this filter against.
+	 * @return Settings mode for additional data columns filter.
+	 */
+	static SettingsModelColumnFilter2 createAdditionalColumnsFilterModel(SettingsModelBoolean modelAdditionalColumnsEnabled, int iInputTableIndex) {
+		final SettingsModelColumnFilter2 modelResult = new SettingsModelColumnFilter2("additionalColumnsFilter" + (iInputTableIndex + 1));
+
+		if (modelAdditionalColumnsEnabled != null) {
+			modelAdditionalColumnsEnabled.addChangeListener(e -> modelResult.setEnabled(modelAdditionalColumnsEnabled.getBooleanValue()));
+		}
+
+		return modelResult;
+	}
+
 }

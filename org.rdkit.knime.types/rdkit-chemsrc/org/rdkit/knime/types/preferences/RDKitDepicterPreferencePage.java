@@ -1,15 +1,48 @@
 /*
- * This source code, its documentation and all related files
- * are protected by copyright law. All rights reserved.
+ * ------------------------------------------------------------------------
  *
- * (C)Copyright 2022 by Novartis Pharma AG
- * Novartis Campus, CH-4002 Basel, Switzerland
+ *  Copyright (C)2022-2023
+ *  Novartis Pharma AG, Switzerland
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * -------------------------------------------------------------------
+ *
  */
 package org.rdkit.knime.types.preferences;
 
@@ -83,6 +116,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	public static final String PREF_KEY_NORMALIZE_DEPICTIONS = "normalizeDepictions";
 
+	/**
+	 * The flag to enable the use of CoordGen for rendering structures. If not set, it uses native RDKit rendering.
+	 */
+	public static final String PREF_KEY_USE_COORDGEN = "useCoordGen";
+
 	/** The default filename for the depiction settings, which is referring to our internal file. */
 	public static final String DEFAULT_CONFIG_FILE = "[default built-in]";
 	
@@ -91,6 +129,9 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	
 	/** The default flag for normalizing depictions (false). */
 	public static final boolean DEFAULT_NORMALIZE_DEPICTIONS = false;
+	
+	/** The default flag for using of CoordGen for rendering structures (false). If not set, it uses native RDKit rendering. */
+	public static final boolean DEFAULT_USE_COORDGEN = false;
 	
 	/** The logger instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitDepicterPreferencePage.class);
@@ -115,6 +156,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	private static boolean g_bNormalizeDepiction = DEFAULT_NORMALIZE_DEPICTIONS;
 	
+	/**
+	 * The use CoordGen flag.
+	 */
+	private static boolean g_bUseCoordGen = DEFAULT_USE_COORDGEN;
+	
 	/** The timestamp of last failure of reading the JSON config file or -1, if not set. */
 	private static long g_lLastFailure = -1;
 
@@ -134,6 +180,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 * The editor for setting the flag to enable normalizing depictions.
 	 */
 	private BooleanFieldEditor m_editorNormalizeDepictions;
+
+	/**
+	 * The editor for setting the flag to enable CoordGen for rendering.
+	 */
+	private BooleanFieldEditor m_editorUseCoordGen;
 
 	//
 	// Constructor
@@ -305,6 +356,9 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		};
 		addField(btnClear);
 		
+		m_editorUseCoordGen = new BooleanFieldEditor(PREF_KEY_USE_COORDGEN, "Use CoordGen instead of native RDKit when generating coordinates (SMILES, SMARTS)", getFieldEditorParent());
+		addField(m_editorUseCoordGen);
+		
 		m_editorNormalizeDepictions = new BooleanFieldEditor(PREF_KEY_NORMALIZE_DEPICTIONS, "Normalize depictions", getFieldEditorParent());
 		addField(m_editorNormalizeDepictions);
 	}
@@ -329,6 +383,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		if (plugin != null) {
 			final IPreferenceStore prefStore = plugin.getPreferenceStore();
 			g_bNormalizeDepiction = prefStore.getBoolean(PREF_KEY_NORMALIZE_DEPICTIONS);
+			g_bUseCoordGen = prefStore.getBoolean(PREF_KEY_USE_COORDGEN);
 		}
 	}
 
@@ -420,6 +475,15 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	public static boolean isNormalizeDepictions() {
 		return g_bNormalizeDepiction;
 	}
+	
+	/**
+	 * Returns the current setting for using CoordGen.
+	 * 
+	 * @return Use CoordGen flag.
+	 */
+	public static boolean isUsingCoordGen() {
+		return g_bUseCoordGen;
+	}
 
 	/**
 	 * Gets the appropriate preference store and initializes its default values.
@@ -445,6 +509,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 					prefStore.setDefault(PREF_KEY_CONFIG_JSON, "");
 					prefStore.setDefault(PREF_KEY_RETRY_INTERVAL, DEFAULT_RETRY_INTERVAL);
 					prefStore.setDefault(PREF_KEY_NORMALIZE_DEPICTIONS, DEFAULT_NORMALIZE_DEPICTIONS);
+					prefStore.setDefault(PREF_KEY_USE_COORDGEN, DEFAULT_USE_COORDGEN);
 					RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 				}
 			} 

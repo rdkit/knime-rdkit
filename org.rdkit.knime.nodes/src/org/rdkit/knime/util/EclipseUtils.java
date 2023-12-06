@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2014
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2014-2023 
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -106,7 +106,7 @@ public class EclipseUtils {
 	 * @param strResourcePath
 	 *            Resource path (absolute or relative to the specified root
 	 *            object). Must not be <code>null</code>. An absolute example:
-	 *            "/com/novartis/nibr/knime/images/loading.gif".
+	 *            "/org/rdkit/knime/nodes/highlighting/delete.png".
 	 * @return
 	 */
 	public static ImageData loadImageData(final Class<?> rootClass,

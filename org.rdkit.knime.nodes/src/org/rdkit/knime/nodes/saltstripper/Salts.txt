@@ -35,7 +35,7 @@ OC(=O)C(=O)O	  Oxalate
 OC(=O)C(O)C(O)C(=O)O	  Tartrate
 C1CCCCC1[NH]C1CCCCC1	  Dicylcohexylammonium
 
-//  Copyright (c) 2010, Novartis Institutes for BioMedical Research Inc.
+//  Copyright (C)2010-2023, Novartis Pharma AG, Switzerland
 //  All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ C1CCCCC1[NH]C1CCCCC1	  Dicylcohexylammonium
 //       copyright notice, this list of conditions and the following 
 //       disclaimer in the documentation and/or other materials provided 
 //       with the distribution.
-//     * Neither the name of Novartis Institutes for BioMedical Research Inc. 
+//     * Neither the name of Novartis Pharma AG, Switzerland 
 //       nor the names of its contributors may be used to endorse or promote 
 //       products derived from this software without specific prior written permission.
 //

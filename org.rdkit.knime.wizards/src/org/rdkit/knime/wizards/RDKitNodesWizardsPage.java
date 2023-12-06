@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -483,7 +483,7 @@ public class RDKitNodesWizardsPage extends WizardPage implements Listener {
         label.setToolTipText("This name will appear in the source files as author information.");
         label.setFont(composite.getFont());
         m_textVendor = new Text(settingsGroup, SWT.BORDER);
-        m_textVendor.setText(System.getProperty("user.name", "NIBR"));
+        m_textVendor.setText(System.getProperty("user.name", "Novartis"));
         m_textVendor.setFont(composite.getFont());
         m_textVendor.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         m_textVendor.addListener(SWT.Modify, this);

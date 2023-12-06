@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RDKit binaries for Intel 64bit MacOSX
 Bundle-SymbolicName: org.rdkit.knime.bin.macosx.x86_64;singleton:=true
-Bundle-Version: 4.6.1.qualifier
-Fragment-Host: org.rdkit.knime.types;bundle-version="4.6.1"
+Bundle-Version: 4.8.1.qualifier
+Fragment-Host: org.rdkit.knime.types;bundle-version="4.8.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Eclipse-PlatformFilter: (&(osgi.os=macosx)(osgi.arch=x86_64))
-Bundle-Vendor: NIBR
+Bundle-Vendor: Novartis

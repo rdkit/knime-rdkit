@@ -1,8 +1,8 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2010
- *  Novartis Institutes for BioMedical Research
+ *  Copyright (C)2010-2023
+ *  Novartis Pharma AG, Switzerland
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -60,6 +60,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.rdkit.knime.types.preferences.RDKitDepicterPreferencePage;
 
 /**
  * Implementation of an RDKit Molecule Cell. 
@@ -175,8 +176,10 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 
 		try {
 			// Convert to SDF
-			if(mol.getNumConformers() == 0){
-				mol.compute2DCoords();
+			if (mol.getNumConformers() == 0) {
+				RDKitMolValueRenderer.compute2DCoords(mol,
+					RDKitDepicterPreferencePage.isUsingCoordGen(),
+					RDKitDepicterPreferencePage.isNormalizeDepictions());
 			}
 
 			value = RDKFuncs.MolToMolBlock(mol);

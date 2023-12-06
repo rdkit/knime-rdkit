@@ -3,8 +3,8 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright (C) 2012
- * Novartis Institutes for BioMedical Research
+ * Copyright (C)2012-2023
+ * Novartis Pharma AG, Switzerland
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@
 package org.rdkit.knime.nodes.onecomponentreaction2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -93,6 +95,7 @@ import org.rdkit.knime.util.WarningConsolidator;
  * 
  * @author Greg Landrum
  * @author Manuel Schwarze
+ * @author Roman Balabanov
  */
 public abstract class AbstractRDKitReactionNodeModel<T extends AbstractRDKitReactionNodeDialog>
 extends AbstractRDKitNodeModel {
@@ -139,6 +142,10 @@ extends AbstractRDKitNodeModel {
 	/** Random seed to be used */
 	protected SettingsModelLong m_modelRandomSeed = registerSettings(
 			T.createRandomSeedModel(m_modelRandomizeReactants), true);
+
+	/** Settings model for the additional columns enabled flag. */
+	protected final SettingsModelBoolean m_modelAdditionalColumnsEnabled = registerSettings(
+			T.createAdditionalColumnsEnabledModel(), true);
 
 	//
 	// Internals
@@ -464,6 +471,7 @@ extends AbstractRDKitNodeModel {
 	 * 
 	 * @param reaction Chemical reaction to run. Can be null.
 	 * @param reactants Reactants to be used as parameters for the reaction. Can be null.
+	 * @param listAdditionalCells Additional data cells to be added to result data rows. Can be null.
 	 * @param listToAddTo A list to be used to add new rows. Can be null to create a new list.
 	 * @param uniqueWaveId Id to register RDKit objects for cleanup.
 	 * @param indicesReactants Indices of reactants passed in using the reactants mol vector.
@@ -472,7 +480,7 @@ extends AbstractRDKitNodeModel {
 	 * @return List of new creates data rows with information about reaction products.
 	 * 		Can be empty, but never null.
 	 */
-	protected List<DataRow> processReactionResults(final ChemicalReaction reaction, final ROMol_Vect reactants,
+	protected List<DataRow> processReactionResults(final ChemicalReaction reaction, final ROMol_Vect reactants, final List<DataCell> listAdditionalCells,
 			final List<DataRow> listToAddTo, final long uniqueWaveId, final int... indicesReactants) {
 		final List<DataRow> listNewRows =  (listToAddTo == null ? new ArrayList<DataRow>(20) : listToAddTo);
 		final boolean bUniquifyProducts = m_modelUniquifyProducts.getBooleanValue();
@@ -514,7 +522,8 @@ extends AbstractRDKitNodeModel {
 
 							m_aiProductCounter.incrementAndGet();
 							sbRowKey.setLength(0);
-							final List<DataCell> listCells = new ArrayList<DataCell>(2 + indicesReactants.length * 2);
+							final List<DataCell> listCells = new ArrayList<>(2 + indicesReactants.length * 2
+									+ (listAdditionalCells != null ? listAdditionalCells.size() : 0));
 
 							// Add product information to row
 							listCells.add(RDKitMolCellFactory.createRDKitAdapterCell(prod));
@@ -527,6 +536,11 @@ extends AbstractRDKitNodeModel {
 								listCells.add(new IntCell(indexReactants));
 								listCells.add(RDKitMolCellFactory.createRDKitAdapterCell(
 										markForCleanup(reactants.get(index), uniqueWaveId)));
+							}
+
+							// Add additional data cells to row
+							if (listAdditionalCells != null) {
+								listCells.addAll(listAdditionalCells);
 							}
 
 							// Create row
@@ -623,6 +637,41 @@ extends AbstractRDKitNodeModel {
 		return (inSpecs != null && inSpecs.length >= iReactionTableIndex &&
 				inSpecs[iReactionTableIndex] instanceof DataTableSpec &&
 				((DataTableSpec)inSpecs[iReactionTableIndex]).getNumColumns() > 0);
+	}
+
+	/**
+	 * Creates list of additional column indexes based on the parameters provided.
+	 *
+	 * @param modelColumnFilter    Settings model for additional columns filter.
+	 *                             Mustn't be null.
+	 * @param tableSpec            {@link DataTableSpec} instance to apply columns selection against.
+	 *                             Mustn't be null.
+	 * @param modelColumnToExclude Optional settings models list for a column that should be excluded explicitly.
+	 *                             List entries mustn't be null.
+	 * @return List containing additional columns indexes.
+	 * @throws IllegalArgumentException If any of {@code modelColumnFilter}, {@code modelColumnToExclude} or {@code tableSpec} parameter is null.
+	 */
+	protected static List<Integer> createAdditionalColumnIndexList(SettingsModelColumnFilter2 modelColumnFilter,
+																   DataTableSpec tableSpec,
+																   SettingsModelString ... modelColumnToExclude)
+	{
+		if (modelColumnFilter == null) {
+			throw new IllegalArgumentException("Additional columns filter parameter must not be null.");
+		}
+		if (modelColumnToExclude == null) {
+			throw new IllegalArgumentException("Column to exclude parameter must not be null.");
+		}
+		if (tableSpec == null) {
+			throw new IllegalArgumentException("Data Table Specification parameter must not be null.");
+		}
+
+		return Arrays.stream(modelColumnFilter.applyTo(tableSpec).getIncludes())
+				.filter(strColumnName ->
+						Arrays.stream(modelColumnToExclude)
+								.map(SettingsModelString::getStringValue)
+								.noneMatch(strColumnName::equals))
+				.map(tableSpec::findColumnIndex)
+				.toList();
 	}
 
 }

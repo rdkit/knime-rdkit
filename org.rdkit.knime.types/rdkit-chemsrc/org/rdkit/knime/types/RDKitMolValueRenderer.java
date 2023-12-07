@@ -180,6 +180,7 @@ implements SvgProvider {
 		boolean trySanitizing = true;
 		boolean bNormalize = RDKitDepicterPreferencePage.isNormalizeDepictions();
 		boolean bUseCoordGen = RDKitDepicterPreferencePage.isUsingCoordGen();
+		boolean bComputeCoordinates = false;
 
 		try {
 			// We have an old plain RDKit Mol Value
@@ -221,48 +222,36 @@ implements SvgProvider {
 		if (molCell != null) {
 			m_strSmiles = molCell.getSmilesValue();
 			omol = molCell.readMoleculeValue();
+			trySanitizing = !omol.hasQuery();
 
-			boolean bComputeCoordinates = (omol.getNumConformers() == 0);
-
-			// If we draw molecules that do not have conformers yet,
-			// we need to compute one here, either with CoordGen or native RDKit,
-			// otherwise RDKit will do this for us, but always using the default
-			// CoordGen setting (not in sync with preferences)
-			if (bComputeCoordinates) {
-	            compute2DCoords(omol, bUseCoordGen, bNormalize);
-			}
-
-			// Store the prepared molecule for drawing next
-			m_molecule = omol;
+			bComputeCoordinates = (omol.getNumConformers() == 0);
 		}
 		else {
-			boolean bComputeCoordinates = false;
-
 			// See if we have a value that we can understand
 			try {
 				RWMol tmol = null;
 				if (value instanceof SmilesValue) {
-		            String val = ((SmilesValue) value).getSmilesValue();
-		            tmol = RWMol.MolFromSmiles(val, 0, false);
-		            bComputeCoordinates = true;
+					String val = ((SmilesValue) value).getSmilesValue();
+					tmol = RWMol.MolFromSmiles(val, 0, false);
+					bComputeCoordinates = true;
 				}
 				else if (value instanceof SdfValue) {
-		            String val = ((SdfValue) value).getSdfValue();
-		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
-		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
-		            bComputeCoordinates = false; // We accept, if there is no conformer
+					String val = ((SdfValue) value).getSdfValue();
+					tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
+							RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
+					bComputeCoordinates = false; // We accept, if there is no conformer
 				}
 				else if (value instanceof MolValue) {
-		            String val = ((MolValue) value).getMolValue();
-		            tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
-		            		RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
-		            bComputeCoordinates = false; // We accept, if there is no conformer
+					String val = ((MolValue) value).getMolValue();
+					tmol = RWMol.MolFromMolBlock(val, false /* sanitize */, true /* removeHs */,
+							RDKitTypesPreferencePage.isStrictParsingForRendering() /* strictParsing */);
+					bComputeCoordinates = false; // We accept, if there is no conformer
 				}
 				else if (value instanceof SmartsValue) {
-		            String val = ((SmartsValue) value).getSmartsValue();
-		            tmol = RWMol.MolFromSmarts(val);
-		            bComputeCoordinates = true;
-		            trySanitizing = false;
+					String val = ((SmartsValue) value).getSmartsValue();
+					tmol = RWMol.MolFromSmarts(val);
+					bComputeCoordinates = true;
+					trySanitizing = false;
 				}
 
 				if (tmol != null) {
@@ -299,53 +288,50 @@ implements SvgProvider {
 				}
 				omol = null;
 			}
+		}
+		if (omol != null) {
+			final Thread t = Thread.currentThread();
+			final ClassLoader contextClassLoader = t.getContextClassLoader();
+			t.setContextClassLoader(getClass().getClassLoader());
 
-			if (omol != null) {
-				final Thread t = Thread.currentThread();
-				final ClassLoader contextClassLoader = t.getContextClassLoader();
-				t.setContextClassLoader(getClass().getClassLoader());
-
-				try {
-					RWMol mol = new RWMol(omol);
-					if (trySanitizing) {
-						try {
-							RDKFuncs.prepareMolForDrawing(mol);
-						}
-						catch(final MolSanitizeException ex) {
-							mol.delete();
-							mol = new RWMol(omol);
-							// Skip kekulization. If this still fails we throw up our hands
-							RDKFuncs.prepareMolForDrawing(mol, false);
-						}
+			try {
+				RWMol mol = new RWMol(omol);
+				if (trySanitizing) {
+					try {
+						RDKFuncs.prepareMolForDrawing(mol);
 					}
-					else {
-						// Skip kekulization
+					catch(final MolSanitizeException ex) {
+						mol.delete();
+						mol = new RWMol(omol);
+						// Skip kekulization. If this still fails we throw up our hands
 						RDKFuncs.prepareMolForDrawing(mol, false);
 					}
+				}
+				else {
+					// Skip kekulization
+					RDKFuncs.prepareMolForDrawing(mol, false);
+				}
 
-					// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS),
-					// we will compute them either with CoordGen or native RDKit.
-					// Instead, if the molecule already have coordinates, we only need to normalize
-					// the scale to RDKit standards if normalization is requested in preferences
-					if (bComputeCoordinates) {
-			            compute2DCoords(mol, bUseCoordGen, bNormalize);
-					} else if (bNormalize && mol.getNumConformers() > 0) {
-						mol.normalizeDepiction(-1, 0);
-					}
+				// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS),
+				// we will compute them either with CoordGen or native RDKit.
+				// Instead, if the molecule already has coordinates, we only need to normalize
+				// the scale to RDKit standards if normalization is requested in preferences
+				if (bComputeCoordinates) {
+					compute2DCoords(mol, bUseCoordGen, bNormalize);
+				} else if (bNormalize && mol.getNumConformers() > 0) {
+					mol.normalizeDepiction(-1, 0);
+				}
 
-					// Store the prepared molecule for drawing next
-					m_molecule = mol;
-				}
-				catch (final Exception ex) {
-					// If conversion fails we will not set the molecule, which will show up as error message later
-					// Logging something here may swam the log files - not desired.
-				}
-				finally {
-					t.setContextClassLoader(contextClassLoader);
-					if (omol != m_molecule) {
-						omol.delete();
-					}
-				}
+				// Store the prepared molecule for drawing next
+				m_molecule = mol;
+			}
+			catch (final Exception ex) {
+				// If conversion fails we will not set the molecule, which will show up as error message later
+				// Logging something here may swam the log files - not desired.
+			}
+			finally {
+				t.setContextClassLoader(contextClassLoader);
+				omol.delete();
 			}
 		}
 	}
@@ -421,7 +407,7 @@ implements SvgProvider {
 
 	@Override
 	public LockedSupplier<SVGDocument> getSvgSupplier() {
-      return new LockedSupplier<SVGDocument>(getSvg(), m_reentrantLock);
+		return new LockedSupplier<SVGDocument>(getSvg(), m_reentrantLock);
 	}
 
 	/**
@@ -594,12 +580,12 @@ implements SvgProvider {
 			// https://github.com/rdkit/rdkit/blob/58b79c6f8e2581205007effcf53c6c3641393c07/Code/JavaWrappers/ROMol.i#L423
 			iRet = (int)mol.compute2DCoords(mapTemplate /* coordMap */,
 					false /* boolean canonOrient */,
-                    true /* boolean clearConfs */,
-                    0 /* long nFlipsPerSample */,
-                    0 /* long nSamples */,
-                    0 /* int sampleSeed */,
-                    false /* boolean permuteDeg4Nodes */,
-                    !bUseCoordGen /* boolean forceRDKit */);
+				   true /* boolean clearConfs */,
+				   0 /* long nFlipsPerSample */,
+				   0 /* long nSamples */,
+				   0 /* int sampleSeed */,
+				   false /* boolean permuteDeg4Nodes */,
+				   !bUseCoordGen /* boolean forceRDKit */);
 
 			// When using CoordGen, we always rescale as the CoordGen scale is different
 			// from RDKit. We leave the scale to 1.0 when using RDKit as rescaling is not

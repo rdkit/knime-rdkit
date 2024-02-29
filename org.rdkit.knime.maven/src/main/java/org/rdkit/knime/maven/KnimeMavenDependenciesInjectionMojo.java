@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.jar.Manifest;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.AbstractMojo;

@@ -291,6 +291,8 @@ public class KnimeMavenDependenciesInjectionMojo extends AbstractMojo {
 	 *                              directory.
 	 * 
 	 * @return Set of all JAR files.
+	 * 
+	 * @throws MojoExecutionException Thrown, if path names could not be resolved properly.
 	 */
 	protected Set<String> findAllJarFiles(String projectDirectory, String[] arrLibraryDirectories)  throws MojoExecutionException {
 		HashSet<String> setJarFiles = new HashSet<>();
@@ -579,10 +581,12 @@ public class KnimeMavenDependenciesInjectionMojo extends AbstractMojo {
 	 * Runs the KNIME Maven Dependencies Injection Mojo as Command Line Utility.
 	 * 
 	 * @param args Two arguments expected in the form:
-	 * 		projectDirectory=<The base directory of the project>, 
+	 * 		projectDirectory=&lt;The base directory of the project&gt;, 
 	 * 		e.g. C:\Development\KNIME\4.6\knime-rdkit\org.rdkit.knime.nodes, and
-	 * 		libraryDirectories=<Comma-separated list of relative paths to library folders, 
-	 * 		relative to projectDirectory>, e.g. "lib".
+	 * 		libraryDirectories=&lt;Comma-separated list of relative paths to library folders, 
+	 * 		relative to projectDirectory&gt;, e.g. "lib".
+	 * 
+	 * @throws Exception Thrown, if an error occurred.
 	 */
 	public static void main(String[] args) throws Exception {
 		String strProjectDirectory = null;

@@ -27,6 +27,21 @@ list of all JAR files that we require from our `lib` folder.
 This Maven plugin helps to execute step 2 and 3 for you fully automatically. It will save a lot of time
 and typos with getting library updates properly done.
 
+## Installing the plugin locally ##
+
+You may run the launch file `KNIME MAVEN DEPENDENCIES INJECTION PLUGIN - PACKAGE AND INSTALL.launch`.
+It basically just calls `mvn -U clean install`
+
+## Deploying the plugin to a Maven repository ##
+
+You may run the launch file `KNIME MAVEN DEPENDENCIES INJECTION PLUGIN - PACKAGE AND DEPLOY.launch`, but you will need to
+configure some parameters with your repository URLs and credentials.
+
+* releaseRepositoryUrl: The URL for performing a real release (not just a SNAPSHOT release)
+* snapshotRepositoryUrl: The URL for performing a SNAPSHOT release.
+
+It basically just calls `mvn -U clean package deploy -DreleaseRepositoryUrl=https://username:password@your.maven.repo.server.net/path/to/deployment/folder -DsnapshotRepositoryUrl=https://username:password@your.maven.repo.server.net/path/to/deployment/folder`
+
 ## Seeing the plugin in action ##
 
 This Maven plugin is used in the `org.rdkit.knime.nodes` subproject. 

@@ -353,6 +353,7 @@ implements SettingsModelFlowVariableCompatible {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public FlowVariable.Type getFlowVariableType() {
 		return FlowVariable.Type.STRING;

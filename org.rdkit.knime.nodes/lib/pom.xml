@@ -14,6 +14,22 @@
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>3.3.2</version>
+				<configuration>
+					<excludeDefaultDirectories>true</excludeDefaultDirectories>
+					<filesets>
+						<fileset>
+							<directory>.</directory>
+							<includes>
+								<include>**/*.jar</include>
+							</includes>
+							<excludes>
+								<exclude>**/pom.xml</exclude>
+								<exclude>**/*.launch</exclude>
+							</excludes>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+					</filesets>
+				</configuration>				
 				<executions>
 					<execution>
 						<id>auto-clean</id>
@@ -21,22 +37,6 @@
 						<goals>
 							<goal>clean</goal>
 						</goals>
-						<configuration>
-							<excludeDefaultDirectories>true</excludeDefaultDirectories>
-							<filesets>
-								<fileset>
-									<directory>.</directory>
-									<includes>
-										<include>**/*.jar</include>
-									</includes>
-									<excludes>
-										<exclude>**/pom.xml</exclude>
-										<exclude>**/*.launch</exclude>
-									</excludes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>

@@ -41,7 +41,7 @@ The libraries can be updated in the `lib` folder semi-automatically with the fol
 In the KNIME RDKit sub project folder `org.rdkit.knime.maven` is a little Maven plugin that was
 developed to update the `MANIFEST.MF` and `build.properties` file with the list of JAR files that
 can be located within certain sub folders. In Eclipse just right-click on the `org.rdkit.knime.maven` folder
-an select from the context menu Run As - Maven Install. This builds the plugin and installs it 
+and select from the context menu Run As - Maven Install. This builds the plugin and installs it 
 in your local Maven repository. Afterwards, it is available in Step 2.
 
 ### 2. Update the lib/pom.xml file ###

@@ -70,7 +70,7 @@ automation steps, but can be useful for development.
 
 ### 3. Update the libraries based on your latest pom.xml changes ###
 
-Run the `UPDATE DEPENDENCIES TO LATEST VERSIONS.launch` file, which will run Maven as 
+Run the `UPDATE LIBRARIES.launch` file, which will run Maven as 
 `mvn -U generate-resources` and will perform the following steps for you:
 
 * Deleting all JAR files in the configured lib folder that contains the `pom.xml` file
@@ -109,7 +109,7 @@ may follow these simple 5 steps (once).
 	b) Set the libraryDirectories parameter: Define here a comma-separated list of folders that contain the JAR files that are
 	   resolved with Maven functionality. Usually, you have just one folder, the one you created in step 1), e.g. `lib/maven`.
 
-5. Create yourself an launch file like the `UPDATE DEPENDENCIES TO LATEST VERSIONS.launch` file that runs Maven as `mvn -U generate-resources`, 
+5. Create yourself a launch file like the `UPDATE LIBRARIES.launch` file that runs Maven as `mvn -U generate-resources`, 
    and execute it. 
 
 From now on you can manage your dependencies inside your `pom.xml` file and run it manually with the `.launch` file whenever you want to update them.

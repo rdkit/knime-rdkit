@@ -22,10 +22,6 @@
 							<includes>
 								<include>**/*.jar</include>
 							</includes>
-							<excludes>
-								<exclude>**/pom.xml</exclude>
-								<exclude>**/*.launch</exclude>
-							</excludes>
 							<followSymlinks>false</followSymlinks>
 						</fileset>
 					</filesets>

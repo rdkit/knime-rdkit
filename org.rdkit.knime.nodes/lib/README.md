@@ -119,8 +119,9 @@ from the KNIME RDKit project (see step 1 above) to have it available in your loc
 
 ## Maven repository and proxy settings ##
 
-Your computer may require proper Maven repository and proxy settings to reach online resources. This is part of the local Maven setup on your machine,
-usually based on company settings. It is outside the scope of this documentation.
+Please pay attention that in an enterprise IT infrastructure you may require special settings to work with a central 
+Maven repository and with proper proxy settings to reach online resources. This is part of your local Maven setup 
+and outside the scope of this documentation.
 
 ## Who do I talk to for further information? ##
 

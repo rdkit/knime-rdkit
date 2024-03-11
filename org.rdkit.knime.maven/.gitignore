@@ -1,0 +1,33 @@
+target/
+bin/
+org.eclipse.m2e.core.prefs
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+org.eclipse.m2e.core.prefs
+
+### IntelliJ IDEA ###
+.idea/*
+!.idea/inspectionProfiles
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/

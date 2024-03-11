@@ -36,6 +36,7 @@
 		<module>org.rdkit.knime.wizards.feature</module>
 		<module>org.rdkit.knime.wizards.samples</module>
 		<module>org.rdkit.knime.update</module>
+		<module>org.rdkit.knime.maven</module>
 	</modules>
 
 	<!-- List the update sites providing dependencies for your projects here -->

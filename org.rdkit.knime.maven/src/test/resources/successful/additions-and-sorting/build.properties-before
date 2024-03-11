@@ -1,0 +1,10 @@
+source.. = src/,\
+           src-deprecated/
+output.. = bin/
+bin.includes = META-INF/,\
+               .,\
+               plugin.xml,\
+               lib/mylibrary-B.jar,\
+               icons/
+jars.extra.classpath = lib/mylibrary-B.jar,\
+		               platform:/plugin/org.rdkit.knime.types/lib/org.RDKit.jar

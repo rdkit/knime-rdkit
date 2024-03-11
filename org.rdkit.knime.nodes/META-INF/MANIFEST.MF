@@ -62,5 +62,10 @@ Export-Package: org.rdkit.knime.nodes,
 Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
- lib/opsin-core-3.0-SNAPSHOT-2023-06-27-jar-with-dependencies.jar
+ lib/automaton-1.12-4.jar,
+ lib/commons-io-2.12.0.jar,
+ lib/log4j-api-2.20.0.jar,
+ lib/opsin-core-2.8.0.jar,
+ lib/stax2-api-4.2.1.jar,
+ lib/woodstox-core-6.5.1.jar
 Import-Package: org.w3c.dom.events;version="3.0.0"

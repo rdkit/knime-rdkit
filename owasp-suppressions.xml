@@ -13,47 +13,42 @@
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-		   		file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: org.apache.logging.log4j:log4j-api:2.17.2)
-		   		The vulnerability targets only an Amazon Hotfix, not the log4j version per se.
-		   		We are not using the Amazon Hotfix in context of RDKit nodes in KNIME.
-		   ]]></notes>
-		<packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-api@.*$
+				file name: org.rdkit.knime.wizards_*.jar
+		   		The RDKit Wizard will not be installed in KNIME, but in an IDE for development. 
+		   		It requires an Eclipse IDE and extends it, therefore we have to tolerate the IDE itself.
+	   		]]></notes>
+		<packageUrl regex="true">^pkg:maven/org\.rdkit\.knime/org\.rdkit\.knime\.wizards@.*$
 		</packageUrl>
-		<cve>CVE-2022-33915</cve>
+		<cve>CVE-2023-4218</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-			   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: commons-io:commons-io:2.11.0)
-			   The vulnerability is categorized as MEDIUM, and OPSIN has per Dec 08, 2022 not provided a fix yet.
+   				file name: org.rdkit.knime.nodes_*.jar: commons-io-2.12.0.jar
+   				Brought in by OPSIN library - we are using already the latest available version 2.8.0.
+   				This vulnerability is apparently tolerated by the OPSIN providers.
    			]]></notes>
 		<packageUrl regex="true">^pkg:maven/commons\-io/commons\-io@.*$
 		</packageUrl>
-		<cpe>cpe:/a:apache:commons_io</cpe>
+		<cve>CVE-2021-37533</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-		   	   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: commons-io:commons-io:2.11.0)
-			   The vulnerability is categorized as MEDIUM, and OPSIN has per Dec 08, 2022 not provided a fix yet.
+			   file name: org.rdkit.knime.nodes_*.jar: stax2-api-4.2.1.jar
+   			   Brought in by OPSIN library - we are using already the latest available version 2.8.0.
+   			   This vulnerability is apparently tolerated by the OPSIN providers.
 		   ]]></notes>
-		<packageUrl regex="true">^pkg:maven/commons\-io/commons\-io@.*$
+		<packageUrl regex="true">^pkg:maven/org\.codehaus\.woodstox/stax2\-api@.*$
 		</packageUrl>
-		<cpe>cpe:/a:apache:commons_net</cpe>
+		<cve>CVE-2022-40152</cve>
 	</suppress>
 	<suppress>
-	   <notes><![CDATA[
-	   		   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-jar-with-dependencies.jar (shaded: org.codehaus.woodstox:stax2-api:4.2.1)
-	   		   False positive. 4.2.1 is the latest version and free of known vulnerabilities as of March 07, 2023.
-	   ]]></notes>
-	   <packageUrl regex="true">^pkg:maven/org\.codehaus\.woodstox/stax2\-api@.*$</packageUrl>
-	   <cve>CVE-2022-40152</cve>
+		<notes><![CDATA[
+			   file name: org.rdkit.knime.nodes_*.jar: woodstox-core-6.5.1.jar (shaded: com.sun.xml.bind.jaxb:isorelax:20090621)
+   			   Brought in by OPSIN library - we are using already the latest available version 2.8.0.
+   			   This vulnerability is apparently tolerated by the OPSIN providers.
+		   ]]></notes>
+		<packageUrl regex="true">^pkg:maven/com\.sun\.xml\.bind\.jaxb/isorelax@.*$
+		</packageUrl>
+		<cve>CVE-2023-34411</cve>
 	</suppress>
-	
-	<suppress>
-	   <notes><![CDATA[
-	   		   file name: org.rdkit.knime.nodes_*.jar: opsin-core-*-SNAPSHOT-2023-06-27-jar-with-dependencies.jar (shaded: com.sun.xml.bind.jaxb:isorelax:20090621)
-			   There is currently no fix provided by OPSIN, which has net.java.dev as a dependency that brings in isorelax in its only version. There is no newer version available.
-	   ]]></notes>
-	   <packageUrl regex="true">^pkg:maven/com\.sun\.xml\.bind\.jaxb/isorelax@.*$</packageUrl>
-	   <cve>CVE-2023-34411</cve>
-	</suppress>	
 </suppressions>

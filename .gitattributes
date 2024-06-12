@@ -1,0 +1,4 @@
+org.rdkit.knime.bin.linux.x86_64/os/linux/x86_64/libGraphMolWrap.so filter=lfs diff=lfs merge=lfs -text
+org.rdkit.knime.bin.macosx.aarch64/os/macosx/aarch64/libGraphMolWrap.jnilib filter=lfs diff=lfs merge=lfs -text
+org.rdkit.knime.bin.macosx.x86_64/os/macosx/x86_64/libGraphMolWrap.jnilib filter=lfs diff=lfs merge=lfs -text
+org.rdkit.knime.bin.win32.x86_64/os/win32/x86_64/GraphMolWrap.dll filter=lfs diff=lfs merge=lfs -text

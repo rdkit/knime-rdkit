@@ -24,3 +24,4 @@ org.rdkit.knime.testing.feature/feature.xml.takari_issue_192
 org.rdkit.knime.wizards.feature/feature.xml.takari_issue_192
 org.rdkit.knime.update/category.xml.takari_issue_192
 org.rdkit.knime.update/.polyglot.category.xml.takari_issue_192
+org.zeroturnaround.eclipse.prefs

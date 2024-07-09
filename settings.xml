@@ -1,0 +1,73 @@
+<!--
+ |
+ | Novartis Maven Settings
+ | 2024-07-09
+ |
+ | This settings.xml contains the proxy settings necessary to reach the KNIME Update Sites
+ | as well as the locally mirror Maven channels.
+ -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+ 
+  <mirrors>
+    <mirror>
+      <id>usca-artifactory</id>
+      <mirrorOf>external:*</mirrorOf>
+      <url>https://repo.nibr.novartis.net/artifactory/public</url>
+    </mirror>
+  </mirrors>
+            
+  <proxies>
+    <proxy>
+        <id>httpproxy</id>
+        <active>true</active>
+        <protocol>http</protocol>
+        <host>nibr-proxy.global.nibr.novartis.net</host>
+        <port>2011</port>
+        <nonProxyHosts>repo.nibr.novartis.net|novartis.net|novartis.intra</nonProxyHosts>
+    </proxy>
+    <proxy>
+        <id>httpsproxy</id>
+        <active>true</active>
+        <protocol>https</protocol>
+        <host>nibr-proxy.global.nibr.novartis.net</host>
+        <port>2011</port>
+        <nonProxyHosts>repo.nibr.novartis.net|novartis.net|novartis.intra</nonProxyHosts>
+    </proxy>
+  </proxies>
+  
+  <profiles>
+    <profile>
+      <id>novartis</id>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  
+  <activeProfiles>
+    <activeProfile>novartis</activeProfile>
+  </activeProfiles>
+</settings>

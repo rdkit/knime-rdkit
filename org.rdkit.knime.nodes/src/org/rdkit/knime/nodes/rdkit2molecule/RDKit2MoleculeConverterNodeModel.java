@@ -134,7 +134,7 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 				}
 
 				// Fix SDF value
-				String strSdf = RDKFuncs.MolToMolBlock(mol);
+				String strSdf = mol.MolToMolBlock();
 				// KNIME SDF type requires string to be terminated
 				// by $$$$ -- see org.knime.chem.types.SdfValue for details
 				if (!strSdf.endsWith(SDF_POSTFIX)) {

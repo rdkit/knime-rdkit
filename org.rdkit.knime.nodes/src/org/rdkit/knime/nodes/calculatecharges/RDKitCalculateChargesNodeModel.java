@@ -229,7 +229,7 @@ public class RDKitCalculateChargesNodeModel extends AbstractRDKitCalculatorNodeM
 					// Calculate charges
 					final int iAtomCount = (int)mol.getNumAtoms();
 					final Double_Vect listCharges = markForCleanup(new Double_Vect(iAtomCount), lUniqueWaveId);
-					mol.computeGasteigerCharges(mol, listCharges);
+					mol.computeGasteigerCharges(listCharges);
 
 					// Convert charges into KNIME Double Cells
 					final ArrayList<DataCell> listCellCharges = new ArrayList<DataCell>();

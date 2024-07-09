@@ -182,7 +182,7 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 					RDKitDepicterPreferencePage.isNormalizeDepictions());
 			}
 
-			value = RDKFuncs.MolToMolBlock(mol);
+			value = mol.MolToMolBlock();
 
 			// KNIME SDF type requires string to be terminated
 			// by $$$$ -- see org.knime.chem.types.SdfValue for details

@@ -3,16 +3,16 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes
 Bundle-SymbolicName: org.rdkit.knime.nodes;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.nodes
-Bundle-Version: 4.10.0.qualifier
+Bundle-Version: 5.0.0.qualifier
 Bundle-Vendor: Novartis
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.ui;bundle-version="[3.109.0,4.0.0)",
- org.knime.base;bundle-version="[4.7.0,5.3.0)",
- org.knime.chem.types;bundle-version="[4.7.0,5.3.0)",
- org.knime.workbench.repository;bundle-version="[4.7.0,5.3.0)",
- org.rdkit.knime.types;bundle-version="[4.10.0,5.0.0)",
- org.knime.ext.svg;bundle-version="[4.7.0,5.3.0)",
- org.knime.filehandling.core;bundle-version="[4.7.0,5.3.0)"
+ org.knime.base;bundle-version="[5.3.0,6.0.0)",
+ org.knime.chem.types;bundle-version="[5.3.0,6.0.0)",
+ org.knime.workbench.repository;bundle-version="[5.3.0,6.0.0)",
+ org.rdkit.knime.types;bundle-version="[5.0.0,6.0.0)",
+ org.knime.ext.svg;bundle-version="[5.3.0,6.0.0)",
+ org.knime.filehandling.core;bundle-version="[5.3.0,6.0.0)"
 Export-Package: org.rdkit.knime.nodes,
  org.rdkit.knime.nodes.addconformers,
  org.rdkit.knime.nodes.addcoordinates;uses:="org.knime.core.node,org.knime.core.node.defaultnodesettings",

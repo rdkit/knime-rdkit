@@ -3,7 +3,7 @@ pipeline {
         node {
             // This job needs to run on the KNIME server that hosts also the target update site 
             // The following values are possible: knime-dev-chbs-c7, knime-test-basel-c7
-            label 'knime-test-basel-c7'
+            label 'knime-dev-chbs-c7'
         }
     }
     

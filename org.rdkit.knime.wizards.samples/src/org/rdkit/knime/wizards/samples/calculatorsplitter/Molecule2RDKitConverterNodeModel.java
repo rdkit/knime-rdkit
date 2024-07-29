@@ -383,6 +383,13 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 							RDKitMolValueRenderer.compute2DCoords(mol,
 								RDKitDepicterPreferencePage.isUsingCoordGen(),
 								RDKitDepicterPreferencePage.isNormalizeDepictions());
+						} else {
+							if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+								((RWMol)mol).reapplyMolBlockWedging();
+							}
+							if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+								mol.normalizeDepiction(-1, 0);
+							}
 						}
 					}
 

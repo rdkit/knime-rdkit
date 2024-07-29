@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes.rdkit2molecule;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.chem.types.SdfAdapterCell;
 import org.knime.chem.types.SdfCellFactory;
 import org.knime.chem.types.SmartsCell;
@@ -131,6 +132,13 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 					RDKitMolValueRenderer.compute2DCoords(mol,
 						RDKitDepicterPreferencePage.isUsingCoordGen(),
 						RDKitDepicterPreferencePage.isNormalizeDepictions());
+				} else {
+					if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+						((RWMol)mol).reapplyMolBlockWedging();
+					}
+					if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+						mol.normalizeDepiction(-1, 0);
+					}
 				}
 
 				// Fix SDF value

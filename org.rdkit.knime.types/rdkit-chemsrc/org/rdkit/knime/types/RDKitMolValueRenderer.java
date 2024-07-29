@@ -180,6 +180,7 @@ implements SvgProvider {
 		boolean trySanitizing = true;
 		boolean bNormalize = RDKitDepicterPreferencePage.isNormalizeDepictions();
 		boolean bUseCoordGen = RDKitDepicterPreferencePage.isUsingCoordGen();
+		boolean bUseMolBlockWedging = RDKitDepicterPreferencePage.isUsingMolBlockWedging();
 		boolean bComputeCoordinates = false;
 
 		try {
@@ -293,23 +294,33 @@ implements SvgProvider {
 			final Thread t = Thread.currentThread();
 			final ClassLoader contextClassLoader = t.getContextClassLoader();
 			t.setContextClassLoader(getClass().getClassLoader());
+			final boolean useMolBlockWedging = bUseMolBlockWedging && !bComputeCoordinates;
+			final boolean addChiralHs = !useMolBlockWedging;
+			final boolean wedgeBonds = !useMolBlockWedging;
+			boolean kekulize = trySanitizing;
 
 			try {
 				RWMol mol = new RWMol(omol);
-				if (trySanitizing) {
+				if (useMolBlockWedging) {
+					mol.reapplyMolBlockWedging();
+				}
+				if (kekulize) {
 					try {
-						RDKFuncs.prepareMolForDrawing(mol);
+						RDKFuncs.prepareMolForDrawing(mol, kekulize, addChiralHs, wedgeBonds);
 					}
 					catch(final MolSanitizeException ex) {
 						mol.delete();
 						mol = new RWMol(omol);
-						// Skip kekulization. If this still fails we throw up our hands
-						RDKFuncs.prepareMolForDrawing(mol, false);
+						if (useMolBlockWedging) {
+							mol.reapplyMolBlockWedging();
+						}
+						// Skip kekulization
+						kekulize = false;
 					}
 				}
-				else {
-					// Skip kekulization
-					RDKFuncs.prepareMolForDrawing(mol, false);
+				if (!kekulize) {
+					// Skip kekulization. If this still fails we throw up our hands
+					RDKFuncs.prepareMolForDrawing(mol, kekulize, addChiralHs, wedgeBonds);
 				}
 
 				// If we draw molecules that did not have coordinates in their format (e.g. SMILES, SMARTS),

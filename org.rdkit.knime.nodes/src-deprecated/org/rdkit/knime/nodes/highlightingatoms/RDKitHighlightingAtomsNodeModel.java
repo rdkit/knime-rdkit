@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes.highlightingatoms;
 
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
 import org.knime.core.data.DataCell;
@@ -279,6 +280,13 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 						RDKitMolValueRenderer.compute2DCoords(mol,
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
+					} else {
+						if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+							((RWMol)mol).reapplyMolBlockWedging();
+						}
+						if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+							mol.normalizeDepiction(-1, 0);
+						}
 					}
 
 					String xmlSvg = null;

@@ -51,6 +51,7 @@ import java.io.IOException;
 import org.RDKit.Int_Vect;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.chem.types.SdfValue;
 import org.knime.chem.types.SmilesValue;
 import org.knime.core.data.DataCell;
@@ -180,6 +181,8 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 				RDKitMolValueRenderer.compute2DCoords(mol,
 					RDKitDepicterPreferencePage.isUsingCoordGen(),
 					RDKitDepicterPreferencePage.isNormalizeDepictions());
+			} else if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+				((RWMol)mol).reapplyMolBlockWedging();
 			}
 
 			value = mol.MolToMolBlock();
@@ -274,7 +277,10 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 	}
 
 	protected static byte[] toByteArray(final ROMol mol) {
-		final Int_Vect iv = mol.ToBinary();
+		// We need to pickle bond properties or native
+		// molblock weging information is lost
+		final int propertyFlags = 0x4;
+		final Int_Vect iv = mol.ToBinary(propertyFlags);
 		final byte[] bytes = new byte[(int)iv.size()];
 		for (int i = 0; i < bytes.length; i++) {
 			bytes[i] = (byte)iv.get(i);

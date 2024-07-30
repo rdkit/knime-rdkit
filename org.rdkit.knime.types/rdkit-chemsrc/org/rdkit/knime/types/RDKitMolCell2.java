@@ -181,8 +181,8 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 				RDKitMolValueRenderer.compute2DCoords(mol,
 					RDKitDepicterPreferencePage.isUsingCoordGen(),
 					RDKitDepicterPreferencePage.isNormalizeDepictions());
-			} else if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-				((RWMol)mol).reapplyMolBlockWedging();
+			} else {
+				RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(mol);
 			}
 
 			value = mol.MolToMolBlock();
@@ -278,12 +278,20 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 
 	protected static byte[] toByteArray(final ROMol mol) {
 		// We need to pickle bond properties or native
-		// molblock weging information is lost
+		// molblock wedging information is lost
 		final int propertyFlags = 0x4;
-		final Int_Vect iv = mol.ToBinary(propertyFlags);
-		final byte[] bytes = new byte[(int)iv.size()];
-		for (int i = 0; i < bytes.length; i++) {
-			bytes[i] = (byte)iv.get(i);
+		Int_Vect iv = null;
+		byte[] bytes = null;
+		try {
+			iv = mol.ToBinary(propertyFlags);
+			bytes = new byte[(int)iv.size()];
+			for (int i = 0; i < bytes.length; i++) {
+				bytes[i] = (byte)iv.get(i);
+			}
+		} finally {
+			if (iv != null) {
+				iv.delete();
+			}
 		}
 		return bytes;
 	}

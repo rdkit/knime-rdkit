@@ -318,12 +318,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-							((RWMol)mol).reapplyMolBlockWedging();
-						}
-						if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
-							mol.normalizeDepiction(-1, 0);
-						}
+						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(mol);
 					}
 
 					boolean bAppliedHighlighting = false;

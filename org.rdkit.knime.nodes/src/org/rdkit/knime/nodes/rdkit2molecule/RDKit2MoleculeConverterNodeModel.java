@@ -133,12 +133,7 @@ public class RDKit2MoleculeConverterNodeModel extends AbstractRDKitCalculatorNod
 						RDKitDepicterPreferencePage.isUsingCoordGen(),
 						RDKitDepicterPreferencePage.isNormalizeDepictions());
 				} else {
-					if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-						((RWMol)mol).reapplyMolBlockWedging();
-					}
-					if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
-						mol.normalizeDepiction(-1, 0);
-					}
+					RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(mol);
 				}
 
 				// Fix SDF value

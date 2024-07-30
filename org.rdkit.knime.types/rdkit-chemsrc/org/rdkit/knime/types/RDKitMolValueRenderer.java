@@ -675,33 +675,21 @@ implements SvgProvider {
 	}
 
 	/**
-	 * Calls RWMol.reapplyMolBlockWedging() on the passed molecule to restore
-	 * native molblock wedging and RWMol.normalizeDepiction() to restore
-	 * RDKit native proportions if the respective preference settings are true.
-	 *
-	 * @param mol Molecule to be adjusted. Can be null to do nothing.
-	 *
-	 */
-	public static void reapplyWedgingAndNormalizeAccordingToPrefs(final RWMol mol) {
-		if (mol != null) {
-			if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-				mol.reapplyMolBlockWedging();
-			}
-			if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
-				mol.normalizeDepiction(-1, 0);
-			}
-		}
-	}
-
-	/**
-	 * Calls RWMol.reapplyMolBlockWedging() on the passed molecule to restore
-	 * native molblock wedging and RWMol.normalizeDepiction() to restore
+	 * Calls RWMol.reapplyMolBlockWedging() on the passed molecule (if RWMol) to restore
+	 * native molblock wedging and ROMol.normalizeDepiction() to restore
 	 * RDKit native proportions if the respective preference settings are true.
 	 *
 	 * @param mol Molecule to be adjusted. Can be null to do nothing.
 	 *
 	 */
 	public static void reapplyWedgingAndNormalizeAccordingToPrefs(final ROMol mol) {
-		reapplyWedgingAndNormalizeAccordingToPrefs((RWMol)mol);
+		if (mol != null) {
+			if (mol instanceof RWMol && RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+				((RWMol)mol).reapplyMolBlockWedging();
+			}
+			if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+				mol.normalizeDepiction(-1, 0);
+			}
+		}
 	}
 }

@@ -331,10 +331,15 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						// TODO: The following line will not be necessary anymore, if Java layer would expose 
-						// function ROmol.reapplyMolBlockWedging(), which is called by RDKitMolValueRenderer method
-						mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
-						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs((RWMol)mol);
+						// TODO: Could be improved by moving those methods into RDKitMolValueRenderer class,
+						// once ROMol.reapplyMolBlockWedging() is available
+						if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+							mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+							((RWMol)mol).reapplyMolBlockWedging();
+						}
+						if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+							mol.normalizeDepiction(-1, 0);
+						}
 					}
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);

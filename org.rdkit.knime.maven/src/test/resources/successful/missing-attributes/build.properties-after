@@ -1,0 +1,7 @@
+source.. = src/,\
+           src-deprecated/
+output.. = bin/
+bin.includes = lib/mylibrary-A.jar,\
+ lib/mylibrary-B.jar
+jars.extra.classpath = lib/mylibrary-A.jar,\
+ lib/mylibrary-B.jar

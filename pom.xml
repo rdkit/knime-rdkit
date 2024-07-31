@@ -11,9 +11,9 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<revision>4.9.1</revision>
+		<revision>4.10.0</revision>
 		<changelist>-SNAPSHOT</changelist>
-		<knime.version>5.1</knime.version>
+		<knime.version>5.2</knime.version>
 		<tycho.version>2.7.3</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
 		<qualifier.prefix>v</qualifier.prefix>
@@ -37,6 +37,7 @@
 		<module>org.rdkit.knime.wizards.feature</module>
 		<module>org.rdkit.knime.wizards.samples</module>
 		<module>org.rdkit.knime.update</module>
+		<module>org.rdkit.knime.maven</module>
 	</modules>
 
 	<!-- List the update sites providing dependencies for your projects here -->

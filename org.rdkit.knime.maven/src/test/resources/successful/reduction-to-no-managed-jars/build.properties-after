@@ -1,0 +1,8 @@
+source.. = src/,\
+           src-deprecated/
+output.. = bin/
+bin.includes = .,\
+ META-INF/,\
+ icons/,\
+ plugin.xml
+jars.extra.classpath = platform:/plugin/org.rdkit.knime.types/lib/org.RDKit.jar

@@ -139,7 +139,6 @@ public class FunctionalGroupFilterV2NodeDialog extends DefaultNodeSettingsPane {
 	 *                           Mustn't be null.
 	 * @throws IllegalArgumentException When {@code nodeCreationConfig} parameter is null.
 	 */
-	@SuppressWarnings("UnusedAssignment")
 	FunctionalGroupFilterV2NodeDialog(NodeCreationConfiguration nodeCreationConfig) {
 		int iPortInputTable = FunctionalGroupFilterV2NodeModel.getInputTablePortIndexes(nodeCreationConfig,
 				FunctionalGroupFilterV2NodeFactory.INPUT_PORT_GRP_ID_MOLECULES)[0];
@@ -429,7 +428,6 @@ public class FunctionalGroupFilterV2NodeDialog extends DefaultNodeSettingsPane {
      *                          definition files.
      * @return Settings model for definition of functional group filter conditions.
      */
-	@SuppressWarnings("SameParameterValue")
     static SettingsModelFunctionalGroupConditions createFunctionalGroupConditionsModel(final boolean bCacheOldSettings) {
 		return new SettingsModelFunctionalGroupConditions("conditions", bCacheOldSettings);
 	}

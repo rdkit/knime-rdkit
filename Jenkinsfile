@@ -16,27 +16,28 @@ pipeline {
     	// Email addresses to be notified about failures, unstable tests or fixes
     	EMAIL_TO = 'manuel.schwarze@novartis.com'
     	
-		// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
-    	KNIME_VERSION = "5.1"
+	// A feature (branch, master or master_nibr) should always be built for one specific KNIME version only
+	KNIME_VERSION = "5.2"
     	
-    	// The Java version to be used to compile and build - possible values are java8, java11 and java17
-    	JAVA_VERSION = "java17"
+	// The Java version to be used to compile and build - possible values are java8, java11 and java17
+	JAVA_VERSION = "java17"
 
-    	// Two pre-requisites that need to be installed by the Novartis Jenkins job knime4.x-all-setup-build-environment
-    	DIRECTOR_HOME = "/apps/knime/buildtools/director"
-    	M2_HOME = "/apps/knime/buildtools/apache-maven"
-		PATH = "${M2_HOME}/bin:${PATH}"
+	// Two pre-requisites that need to be installed by the Novartis Jenkins job knime4.x-all-setup-build-environment
+	DIRECTOR_HOME = "/apps/knime/buildtools/director"
+	M2_HOME = "/apps/knime/buildtools/apache-maven"
+	PATH = "${M2_HOME}/bin:${PATH}"
+	MAVEN_SETTINGS_FILE = "${WORKSPACE}/settings.xml"
 
-		// OWASP Dependency Check settings
-		// Installation folder (optional, will just not run if it does not exist)
-		DC_HOME = "/apps/knime/buildtools/dependency-check"
-		// CVSS score threshold that is considered a failure (with this value or above)
-		CVSS_SCORE_THRESHOLD = 7
-		// File with exceptions (false positives that we accept)		
-		DC_SUPPRESSION_FILE = "${WORKSPACE}/owasp-suppressions.xml"
-		
-		// Scripts required for testing and deployment
-		GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
+	// OWASP Dependency Check settings
+	// Installation folder (optional, will just not run if it does not exist)
+	DC_HOME = "/apps/knime/buildtools/dependency-check"
+	// CVSS score threshold that is considered a failure (with this value or above)
+	CVSS_SCORE_THRESHOLD = 7
+	// File with exceptions (false positives that we accept)		
+	DC_SUPPRESSION_FILE = "${WORKSPACE}/owasp-suppressions.xml"
+	
+	// Scripts required for testing and deployment
+	GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
         GIT_BRANCH_SCRIPTS = "refs/heads/master"
     	
     	// Prefix for the version number of the artifacts to distinguish them from normal community builds 
@@ -141,10 +142,8 @@ pipeline {
 		}	
         stage('Compile and Build') {
         	steps {
-	            // Compiles the plugin and builds an update site from it
-		        configFileProvider([configFile(fileId: 'artifactory-maven', variable: 'MAVEN_SETTINGS')]) {
-					sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/${JAVA_VERSION} && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dupdate.site=${UPDATE_SITE} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS}")
-		        }
+	            // Compiles the plugin and builds an update site from it (uses update site defined in pom.xml)
+				sh(label: "Compile and Build", script: "JAVA_HOME=/apps/knime/buildtools/${JAVA_VERSION} && mvn -U clean verify -Dknime.version=${KNIME_VERSION} -Dqualifier.prefix=${QUALIFIER_PREFIX} -s ${MAVEN_SETTINGS_FILE}")
 		    }    
         }
         stage('OWASP Dependency Check') {
@@ -154,7 +153,7 @@ pipeline {
 				sh '''#!/bin/bash
 					cd "${WORKSPACE}/org.rdkit.knime.update/target"
 					mkdir -p reports
-					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./reports" --format "HTML" --format "JSON" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra"
+					${DC_HOME}/bin/dependency-check.sh --scan "./repository" --out "./reports" --format "HTML" --format "JSON" --prettyPrint --project "RDKit Nodes" --failOnCVSS ${CVSS_SCORE_THRESHOLD} --suppression "${DC_SUPPRESSION_FILE}" --proxyserver "nibr-proxy.global.nibr.novartis.net" --proxyport 2011 --nonProxyHosts "localhost,novartis.net,novartis.intra,login.microsoftonline.com"
 				'''
 			}                                 
             post {

@@ -50,7 +50,6 @@ package org.rdkit.knime.nodes.rdkit2molecule;
 
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
-import org.RDKit.RWMol;
 import org.knime.chem.types.SdfAdapterCell;
 import org.knime.chem.types.SdfCellFactory;
 import org.knime.chem.types.SmartsCell;

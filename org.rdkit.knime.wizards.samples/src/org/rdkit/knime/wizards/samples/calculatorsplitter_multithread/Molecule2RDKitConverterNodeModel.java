@@ -84,7 +84,7 @@ import org.rdkit.knime.util.SettingsUtils;
  * This class implements the node model of the "Molecule2RDKitConverter" node
  * providing translations of a molecule column to an RDKit Molecule based on
  * the open source RDKit library.
- *
+ * 
  * @author Greg Landrum
  * @author Manuel Schwarze
  */
@@ -241,12 +241,12 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 
 	/**
 	 * Returns the output table specification of the specified out port.
-	 *
+	 * 
 	 * @param outPort Index of output port in focus. Zero-based.
 	 * @param inSpecs All input table specifications.
-	 *
+	 * 
 	 * @return The specification of all output tables.
-	 *
+	 * 
 	 * @throws InvalidSettingsException Thrown, if the settings are inconsistent with
 	 * 		given DataTableSpec elements.
 	 */
@@ -289,16 +289,16 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 	/**
 	 * Creates an output factory to create cells based on the passed in
 	 * input.
-	 *
+	 * 
 	 * @param arrInputDataInfos Array of input data information that is relevant
 	 * 		for processing.
-	 *
+	 * 
 	 * @return The output factory to be used to calculate the values when
 	 * 		the node executes.
-	 *
+	 * 
 	 * @throws InvalidSettingsException Thrown, if the output factory could not be created
 	 * 		due to invalid settings.
-	 *
+	 * 
 	 * @see #createInputDataInfos(int, DataTableSpec)
 	 */
 	protected AbstractRDKitCellFactory createOutputFactory(final InputDataInfo[] arrInputDataInfos)

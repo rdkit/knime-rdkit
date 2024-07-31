@@ -537,7 +537,6 @@ public class Molecule2RDKitConverterNodeModel extends AbstractRDKitNodeModel {
 				try {
 				   if (m_inputType == InputType.SDF) {
                   final String value = arrInputDataInfo[INPUT_COLUMN_MOL].getSdfValue(row);
-
                   mol = markForCleanup(RWMol.MolFromMolBlock(value, m_bSanitize, m_bRemoveHs, m_bStrictParsing), lUniqueWaveId);
                }
 				   else if (m_inputType == InputType.SMILES) {

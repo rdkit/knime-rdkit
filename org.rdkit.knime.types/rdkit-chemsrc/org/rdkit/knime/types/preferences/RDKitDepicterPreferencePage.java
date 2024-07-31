@@ -121,18 +121,26 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	public static final String PREF_KEY_USE_COORDGEN = "useCoordGen";
 
+	/**
+	 * The flag to enable the use of native molblock wedging for rendering structures endowed with their own set of 2D coordinates. If not set, it uses native RDKit wedging.
+	 */
+	public static final String PREF_KEY_USE_MOLBLOCK_WEDGING = "useMolBlockWedging";
+
 	/** The default filename for the depiction settings, which is referring to our internal file. */
 	public static final String DEFAULT_CONFIG_FILE = "[default built-in]";
-	
+
 	/** The default retry interval (10 minutes = 60000 millis). */
 	public static final int DEFAULT_RETRY_INTERVAL = 60000; // 10 minutes
-	
+
 	/** The default flag for normalizing depictions (false). */
 	public static final boolean DEFAULT_NORMALIZE_DEPICTIONS = false;
-	
+
 	/** The default flag for using of CoordGen for rendering structures (false). If not set, it uses native RDKit rendering. */
 	public static final boolean DEFAULT_USE_COORDGEN = false;
-	
+
+	/** The default flag for using native molblock wedging when rendering structures endowed with their own set of 2D coordinates (false). If not set, it uses native RDKit wedging. */
+	public static final boolean DEFAULT_USE_MOLBLOCK_WEDGING = false;
+
 	/** The logger instance. */
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(RDKitDepicterPreferencePage.class);
 
@@ -145,22 +153,27 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 * double init after such default may have been overridden from the outside.
 	 */
 	private static boolean g_bDefaultInitializationDone = false;
-	
+
 	/**
 	 * The cached JSON configuration.
 	 */
 	private static String g_jsonConfig = null;
-	
+
 	/**
 	 * The normalize depiction flag.
 	 */
 	private static boolean g_bNormalizeDepiction = DEFAULT_NORMALIZE_DEPICTIONS;
-	
+
 	/**
 	 * The use CoordGen flag.
 	 */
 	private static boolean g_bUseCoordGen = DEFAULT_USE_COORDGEN;
-	
+
+	/**
+	 * The use native molblock wedging flag.
+	 */
+	private static boolean g_bUseMolBlockWedging = DEFAULT_USE_MOLBLOCK_WEDGING;
+
 	/** The timestamp of last failure of reading the JSON config file or -1, if not set. */
 	private static long g_lLastFailure = -1;
 
@@ -185,6 +198,11 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 * The editor for setting the flag to enable CoordGen for rendering.
 	 */
 	private BooleanFieldEditor m_editorUseCoordGen;
+
+	/**
+	 * The editor for setting the flag to enable native molblock wedging.
+	 */
+	private BooleanFieldEditor m_editorUseMolBlockWedging;
 
 	//
 	// Constructor
@@ -271,7 +289,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		String strError = getJsonError(strConfigJson);
 		bRet = (strError == null);
 		setErrorMessage(strError);
-		
+
 		// Trim the URL / File Path
 		final String strConfigFile = m_editorConfigFile.getStringValue().trim();
 		m_editorConfigFile.setStringValue(strConfigFile);
@@ -322,7 +340,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 			protected void onButtonClicked() {
 				String strConfigFile = m_editorConfigFile.getStringValue();
 				String strJsonConfig = null;
-				
+
 				if (DEFAULT_CONFIG_FILE.equals(strConfigFile)) {
 					strJsonConfig = readFromResource("default-depiction.json");
 				}
@@ -332,7 +350,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 				else {
 					strJsonConfig = readFromFile(strConfigFile);
 				}
-				
+
 				if (strJsonConfig != null) {
 					m_editorConfigJson.setStringValue(strJsonConfig);
 				}
@@ -355,12 +373,15 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 			}
 		};
 		addField(btnClear);
-		
+
 		m_editorUseCoordGen = new BooleanFieldEditor(PREF_KEY_USE_COORDGEN, "Use CoordGen instead of native RDKit when generating coordinates (SMILES, SMARTS)", getFieldEditorParent());
 		addField(m_editorUseCoordGen);
-		
+
 		m_editorNormalizeDepictions = new BooleanFieldEditor(PREF_KEY_NORMALIZE_DEPICTIONS, "Normalize depictions", getFieldEditorParent());
 		addField(m_editorNormalizeDepictions);
+
+		m_editorUseMolBlockWedging = new BooleanFieldEditor(PREF_KEY_USE_MOLBLOCK_WEDGING, "Use bond wedging from the mol block", getFieldEditorParent());
+		addField(m_editorUseMolBlockWedging);
 	}
 
 	//
@@ -376,7 +397,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		g_jsonConfig = null;
 		g_lLastFailure = -1;
 		getJsonConfig();
-		
+
 		// Read current normalize depictions flag
 		final RDKitTypesPluginActivator plugin = RDKitTypesPluginActivator.getDefault();
 
@@ -384,6 +405,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 			final IPreferenceStore prefStore = plugin.getPreferenceStore();
 			g_bNormalizeDepiction = prefStore.getBoolean(PREF_KEY_NORMALIZE_DEPICTIONS);
 			g_bUseCoordGen = prefStore.getBoolean(PREF_KEY_USE_COORDGEN);
+			g_bUseMolBlockWedging = prefStore.getBoolean(PREF_KEY_USE_MOLBLOCK_WEDGING);
 		}
 	}
 
@@ -421,12 +443,12 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 						else {
 							strJsonConfig = readFromFile(strConfigFile);
 						}
-						
+
 						// Set to null, if we did not get anything useful - considered the same as an error
 						if (!PreferenceUtils.isSet(strJsonConfig)) {
 							strJsonConfig = null;
 						}
-						
+
 						// A failure occurred - we will remember it and only retry after a certain time
 						if (strJsonConfig == null) {
 							g_lLastFailure = System.currentTimeMillis();
@@ -442,22 +464,22 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 								g_lLastFailure = System.currentTimeMillis();
 								LOGGER.warn("RDKit 2D Depiction configuration file '" + strConfigFile + 
 										"' has errors: " + strError);
-							}					
-						}						
+							}
+						}
 					}
-					
+
 					// Use the directly configured data structure
 					else if (PreferenceUtils.isSet(strConfigJsonData)) {
 						strJsonConfig = strConfigJsonData;
-						
+
 						// Validate the JSON data
 						String strError = getJsonError(strJsonConfig);
 						if (strError != null) {
 							strJsonConfig = null;
 							g_lLastFailure = System.currentTimeMillis();
 							LOGGER.warn("RDKit 2D Depiction configuration JSON structure has errors: " + strError);
-						}					
-					}						
+						}
+					}
 
 					g_jsonConfig = strJsonConfig;
 				}
@@ -466,7 +488,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 
 		return strJsonConfig;
 	}
-	
+
 	/**
 	 * Returns the current setting for normalizing depictions.
 	 * 
@@ -475,7 +497,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	public static boolean isNormalizeDepictions() {
 		return g_bNormalizeDepiction;
 	}
-	
+
 	/**
 	 * Returns the current setting for using CoordGen.
 	 * 
@@ -483,6 +505,15 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	public static boolean isUsingCoordGen() {
 		return g_bUseCoordGen;
+	}
+
+	/**
+	 * Returns the current setting for using native molblock wedging.
+	 *
+	 * @return Use native molblock wedging flag.
+	 */
+	public static boolean isUsingMolBlockWedging() {
+		return g_bUseMolBlockWedging;
 	}
 
 	/**
@@ -510,6 +541,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 					prefStore.setDefault(PREF_KEY_RETRY_INTERVAL, DEFAULT_RETRY_INTERVAL);
 					prefStore.setDefault(PREF_KEY_NORMALIZE_DEPICTIONS, DEFAULT_NORMALIZE_DEPICTIONS);
 					prefStore.setDefault(PREF_KEY_USE_COORDGEN, DEFAULT_USE_COORDGEN);
+					prefStore.setDefault(PREF_KEY_USE_MOLBLOCK_WEDGING, DEFAULT_USE_MOLBLOCK_WEDGING);
 					RDKitDepicterPreferencePage.clearConfigCacheAndResetFailure();
 				}
 			} 
@@ -523,7 +555,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	//
 	// Private Methods
 	//
-	
+
 	/**
 	 * Reads in the specified resource text file and returns it as string.
 	 * 
@@ -542,7 +574,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		String strContent = null;
 		InputStream input = null;
 		URL urlResource = null;
-		
+
 		try {
 			urlResource = RDKitDepicterPreferencePage.class.getResource(strResourceName);
 			if (urlResource == null) {
@@ -578,18 +610,18 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	private static String readFromUrl(final String strUrl) {
 		String strContent = null;
-		
+
 		try {
 			strContent = readFromUrl(new URL(strUrl));
 		}
 		catch (Exception exc) {
 			LOGGER.error("Unable to access JSON config resource " + strUrl + ": " + exc.getMessage());
 		}
-		
+
 		return strContent;
 	}
 
-	
+
 	/**
 	 * Reads in the specified resource text file and returns it as string.
 	 * 
@@ -636,7 +668,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 
 		return strContent;
 	}
-	
+
 	/**
 	 * Read the JSON config content from the passed in file.
 	 * 
@@ -646,17 +678,17 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	private static String readFromFile(String strFile) {
 		String strJson = null;
-		
+
 		try {
 			strJson = new String(Files.readAllBytes(Paths.get(strFile)), Charset.forName("UTF-8"));
 		}
 		catch (Exception exc) {
 			LOGGER.error("Unable to load JSON config from file " + strFile + ": " + exc.getMessage());
 		}
-		
+
 		return strJson;
 	}
-	
+
 	/**
 	 * Determines, if the passed in JSON is valid or not. If not valid, it 
 	 * returns the error message of the validation method.
@@ -667,7 +699,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 	 */
 	private static String getJsonError(String strJson) {
 		String strError = null;
-		
+
 		if (!strJson.isEmpty()) {
 			try {
 				if (!strJson.startsWith("{") || !strJson.endsWith("}")) {
@@ -687,7 +719,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 				strError = ("The JSON configuration is invalid. " + (strMessage != null ? strMessage : ""));
 			}
 		}
-		
+
 		return strError;
 	}
 }

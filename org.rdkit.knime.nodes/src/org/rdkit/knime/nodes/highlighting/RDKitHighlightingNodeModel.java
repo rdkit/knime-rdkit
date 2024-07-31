@@ -62,6 +62,7 @@ import org.RDKit.Int_Vect;
 import org.RDKit.MolDraw2DSVG;
 import org.RDKit.MolDrawOptions;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
 import org.knime.core.data.DataCell;
@@ -307,7 +308,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
@@ -316,6 +317,16 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 						RDKitMolValueRenderer.compute2DCoords(mol,
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
+					} else {
+						// TODO: Could be improved by moving those methods into RDKitMolValueRenderer class,
+						// once ROMol.reapplyMolBlockWedging() is available
+						if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+							mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+							((RWMol)mol).reapplyMolBlockWedging();
+						}
+						if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+							mol.normalizeDepiction(-1, 0);
+						}
 					}
 
 					boolean bAppliedHighlighting = false;

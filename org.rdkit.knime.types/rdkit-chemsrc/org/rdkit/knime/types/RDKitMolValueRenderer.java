@@ -684,8 +684,8 @@ implements SvgProvider {
 	 */
 	public static void reapplyWedgingAndNormalizeAccordingToPrefs(final ROMol mol) {
 		if (mol != null) {
-			if (mol instanceof RWMol && RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-				((RWMol)mol).reapplyMolBlockWedging();
+			if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+				mol.reapplyMolBlockWedging();
 			}
 			if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
 				mol.normalizeDepiction(-1, 0);

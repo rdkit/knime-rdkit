@@ -181,9 +181,6 @@ public class RDKitMolCell2 extends DataCell implements RDKitMolValue,
 				RDKitMolValueRenderer.compute2DCoords(mol,
 					RDKitDepicterPreferencePage.isUsingCoordGen(),
 					RDKitDepicterPreferencePage.isNormalizeDepictions());
-			} 
-			else if (mol instanceof RWMol && RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
-				((RWMol)mol).reapplyMolBlockWedging();
 			}
 
 			value = mol.MolToMolBlock();

@@ -380,7 +380,7 @@ public class RDKitDepicterPreferencePage extends FieldEditorPreferencePage imple
 		m_editorNormalizeDepictions = new BooleanFieldEditor(PREF_KEY_NORMALIZE_DEPICTIONS, "Normalize depictions", getFieldEditorParent());
 		addField(m_editorNormalizeDepictions);
 
-		m_editorUseMolBlockWedging = new BooleanFieldEditor(PREF_KEY_USE_MOLBLOCK_WEDGING, "Use native molblock wedging", getFieldEditorParent());
+		m_editorUseMolBlockWedging = new BooleanFieldEditor(PREF_KEY_USE_MOLBLOCK_WEDGING, "Use bond wedging from the mol block", getFieldEditorParent());
 		addField(m_editorUseMolBlockWedging);
 	}
 

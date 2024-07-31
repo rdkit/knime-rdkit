@@ -309,6 +309,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 
 					// Calculate the new cells
 					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					final RWMol molDraw = markForCleanup(new RWMol(mol), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
@@ -318,7 +319,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(mol);
+						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(molDraw);
 					}
 
 					boolean bAppliedHighlighting = false;
@@ -327,7 +328,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final HashMap<Integer, DrawColour> mapAtomColors = new HashMap<Integer, DrawColour>();
 					final HashMap<Integer, DrawColour> mapBondColors = new HashMap<Integer, DrawColour>();
 					List<Bond> listBonds = null;
-					final int iBondCount = (int) mol.getNumBonds();
+					final int iBondCount = (int) molDraw.getNumBonds();
 
 					// Walk through the definitions from bottom to top to overwrite colors in case
 					// of
@@ -357,7 +358,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 										// included
 										if (def.isNeighborhoodIncluded()) {
 											if (listBonds == null) {
-												listBonds = getBondList(mol, lUniqueWaveId);
+												listBonds = getBondList(molDraw, lUniqueWaveId);
 											}
 											for (final Bond bond : listBonds) {
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
@@ -383,7 +384,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 											// Figure out which atoms to highlight around bonds, if neighborhood is
 											// included
 											if (def.isNeighborhoodIncluded() && indexBond < iBondCount) {
-												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond),
+												final Bond bond = markForCleanup(molDraw.getBondWithIdx(indexBond),
 														lUniqueWaveId);
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
 												final int iEndAtom = (int) bond.getEndAtomIdx();
@@ -427,7 +428,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
 					MolDrawOptions opts = molDrawing.drawOptions();
 					opts.setAddStereoAnnotation(true);
-					molDrawing.drawMolecule(mol, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
+					molDrawing.drawMolecule(molDraw, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 
 					final String xmlSvg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");

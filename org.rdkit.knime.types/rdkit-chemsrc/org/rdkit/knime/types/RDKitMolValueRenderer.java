@@ -682,7 +682,7 @@ implements SvgProvider {
 	 * @param mol Molecule to be adjusted. Can be null to do nothing.
 	 *
 	 */
-	public static void reapplyWedgingAndNormalizeAccordingToPrefs(final ROMol mol) {
+	public static void reapplyWedgingAndNormalizeAccordingToPrefs(final RWMol mol) {
 		if (mol != null) {
 			if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
 				mol.reapplyMolBlockWedging();

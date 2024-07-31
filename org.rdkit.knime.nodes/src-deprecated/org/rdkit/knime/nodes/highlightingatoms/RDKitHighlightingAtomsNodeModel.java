@@ -50,6 +50,7 @@ package org.rdkit.knime.nodes.highlightingatoms;
 
 import org.RDKit.Int_Vect;
 import org.RDKit.ROMol;
+import org.RDKit.RWMol;
 import org.knime.base.data.xml.SvgCell;
 import org.knime.base.data.xml.SvgCellFactory;
 import org.knime.core.data.DataCell;
@@ -270,7 +271,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
@@ -279,6 +280,16 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 						RDKitMolValueRenderer.compute2DCoords(mol,
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
+					} else {
+						// TODO: Could be improved by moving those methods into RDKitMolValueRenderer class,
+						// once ROMol.reapplyMolBlockWedging() is available
+						if (RDKitDepicterPreferencePage.isUsingMolBlockWedging()) {
+							mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+							((RWMol)mol).reapplyMolBlockWedging();
+						}
+						if (RDKitDepicterPreferencePage.isNormalizeDepictions()) {
+							mol.normalizeDepiction(-1, 0);
+						}
 					}
 
 					String xmlSvg = null;

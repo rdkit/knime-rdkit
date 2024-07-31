@@ -162,7 +162,6 @@ public class RDKitStructureNormalizerV2NodeDialog extends DefaultNodeSettingsPan
 	 *                           Mustn't be null.
 	 * @throws IllegalArgumentException When {@code nodeCreationConfig} parameter is null.
 	 */
-	@SuppressWarnings({"ReassignedVariable", "UnusedAssignment"})
 	RDKitStructureNormalizerV2NodeDialog(NodeCreationConfiguration nodeCreationConfig) {
 		int iPortInputTable = RDKitStructureNormalizerV2NodeModel.getInputTablePortIndexes(nodeCreationConfig,
 				RDKitStructureNormalizerV2NodeFactory.INPUT_PORT_GRP_ID_INPUT_TABLE)[0];

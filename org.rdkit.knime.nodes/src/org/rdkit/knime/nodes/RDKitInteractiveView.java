@@ -117,6 +117,7 @@ import org.rdkit.knime.headers.HeaderPropertyHandlerRegistry;
  * @author Bernd Wiswedel, University of Konstanz
  * @author Manuel Schwarze, Novartis
  */
+@SuppressWarnings("deprecation")
 public class RDKitInteractiveView<T extends NodeModel> extends NodeView<T> {
 
 	//

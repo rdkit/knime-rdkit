@@ -308,8 +308,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
-					final RWMol molDraw = markForCleanup(new RWMol(mol), lUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
@@ -319,7 +318,10 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(molDraw);
+						// TODO: The following line will not be necessary anymore, if Java layer would expose 
+						// function ROmol.reapplyMolBlockWedging(), which is called by RDKitMolValueRenderer method
+						mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs((RWMol)mol);
 					}
 
 					boolean bAppliedHighlighting = false;
@@ -328,7 +330,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final HashMap<Integer, DrawColour> mapAtomColors = new HashMap<Integer, DrawColour>();
 					final HashMap<Integer, DrawColour> mapBondColors = new HashMap<Integer, DrawColour>();
 					List<Bond> listBonds = null;
-					final int iBondCount = (int) molDraw.getNumBonds();
+					final int iBondCount = (int) mol.getNumBonds();
 
 					// Walk through the definitions from bottom to top to overwrite colors in case
 					// of
@@ -358,7 +360,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 										// included
 										if (def.isNeighborhoodIncluded()) {
 											if (listBonds == null) {
-												listBonds = getBondList(molDraw, lUniqueWaveId);
+												listBonds = getBondList(mol, lUniqueWaveId);
 											}
 											for (final Bond bond : listBonds) {
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
@@ -384,7 +386,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 											// Figure out which atoms to highlight around bonds, if neighborhood is
 											// included
 											if (def.isNeighborhoodIncluded() && indexBond < iBondCount) {
-												final Bond bond = markForCleanup(molDraw.getBondWithIdx(indexBond),
+												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond),
 														lUniqueWaveId);
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
 												final int iEndAtom = (int) bond.getEndAtomIdx();
@@ -428,7 +430,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
 					MolDrawOptions opts = molDrawing.drawOptions();
 					opts.setAddStereoAnnotation(true);
-					molDrawing.drawMolecule(molDraw, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
+					molDrawing.drawMolecule(mol, "", ivAtoms, ivBonds, mapRdkitAtomColors, mapRdkitBondColors);
 					molDrawing.finishDrawing();
 
 					final String xmlSvg = molDrawing.getDrawingText().replaceAll("svg:", "").replaceAll("xmlns:svg=", "xmlns=");

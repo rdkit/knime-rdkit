@@ -271,18 +271,20 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
-					final RWMol molDraw = markForCleanup(new RWMol(mol), lUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 					Int_Vect vectInt  = markForCleanup(arrInputDataInfo[INPUT_COLUMN_ATOM_LIST].getRDKitIntegerVector(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was created from a SMILES)
 					// This is necessary for the RDKit changes in the SVG generation
-					if (molDraw.getNumConformers() == 0) {
+					if (mol.getNumConformers() == 0) {
 						RDKitMolValueRenderer.compute2DCoords(mol,
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(molDraw);
+						// TODO: The following line will not be necessary anymore, if Java layer would expose 
+						// function ROmol.reapplyMolBlockWedging(), which is called by RDKitMolValueRenderer method
+						mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs((RWMol)mol);
 					}
 
 					String xmlSvg = null;
@@ -293,7 +295,7 @@ public class RDKitHighlightingAtomsNodeModel extends AbstractRDKitCalculatorNode
 						vectInt = EMPTY_ATOM_LIST; // This must not be cleaned up, it is a constant
 					}
 
-					xmlSvg = molDraw.ToSVG(vectInt, 8, 50);
+					xmlSvg = mol.ToSVG(vectInt, 8, 50);
 
 					if (xmlSvg != null && !xmlSvg.trim().isEmpty()) {
 						// Important: Use the factory here, because using the normal SvgCell contructor causes

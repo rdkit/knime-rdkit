@@ -322,17 +322,19 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					DataCell outputCell = null;
 
 					// Calculate the new cells
-					final ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
-					final RWMol molDraw = markForCleanup(new RWMol(mol), lUniqueWaveId);
+					ROMol mol = markForCleanup(arrInputDataInfo[INPUT_COLUMN_MOL].getROMol(row), lUniqueWaveId);
 
 					// Add 2D coordinates if there is no conformer yet (e.g. if RDKit molecule was
 					// created from a SMILES)
-					if (molDraw.getNumConformers() == 0) {
-						RDKitMolValueRenderer.compute2DCoords(molDraw,
+					if (mol.getNumConformers() == 0) {
+						RDKitMolValueRenderer.compute2DCoords(mol,
 							RDKitDepicterPreferencePage.isUsingCoordGen(),
 							RDKitDepicterPreferencePage.isNormalizeDepictions());
 					} else {
-						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs(molDraw);
+						// TODO: The following line will not be necessary anymore, if Java layer would expose 
+						// function ROmol.reapplyMolBlockWedging(), which is called by RDKitMolValueRenderer method
+						mol = markForCleanup(new RWMol(mol), lUniqueWaveId);
+						RDKitMolValueRenderer.reapplyWedgingAndNormalizeAccordingToPrefs((RWMol)mol);
 					}
 
 					final MolDraw2DSVG molDrawing = markForCleanup(new MolDraw2DSVG(300, 300), lUniqueWaveId);
@@ -361,7 +363,7 @@ public class RDKit2SVGNodeModel extends AbstractRDKitCalculatorNodeModel {
 					if(m_modelBWModeOption.getBooleanValue()) {
 						RDKFuncs.assignBWPalette(opts.getAtomColourPalette());
 					}
-					molDrawing.drawMolecule(molDraw);
+					molDrawing.drawMolecule(mol);
 					molDrawing.finishDrawing();
 
 					final String xmlSvg = molDrawing.getDrawingText();

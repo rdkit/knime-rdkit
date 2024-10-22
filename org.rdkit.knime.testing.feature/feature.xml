@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.testing.feature"
       label="RDKit Nodes Tests Feature"
-      version="5.0.0.qualifier"
+      version="5.0.1.qualifier"
       provider-name="Novartis">
 
    <description>

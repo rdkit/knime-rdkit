@@ -363,14 +363,15 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 										// Figure out which bonds to highlight between atoms, if neighborhood is
 										// included
 										if (def.isNeighborhoodIncluded()) {
-											for (int iBondIndex = 0; iBondIndex < mol.getNumBonds(); ++iBondIndex) {
-												final Bond bond = mol.getBondWithIdx(bi);
+											int iBondNumber = (int)mol.getNumBonds();
+											for (int b = 0; b < iBondNumber; b++) {
+												final Bond bond = mol.getBondWithIdx(b);
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
 												final int iEndAtom = (int) bond.getEndAtomIdx();
 												if (subSetAtoms.contains(iBeginAtom)
 														&& subSetAtoms.contains(iEndAtom)) {
-													setBonds.add(iBondIndex);
-													mapBondColors.put(iBondIndex, col);
+													setBonds.add(b);
+													mapBondColors.put(b, col);
 												}
 											}
 										}

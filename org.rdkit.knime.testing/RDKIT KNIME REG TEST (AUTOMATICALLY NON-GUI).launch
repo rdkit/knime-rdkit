@@ -179,10 +179,8 @@
         <setEntry value="it.sauronsoftware.ftp4j@default:default"/>
         <setEntry value="java_cup.runtime@default:default"/>
         <setEntry value="javax.activation@default:default"/>
-        <setEntry value="javax.annotation@default:default"/>
         <setEntry value="javax.ejb@default:default"/>
         <setEntry value="javax.el@default:default"/>
-        <setEntry value="javax.inject@default:default"/>
         <setEntry value="javax.javaee-api@default:default"/>
         <setEntry value="javax.jms@default:default"/>
         <setEntry value="javax.mail.glassfish@default:default"/>

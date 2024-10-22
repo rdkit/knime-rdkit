@@ -126,7 +126,7 @@ pipeline {
 	        	// which is sub-optimal, but no other solution was found so far
 				dir("scripts") {
 					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_SCRIPTS}"]], doGenerateSubmoduleConfigurations: false, \
-          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-ee-jenkins-active, \
+          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-ee-jenkins-active', \
           			url: "${GIT_REPO_SCRIPTS}"]]])
         		}
 	        }

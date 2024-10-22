@@ -63,7 +63,7 @@ Bundle-Activator: org.rdkit.knime.nodes.RDKitNodePlugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/automaton-1.12-4.jar,
- lib/commons-io-2.12.0.jar,
+ lib/commons-io-2.17.0.jar,
  lib/log4j-api-2.20.0.jar,
  lib/opsin-core-2.8.0.jar,
  lib/stax2-api-4.2.1.jar,

@@ -62,7 +62,9 @@ public enum Matching {
 
 	Greedy("Greedy", RGroupMatching.Greedy),
 	GreedyChunks("Greedy Chunks", RGroupMatching.GreedyChunks), 
-	Exhaustive("Exhaustive", RGroupMatching.Exhaustive); // Not useful for large datasets
+	Exhaustive("Exhaustive", RGroupMatching.Exhaustive), // Not useful for large datasets
+	NoSymmetrization("No Symmetrization", RGroupMatching.NoSymmetrization),
+	GA("GA", RGroupMatching.GA);
 
 	//
 	// Members

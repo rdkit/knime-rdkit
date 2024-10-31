@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.feature"
       label="RDKit Nodes Feature"
-      version="4.10.1.qualifier"
+      version="4.11.0.qualifier"
       provider-name="Novartis"
       plugin="org.rdkit.knime.nodes">
 

@@ -324,7 +324,8 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 
 					int iReaction = 0;
 					final ROMol_Vect vReactant = markForCleanup(new ROMol_Vect(1));
-
+					String strSanitizeException = null;
+					
 					// Process reactions one after the other
 					for (final ChemicalReaction reaction : chemicalReactions.get()) {
 
@@ -358,6 +359,30 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 												// Take the very first product only and free the others immediately
 												if (i == 0 && j == 0) {
 													molProduct = markForCleanup(vProds.get(j), lUniqueWaveId);
+													
+													// Try to sanitize the intermediate product (may fail)
+													try {
+														if (molProduct != null && molProduct.getNumAtoms() > 0) {
+															RWMol molProductSanitized = markForCleanup(new RWMol(molProduct), lUniqueWaveId);
+															RDKFuncs.sanitizeMol(molProductSanitized);
+															molProduct = molProductSanitized;
+														}
+													}
+													catch (final Exception exc) {
+														// Output warning in console
+														String smiles = "Unknown SMILES";
+
+														try {
+															smiles = RDKFuncs.MolToSmiles(molProduct, false, false, 0, false);
+														}
+														catch (final Exception excSmiles) {
+															// Ignore
+														}
+
+														// Reset to not process it further
+														molProduct = null;
+														strSanitizeException = "The following intermediate or result product could not be sanitized: " + smiles;
+													}
 												}
 												else {
 													final ROMol molProductToIgnore = vProds.get(j);
@@ -379,7 +404,7 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 									// Increase the cycle number as we had a valid reaction
 									iCycle++;
 
-									// Instead of sanitization just update the property cache
+									// Update the property cache (might not be necessary since we sanitized already)
 									molProduct.updatePropertyCache(false);
 									mol = molProduct;
 								}
@@ -398,31 +423,16 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 						}
 					}
 
-					// Use final product as result, but check it for validity sanitizing it
-					if (mol != null) {
-						final RWMol temp = markForCleanup(new RWMol(mol), lUniqueWaveId);
-
-						if (temp.getNumAtoms() > 0) {
-							try {
-								RDKFuncs.sanitizeMol(temp);
-								outputCell = RDKitMolCellFactory.createRDKitAdapterCell(temp);
-							}
-							catch (final Exception exc) {
-								warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-										"A result product molecule could not be sanitized successfully - Result will be empty.");
-
-								// Output warning in console
-								String smiles = "Unknown SMILES";
-
-								try {
-									smiles = RDKFuncs.MolToSmiles(temp, false, false, 0, false);
-								}
-								catch (final Exception excSmiles) {
-									// Ignore
-								}
-
-								LOGGER.warn("The following result product could not be sanitized: " + smiles);
-							}
+					// Communicate a sanitize error to the user
+					if (strSanitizeException != null) {
+						LOGGER.warn(strSanitizeException);
+						warnings.saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+							"An intermediate or result product molecule could not be sanitized successfully - Result will be empty.");							
+					}
+					// Use final product as result, it was already sanitized above
+					else if (mol != null) {
+						if (mol.getNumAtoms() > 0) {
+							outputCell = RDKitMolCellFactory.createRDKitAdapterCell(mol);
 						}
 					}
 

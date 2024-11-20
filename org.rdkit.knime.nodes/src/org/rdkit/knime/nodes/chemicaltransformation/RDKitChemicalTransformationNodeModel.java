@@ -403,9 +403,6 @@ public class RDKitChemicalTransformationNodeModel extends AbstractRDKitCalculato
 								if (molProduct != null) {
 									// Increase the cycle number as we had a valid reaction
 									iCycle++;
-
-									// Update the property cache (might not be necessary since we sanitized already)
-									molProduct.updatePropertyCache(false);
 									mol = molProduct;
 								}
 								else {

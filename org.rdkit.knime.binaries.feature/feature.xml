@@ -2,7 +2,7 @@
 <feature
       id="org.rdkit.knime.binaries.feature"
       label="RDKit Binaries and Chemistry Type Definitions Feature"
-      version="4.10.0.qualifier"
+      version="4.12.0.qualifier"
       provider-name="Novartis">
 
    <description>
@@ -10,7 +10,7 @@
    </description>
 
    <copyright>
-      Copyright (C)2010-2023 Novartis Pharma AG, Switzerland
+      Copyright (C)2010-2024 Novartis Pharma AG, Switzerland
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-3.0.html">

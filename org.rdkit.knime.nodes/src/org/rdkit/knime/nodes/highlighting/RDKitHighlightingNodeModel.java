@@ -334,7 +334,6 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 					final Set<Integer> setBonds = new HashSet<Integer>();
 					final HashMap<Integer, DrawColour> mapAtomColors = new HashMap<Integer, DrawColour>();
 					final HashMap<Integer, DrawColour> mapBondColors = new HashMap<Integer, DrawColour>();
-					List<Bond> listBonds = null;
 					final int iBondCount = (int) mol.getNumBonds();
 
 					// Walk through the definitions from bottom to top to overwrite colors in case
@@ -364,17 +363,15 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 										// Figure out which bonds to highlight between atoms, if neighborhood is
 										// included
 										if (def.isNeighborhoodIncluded()) {
-											if (listBonds == null) {
-												listBonds = getBondList(mol, lUniqueWaveId);
-											}
-											for (final Bond bond : listBonds) {
+											int iBondNumber = (int)mol.getNumBonds();
+											for (int b = 0; b < iBondNumber; b++) {
+												final Bond bond = mol.getBondWithIdx(b);
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
 												final int iEndAtom = (int) bond.getEndAtomIdx();
-												final int iBondIndex = (int) bond.getIdx();
 												if (subSetAtoms.contains(iBeginAtom)
 														&& subSetAtoms.contains(iEndAtom)) {
-													setBonds.add(iBondIndex);
-													mapBondColors.put(iBondIndex, col);
+													setBonds.add(b);
+													mapBondColors.put(b, col);
 												}
 											}
 										}
@@ -391,8 +388,7 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 											// Figure out which atoms to highlight around bonds, if neighborhood is
 											// included
 											if (def.isNeighborhoodIncluded() && indexBond < iBondCount) {
-												final Bond bond = markForCleanup(mol.getBondWithIdx(indexBond),
-														lUniqueWaveId);
+												final Bond bond = mol.getBondWithIdx(indexBond);
 												final int iBeginAtom = (int) bond.getBeginAtomIdx();
 												final int iEndAtom = (int) bond.getEndAtomIdx();
 												setAtoms.add(iBeginAtom);
@@ -478,28 +474,5 @@ public class RDKitHighlightingNodeModel extends AbstractRDKitCalculatorNodeModel
 		// Perform normal work
 		final ColumnRearranger result = super.createColumnRearranger(outPort, inSpec);
 		return result;
-	}
-
-	/**
-	 * Generates a Java list of bonds for the specified molecule.
-	 * 
-	 * @param mol
-	 *            RDKit Molecule to traverse. Can be null.
-	 * @param lUniqueWaveId
-	 *            A unique wave ID used for cleanup processes.
-	 * 
-	 * @return List of bonds. Empty, if null was passed in. Never null.
-	 */
-	private List<Bond> getBondList(final ROMol mol, final long lUniqueWaveId) {
-		// Get bond list for the first time, reuse it afterwards
-		final List<Bond> listBonds = new ArrayList<Bond>(20);
-		if (mol != null) {
-			BondIterator it = mol.beginBonds();
-			while (it.ne(mol.endBonds())) {
-				listBonds.add(markForCleanup(it.getBond(), lUniqueWaveId));
-				it = it.next();
-			}
-		}
-		return listBonds;
 	}
 }

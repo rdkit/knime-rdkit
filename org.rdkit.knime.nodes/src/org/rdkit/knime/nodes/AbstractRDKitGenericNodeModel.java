@@ -1449,7 +1449,7 @@ public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements
 					if (iErrorCounter == arrDeprecatedKeys.length - 1) {
 						LOGGER.debug("Deprecated keys did not work either. - Giving up.");
 
-						if (bIgnoreNonExistingSetting) {
+						if (bIgnoreNonExistingSetting && isNonExistingSettingException(excOrig)) {
 							LOGGER.warn("The new setting '" + newKey + "' was not known when the node" +
 									(nodeName == null ? "" : " '" + nodeName + "'") + " was saved. " +
 									"Please save the workflow again to include it for the future.");
@@ -1465,7 +1465,7 @@ public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements
 					setting.loadSettingsFrom(settings);
 				}
 				catch (final InvalidSettingsException excOrig) {
-					if (bIgnoreNonExistingSetting) {
+					if (bIgnoreNonExistingSetting && isNonExistingSettingException(excOrig)) {
 						LOGGER.debug("A new setting was not known when the node" +
 								(nodeName == null ? "" : " '" + nodeName + "'") + " was saved.");
 					}
@@ -1547,7 +1547,7 @@ public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements
 					if (iErrorCounter == arrDeprecatedKeys.length - 1) {
 						LOGGER.debug("Deprecated keys did not work either. - Giving up.");
 
-						if (!bIgnoreNonExistingSetting) {
+						if (!bIgnoreNonExistingSetting || !isNonExistingSettingException(excOrig)) {
 							throw excOrig;
 						}
 					}
@@ -1558,7 +1558,7 @@ public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements
 					setting.validateSettings(settings);
 				}
 				catch (final InvalidSettingsException excOrig) {
-					if (!bIgnoreNonExistingSetting) {
+					if (!bIgnoreNonExistingSetting || !isNonExistingSettingException(excOrig)) {
 						throw excOrig;
 					}
 				}
@@ -2905,6 +2905,23 @@ public abstract class AbstractRDKitGenericNodeModel extends NodeModel implements
 		return inTables == null ? null :
 				Arrays.stream(inTables)
 						.toArray(PortObject[]::new);
+	}
+
+	//
+	// Private static methods
+	//
+
+	/**
+	 * Checks and returns True if the supplied {@code InvalidSettingsException} instance
+	 * is about a non-existing settings entry,  otherwise False.
+	 *
+	 * @param e The {@code InvalidSettingsException} instance to check.
+	 *          Can be null.
+	 * @return True if the supplied {@code InvalidSettingsException} instance is about a non-existing settings entry, otherwise False.
+	 */
+	private static boolean isNonExistingSettingException(InvalidSettingsException e) {
+		return e != null && e.getMessage() != null
+				&& e.getMessage().matches(".*? for key \".*?\" not found.");
 	}
 
 }

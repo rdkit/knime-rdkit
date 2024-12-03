@@ -59,7 +59,7 @@ import org.RDKit.RGroupCoreAlignment;
  */
 public enum CoreAlignment {
 
-	None("No alignment", RGroupCoreAlignment.None), 
+	None("No alignment", RGroupCoreAlignment.NoAlignment), 
 	MCS("Align MCS", RGroupCoreAlignment.MCS);
 
 	//

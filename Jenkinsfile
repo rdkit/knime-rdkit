@@ -37,7 +37,7 @@ pipeline {
 	DC_SUPPRESSION_FILE = "${WORKSPACE}/owasp-suppressions.xml"
 	
 	// Scripts required for testing and deployment
-	GIT_REPO_SCRIPTS = "https://bitbucket.prd.nibr.novartis.net/scm/knim/knime-build-scripts.git"
+	GIT_REPO_SCRIPTS = "https://bitbucketenterprise.aws.novartis.net/scm/knim/knime-build-scripts.git"
         GIT_BRANCH_SCRIPTS = "refs/heads/master"
     	
     	// Prefix for the version number of the artifacts to distinguish them from normal community builds 
@@ -126,7 +126,7 @@ pipeline {
 	        	// which is sub-optimal, but no other solution was found so far
 				dir("scripts") {
 					checkout([$class: 'GitSCM', branches: [[name: "${GIT_BRANCH_SCRIPTS}"]], doGenerateSubmoduleConfigurations: false, \
-          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', \
+          			extensions: [], gitTool: 'default-git', submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bitbucket-ee-jenkins-active', \
           			url: "${GIT_REPO_SCRIPTS}"]]])
         		}
 	        }

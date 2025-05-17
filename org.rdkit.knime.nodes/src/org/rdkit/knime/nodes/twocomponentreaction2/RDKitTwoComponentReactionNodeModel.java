@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -339,7 +340,6 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 		return spec;
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -373,35 +373,13 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 			final SafeGuardedResource<ChemicalReaction> chemicalReaction =
 					markForCleanup(createSafeGuardedReactionResource(inData, arrInputDataInfo));
 
-			// Create iterator resources over table with the second reactants
-			final SafeGuardedResource<RandomAccessRowIterator> rowAccessReactant2 =
-					markForCleanup(new SafeGuardedResource<RandomAccessRowIterator>() {
-
-						/**
-						 * {@inheritDoc}
-						 * Creates a new instance of a random row iterator that iterates over the table
-						 * that contains the seconds reactants.
-						 */
-						@Override
-						protected RandomAccessRowIterator createResource() {
-							return new RandomAccessRowIterator(inData[1]);
-						}
-
-						/**
-						 * {@inheritDoc}
-						 * Calls close() on the iterator to free table resources.
-						 */
-						@Override
-						protected void disposeResource(final RandomAccessRowIterator res) {
-							if (res != null) {
-								res.close();
-							}
-						}
-					});
+			// Create an iterator that walks over all reactant pairs
+			PairIterable<DataRow, DataRow> reactantPairIterator = new PairIterable<DataRow, DataRow>(inData[0],
+					inData[1]);
 
 			// Calculate two component reactions
-			final MultiThreadWorker<DataRow, List<DataRow>> multiWorker =
-					new MultiThreadWorker<DataRow, List<DataRow>>(iQueueSize, iMaxParallelWorkers) {
+			final MultiThreadWorker<Pair<Pair<DataRow, Long>, Pair<DataRow, Long>>, List<DataRow>> multiWorker =
+					new MultiThreadWorker<>(iQueueSize, iMaxParallelWorkers) {
 
 				/**
 				 * Array of input reactant table #1 column indexes to be included to output table.
@@ -446,8 +424,8 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				/**
 				 * Computes the two component reactions.
 				 * 
-				 * @param row Input row with reactant 1.
-				 * @param index Index of row with reactant 1.
+				 * @param reactantPair data row and row index pairs for both reactants
+				 * @param reactionIndex Index of the reaction that is processed.
 				 * 
 				 * @return Result of none (null), one or multiple data rows. If the result
 				 * 		is equal to EMPTY_RESULT_DUE_TO_LACK_OF_ROWS processing will
@@ -455,7 +433,13 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 				 * 		a missing reactant 1.
 				 */
 				@Override
-				protected List<DataRow> compute(final DataRow row, final long index) throws Exception {
+				protected List<DataRow> compute(final Pair<Pair<DataRow, Long>, Pair<DataRow, Long>> reactantPair, final long reactionIndex)
+						throws Exception {
+					DataRow firstReactantRow = reactantPair.getFirst().getFirst();
+					long firstReactantIndex = reactantPair.getFirst().getSecond();
+					DataRow secondReactantRow = reactantPair.getSecond().getFirst();
+					long secondReactantIndex = reactantPair.getSecond().getSecond();
+					
 					final long uniqueWaveId = createUniqueCleanupWaveId();
 					List<DataRow> listNewRows = null;
 
@@ -463,85 +447,62 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					ROMol mol1 = null;
 
 					try {
-						final RandomAccessRowIterator rowAccess = rowAccessReactant2.get();
+						if (bMatrixExpansion) {
+							// there's one subUniqueWaveId per first reactant, so we use index as a key into a Map
+							final long subUniqueWaveId = uniqueWaveId;	
 
-						if (rowAccess != null) {
-							// Iterate through all second reactant rows for each first reactant
-							if (bMatrixExpansion) {
-								rowAccess.resetIterator();
-								final long subUniqueWaveId = createUniqueCleanupWaveId();
-								int index2 = 0;
-
-								try {
-									while (rowAccess.hasNext()) {
-										if (isReactionIncluded(index, index2)) {
-											bFoundIncluded = true;
-											if (mol1 == null) {
-												mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(row), uniqueWaveId);
-												if (mol1 == null) {
-													// Nothing to calculate, if cell is empty
-													break;
-												}
-											}
-
-											// Additional data cells
-											final List<DataCell> listAdditionalCells1;
-                                            if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
-												listAdditionalCells1 = new ArrayList<>();
-												for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
-													listAdditionalCells1.add(row.getCell(iReactant1AdditionalColumnIndex));
-												}
-											}
-                                            else {
-												listAdditionalCells1 = null;
-											}
-
-											listNewRows = processWithSecondReactant(mol1, listAdditionalCells1, rowAccess.next(),
-													listNewRows, subUniqueWaveId, (int)index, index2);
+							if (isReactionIncluded(firstReactantIndex, secondReactantIndex)) {
+								bFoundIncluded = true;
+								mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(firstReactantRow),
+										uniqueWaveId);
+								if (mol1 != null) { // Nothing to calculate, if cell is empty
+									// Additional data cells
+									final List<DataCell> listAdditionalCells1;
+									if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+										listAdditionalCells1 = new ArrayList<>();
+										for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
+											listAdditionalCells1
+													.add(firstReactantRow.getCell(iReactant1AdditionalColumnIndex));
 										}
-										else {
-											rowAccess.skip(1);
-										}
-										index2++;
+									} else {
+										listAdditionalCells1 = null;
 									}
+
+									listNewRows = processWithSecondReactant(mol1, listAdditionalCells1,
+											secondReactantRow, listNewRows, subUniqueWaveId, (int) firstReactantIndex,
+											(int) secondReactantIndex);
 								}
-								finally {
-									cleanupMarkedObjects(subUniqueWaveId);
-								}
-							}
+							} 
+						}
 
-							// Or: Just take the second reactant with the same row index
-							else {
-								if (isReactionIncluded(index, index)) {
-									bFoundIncluded = true;
-									if (mol1 == null) {
-										mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(row), uniqueWaveId);
-										if (mol1 != null) {
-											final DataRow row2 = rowAccess.get((int)index);
+						// Or: Just take the second reactant with the same row index
+						else if (firstReactantIndex == secondReactantIndex && isReactionIncluded(firstReactantIndex, firstReactantIndex)) {
+							bFoundIncluded = true;
+							mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(firstReactantRow),
+									uniqueWaveId);
+							if (mol1 != null) {
 
-											if (row2 != null) {
-												// Additional data cells
-												final List<DataCell> listAdditionalCells1;
-                                                if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
-													listAdditionalCells1 = new ArrayList<>();
-													for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
-														listAdditionalCells1.add(row.getCell(iReactant1AdditionalColumnIndex));
-													}
-												}
-                                                else {
-													listAdditionalCells1 = null;
-												}
+								final DataRow row2 = secondReactantRow;
 
-												listNewRows = processWithSecondReactant(mol1, listAdditionalCells1, row2,
-														null, uniqueWaveId, (int)index, (int)index);
-											}
-											else {
-												// Using this as result will cause an CancellationException to be thrown
-												// See process() method
-												listNewRows = EMPTY_RESULT_DUE_TO_LACK_OF_ROWS; // No more rows found
-											}
+								if (row2 != null) {
+									// Additional data cells
+									final List<DataCell> listAdditionalCells1;
+									if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
+										listAdditionalCells1 = new ArrayList<>();
+										for (int iReactant1AdditionalColumnIndex : listReactant1AdditionalColumnIndexes) {
+											listAdditionalCells1
+													.add(firstReactantRow.getCell(iReactant1AdditionalColumnIndex));
 										}
+									} else {
+										listAdditionalCells1 = null;
 									}
+
+									listNewRows = processWithSecondReactant(mol1, listAdditionalCells1,
+											row2, null, uniqueWaveId, (int) firstReactantIndex, (int) firstReactantIndex);
+								} else {
+									// Using this as result will cause an CancellationException to be thrown
+									// See process() method
+									listNewRows = EMPTY_RESULT_DUE_TO_LACK_OF_ROWS; // No more rows found
 								}
 							}
 						}
@@ -651,7 +612,8 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					if (task.getIndex() % 20 == 0) {
 						try {
 							AbstractRDKitNodeModel.reportProgress(exec, (int)task.getIndex(),
-									iTotalRowCountReactant1, task.getInput(),
+									iTotalRowCountReactant1 * iTotalRowCountReactant2, 
+									task.getInput().getFirst().getFirst(),
 									new StringBuilder(" to calculate ").append(aiReactionCounter.get())
 									.append(" reactions [").append(getActiveCount()).append(" active, ")
 									.append(getFinishedTaskCount()).append(" pending]").toString());
@@ -664,9 +626,8 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 			};
 
 			try {
-				multiWorker.run(inData[0]);
-			}
-			catch (final Exception exc) {
+				multiWorker.run(reactantPairIterator);
+			} catch (final Exception exc) {
 				// Ignore cancellations or early aborts due to too few rows
 				if (exc instanceof CancellationException == false || abEarlyDone.get() == false) {
 					throw exc;

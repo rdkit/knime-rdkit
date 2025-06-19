@@ -3,10 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes Tests
 Bundle-SymbolicName: org.rdkit.knime.testing;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.testing
-Bundle-Version: 5.2.0.qualifier
+Bundle-Version: 5.2.1.qualifier
 Bundle-Vendor: Novartis
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Fragment-Host: org.rdkit.knime.nodes;bundle-version="5.2.0"
+Fragment-Host: org.rdkit.knime.nodes;bundle-version="5.2.1"
 Require-Bundle: org.knime.testing;bundle-version="[5.3.0,6.0.0)",
  org.knime.chem.base;bundle-version="[5.3.0,6.0.0)"
 Bundle-ClassPath: rdkit-testing.jar

@@ -67,6 +67,7 @@ import org.RDKit.Point2D;
 import org.RDKit.RDKFuncs;
 import org.RDKit.ROMol;
 import org.RDKit.RWMol;
+import org.RDKit.Bond;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.knime.base.data.xml.SvgProvider;
@@ -569,6 +570,37 @@ implements SvgProvider {
 	}
 
 	/**
+	 * Clears the single bond direction flags of the passed in molecule.
+	 * If bOnlyWedgeFlags is true, only the wedge flags are cleared, otherwise
+	 * all single bond direction flags are cleared.
+	 * FIXME: This method can be replaced with the native clearSingleBondDirFlags
+	 * method once the RDKit version is updated to 2025_03_4 or later
+	 * @param mol Molecule to clear the single bond direction flags for. Can be null to do nothing.
+	 * @param bOnlyWedgeFlags If true, only the wedge flags are cleared, otherwise
+	 * all single bond direction flags are cleared.
+	 */
+	public static void clearSingleBondDirFlags(ROMol mol, boolean bOnlyWedgeFlags) {
+		if (mol == null) {
+			return;
+		}
+		for (int i = 0; i < mol.getNumBonds(); ++i) {
+			final Bond bond = mol.getBondWithIdx(i);
+			if (bond.getBondType() == Bond.BondType.SINGLE) {
+				if (bond.getBondDir() == Bond.BondDir.UNKNOWN) {
+					bond.setProp("_UnknownStereo", "1");
+				}
+
+				if (!bOnlyWedgeFlags ||
+					(bond.getBondDir() != Bond.BondDir.ENDDOWNRIGHT &&
+					bond.getBondDir() != Bond.BondDir.ENDUPRIGHT)) {
+					bond.setBondDir(Bond.BondDir.NONE);
+				}
+			}
+		}
+	}
+
+
+	/**
 	 * Calls the compute2DCoords method on the passed in ROMol object (if not null)
 	 * and passes default parameters except for the last boolean parameter, which
 	 * controls, if the coordinate generation should happen with CoordGen or
@@ -608,7 +640,7 @@ implements SvgProvider {
 					// canonicalization may flip the molecule around the Z axis,
 					// so we recompute bond wedging to make sure the stereochemistry
 					// is depicted correctly (KNIME-1692)
-					mol.ClearSingleBondDirFlags();
+					clearSingleBondDirFlags(mol, true);
 					mol.WedgeMolBonds(mol.getConformer());
 				}
 			}

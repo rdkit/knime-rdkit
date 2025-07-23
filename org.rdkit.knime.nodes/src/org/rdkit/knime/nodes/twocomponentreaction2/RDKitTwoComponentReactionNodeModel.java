@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -68,6 +69,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -87,7 +89,6 @@ import org.rdkit.knime.types.RDKitAdapterCell;
 import org.rdkit.knime.types.RDKitMolValue;
 import org.rdkit.knime.util.InputDataInfo;
 import org.rdkit.knime.util.InputDataInfo.EmptyCellException;
-import org.rdkit.knime.util.RandomAccessRowIterator;
 import org.rdkit.knime.util.SafeGuardedResource;
 import org.rdkit.knime.util.SettingsUtils;
 import org.rdkit.knime.util.WarningConsolidator;
@@ -368,6 +369,9 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 			final AtomicInteger aiReactionCounter = new AtomicInteger();
 			final AtomicBoolean abEarlyDone = new AtomicBoolean(false);
 
+			// The collector for warnings which are postponed to be put into WarningsCollector until the end of processing
+			final Map<RowKey, Boolean> mapPostponedEmptyMoleculeWarnings = new ConcurrentHashMap<>();
+
 			// Create the chemical reaction to be applied as safe guarded resource to avoid corruption
 			// by multiple thread processing
 			final SafeGuardedResource<ChemicalReaction> chemicalReaction =
@@ -446,6 +450,9 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					boolean bFoundIncluded = false;
 					ROMol mol1 = null;
 
+					// Assume an Empty Molecule warning will be needed, will clear this flag later if not so
+					mapPostponedEmptyMoleculeWarnings.putIfAbsent(firstReactantRow.getKey(), true);
+
 					try {
 						if (bMatrixExpansion) {
 							// there's one subUniqueWaveId per first reactant, so we use index as a key into a Map
@@ -469,22 +476,29 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 									}
 
 									listNewRows = processWithSecondReactant(mol1, listAdditionalCells1,
-											secondReactantRow, listNewRows, subUniqueWaveId, (int) firstReactantIndex,
-											(int) secondReactantIndex);
+											secondReactantRow, listNewRows, subUniqueWaveId,
+											(int) firstReactantIndex, (int) secondReactantIndex);
 								}
-							} 
+
+								if (listNewRows != null) {
+									// Dismiss "Empty Molecule" warning
+									mapPostponedEmptyMoleculeWarnings.put(firstReactantRow.getKey(), false);
+								}
+							}
+						}
+
+						// Or: We do not expand the matrix and have two reactants with different row indices
+						else if (firstReactantIndex != secondReactantIndex) {
+							listNewRows = NOT_INCLUDED;
 						}
 
 						// Or: Just take the second reactant with the same row index
-						else if (firstReactantIndex == secondReactantIndex && isReactionIncluded(firstReactantIndex, firstReactantIndex)) {
+						else if (isReactionIncluded(firstReactantIndex, firstReactantIndex)) {
 							bFoundIncluded = true;
 							mol1 = markForCleanup(arrInputDataInfo[0][INPUT_COLUMN_REACTANT1].getROMol(firstReactantRow),
 									uniqueWaveId);
 							if (mol1 != null) {
-
-								final DataRow row2 = secondReactantRow;
-
-								if (row2 != null) {
+                                if (secondReactantRow != null) {
 									// Additional data cells
 									final List<DataCell> listAdditionalCells1;
 									if (m_modelAdditionalColumnsEnabled.getBooleanValue()) {
@@ -493,16 +507,24 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 											listAdditionalCells1
 													.add(firstReactantRow.getCell(iReactant1AdditionalColumnIndex));
 										}
-									} else {
+									}
+									else {
 										listAdditionalCells1 = null;
 									}
 
 									listNewRows = processWithSecondReactant(mol1, listAdditionalCells1,
-											row2, null, uniqueWaveId, (int) firstReactantIndex, (int) firstReactantIndex);
-								} else {
+                                            secondReactantRow, null, uniqueWaveId,
+											(int) firstReactantIndex, (int) secondReactantIndex);
+								}
+								else {
 									// Using this as result will cause an CancellationException to be thrown
 									// See process() method
 									listNewRows = EMPTY_RESULT_DUE_TO_LACK_OF_ROWS; // No more rows found
+								}
+
+								if (listNewRows != null) {
+									// Dismiss "Empty Molecule" warning
+									mapPostponedEmptyMoleculeWarnings.put(firstReactantRow.getKey(), false);
 								}
 							}
 						}
@@ -511,9 +533,12 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 						cleanupMarkedObjects(uniqueWaveId);
 					}
 
-					// If we there was no reaction to be included we use a special return value
+					// If there was no reaction to be included we use a special return value
 					if (listNewRows == null && !bFoundIncluded) {
 						listNewRows = NOT_INCLUDED;
+
+						// Dismiss "Empty Molecule" warning
+						mapPostponedEmptyMoleculeWarnings.put(firstReactantRow.getKey(), false);
 					}
 
 					return listNewRows;
@@ -602,10 +627,6 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 							}
 						}
 					}
-					else {
-						getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
-								"Encountered empty molecule cell, which will be ignored.");
-					}
 
 					// Check, if user pressed cancel (however, we will finish the method nevertheless)
 					// Update the progress only every 20 rows
@@ -633,6 +654,14 @@ public class RDKitTwoComponentReactionNodeModel extends AbstractRDKitReactionNod
 					throw exc;
 				}
 			}
+
+			// Release the warnings postponed during the computation
+			mapPostponedEmptyMoleculeWarnings.forEach((row, bHasEmptyMolecule) -> {
+				if (bHasEmptyMolecule) {
+					getWarningConsolidator().saveWarning(WarningConsolidator.ROW_CONTEXT.getId(),
+							"Encountered empty molecule cell, which will be ignored.");
+				}
+			});
 
 			// Check size discrepancy
 			if (bMatrixExpansion == false) {

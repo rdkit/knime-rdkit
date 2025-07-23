@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RDKit Nodes Creation Wizards
 Bundle-SymbolicName: org.rdkit.knime.wizards;singleton:=true
 Automatic-Module-Name: org.rdkit.knime.wizards
-Bundle-Version: 5.2.0.qualifier
+Bundle-Version: 5.2.1.qualifier
 Bundle-Activator: org.rdkit.knime.wizards.RDKitNodesWizardsPlugin
 Bundle-Vendor: Novartis
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.20.0,4.0.0)",
